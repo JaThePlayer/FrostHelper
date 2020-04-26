@@ -4,6 +4,7 @@ A Celeste mod using Everest that adds way too much stuff.
 NOTE: This repo only contains the code. For an actual download, check the [Gamebanana page](https://gamebanana.com/gamefiles/9201)
 
 Feature list:
+
 Entities:
 - Blue Boosters -> They don't recover your dash
 - Yellow Boosters -> They kill you if you don't fastbubble
@@ -22,6 +23,7 @@ Entities:
 - Custom Dream Blocks (Space Jam) -> Space Jam with customizable speed and colors. You can also allow the player to redirect their dash inside of them
 - Custom Crystal Spinners -> Speen but with customizable colors. They can also be dash-throughable
 - Core Berries -> Berries that respect Core Mode -> Hot berries will dissapear when you switch to cold mode and vice versa
+
 Triggers:
 - Anxiety Trigger -> Triggers the Anxiety effect, the same as badeline causes
 - Cassette Tempo Trigger -> Allows you to change the cassette tempo mid-room
