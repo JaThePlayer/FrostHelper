@@ -5,6 +5,9 @@ using Monocle;
 
 namespace FrostHelper
 {
+    /// <summary>
+    /// Will be moved to CollabUtils2 ???
+    /// </summary>
     [CustomEntity("FrostHelper/SpeedBerryCollectTrigger")]
     [Tracked]
     class SpeedBerryCollectTrigger : Trigger

@@ -8,6 +8,9 @@ using System.Collections;
 
 namespace FrostHelper
 {
+    /// <summary>
+    /// Will be moved to CollabUtils2 ???
+    /// </summary>
     [CustomEntity("FrostHelper/SpeedBerry")]
     [RegisterStrawberry(false, true)]
     class SpeedBerry : Strawberry, IStrawberry
