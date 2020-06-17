@@ -1,11 +1,11 @@
-﻿using System;
-using System.Collections;
-using Celeste;
+﻿using Celeste;
 using Celeste.Mod.Entities;
 using Microsoft.Xna.Framework;
 using Monocle;
+using System;
+using System.Collections;
 
-namespace FrostTempleHelper
+namespace FrostHelper
 {
     /// <summary>
     /// A booster that will kill you if you don't dash out of it
@@ -111,11 +111,11 @@ namespace FrostTempleHelper
         public bool StartedBoosting;
         public static void Boost(Player player, YellowBooster booster)
         {
-            player.StateMachine.State = (FrostHelper.FrostModule.yellowBoostState);
+            player.StateMachine.State = FrostModule.YellowBoostState;
             player.Speed = Vector2.Zero;
             //player.boostTarget = booster.Center;
             //player.boostRed = false;
-            FrostHelper.FrostModule.player_boostTarget.SetValue(player, booster.Center);
+            FrostModule.player_boostTarget.SetValue(player, booster.Center);
             booster.StartedBoosting = true;
             //player.CurrentBooster = booster;
             //this.LastBooster = booster;

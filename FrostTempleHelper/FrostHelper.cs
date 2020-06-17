@@ -8,7 +8,10 @@ using Celeste.Mod;
 using Celeste.Mod.Meta;
 using FrostTempleHelper;
 using Microsoft.Xna.Framework;
+using Mono.Cecil.Cil;
 using Monocle;
+using MonoMod.Cil;
+using MonoMod.RuntimeDetour;
 using MonoMod.Utils;
 
 namespace FrostHelper
@@ -19,8 +22,6 @@ namespace FrostHelper
         // Only one alive module instance can exist at any given time.
         public static FrostModule Instance;
         bool initFont = false;
-        public bool HasSpeedBerry = false;
-        public int SpeedBerryTimeRemaining = -1;
         public FrostModule()
         {
             Instance = this;
@@ -46,11 +47,13 @@ namespace FrostHelper
         // Load runs before Celeste itself has initialized properly.
         public override void Load()
         {
+            // Legacy entity creation (for back when we didn't have the CustomEntity attribute)
             Everest.Events.Level.OnLoadEntity += OnLoadEntity;
-            On.Celeste.Player.Die += Player_Die;
+            // Custom Rising Lava integrations
             On.Celeste.Mod.Entities.LavaBlockerTrigger.Awake += LavaBlockerTrigger_Awake;
             On.Celeste.Mod.Entities.LavaBlockerTrigger.OnStay += LavaBlockerTrigger_OnStay;
             On.Celeste.Mod.Entities.LavaBlockerTrigger.OnLeave += LavaBlockerTrigger_OnLeave;
+            // Lightning Color Trigger
             On.Celeste.LightningRenderer.Update += LightningRenderer_Update;
             
             // Register new states
@@ -60,44 +63,87 @@ namespace FrostHelper
             On.Celeste.Player.CallDashEvents += Player_CallDashEvents;
 
             // For Custom Dream Blocks
+            // legacy
             On.Celeste.Player.OnCollideH += Player_OnCollideH;
             On.Celeste.Player.OnCollideV += Player_OnCollideV;
-            On.Celeste.Player.UpdateSprite += Player_UpdateSprite;
             On.Celeste.Player.RefillDash += Player_RefillDash;
+            On.Celeste.Player.DreamDashUpdate += Player_DreamDashUpdate;
+            On.Celeste.Player.DreamDashEnd += Player_DreamDashEnd;
+            // Custom dream blocks and feathers
+            On.Celeste.Player.UpdateSprite += Player_UpdateSprite;
 
-            // TODO: REMOVE
-            // Don't call Update when the game is not Active
-            //On.Celeste.Celeste.Update += Celeste_Update;
-            //On.Celeste.Celeste.RenderCore += Celeste_RenderCore;
-            //On.Monocle.Engine.Draw += Engine_Draw;
+            // custom feathers
+            IL.Celeste.Player.UpdateHair += modFeatherState;
+            IL.Celeste.Player.OnCollideH += modFeatherState;
+            IL.Celeste.Player.OnCollideV += modFeatherState;
+            //IL.Celeste.Player.Update += modFeatherState;
+            playerUpdateHook = new ILHook(typeof(Player).GetMethod("orig_Update", BindingFlags.Instance | BindingFlags.Public), modFeatherState);
+            IL.Celeste.Player.Render += modFeatherState;
         }
 
-        private void Engine_Draw(On.Monocle.Engine.orig_Draw orig, Engine self, GameTime gameTime)
+        private void Player_DreamDashEnd(On.Celeste.Player.orig_DreamDashEnd orig, Player self)
         {
-            if (!self.IsActive)
-            {
-                return;
-            }
-            orig(self, gameTime);
-        }
-
-        private void Celeste_RenderCore(On.Celeste.Celeste.orig_RenderCore orig, Celeste.Celeste self)
-        {
-            if (!self.IsActive)
-            {
-                return;
-            }
             orig(self);
+            new DynData<Player>(self).Set("lastDreamSpeed", 0f);
         }
 
-        private void Celeste_Update(On.Celeste.Celeste.orig_Update orig, Celeste.Celeste self, GameTime gameTime)
+        private int Player_DreamDashUpdate(On.Celeste.Player.orig_DreamDashUpdate orig, Player self)
         {
-            if (!self.IsActive)
+            CustomDreamBlockV2 cdm = self.CollideFirst<CustomDreamBlockV2>(); 
+            if (cdm != null)
             {
-                return;
+                var dyn = new DynData<Player>(self);
+                float lastDreamSpeed = dyn.Get<float>("lastDreamSpeed");
+                if (lastDreamSpeed != cdm.DashSpeed)
+                {
+                    self.Speed = self.DashDir * cdm.DashSpeed;
+                    dyn.Set<float>("lastDreamSpeed", cdm.DashSpeed * 1f);
+                }
+                if(cdm.AllowRedirects && self.CanDash)
+                {
+                    bool sameDir = Input.GetAimVector(Facings.Right) == self.DashDir;
+                    bool flag4 = !sameDir || cdm.AllowRedirectsInSameDir;
+                    if (flag4)
+                    {
+                        self.DashDir = Input.GetAimVector(Facings.Right);
+                        self.Speed = self.DashDir * self.Speed.Length();
+                        self.Dashes = Math.Max(0, self.Dashes - 1);
+                        Audio.Play("event:/char/madeline/dreamblock_enter");
+                        if (sameDir)
+                        {
+                            self.Speed *= cdm.SameDirectionSpeedMultiplier;
+                            self.DashDir *= (float)Math.Sign(cdm.SameDirectionSpeedMultiplier);
+                        }
+                        Input.Dash.ConsumeBuffer();
+                    }
+                }
             }
-            orig(self, gameTime);
+            return orig(self);
         }
+
+        ILHook playerUpdateHook;
+
+        void modFeatherState(ILContext il)
+        {
+            ILCursor cursor = new ILCursor(il);
+            while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdcI4(19)))
+            {
+                cursor.Emit(OpCodes.Pop);
+                cursor.EmitDelegate<Func<int>>(getFeatherState);
+            }
+        }
+
+        static int getFeatherState()
+        {
+            if (Engine.Scene is Level)
+                return StateGetPlayer().StateMachine.State == CustomFeatherState ? CustomFeatherState : 19;
+            else
+                return 19;
+        }
+        
+        #region CustomDreamBlock
+
+        public static int CustomDreamDashState;
 
         private bool Player_RefillDash(On.Celeste.Player.orig_RefillDash orig, Player self)
         {
@@ -114,6 +160,10 @@ namespace FrostHelper
                 {
                     self.Sprite.Play("dreamDashIn", false, false);
                 }
+            } else if (self.StateMachine.State == CustomFeatherState)
+            {
+                self.Sprite.Scale.X = Calc.Approach(self.Sprite.Scale.X, 1f, 1.75f * Engine.DeltaTime);
+                self.Sprite.Scale.Y = Calc.Approach(self.Sprite.Scale.Y, 1f, 1.75f * Engine.DeltaTime);
             } else
             {
                 orig(self);
@@ -138,7 +188,6 @@ namespace FrostHelper
             {
                 orig(self, data);
             }
-
         }
 
         private void Player_OnCollideH(On.Celeste.Player.orig_OnCollideH orig, Player self, CollisionData data)
@@ -159,9 +208,8 @@ namespace FrostHelper
             {
                 orig(self, data);
             }
-            
-            
         }
+        #endregion
 
         public static Player StateGetPlayer()
         {
@@ -171,64 +219,352 @@ namespace FrostHelper
 
         private void Player_CallDashEvents(On.Celeste.Player.orig_CallDashEvents orig, Player self)
         {
-            foreach (YellowBooster b in self.Scene.Tracker.GetEntities<YellowBooster>())
+            // sometimes crashes? Can't reproduce this myself and I have no clue why it happens, just gonna try catch this :/
+            try
             {
-                b.sprite.SetColor(Color.White);
-                if (b.StartedBoosting)
+                foreach (YellowBooster b in self.Scene.Tracker.GetEntities<YellowBooster>())
                 {
-                    b.PlayerBoosted(self, self.DashDir);
-                    return;
+                    b.sprite.SetColor(Color.White);
+                    if (b.StartedBoosting)
+                    {
+                        b.PlayerBoosted(self, self.DashDir);
+                        return;
+                    }
+                    if (b.BoostingPlayer)
+                    {
+                        return;
+                    }
                 }
-                if (b.BoostingPlayer)
+                foreach (BlueBooster b in self.Scene.Tracker.GetEntities<BlueBooster>())
                 {
-                    return;
+                    if (b.StartedBoosting)
+                    {
+                        b.PlayerBoosted(self, self.DashDir);
+                        return;
+                    }
+                    if (b.BoostingPlayer)
+                    {
+                        return;
+                    }
+                }
+                foreach (GrayBooster b in self.Scene.Tracker.GetEntities<GrayBooster>())
+                {
+                    if (b.StartedBoosting)
+                    {
+                        b.PlayerBoosted(self, self.DashDir);
+                        return;
+                    }
+                    if (b.BoostingPlayer)
+                    {
+                        return;
+                    }
                 }
             }
-            foreach (BlueBooster b in self.Scene.Tracker.GetEntities<BlueBooster>())
-            {
-                if (b.StartedBoosting)
-                {
-                    b.PlayerBoosted(self, self.DashDir);
-                    return;
-                }
-                if (b.BoostingPlayer)
-                {
-                    return;
-                }
-            }
-            foreach (GrayBooster b in self.Scene.Tracker.GetEntities<GrayBooster>())
-            {
-                if (b.StartedBoosting)
-                {
-                    b.PlayerBoosted(self, self.DashDir);
-                    return;
-                }
-                if (b.BoostingPlayer)
-                {
-                    return;
-                }
-            }
-
+            catch {}
             orig(self);
         }
 
         private void Player_ctor(On.Celeste.Player.orig_ctor orig, Player self, Vector2 position, PlayerSpriteMode spriteMode)
         {
             orig(self, position, spriteMode);
+            new DynData<Player>(self).Set<float>("lastDreamSpeed", 0f);
             // Let's define new states
             // .AddState is defined in StateMachineExt
-            yellowBoostState = self.StateMachine.AddState(new Func<int>(YellowBoostUpdate), YellowBoostCoroutine, YellowBoostBegin, YellowBoostEnd);
+            YellowBoostState = self.StateMachine.AddState(new Func<int>(YellowBoostUpdate), YellowBoostCoroutine, YellowBoostBegin, YellowBoostEnd);
             blueBoostState = self.StateMachine.AddState(new Func<int>(BlueBoostUpdate), BlueBoostCoroutine, BlueBoostBegin, BlueBoostEnd);
             grayBoostState = self.StateMachine.AddState(new Func<int>(GrayBoostUpdate), GrayBoostCoroutine, GrayBoostBegin, GrayBoostEnd);
             CustomDreamDashState = self.StateMachine.AddState(new Func<int>(CustomDreamBlock.DreamDashUpdate), null, CustomDreamBlock.DreamDashBegin, CustomDreamBlock.DreamDashEnd);
+            CustomFeatherState = self.StateMachine.AddState(StarFlyUpdate, CustomFeatherCoroutine, CustomFeatherBegin, CustomFeatherEnd);
         }
 
-        public static int CustomDreamDashState;
+        #region CustomFeathers
+        public static int CustomFeatherState;
+        public static MethodInfo player_StarFlyReturnToNormalHitbox = typeof(Player).GetMethod("StarFlyReturnToNormalHitbox", BindingFlags.Instance | BindingFlags.NonPublic);
+        public static MethodInfo player_WallJump = typeof(Player).GetMethod("WallJump", BindingFlags.Instance | BindingFlags.NonPublic);
+        public static MethodInfo player_WallJumpCheck = typeof(Player).GetMethod("WallJumpCheck", BindingFlags.Instance | BindingFlags.NonPublic);
+
+        private void CustomFeatherBegin()
+        {
+            Player player = StateGetPlayer();
+            DynData<Player> data = new DynData<Player>(player);
+            CustomFeather feather = (CustomFeather)data["fh.customFeather"];
+            player.Sprite.Play("startStarFly", false, false);
+            data["starFlyTransforming"] = true;
+            data["starFlyTimer"] = feather.FlyTime;
+            data["starFlySpeedLerp"] = 0f;
+            data["jumpGraceTimer"] = 0f;
+            BloomPoint starFlyBloom = (BloomPoint)data["starFlyBloom"];
+            if (starFlyBloom == null)
+            {
+                player.Add(starFlyBloom = new BloomPoint(new Vector2(0f, -6f), 0f, 16f));
+            }
+            starFlyBloom.Visible = true;
+            starFlyBloom.Alpha = 0f;
+            data["starFlyBloom"] = starFlyBloom;
+            player.Collider = (Hitbox)data["starFlyHitbox"];
+            data["hurtbox"] = data["starFlyHurtbox"];
+            SoundSource starFlyLoopSfx = (SoundSource)data["starFlyLoopSfx"];
+            SoundSource starFlyWarningSfx = (SoundSource)data["starFlyWarningSfx"];
+            if (starFlyLoopSfx == null)
+            {
+                player.Add(starFlyLoopSfx = new SoundSource());
+                starFlyLoopSfx.DisposeOnTransition = false;
+                player.Add(starFlyWarningSfx = new SoundSource());
+                starFlyWarningSfx.DisposeOnTransition = false;
+            }
+            starFlyLoopSfx.Play("event:/game/06_reflection/feather_state_loop", "feather_speed", 1f);
+            starFlyWarningSfx.Stop(true);
+            data["starFlyLoopSfx"] = starFlyLoopSfx;
+            data["starFlyWarningSfx"] = starFlyWarningSfx;
+        }
+        private void CustomFeatherEnd()
+        {
+            Player player = StateGetPlayer();
+            DynData<Player> data = new DynData<Player>(player);
+            CustomFeather feather = (CustomFeather)data["fh.customFeather"];
+            player.Play("event:/game/06_reflection/feather_state_end", null, 0f);
+            ((SoundSource)data["starFlyWarningSfx"]).Stop(true);
+            ((SoundSource)data["starFlyLoopSfx"]).Stop(true);
+            player.Hair.DrawPlayerSpriteOutline = false;
+            player.Sprite.Color = Color.White;
+            player.SceneAs<Level>().Displacement.AddBurst(player.Center, 0.25f, 8f, 32f, 1f, null, null);
+            ((BloomPoint)data["starFlyBloom"]).Visible = false;
+            player.Sprite.HairCount = (int)data["startHairCount"];
+            player_StarFlyReturnToNormalHitbox.Invoke(player, null);
+            bool flag = player.StateMachine.State != 2;
+            if (flag)
+            {
+                player.SceneAs<Level>().Particles.Emit(feather.P_Boost, 12, player.Center, Vector2.One * 4f, (-player.Speed).Angle());
+            }
+        }
+        private IEnumerator CustomFeatherCoroutine()
+        {
+            Player player = StateGetPlayer();
+            DynData<Player> data = new DynData<Player>(player);
+            CustomFeather feather = (CustomFeather)data["fh.customFeather"];
+            while (player.Sprite.CurrentAnimationID == "startStarFly")
+            {
+                yield return null;
+            }
+            while (player.Speed != Vector2.Zero)
+            {
+                yield return null;
+            }
+            yield return 0.1f;
+            player.Sprite.Color = feather.FlyColor;
+            player.Sprite.HairCount = 7;
+            player.Hair.DrawPlayerSpriteOutline = true;
+            player.SceneAs<Level>().Displacement.AddBurst(player.Center, 0.25f, 8f, 32f, 1f, null, null);
+            data["starFlyTransforming"] = false;
+            data["starFlyTimer"] = feather.FlyTime;
+            player.RefillDash();
+            player.RefillStamina();
+            Vector2 dir = Input.Aim.Value;
+            bool flag = dir == Vector2.Zero;
+            if (flag)
+            {
+                dir = Vector2.UnitX * (float)player.Facing;
+            }
+            player.Speed = dir * 250f;
+            data["starFlyLastDir"] = dir;
+            player.SceneAs<Level>().Particles.Emit(feather.P_Boost, 12, player.Center, Vector2.One * 4f, feather.FlyColor,(-dir).Angle());
+            dir = default(Vector2);
+            Input.Rumble(RumbleStrength.Strong, RumbleLength.Medium);
+            player.SceneAs<Level>().DirectionalShake((Vector2)data["starFlyLastDir"], 0.3f);
+            while ((float)data["starFlyTimer"] > 0.5f)
+            {
+                yield return null;
+            }
+            ((SoundSource)data["starFlyWarningSfx"]).Play("event:/game/06_reflection/feather_state_warning", null, 0f);
+            yield break;
+        }
+
+        private int StarFlyUpdate()
+        {
+            Player player = StateGetPlayer();
+            Level level = player.SceneAs<Level>();
+            DynData<Player> data = new DynData<Player>(player);
+            BloomPoint bloomPoint = (BloomPoint)data["starFlyBloom"];
+            CustomFeather feather = (CustomFeather)data["fh.customFeather"];
+            // 2f -> StarFlyTime
+            float StarFlyTime = feather.FlyTime;
+            bloomPoint.Alpha = Calc.Approach(bloomPoint.Alpha, 0.7f, Engine.DeltaTime * StarFlyTime);
+            data["starFlyBloom"] = bloomPoint;
+            Input.Rumble(RumbleStrength.Climb, RumbleLength.Short);
+            if ((bool)data["starFlyTransforming"])
+            {
+                player.Speed = Calc.Approach(player.Speed, Vector2.Zero, 1000f * Engine.DeltaTime);
+            }
+            else
+            {
+                Vector2 aimValue = Input.Aim.Value;
+                bool notAiming = false;
+                bool flag3 = aimValue == Vector2.Zero;
+                if (flag3)
+                {
+                    notAiming = true;
+                    aimValue = (Vector2)data["starFlyLastDir"];
+                }
+                Vector2 lastSpeed = player.Speed.SafeNormalize(Vector2.Zero);
+                bool flag4 = lastSpeed == Vector2.Zero;
+                if (flag4)
+                {
+                    lastSpeed = aimValue;
+                }
+                else
+                {
+                    lastSpeed = lastSpeed.RotateTowards(aimValue.Angle(), 5.58505344f * Engine.DeltaTime);
+                }
+                data["starFlyLastDir"] = lastSpeed;
+                float target;
+                if (notAiming)
+                {
+                    data["starFlySpeedLerp"] = 0f;
+                    target = feather.NeutralSpeed; // was 91f
+                }
+                else
+                {
+                    bool flag6 = lastSpeed != Vector2.Zero && Vector2.Dot(lastSpeed, aimValue) >= 0.45f;
+                    if (flag6)
+                    {
+                        data["starFlySpeedLerp"] = Calc.Approach((float)data["starFlySpeedLerp"], 1f, Engine.DeltaTime / 1f);
+                        target = MathHelper.Lerp(feather.LowSpeed, feather.MaxSpeed, (float)data["starFlySpeedLerp"]);
+                    }
+                    else
+                    {
+                        data["starFlySpeedLerp"] = 0f;
+                        target = 140f;
+                    }
+                }
+                SoundSource ss = (SoundSource)data["starFlyLoopSfx"];
+                ss.Param("feather_speed", (float)(notAiming ? 0 : 1));
+                data["starFlyLoopSfx"] = ss;
+
+                float num = player.Speed.Length();
+                num = Calc.Approach(num, target, 1000f * Engine.DeltaTime);
+                player.Speed = lastSpeed * num;
+                bool flag7 = level.OnInterval(0.02f);
+                if (flag7)
+                {
+                    level.Particles.Emit(feather.P_Flying, 1, player.Center, Vector2.One * 2f, feather.FlyColor, (-player.Speed).Angle());
+                }
+                bool pressed = Input.Jump.Pressed;
+                if (pressed)
+                {
+                    bool flag8 = player.OnGround(3);
+                    if (flag8)
+                    {
+                        player.Jump(true, true);
+                        return 0;
+                    }
+                    bool flag9 = (bool)player_WallJumpCheck.Invoke(player, new object[] { -1 });
+                    if (flag9)
+                    {
+                        player_WallJump.Invoke(player, new object[] { 1 });
+                        return 0;
+                    }
+                    bool flag10 = (bool)player_WallJumpCheck.Invoke(player, new object[] { 1 });
+                    if (flag10)
+                    {
+                        player_WallJump.Invoke(player, new object[] { -1 });
+                        return 0;
+                    }
+                }
+                bool check = Input.Grab.Check;
+                if (check)
+                {
+                    bool flag11 = false;
+                    int dir = 0;
+                    bool flag12 = Input.MoveX.Value != -1 && player.ClimbCheck(1, 0);
+                    if (flag12)
+                    {
+                        player.Facing = Facings.Right;
+                        dir = 1;
+                        flag11 = true;
+                    }
+                    else
+                    {
+                        bool flag13 = Input.MoveX.Value != 1 && player.ClimbCheck(-1, 0);
+                        if (flag13)
+                        {
+                            player.Facing = Facings.Left;
+                            dir = -1;
+                            flag11 = true;
+                        }
+                    }
+                    bool flag14 = flag11;
+                    if (flag14)
+                    {
+                        bool noGrabbing = SaveData.Instance.Assists.NoGrabbing;
+                        if (noGrabbing)
+                        {
+                            player.Speed = Vector2.Zero;
+                            player.ClimbTrigger(dir);
+                            return 0;
+                        }
+                        return 1;
+                    }
+                }
+                bool canDash = player.CanDash;
+                if (canDash)
+                {
+                    return player.StartDash();
+                }
+                float starFlyTimer = (float)data["starFlyTimer"];
+                starFlyTimer -= Engine.DeltaTime;
+                data["starFlyTimer"] = starFlyTimer;
+                bool flag15 = starFlyTimer <= 0f;
+                if (flag15)
+                {
+                    bool flag16 = Input.MoveY.Value == -1;
+                    if (flag16)
+                    {
+                        player.Speed.Y = -100f;
+                    }
+                    bool flag17 = Input.MoveY.Value < 1;
+                    if (flag17)
+                    {
+                        data["varJumpSpeed"] = player.Speed.Y;
+                        player.AutoJump = true;
+                        player.AutoJumpTimer = 0f;
+                        data["varJumpTimer"] = 0.2f;
+                    }
+                    bool flag18 = player.Speed.Y > 0f;
+                    if (flag18)
+                    {
+                        player.Speed.Y = 0f;
+                    }
+                    bool flag19 = Math.Abs(player.Speed.X) > 140f;
+                    if (flag19)
+                    {
+                        player.Speed.X = 140f * (float)Math.Sign(player.Speed.X);
+                    }
+                    Input.Rumble(RumbleStrength.Medium, RumbleLength.Medium);
+                    return 0;
+                }
+                bool flag20 = starFlyTimer < 0.5f && player.Scene.OnInterval(0.05f);
+                if (flag20)
+                {
+                    Color starFlyColor = feather.FlyColor;
+                    if (player.Sprite.Color == starFlyColor)
+                    {
+                        player.Sprite.Color = Player.NormalHairColor;
+                    }
+                    else
+                    {
+                        player.Sprite.Color = starFlyColor;
+                    }
+                }
+            }
+            return CustomFeatherState;
+        }
+        #endregion
+
         public static FieldInfo player_boostTarget = typeof(Player).GetField("boostTarget", BindingFlags.Instance | BindingFlags.NonPublic);
 
         #region YellowBoost
 
-        public static int yellowBoostState;
+        public static int YellowBoostState;
         
         private void YellowBoostBegin()
         {
@@ -273,7 +609,7 @@ namespace FrostHelper
             }
             else
             {
-                result = yellowBoostState;
+                result = YellowBoostState;
             }
             return result;
         }
@@ -478,7 +814,6 @@ namespace FrostHelper
         public override void Unload()
         {
             Everest.Events.Level.OnLoadEntity -= OnLoadEntity;
-            On.Celeste.Player.Die -= Player_Die;
             On.Celeste.Mod.Entities.LavaBlockerTrigger.Awake -= LavaBlockerTrigger_Awake;
             On.Celeste.Mod.Entities.LavaBlockerTrigger.OnStay -= LavaBlockerTrigger_OnStay;
             On.Celeste.Mod.Entities.LavaBlockerTrigger.OnLeave -= LavaBlockerTrigger_OnLeave;
@@ -487,66 +822,9 @@ namespace FrostHelper
             On.Celeste.Player.CallDashEvents -= Player_CallDashEvents;
         }
 
-        
-        static PixelFont font;
-        static float fontFaceSize;
-        static PixelFontSize pixelFontSize;
-        static float spacerWidth;
 
-        static float numberWidth = 0f;
-
-        static void getNumberWidth()
-        {
-            for (int i = 0; i < 10; i++)
-            {
-                float x = pixelFontSize.Measure(i.ToString()).X;
-                bool flag = x > numberWidth;
-                if (flag)
-                {
-                    numberWidth = x;
-                }
-            }
-        }
-
-        // Handle Speed Berries
-        private PlayerDeadBody Player_Die(On.Celeste.Player.orig_Die orig, Player self, Vector2 direction, bool evenIfInvincible, bool registerDeathInStats)
-        {
-            Session session = self.SceneAs<Level>().Session;
-            SpeedBerry speedStrawb = null;
-            foreach (Player player in self.Scene.Tracker.GetEntities<Player>())
-            {
-                foreach (Follower follower in player.Leader.Followers)
-                {
-                    if (follower.Entity is SpeedBerry)
-                    {
-                        SpeedBerryTimerDisplay.Enabled = false;
-                        if ((follower.Entity as SpeedBerry).TimeRanOut)
-                        speedStrawb = (follower.Entity as SpeedBerry);
-                    }
-                }
-            }
-            
-            PlayerDeadBody body = orig(self, direction, evenIfInvincible, registerDeathInStats);
-            
-            if (body != null)
-            {
-                
-                if (speedStrawb != null)
-                {
-                    body.HasGolden = true;
-                    body.DeathAction = delegate ()
-                    {
-                        Engine.Scene = new LevelExit(LevelExit.Mode.GoldenBerryRestart, session, null)
-                        {
-                            GoldenStrawberryEntryLevel = speedStrawb.ID.Level
-                        };
-                    };
-                }
-            }
-
-            return body;
-        }
-
+        // Make custom rising lava work with Lava Blocker Triggers:
+        #region LavaBlockerInteraction
         private void LavaBlockerTrigger_OnLeave(On.Celeste.Mod.Entities.LavaBlockerTrigger.orig_OnLeave orig, Celeste.Mod.Entities.LavaBlockerTrigger self, Player player)
         {
             foreach (CustomRisingLava lava in customRisingLavas)
@@ -570,7 +848,7 @@ namespace FrostHelper
             orig(self, scene);
             customRisingLavas = scene.Entities.OfType<CustomRisingLava>().ToList();
         }
-
+        #endregion
         // Optional, initialize anything after Celeste has initialized itself properly.
         public override void Initialize()
         {
@@ -595,11 +873,11 @@ namespace FrostHelper
                     level.Add(new SlowCrushBlock(entityData, offset));
                     return true;
                 case "FrostHelper/CustomZipMover":
-                    level.Add(new CustomZipMover(entityData, offset, entityData.Float("percentage", 100f), entityData.Enum<CustomZipMover.LineColor>("color", CustomZipMover.LineColor.Normal)));
+                    level.Add(new CustomZipMover(entityData, offset, entityData.Float("percentage", 100f), entityData.Enum("color", CustomZipMover.LineColor.Normal)));
                     return true;
                 case "FrostHelper/IceSpinner":
                 case "FrostHelperExt/CustomBloomSpinner":
-                    level.Add(new CrystalStaticSpinner(entityData, offset, entityData.Bool("attachToSolid", false), entityData.Attr("directory", "danger/FrostHelper/icecrystal"), entityData.Attr("destroyColor", "639bff"), entityData.Bool("isCore", false), entityData.Attr("tint", "")));
+                    level.Add(new CustomSpinner(entityData, offset, entityData.Bool("attachToSolid", false), entityData.Attr("directory", "danger/FrostHelper/icecrystal"), entityData.Attr("destroyColor", "639bff"), entityData.Bool("isCore", false), entityData.Attr("tint", "")));
                     return true;
                 case "FrostHelper/Skateboard":
                     level.Add(new Skateboard(entityData, offset));
@@ -628,6 +906,15 @@ namespace FrostHelper
                 case "FrostHelper/SpringFloor":
                     level.Add(new CustomSpring(entityData, offset, Spring.Orientations.Floor));
                     return true;
+                case "FrostHelper/CustomDreamBlock":
+                    if (entityData.Bool("old", false))
+                    {
+                        level.Add(new CustomDreamBlock(entityData, offset));
+                    } else
+                    {
+                        level.Add(new CustomDreamBlockV2(entityData, offset));
+                    }
+                    return true;
                 default:
                     return false;
             }
@@ -638,8 +925,6 @@ namespace FrostHelper
             string[] strSplit = str.Split(',');
             if (strSplit.Length < 2)
             {
-                //Logger.Log("Frost Helper", $"[ERROR] Vector2 doesn't have enough parameters! string: {str}");
-                //throw new Exception($"[Frost Helper] Vector2 doesn't have enough parameters! string: {str}");
                 return new Vector2(float.Parse(strSplit[0]), float.Parse(strSplit[0]));
             }
             return new Vector2(float.Parse(strSplit[0]), float.Parse(strSplit[1]));

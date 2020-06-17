@@ -1,5 +1,4 @@
 ﻿using Celeste;
-using Celeste.Mod;
 using Celeste.Mod.Entities;
 using Microsoft.Xna.Framework;
 using Monocle;
@@ -10,9 +9,8 @@ using System.Collections;
 namespace FrostHelper
 {
     // State 9 is vanilla Dream Block Dash
-    [CustomEntity("FrostHelper/CustomDreamBlock")]
+    //[CustomEntity("FrostHelper/CustomDreamBlock")]
     [Tracked]
-    [TrackedAs(typeof(DreamBlock))]
     public class CustomDreamBlock : Solid
     {
         public CustomDreamBlock(EntityData data, Vector2 offset) : base(data.Position + offset, (float)data.Width, (float)data.Height, true)
@@ -164,9 +162,9 @@ namespace FrostHelper
 
         private void OneUseDestroy()
         {
-            this.Collidable = (this.Visible = false);
-            base.DisableStaticMovers();
-            base.RemoveSelf();
+            Collidable = Visible = false;
+            DisableStaticMovers();
+            RemoveSelf();
         }
 
         public override void Update()

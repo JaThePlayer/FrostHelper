@@ -10,7 +10,7 @@ using Monocle;
 namespace FrostHelper
 {
     [Tracked(false)]
-    public class CrystalStaticSpinner : Entity
+    public class CustomSpinner : Entity
     {
         public string bgDirectory;
         public string fgDirectory;
@@ -30,32 +30,32 @@ namespace FrostHelper
         
         private void CheckModeChange()
         {
-            if (this.iceModeNext != this.iceMode)
+            if (iceModeNext != iceMode)
             {
-                this.iceMode = this.iceModeNext;
-                this.ToggleSprite();
+                iceMode = iceModeNext;
+                ToggleSprite();
             }
         }
 
         private void ToggleSprite()
         {
-            if (this.iceMode)
+            if (iceMode)
             {
-                this.bgDirectory = directory + "/bg";
-                this.fgDirectory = directory + "/fg";
+                bgDirectory = directory + "/bg";
+                fgDirectory = directory + "/fg";
             }
             else
             {
-                this.bgDirectory = directory + "/hot/bg";
-                this.fgDirectory = directory + "/hot/fg";
+                bgDirectory = directory + "/hot/bg";
+                fgDirectory = directory + "/hot/fg";
             }
-            this.ClearSprites();
-            this.CreateSprites();
-            this.expanded = false;
-            this.orig_Awake(base.Scene);
+            ClearSprites();
+            CreateSprites();
+            expanded = false;
+            orig_Awake(base.Scene);
         }
 
-        public CrystalStaticSpinner(EntityData data, Vector2 position, bool attachToSolid, string directory, string destroyColor, bool isCore, string tint) : base(data.Position + position)
+        public CustomSpinner(EntityData data, Vector2 position, bool attachToSolid, string directory, string destroyColor, bool isCore, string tint) : base(data.Position + position)
         {
             ID = data.ID;
             DashThrough = data.Bool("dashThrough", false);
@@ -80,8 +80,8 @@ namespace FrostHelper
                 new Hitbox(16f, 4f, -8f, -3f)
             });
             Visible = false;
-            Add(new PlayerCollider(new Action<Player>(this.OnPlayer), null, null));
-            Add(new HoldableCollider(new Action<Holdable>(this.OnHoldable), null));
+            Add(new PlayerCollider(new Action<Player>(OnPlayer), null, null));
+            Add(new HoldableCollider(new Action<Holdable>(OnHoldable), null));
             Add(new LedgeBlocker(null));
             Depth = -8500;
             AttachToSolid = attachToSolid;
@@ -89,79 +89,79 @@ namespace FrostHelper
             {
                 base.Add(new StaticMover
                 {
-                    OnShake = new Action<Vector2>(this.OnShake),
-                    SolidChecker = new Func<Solid, bool>(this.IsRiding),
+                    OnShake = new Action<Vector2>(OnShake),
+                    SolidChecker = new Func<Solid, bool>(IsRiding),
                     OnDestroy = new Action(base.RemoveSelf)
                 });
             }
             randomSeed = Calc.Random.Next();
-            if (this.isCore)
+            if (isCore)
             {
                 Add(new CoreModeListener(new Action<Session.CoreModes>(OnChangeMode)));
             }
             float bloomAlpha = data.Float("bloomAlpha", 0.0f);
             if (bloomAlpha != 0.0f)
-                Add(new BloomPoint(this.Collider.Center, bloomAlpha, data.Float("bloomRadius", 0f)));
+                Add(new BloomPoint(Collider.Center, bloomAlpha, data.Float("bloomRadius", 0f)));
         }
         
         public override void Awake(Scene scene)
         {
-            if (this.isCore)
+            if (isCore)
             {
-                base.Add(new CoreModeListener(new Action<Session.CoreModes>(this.OnChangeMode)));
+                base.Add(new CoreModeListener(new Action<Session.CoreModes>(OnChangeMode)));
                 if ((scene as Level).CoreMode == Session.CoreModes.Cold)
                 {
-                    this.bgDirectory = directory + "/bg";
-                    this.fgDirectory = directory + "/fg";
+                    bgDirectory = directory + "/bg";
+                    fgDirectory = directory + "/fg";
                 }
                 else
                 {
-                    this.bgDirectory = directory + "/hot/bg";
-                    this.fgDirectory = directory + "/hot/fg";
+                    bgDirectory = directory + "/hot/bg";
+                    fgDirectory = directory + "/hot/fg";
                 }
             }
-            this.orig_Awake(scene);
+            orig_Awake(scene);
         }
         
         public void ForceInstantiate()
         {
-            this.CreateSprites();
-            this.Visible = true;
+            CreateSprites();
+            Visible = true;
         }
         
         public override void Update()
         {
-            if (!this.Visible)
+            if (!Visible)
             {
-                this.Collidable = false;
-                if (this.InView())
+                Collidable = false;
+                if (InView())
                 {
-                    this.Visible = true;
-                    if (!this.expanded)
+                    Visible = true;
+                    if (!expanded)
                     {
-                        this.CreateSprites();
+                        CreateSprites();
                     }
                 }
             }
             else
             {
                 base.Update();
-                if (base.Scene.OnInterval(0.25f, this.offset) && !this.InView())
+                if (base.Scene.OnInterval(0.25f, offset) && !InView())
                 {
-                    this.Visible = false;
+                    Visible = false;
                 }
-                if (base.Scene.OnInterval(0.05f, this.offset))
+                if (base.Scene.OnInterval(0.05f, offset))
                 {
                     Player entity = base.Scene.Tracker.GetEntity<Player>();
                     if (entity != null)
                     {
-                        this.Collidable = (Math.Abs(entity.X - base.X) < 128f && Math.Abs(entity.Y - base.Y) < 128f);
+                        Collidable = (Math.Abs(entity.X - base.X) < 128f && Math.Abs(entity.Y - base.Y) < 128f);
                     }
                 }
             }
-            if (this.filler != null)
+            if (filler != null)
             {
-                this.filler.Position = this.Position;
+                filler.Position = Position;
             }
 
             if (moveWithWind)
@@ -189,29 +189,29 @@ namespace FrostHelper
         {
             if (Engine.DeltaTime == 0f)
             {
-                this.LiftSpeed.X = 0f;
+                LiftSpeed.X = 0f;
             }
             else
             {
-                this.LiftSpeed.X = moveV / Engine.DeltaTime;
+                LiftSpeed.X = moveV / Engine.DeltaTime;
             }
 
             int num = (int)moveV;
             if (num != 0)
             {
-                this.MoveHExact(num);
+                MoveHExact(num);
             }
         }
 
         public IEnumerator DummyWalkTo(float x, bool walkBackwards = false, float speedMultiplier = 1f, bool keepWalkingIntoWalls = false)
         {
-            if (Math.Abs(this.X - x) > 4f)
+            if (Math.Abs(X - x) > 4f)
             {
                 Player player = Scene.Tracker.GetEntity<Player>();
-                while (Math.Abs(x - this.X) > 4f && this.Scene != null && (keepWalkingIntoWalls || !this.CollideCheck<Solid>(this.Position + Vector2.UnitX * (float)Math.Sign(x - this.X))))
+                while (Math.Abs(x - X) > 4f && Scene != null && (keepWalkingIntoWalls || !CollideCheck<Solid>(Position + Vector2.UnitX * (float)Math.Sign(x - X))))
                 {
                     player.Speed.X = Calc.Approach(player.Speed.X, (float)Math.Sign(x - player.X) * 64f * speedMultiplier, 1000f * Engine.DeltaTime);
-                    this.Speed.X = Calc.Approach(this.Speed.X, (float)Math.Sign(x - this.X) * 64f * speedMultiplier, 1000f * Engine.DeltaTime);
+                    Speed.X = Calc.Approach(Speed.X, (float)Math.Sign(x - X) * 64f * speedMultiplier, 1000f * Engine.DeltaTime);
                     Level level = Scene as Level;
                     level.Camera.Approach(new Vector2(Position.X, level.Camera.Y), 0.02f);
                     player.Position = Position;
@@ -231,36 +231,36 @@ namespace FrostHelper
 
         private void CreateSprites()
         {
-            if (!this.expanded)
+            if (!expanded)
             {
-                Calc.PushRandom(this.randomSeed);
+                Calc.PushRandom(randomSeed);
                 Image image;
-                //List<MTexture> atlasSubtextures = GFX.Game.GetAtlasSubtextures(CrystalStaticSpinner.fgTextureLookup[this.color]);
-                List<MTexture> atlasSubtextures = GFX.Game.GetAtlasSubtextures(this.fgDirectory);
+                //List<MTexture> atlasSubtextures = GFX.Game.GetAtlasSubtextures(CrystalStaticSpinner.fgTextureLookup[color]);
+                List<MTexture> atlasSubtextures = GFX.Game.GetAtlasSubtextures(fgDirectory);
                 MTexture mtexture = Calc.Random.Choose(atlasSubtextures);
-                //mtexture. = Calc.HexToColor(this.tint);
-                if (!this.SolidCheck(new Vector2(base.X - 4f, base.Y - 4f)))
+                //mtexture. = Calc.HexToColor(tint);
+                if (!SolidCheck(new Vector2(base.X - 4f, base.Y - 4f)))
                 {
                     //base.Add(new Image(mtexture.GetSubtexture(0, 0, 14, 14, null)).SetOrigin(12f, 12f));
                     image = new Image(mtexture.GetSubtexture(0, 0, 14, 14, null)).SetOrigin(12f, 12f);
                     image.Color = Tint;
                     base.Add(image);
                 }
-                if (!this.SolidCheck(new Vector2(base.X + 4f, base.Y - 4f)))
+                if (!SolidCheck(new Vector2(base.X + 4f, base.Y - 4f)))
                 {
                     //base.Add(new Image(mtexture.GetSubtexture(10, 0, 14, 14, null)).SetOrigin(2f, 12f));
                     image = new Image(mtexture.GetSubtexture(10, 0, 14, 14, null)).SetOrigin(2f, 12f);
                     image.Color = Tint;
                     base.Add(image);
                 }
-                if (!this.SolidCheck(new Vector2(base.X + 4f, base.Y + 4f)))
+                if (!SolidCheck(new Vector2(base.X + 4f, base.Y + 4f)))
                 {
                     //base.Add(new Image(mtexture.GetSubtexture(10, 10, 14, 14, null)).SetOrigin(2f, 2f));
                     image = new Image(mtexture.GetSubtexture(10, 10, 14, 14, null)).SetOrigin(2f, 2f);
                     image.Color = Tint;
                     base.Add(image);
                 }
-                if (!this.SolidCheck(new Vector2(base.X - 4f, base.Y + 4f)))
+                if (!SolidCheck(new Vector2(base.X - 4f, base.Y + 4f)))
                 {
                     //base.Add(new Image(mtexture.GetSubtexture(0, 10, 14, 14, null)).SetOrigin(12f, 2f));
                     image = new Image(mtexture.GetSubtexture(0, 10, 14, 14, null)).SetOrigin(12f, 2f);
@@ -268,39 +268,39 @@ namespace FrostHelper
                     base.Add(image);
                 } 
                 //image = new Image(mtexture).CenterOrigin();
-                //image.Color = Calc.HexToColor(this.tint);
+                //image.Color = Calc.HexToColor(tint);
                 //base.Add(image);
-                foreach (Entity entity in base.Scene.Tracker.GetEntities<CrystalStaticSpinner>())
+                foreach (Entity entity in base.Scene.Tracker.GetEntities<CustomSpinner>())
                 {
-                    CrystalStaticSpinner crystalStaticSpinner = (CrystalStaticSpinner)entity;
+                    CustomSpinner crystalStaticSpinner = (CustomSpinner)entity;
                     // crystalStaticSpinner != this
-                    if (crystalStaticSpinner.ID > ID && crystalStaticSpinner.AttachToSolid == this.AttachToSolid && (crystalStaticSpinner.Position - this.Position).LengthSquared() < 576f)
+                    if (crystalStaticSpinner.ID > ID && crystalStaticSpinner.AttachToSolid == AttachToSolid && (crystalStaticSpinner.Position - Position).LengthSquared() < 576f)
                     {
-                        this.AddSprite((this.Position + crystalStaticSpinner.Position) / 2f - this.Position);
+                        AddSprite((Position + crystalStaticSpinner.Position) / 2f - Position);
                     }
                     
                 }
-                base.Scene.Add(this.border = new CrystalStaticSpinner.Border(this, this.filler));
-                this.expanded = true;
+                base.Scene.Add(border = new CustomSpinner.Border(this, filler));
+                expanded = true;
                 Calc.PopRandom();
             }
         }
         // Token: 0x060011C7 RID: 4551 RVA: 0x00041EDC File Offset: 0x000400DC
         private void AddSprite(Vector2 offset)
         {
-            if (this.filler == null)
+            if (filler == null)
             {
-                base.Scene.Add(this.filler = new Entity(this.Position));
-                this.filler.Depth = base.Depth + 1;
+                base.Scene.Add(filler = new Entity(Position));
+                filler.Depth = base.Depth + 1;
             }
-            //List<MTexture> atlasSubtextures = GFX.Game.GetAtlasSubtextures(CrystalStaticSpinner.bgTextureLookup[this.color]);
-            List<MTexture> atlasSubtextures = GFX.Game.GetAtlasSubtextures(this.bgDirectory);
+            //List<MTexture> atlasSubtextures = GFX.Game.GetAtlasSubtextures(CrystalStaticSpinner.bgTextureLookup[color]);
+            List<MTexture> atlasSubtextures = GFX.Game.GetAtlasSubtextures(bgDirectory);
             Image image = new Image(Calc.Random.Choose(atlasSubtextures));
             image.Position = offset;
             image.Rotation = (float)Calc.Random.Choose(0, 1, 2, 3) * 1.57079637f;
             image.CenterOrigin();
             image.Color = Tint;
-            this.filler.Add(image);
+            filler.Add(image);
         }
 
         // Token: 0x060011C8 RID: 4552 RVA: 0x00041F84 File Offset: 0x00040184
@@ -326,21 +326,21 @@ namespace FrostHelper
         // Token: 0x060011C9 RID: 4553 RVA: 0x00041FF0 File Offset: 0x000401F0
         private void ClearSprites()
         {
-            if (this.filler != null)
+            if (filler != null)
             {
-                this.filler.RemoveSelf();
+                filler.RemoveSelf();
             }
-            this.filler = null;
-            if (this.border != null)
+            filler = null;
+            if (border != null)
             {
-                this.border.RemoveSelf();
+                border.RemoveSelf();
             }
-            this.border = null;
+            border = null;
             foreach (Image image in base.Components.GetAll<Image>())
             {
                 image.RemoveSelf();
             }
-            this.expanded = false;
+            expanded = false;
         }
 
         private void OnShake(Vector2 pos)
@@ -377,13 +377,13 @@ namespace FrostHelper
         // Token: 0x060011CE RID: 4558 RVA: 0x0004210C File Offset: 0x0004030C
         public override void Removed(Scene scene)
         {
-            if (this.filler != null && this.filler.Scene == scene)
+            if (filler != null && filler.Scene == scene)
             {
-                this.filler.RemoveSelf();
+                filler.RemoveSelf();
             }
-            if (this.border != null && this.border.Scene == scene)
+            if (border != null && border.Scene == scene)
             {
-                this.border.RemoveSelf();
+                border.RemoveSelf();
             }
             base.Removed(scene);
         }
@@ -391,12 +391,12 @@ namespace FrostHelper
         // Token: 0x060011CF RID: 4559 RVA: 0x00042164 File Offset: 0x00040364
         public void Destroy(bool boss = false)
         {
-            if (this.InView())
+            if (InView())
             {
-                Audio.Play("event:/game/06_reflection/fall_spike_smash", this.Position);
-                Color color = Calc.HexToColor(this.destroyColor);
+                Audio.Play("event:/game/06_reflection/fall_spike_smash", Position);
+                Color color = Calc.HexToColor(destroyColor);
 
-                CrystalDebris.Burst(this.Position, color, boss, 8);
+                CrystalDebris.Burst(Position, color, boss, 8);
             }
             base.RemoveSelf();
         }
@@ -405,9 +405,9 @@ namespace FrostHelper
         public void orig_Awake(Scene scene)
         {
             base.Awake(scene);
-            if (this.InView())
+            if (InView())
             {
-                this.CreateSprites();
+                CreateSprites();
             }
         }
         
@@ -426,7 +426,7 @@ namespace FrostHelper
         
         private Entity filler;
         
-        private CrystalStaticSpinner.Border border;
+        private CustomSpinner.Border border;
         
         private float offset;
         
@@ -438,20 +438,20 @@ namespace FrostHelper
         {
             public Border(Entity parent, Entity filler)
             {
-                this.drawing = new Entity[2];
-                this.drawing[0] = parent;
-                this.drawing[1] = filler;
+                drawing = new Entity[2];
+                drawing[0] = parent;
+                drawing[1] = filler;
                 base.Depth = parent.Depth + 2;
             }
             
             public override void Render()
             {
-                if (!this.drawing[0].Visible)
+                if (!drawing[0].Visible)
                 {
                     return;
                 }
-                this.DrawBorder(this.drawing[0]);
-                this.DrawBorder(this.drawing[1]);
+                DrawBorder(drawing[0]);
+                DrawBorder(drawing[1]);
             }
             
             private void DrawBorder(Entity entity)

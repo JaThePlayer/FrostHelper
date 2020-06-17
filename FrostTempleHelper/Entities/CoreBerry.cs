@@ -170,9 +170,5 @@ namespace FrostTempleHelper
         }
 
         bool hidden;
-        // hackfix for TAS tools crashing when you grab the berry
-        #pragma warning disable CS0414
-        private float collectTimer = 0f;
-        #pragma warning restore CS0414
     }
 }

@@ -4,16 +4,16 @@ using Monocle;
 using Celeste;
 using Celeste.Mod.Entities;
 
-namespace FrostTempleHelper
+namespace FrostHelper
 {
     [CustomEntity("FrostHelper/CustomFireBarrier")]
     public class CustomFireBarrier : Entity
     {
         private bool isIce;
-
+        
         public CustomFireBarrier(EntityData data, Vector2 offset) : base(data.Position + offset)
         {
-            Color[] colors = new Color[3];
+            var colors = new Color[3];
             colors[0] = data.HexColor("surfaceColor");
             colors[1] = data.HexColor("edgeColor");
             colors[2] = data.HexColor("centerColor");
@@ -24,7 +24,8 @@ namespace FrostTempleHelper
             Collider = new Hitbox(width, height, 0f, 0f);
             Add(new PlayerCollider(new Action<Player>(this.OnPlayer), null, null));
             Add(new CoreModeListener(new Action<Session.CoreModes>(this.OnChangeMode)));
-            Add(Lava = new LavaRect(width, height, 4));
+            Lava = new LavaRect(width, height, 4);
+            Add(Lava);
             Lava.SurfaceColor = colors[0];
             Lava.EdgeColor = colors[1];
             Lava.CenterColor = colors[2];
@@ -54,7 +55,7 @@ namespace FrostTempleHelper
                 this.idleSfx.Play("event:/env/local/09_core/lavagate_idle", null, 0f);
             }
         }
-
+        
         private void OnChangeMode(Session.CoreModes mode)
         {
             if (!isIce)
@@ -123,7 +124,7 @@ namespace FrostTempleHelper
 
         public static ParticleType P_Deactivate;
 
-        private LavaRect Lava;
+        public LavaRect Lava;
 
         private Solid solid;
 

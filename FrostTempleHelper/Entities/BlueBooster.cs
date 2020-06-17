@@ -26,9 +26,9 @@ namespace FrostTempleHelper
         public float BoostTime;
         public BlueBooster(EntityData data, Vector2 offset) : base(data.Position + offset)
         {
-            base.Depth = -8500;
-            base.Collider = new Circle(10f, 0f, 2f);
-            this.sprite = new Sprite(GFX.Game, data.Attr("directory", "objects/FrostHelper/blueBooster/"));
+            Depth = -8500;
+            Collider = new Circle(10f, 0f, 2f);
+            sprite = new Sprite(GFX.Game, data.Attr("directory", "objects/FrostHelper/blueBooster/"));
             sprite.Visible = true;
             sprite.CenterOrigin();
             sprite.Justify = (new Vector2(0.5f, 0.5f));
@@ -39,19 +39,19 @@ namespace FrostTempleHelper
             sprite.Play("loop", false);
             Add(sprite);
 
-            base.Add(new PlayerCollider(new Action<Player>(this.OnPlayer), null, null));
-            base.Add(this.light = new VertexLight(Color.White, 1f, 16, 32));
-            base.Add(this.bloom = new BloomPoint(0.1f, 16f));
-            base.Add(this.wiggler = Wiggler.Create(0.5f, 4f, delegate (float f)
+            Add(new PlayerCollider(new Action<Player>(OnPlayer), null, null));
+            Add(light = new VertexLight(Color.White, 1f, 16, 32));
+            Add(bloom = new BloomPoint(0.1f, 16f));
+            Add(wiggler = Wiggler.Create(0.5f, 4f, delegate (float f)
             {
-                this.sprite.Scale = Vector2.One * (1f + f * 0.25f);
+                sprite.Scale = Vector2.One * (1f + f * 0.25f);
             }, false, false));
-            base.Add(this.dashRoutine = new Coroutine(false));
-            base.Add(this.dashListener = new DashListener());
-            base.Add(new MirrorReflection());
-            base.Add(this.loopingSfx = new SoundSource());
-            this.dashListener.OnDash = new Action<Vector2>(this.OnPlayerDashed);
-            this.particleType = (Booster.P_Burst);
+            Add(dashRoutine = new Coroutine(false));
+            Add(dashListener = new DashListener());
+            Add(new MirrorReflection());
+            Add(loopingSfx = new SoundSource());
+            dashListener.OnDash = new Action<Vector2>(OnPlayerDashed);
+            particleType = (Booster.P_Burst);
 
             RespawnTime = data.Float("respawnTime", 1f);
             BoostTime = data.Float("boostTime", 0.3f);
@@ -68,45 +68,45 @@ namespace FrostTempleHelper
             Image image = new Image(GFX.Game["objects/booster/outline"]);
             image.CenterOrigin();
             image.Color = Color.White * 0.75f;
-            this.outline = new Entity(this.Position);
-            this.outline.Depth = 8999;
-            this.outline.Visible = false;
-            this.outline.Add(image);
-            this.outline.Add(new MirrorReflection());
-            scene.Add(this.outline);
+            outline = new Entity(Position);
+            outline.Depth = 8999;
+            outline.Visible = false;
+            outline.Add(image);
+            outline.Add(new MirrorReflection());
+            scene.Add(outline);
         }
 
         public void Appear()
         {
-            Audio.Play(reappearSfx, this.Position);
-            this.sprite.Play("appear", false, false);
-            this.wiggler.Start();
-            this.Visible = true;
-            this.AppearParticles();
+            Audio.Play(reappearSfx, Position);
+            sprite.Play("appear", false, false);
+            wiggler.Start();
+            Visible = true;
+            AppearParticles();
         }
 
         private void AppearParticles()
         {
-            ParticleSystem particlesBG = base.SceneAs<Level>().ParticlesBG;
+            ParticleSystem particlesBG = SceneAs<Level>().ParticlesBG;
             for (int i = 0; i < 360; i += 30)
             {
-                particlesBG.Emit(Booster.P_Appear, 1, base.Center, Vector2.One * 2f, ParticleColor, i * 0.0174532924f);
+                particlesBG.Emit(Booster.P_Appear, 1, Center, Vector2.One * 2f, ParticleColor, i * 0.0174532924f);
             }
         }
 
         private void OnPlayer(Player player)
         {
-            bool flag = this.respawnTimer <= 0f && this.cannotUseTimer <= 0f && !this.BoostingPlayer;
+            bool flag = respawnTimer <= 0f && cannotUseTimer <= 0f && !BoostingPlayer;
             if (flag)
             {
-                this.cannotUseTimer = 0.45f;
+                cannotUseTimer = 0.45f;
 
                 Boost(player, this);
 
-                Audio.Play(enterSfx, this.Position);
-                this.wiggler.Start();
-                this.sprite.Play("inside", false, false);
-                this.sprite.FlipX = (player.Facing == Facings.Left);
+                Audio.Play(enterSfx, Position);
+                wiggler.Start();
+                sprite.Play("inside", false, false);
+                sprite.FlipX = (player.Facing == Facings.Left);
             }
         }
 
@@ -120,147 +120,147 @@ namespace FrostTempleHelper
             FrostHelper.FrostModule.player_boostTarget.SetValue(player, booster.Center);
             booster.StartedBoosting = true;
             //player.CurrentBooster = booster;
-            //this.LastBooster = booster;
+            //LastBooster = booster;
         }
         public Color ParticleColor;
         public void PlayerBoosted(Player player, Vector2 direction)
         {
             StartedBoosting = false;
-            Audio.Play(boostSfx, this.Position);
-            this.BoostingPlayer = true;
-            base.Tag = (Tags.Persistent | Tags.TransitionUpdate);
-            this.sprite.Play("spin", false, false);
-            this.sprite.FlipX = (player.Facing == Facings.Left);
-            this.outline.Visible = true;
-            this.wiggler.Start();
-            this.dashRoutine.Replace(this.BoostRoutine(player, direction));
+            Audio.Play(boostSfx, Position);
+            BoostingPlayer = true;
+            Tag = (Tags.Persistent | Tags.TransitionUpdate);
+            sprite.Play("spin", false, false);
+            sprite.FlipX = (player.Facing == Facings.Left);
+            outline.Visible = true;
+            wiggler.Start();
+            dashRoutine.Replace(BoostRoutine(player, direction));
         }
 
         private IEnumerator BoostRoutine(Player player, Vector2 dir)
         {
             float angle = (-dir).Angle();
-            while ((player.StateMachine.State == 2 || player.StateMachine.State == 5) && this.BoostingPlayer)
+            while ((player.StateMachine.State == 2 || player.StateMachine.State == 5) && BoostingPlayer)
             {
                 if (player.Dead)
                 {
                     PlayerDied();
                 } else
                 {
-                    this.sprite.RenderPosition = player.Center + Booster.playerOffset;
-                    this.loopingSfx.Position = this.sprite.Position;
-                    bool flag = this.Scene.OnInterval(0.02f);
+                    sprite.RenderPosition = player.Center + Booster.playerOffset;
+                    loopingSfx.Position = sprite.Position;
+                    bool flag = Scene.OnInterval(0.02f);
                     if (flag)
                     {
-                        (this.Scene as Level).ParticlesBG.Emit(this.particleType, 2, player.Center - dir * 3f + new Vector2(0f, -2f), new Vector2(3f, 3f), ParticleColor, angle);
+                        (Scene as Level).ParticlesBG.Emit(particleType, 2, player.Center - dir * 3f + new Vector2(0f, -2f), new Vector2(3f, 3f), ParticleColor, angle);
                     }
                     yield return null;
                 }
                 
             }
-            this.PlayerReleased();
+            PlayerReleased();
             bool flag2 = player.StateMachine.State == 4;
             if (flag2)
             {
-                this.sprite.Visible = false;
+                sprite.Visible = false;
             }
-            while (this.SceneAs<Level>().Transitioning)
+            while (SceneAs<Level>().Transitioning)
             {
                 yield return null;
             }
-            this.Tag = 0;
+            Tag = 0;
             yield break;
         }
 
         public void OnPlayerDashed(Vector2 direction)
         {
-            bool boostingPlayer = this.BoostingPlayer;
+            bool boostingPlayer = BoostingPlayer;
             if (boostingPlayer)
             {
-                this.BoostingPlayer = false;
+                BoostingPlayer = false;
             }
         }
 
         public void PlayerReleased()
         {
-            Audio.Play(endSfx, this.sprite.RenderPosition);
-            this.sprite.Play("pop", false, false);
-            this.cannotUseTimer = 0f;
-            this.respawnTimer = RespawnTime;
-            this.BoostingPlayer = false;
-            this.wiggler.Stop();
-            this.loopingSfx.Stop(true);
+            Audio.Play(endSfx, sprite.RenderPosition);
+            sprite.Play("pop", false, false);
+            cannotUseTimer = 0f;
+            respawnTimer = RespawnTime;
+            BoostingPlayer = false;
+            wiggler.Stop();
+            loopingSfx.Stop(true);
         }
 
         public void PlayerDied()
         {
-            bool boostingPlayer = this.BoostingPlayer;
+            bool boostingPlayer = BoostingPlayer;
             if (boostingPlayer)
             {
-                this.PlayerReleased();
-                this.dashRoutine.Active = false;
-                base.Tag = 0;
+                PlayerReleased();
+                dashRoutine.Active = false;
+                Tag = 0;
             }
         }
 
         public void Respawn()
         {
-            Audio.Play(reappearSfx, this.Position);
-            this.sprite.Position = Vector2.Zero;
-            this.sprite.Play("loop", true, false);
-            this.wiggler.Start();
-            this.sprite.Visible = true;
-            this.outline.Visible = false;
-            this.AppearParticles();
+            Audio.Play(reappearSfx, Position);
+            sprite.Position = Vector2.Zero;
+            sprite.Play("loop", true, false);
+            wiggler.Start();
+            sprite.Visible = true;
+            outline.Visible = false;
+            AppearParticles();
         }
 
         public override void Update()
         {
             base.Update();
-            bool flag = this.cannotUseTimer > 0f;
+            bool flag = cannotUseTimer > 0f;
             if (flag)
             {
-                this.cannotUseTimer -= Engine.DeltaTime;
+                cannotUseTimer -= Engine.DeltaTime;
             }
-            bool flag2 = this.respawnTimer > 0f;
+            bool flag2 = respawnTimer > 0f;
             if (flag2)
             {
-                this.respawnTimer -= Engine.DeltaTime;
-                bool flag3 = this.respawnTimer <= 0f;
+                respawnTimer -= Engine.DeltaTime;
+                bool flag3 = respawnTimer <= 0f;
                 if (flag3)
                 {
-                    this.Respawn();
+                    Respawn();
                 }
             }
-            bool flag4 = !this.dashRoutine.Active && this.respawnTimer <= 0f;
+            bool flag4 = !dashRoutine.Active && respawnTimer <= 0f;
             if (flag4)
             {
                 Vector2 target = Vector2.Zero;
-                Player entity = base.Scene.Tracker.GetEntity<Player>();
-                bool flag5 = entity != null && base.CollideCheck(entity);
+                Player entity = Scene.Tracker.GetEntity<Player>();
+                bool flag5 = entity != null && CollideCheck(entity);
                 if (flag5)
                 {
-                    target = entity.Center + Booster.playerOffset - this.Position;
+                    target = entity.Center + Booster.playerOffset - Position;
                 }
-                this.sprite.Position = Calc.Approach(this.sprite.Position, target, 80f * Engine.DeltaTime);
+                sprite.Position = Calc.Approach(sprite.Position, target, 80f * Engine.DeltaTime);
             }
-            bool flag6 = this.sprite.CurrentAnimationID == "inside" && !this.BoostingPlayer && !base.CollideCheck<Player>();
+            bool flag6 = sprite.CurrentAnimationID == "inside" && !BoostingPlayer && !CollideCheck<Player>();
             if (flag6)
             {
-                this.sprite.Play("loop", false, false);
+                sprite.Play("loop", false, false);
             }
         }
 
         public override void Render()
         {
-            Vector2 position = this.sprite.Position;
-            this.sprite.Position = position.Floor();
-            bool flag = this.sprite.CurrentAnimationID != "pop" && this.sprite.Visible;
+            Vector2 position = sprite.Position;
+            sprite.Position = position.Floor();
+            bool flag = sprite.CurrentAnimationID != "pop" && sprite.Visible;
             if (flag)
             {
-                this.sprite.DrawOutline(1);
+                sprite.DrawOutline(1);
             }
             base.Render();
-            this.sprite.Position = position;
+            sprite.Position = position;
         }
         
         // Note: this type is marked as 'beforefieldinit'.
