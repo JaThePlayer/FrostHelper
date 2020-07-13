@@ -23,6 +23,7 @@ Entities:
 - Custom Dream Blocks (Space Jam) -> Space Jam with customizable speed and colors. You can also allow the player to redirect their dash inside of them
 - Custom Crystal Spinners -> Speen but with customizable colors. They can also be dash-throughable
 - Core Berries -> Berries that respect Core Mode -> Hot berries will dissapear when you switch to cold mode and vice versa
+- Bubblers -> Puts the player in the "Cassette Fly" state, just like Cassettes.
 
 Triggers:
 - Anxiety Trigger -> Triggers the Anxiety effect, the same as badeline causes
