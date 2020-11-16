@@ -24,6 +24,9 @@ Entities:
 - Custom Crystal Spinners -> Speen but with customizable colors. They can also be dash-throughable
 - Core Berries -> Berries that respect Core Mode -> Hot berries will dissapear when you switch to cold mode and vice versa
 - Bubblers -> Puts the player in the "Cassette Fly" state, just like Cassettes.
+- Colored Lightbeams
+- Entity Mover -> An entity that can move other entities
+- Custom Flutterbirds -> They have customizable colors.
 
 Triggers:
 - Anxiety Trigger -> Triggers the Anxiety effect, the same as badeline causes
