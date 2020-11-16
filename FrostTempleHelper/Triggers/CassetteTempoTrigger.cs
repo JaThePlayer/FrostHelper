@@ -8,7 +8,7 @@ using Celeste;
 using Microsoft.Xna.Framework;
 using MonoMod.Utils;
 
-namespace FrostTempleHelper
+namespace FrostHelper
 {
     public class CassetteTempoTrigger : Trigger
     {
@@ -41,8 +41,11 @@ namespace FrostTempleHelper
         {
             // let me speak to your manager... to change the tempo
             CassetteBlockManager manager = Scene.Tracker.GetEntity<CassetteBlockManager>();
-            DynData<CassetteBlockManager> data = new DynData<CassetteBlockManager>(manager);
-            data.Set("tempoMult", Tempo);
+            if (manager != null)
+            {
+                DynData<CassetteBlockManager> data = new DynData<CassetteBlockManager>(manager);
+                data.Set("tempoMult", Tempo);
+            }
         }
     }
 }

@@ -3,11 +3,13 @@ using Microsoft.Xna.Framework;
 using Monocle;
 using Celeste;
 
-namespace FrostTempleHelper
+namespace FrostHelper
 {
     public class CustomRisingLava : Entity
     {
         public bool ReverseCoreMode;
+        public bool DoRubberbanding;
+
         public CustomRisingLava(bool intro, float speed, Color[] coldColors, Color[] hotColors, bool reverseCoreMode)
         {
             delay = 0f;
@@ -26,6 +28,7 @@ namespace FrostTempleHelper
             Cold = coldColors;
             Hot = hotColors;
             ReverseCoreMode = reverseCoreMode;
+            
         }
 
         public static Color[] GetColors(EntityData data, bool cold)
@@ -41,6 +44,7 @@ namespace FrostTempleHelper
 
         public CustomRisingLava(EntityData data, Vector2 offset) : this(data.Bool("intro", false), data.Float("speed", -30f), GetColors(data, true), GetColors(data, false), data.Bool("reverseCoreMode", false))
         {
+            DoRubberbanding = data.Bool("doRubberbanding", true);
         }
 
         public override void Added(Scene scene)
@@ -65,14 +69,12 @@ namespace FrostTempleHelper
             else
             {
                 Player entity = Scene.Tracker.GetEntity<Player>();
-                bool flag2 = entity != null && entity.JustRespawned;
-                if (flag2)
+                if (entity != null && entity.JustRespawned)
                 {
                     waiting = true;
                 }
             }
-            bool flag3 = intro;
-            if (flag3)
+            if (intro)
             {
                 Visible = true;
             }
@@ -88,11 +90,9 @@ namespace FrostTempleHelper
 
         private void OnPlayer(Player player)
         {
-            bool invincible = SaveData.Instance.Assists.Invincible;
-            if (invincible)
+            if (SaveData.Instance.Assists.Invincible)
             {
-                bool flag = delay <= 0f;
-                if (flag)
+                if (delay <= 0f)
                 {
                     float from = Y;
                     float to = Y + 48f;
@@ -120,8 +120,7 @@ namespace FrostTempleHelper
             Player entity = Scene.Tracker.GetEntity<Player>();
             base.Update();
             Visible = true;
-            bool flag = waiting;
-            if (flag)
+            if (waiting)
             {
                 loopSfx.Param("rising", 0f);
                 bool flag2 = !intro && entity != null && entity.JustRespawned;
@@ -138,14 +137,12 @@ namespace FrostTempleHelper
             else
             {
                 float num = SceneAs<Level>().Camera.Bottom - 12f;
-                bool flag4 = Top > num + 96f;
-                if (flag4)
+                if (Top > num + 96f)
                 {
                     Top = num + 96f;
                 }
-                bool flag5 = Top > num;
                 float num2;
-                if (flag5)
+                if (DoRubberbanding && Top > num)
                 {
                     num2 = Calc.ClampedMap(Top - num, 0f, 96f, 1f, 2f);
                 }
@@ -153,8 +150,7 @@ namespace FrostTempleHelper
                 {
                     num2 = Calc.ClampedMap(num - Top, 0f, 32f, 1f, 0.5f);
                 }
-                bool flag6 = delay <= 0f;
-                if (flag6)
+                if (delay <= 0f)
                 {
                     loopSfx.Param("rising", 1f);
                     Y += Speed * num2 * Engine.DeltaTime;

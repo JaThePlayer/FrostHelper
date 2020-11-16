@@ -3,15 +3,52 @@ using System.Collections;
 using System.Collections.Generic;
 using Celeste;
 using Celeste.Mod;
+using Celeste.Mod.Entities;
 using Microsoft.Xna.Framework;
 using Monocle;
-
+using System.Linq;
+using System.Reflection;
 
 namespace FrostHelper
 {
     [Tracked(false)]
     public class CustomSpinner : Entity
     {
+        // Hooks
+        public static void LoadHooks()
+        {
+            On.Celeste.Mod.Entities.CrystalShatterTrigger.OnEnter += CrystalShatterTrigger_OnEnter;
+        }
+        
+        public static void UnloadHooks()
+        {
+            On.Celeste.Mod.Entities.CrystalShatterTrigger.OnEnter -= CrystalShatterTrigger_OnEnter;
+        }
+
+        // smh
+        private static FieldInfo CrystalShatterTrigger_mode = typeof(CrystalShatterTrigger).GetField("mode", BindingFlags.NonPublic | BindingFlags.Instance);
+        private static void CrystalShatterTrigger_OnEnter(On.Celeste.Mod.Entities.CrystalShatterTrigger.orig_OnEnter orig, CrystalShatterTrigger self, Player player)
+        {
+            var list = self.Scene.Tracker.GetEntities<CustomSpinner>();
+            if (list.Count > 0)
+            {
+                CrystalShatterTrigger.Modes mode = (CrystalShatterTrigger.Modes)CrystalShatterTrigger_mode.GetValue(self);
+                if (mode == CrystalShatterTrigger.Modes.All)
+                {
+                    Audio.Play("event:/game/06_reflection/boss_spikes_burst");
+                }
+                foreach (CustomSpinner crystalStaticSpinner in list)
+                {
+                    if (mode == CrystalShatterTrigger.Modes.All || self.CollideCheck(crystalStaticSpinner))
+                    {
+                        crystalStaticSpinner.Destroy(false);
+                    }
+                }
+            }
+            orig(self, player);
+        }
+
+
         public string bgDirectory;
         public string fgDirectory;
         public bool iceModeNext;
@@ -67,8 +104,8 @@ namespace FrostHelper
             bgDirectory = directory + "/bg";
             fgDirectory = directory + "/fg";
             moveWithWind = data.Bool("moveWithWind", false);
-            List<MTexture> atlasSubtextures = GFX.Game.GetAtlasSubtextures(this.bgDirectory);
-            MTexture mtexture = Calc.Random.Choose(atlasSubtextures);
+            //List<MTexture> atlasSubtextures = GFX.Game.GetAtlasSubtextures(this.bgDirectory);
+            //MTexture mtexture = Calc.Random.Choose(atlasSubtextures);
             coldDirectory = directory;
             this.destroyColor = destroyColor;
             this.isCore = isCore;
@@ -203,26 +240,6 @@ namespace FrostHelper
             }
         }
 
-        public IEnumerator DummyWalkTo(float x, bool walkBackwards = false, float speedMultiplier = 1f, bool keepWalkingIntoWalls = false)
-        {
-            if (Math.Abs(X - x) > 4f)
-            {
-                Player player = Scene.Tracker.GetEntity<Player>();
-                while (Math.Abs(x - X) > 4f && Scene != null && (keepWalkingIntoWalls || !CollideCheck<Solid>(Position + Vector2.UnitX * (float)Math.Sign(x - X))))
-                {
-                    player.Speed.X = Calc.Approach(player.Speed.X, (float)Math.Sign(x - player.X) * 64f * speedMultiplier, 1000f * Engine.DeltaTime);
-                    Speed.X = Calc.Approach(Speed.X, (float)Math.Sign(x - X) * 64f * speedMultiplier, 1000f * Engine.DeltaTime);
-                    Level level = Scene as Level;
-                    level.Camera.Approach(new Vector2(Position.X, level.Camera.Y), 0.02f);
-                    player.Position = Position;
-                    yield return null;
-                }
-            }
-            yield break;
-        }
-
-        
-
         private bool InView()
         {
             Camera camera = (base.Scene as Level).Camera;
@@ -238,38 +255,37 @@ namespace FrostHelper
                 //List<MTexture> atlasSubtextures = GFX.Game.GetAtlasSubtextures(CrystalStaticSpinner.fgTextureLookup[color]);
                 List<MTexture> atlasSubtextures = GFX.Game.GetAtlasSubtextures(fgDirectory);
                 MTexture mtexture = Calc.Random.Choose(atlasSubtextures);
-                //mtexture. = Calc.HexToColor(tint);
+                int imgCount = 0;
+                bool c1,c2,c3,c4 = false;
+                c1 = false;
+                c2 = false;
+                c3 = false;
+
                 if (!SolidCheck(new Vector2(base.X - 4f, base.Y - 4f)))
                 {
-                    //base.Add(new Image(mtexture.GetSubtexture(0, 0, 14, 14, null)).SetOrigin(12f, 12f));
-                    image = new Image(mtexture.GetSubtexture(0, 0, 14, 14, null)).SetOrigin(12f, 12f);
-                    image.Color = Tint;
-                    base.Add(image);
+                    c1 = true;
+                    imgCount++;
                 }
                 if (!SolidCheck(new Vector2(base.X + 4f, base.Y - 4f)))
                 {
-                    //base.Add(new Image(mtexture.GetSubtexture(10, 0, 14, 14, null)).SetOrigin(2f, 12f));
-                    image = new Image(mtexture.GetSubtexture(10, 0, 14, 14, null)).SetOrigin(2f, 12f);
-                    image.Color = Tint;
-                    base.Add(image);
+                    c2 = true;
+                    imgCount++;
                 }
                 if (!SolidCheck(new Vector2(base.X + 4f, base.Y + 4f)))
                 {
-                    //base.Add(new Image(mtexture.GetSubtexture(10, 10, 14, 14, null)).SetOrigin(2f, 2f));
-                    image = new Image(mtexture.GetSubtexture(10, 10, 14, 14, null)).SetOrigin(2f, 2f);
-                    image.Color = Tint;
-                    base.Add(image);
+                    c3 = true;
+                    imgCount++;
                 }
                 if (!SolidCheck(new Vector2(base.X - 4f, base.Y + 4f)))
                 {
-                    //base.Add(new Image(mtexture.GetSubtexture(0, 10, 14, 14, null)).SetOrigin(12f, 2f));
-                    image = new Image(mtexture.GetSubtexture(0, 10, 14, 14, null)).SetOrigin(12f, 2f);
-                    image.Color = Tint;
-                    base.Add(image);
-                } 
-                //image = new Image(mtexture).CenterOrigin();
-                //image.Color = Calc.HexToColor(tint);
-                //base.Add(image);
+                    c4 = true;
+                    imgCount++;
+                }
+                // technically this solution is twice as fast! Unfortunately it has side-effects that make this not usable
+                /*
+                image = new Image(mtexture).CenterOrigin();
+                image.Color = Calc.HexToColor(tint);
+                Add(image); */
                 foreach (Entity entity in base.Scene.Tracker.GetEntities<CustomSpinner>())
                 {
                     CustomSpinner crystalStaticSpinner = (CustomSpinner)entity;
@@ -280,7 +296,44 @@ namespace FrostHelper
                     }
                     
                 }
-                base.Scene.Add(border = new CustomSpinner.Border(this, filler));
+                if (imgCount == 4)
+                {
+                    image = new Image(mtexture).CenterOrigin();
+                    image.Color = Tint;
+                    Add(image);
+                    //image.Visible = false;
+                    image.Active = false;
+                    Scene.Add(border = new Border(image, filler, this));
+                } else
+                {
+                    // only spawn quarter images if it's needed to avoid edge cases
+                    if (c1)
+                    {
+                        image = new Image(mtexture.GetSubtexture(0, 0, 14, 14, null)).SetOrigin(12f, 12f);
+                        image.Color = Tint;
+                        Add(image);
+                    }
+                    if (c2)
+                    {
+                        image = new Image(mtexture.GetSubtexture(10, 0, 14, 14, null)).SetOrigin(2f, 12f);
+                        image.Color = Tint;
+                        Add(image);
+                    }
+                    if (c3)
+                    {
+                        image = new Image(mtexture.GetSubtexture(10, 10, 14, 14, null)).SetOrigin(2f, 2f);
+                        image.Color = Tint;
+                        Add(image);
+                    }
+                    if (c4)
+                    {
+                        image = new Image(mtexture.GetSubtexture(0, 10, 14, 14, null)).SetOrigin(12f, 2f);
+                        image.Color = Tint;
+                        Add(image);
+                    }
+                    Scene.Add(border = new Border(null, filler, this));
+                }
+                
                 expanded = true;
                 Calc.PopRandom();
             }
@@ -433,15 +486,84 @@ namespace FrostHelper
         private bool expanded;
         
         private int randomSeed;
-        
+
         private class Border : Entity
         {
+            private Image fg;
+            private Entity fill;
+            private Entity parent;
+
+            public Border(Image fg, Entity fill, Entity parent)
+            {
+                this.fg = fg;
+                this.fill = fill;
+                this.parent = parent;
+                Depth = parent.Depth + 2;
+            }
+
+            public override void Render()
+            {
+                if (!parent.Visible)
+                {
+                    return;
+                }
+                if (fg != null)
+                {
+                    // new method, faster, only used if the spinner has 4 sprites due to edge cases
+                    DrawBorder(fg);
+                } else
+                {
+                    // old method, slower
+                    foreach (Component c in parent.Components)
+                    {
+                        if (c is Image img)
+                        {
+                            DrawBorder(img);
+                        }
+                    }
+                }
+                
+                if (fill != null)
+                    foreach (Component c in fill.Components)
+                    {
+                        if (c is Image img)
+                        {
+                            DrawBorder(img);
+                        }  
+                    }
+            }
+
+            private void DrawBorder(Image image)
+            {
+                
+                Vector2 position = image.Position;
+
+                Color color = image.Color;
+                image.Color = Color.Black;
+
+                image.Position = position + new Vector2(0f, -1f);
+                image.Render();
+                image.Position.Y += 2f; //= position + new Vector2(0f, 1f);
+                image.Render();
+                image.Position = position + new Vector2(-1f, 0f);
+                image.Render();
+                image.Position.X += 2f; //= position + new Vector2(1f, 0f);
+                image.Render();
+
+                image.Position = position;
+                image.Color = color;
+            }
+        }
+
+        /* private class Border : Entity
+        {
+
             public Border(Entity parent, Entity filler)
             {
                 drawing = new Entity[2];
                 drawing[0] = parent;
                 drawing[1] = filler;
-                base.Depth = parent.Depth + 2;
+                Depth = parent.Depth + 2;
             }
             
             public override void Render()
@@ -451,23 +573,20 @@ namespace FrostHelper
                     return;
                 }
                 DrawBorder(drawing[0]);
-                DrawBorder(drawing[1]);
+                if (drawing[1] != null)
+                    DrawBorder(drawing[1]);
             }
-            
+
             private void DrawBorder(Entity entity)
             {
-                if (entity == null)
-                {
-                    return;
-                }
                 foreach (Component component in entity.Components)
                 {
-                    Image image = component as Image;
-                    if (image != null)
+                    if (component is Image image)
                     {
                         Color color = image.Color;
                         Vector2 position = image.Position;
                         image.Color = Color.Black;
+                        
                         image.Position = position + new Vector2(0f, -1f);
                         image.Render();
                         image.Position = position + new Vector2(0f, 1f);
@@ -483,6 +602,6 @@ namespace FrostHelper
             }
             
             private Entity[] drawing;
-        }
+        } */
     }
 }

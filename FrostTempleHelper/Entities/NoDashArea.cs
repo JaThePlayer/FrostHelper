@@ -9,7 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Celeste.Mod;
 
-namespace FrostTempleHelper
+namespace FrostHelper
 {
     public class NoDashArea : Entity
     {
@@ -144,21 +144,19 @@ namespace FrostTempleHelper
         {
             Color color = Color.White * 0.5f;
             Draw.Rect(Collider, Color.Red * 0.25f);
-            foreach (Vector2 value in this.particles)
+            foreach (Vector2 value in particles)
             {
                 Draw.Pixel.Draw(Position + value, Vector2.Zero, color);
             }
-            bool flashing = Flashing;
-            if (flashing)
+            if (Flashing)
             {
-                Draw.Rect(Collider, Color.White * this.Flash * 0.25f);
+                Draw.Rect(Collider, Color.White * Flash * 0.25f);
             }
         }
 
         public void RenderDisplacement()
         {
             Draw.Rect(X, Y, Width, Height, new Color(0.5f, 0.5f, 0.8f, 1f));
-            
         }
 
     }

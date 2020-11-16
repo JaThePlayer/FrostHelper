@@ -25,8 +25,11 @@ namespace FrostHelper
 
         bool rainbow;
 
+        bool persistent;
+
         public LightningColorTrigger(EntityData data, Vector2 offset) : base(data, offset)
         {
+            persistent = data.Bool("persistent", false);
             Color c1 = data.HexColor("color1", Calc.HexToColor("fcf579"));
             Color c2 = data.HexColor("color2", Calc.HexToColor("8cf7e2"));
             electricityColors = new Color[]
@@ -35,12 +38,18 @@ namespace FrostHelper
             };
             rainbow = data.Bool("rainbow");
         }
-
+        
         public override void OnEnter(Player player)
         {
             base.OnEnter(player);
             LightningRenderer r = player.Scene.Tracker.GetEntity<LightningRenderer>();
             ChangeLightningColor(r, electricityColors);
+            if (persistent)
+            {
+                var session = SceneAs<Level>().Session;
+                SessionHelper.WriteColorToSession(session, "fh.lightningColorA", electricityColors[0]);
+                SessionHelper.WriteColorToSession(session, "fh.lightningColorB", electricityColors[1]);
+            }
             if (rainbow)
             {
                 Coroutine c = r.Get<Coroutine>();

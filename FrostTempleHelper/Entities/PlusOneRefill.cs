@@ -150,7 +150,7 @@ namespace FrostHelper
 
         private IEnumerator RefillRoutine(Player player)
         {
-            //Celeste.Celeste.Freeze(0.05f);
+            Celeste.Celeste.Freeze(0.05f);
             yield return null;
             level.Shake(0.3f);
             sprite.Visible = (this.flash.Visible = false);

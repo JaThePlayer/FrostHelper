@@ -61,10 +61,26 @@ namespace FrostHelper
             //speedX = (dir == Directions.Right) ? 30f : -30f;
         }
 
+        bool HasNonGhostRider()
+        {
+            using (List<Entity>.Enumerator enumerator = Scene.Tracker.GetEntities<Actor>().GetEnumerator())
+            {
+                while (enumerator.MoveNext())
+                {
+                    var actor = enumerator.Current;
+                    if (((Actor)actor).IsRiding(this) && actor.GetType().Name != "Ghost")
+                    {
+                        return true;
+                    }
+                }
+            };
+            return false;
+        }
+
         public override void Update()
         {
             Player player = base.Scene.Tracker.GetEntity<Player>();
-            bool flag = base.HasRider();
+            bool flag = HasNonGhostRider();
             if (base.Y > this.startY && (!flag || base.Y > this.startY + 1f))
             {
                 float moveV = -10f * Engine.DeltaTime;

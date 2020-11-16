@@ -7,7 +7,7 @@ using FMOD.Studio;
 using Microsoft.Xna.Framework;
 using Monocle;
 
-namespace FrostTempleHelper
+namespace FrostHelper
 {
     [Tracked(false)]
     public class ToggleSwapBlock : Solid

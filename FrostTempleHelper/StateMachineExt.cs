@@ -3,7 +3,7 @@ using System;
 using System.Collections;
 using System.Reflection;
 
-namespace FrostTempleHelper
+namespace FrostHelper
 {
     internal static class StateMachineExt
     {

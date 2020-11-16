@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using Monocle;
 using Celeste;
 using Celeste.Mod.Entities;
+using Celeste.Mod;
 
 namespace FrostHelper
 {
@@ -24,7 +25,7 @@ namespace FrostHelper
             Collider = new Hitbox(width, height, 0f, 0f);
             Add(new PlayerCollider(new Action<Player>(this.OnPlayer), null, null));
             Add(new CoreModeListener(new Action<Session.CoreModes>(this.OnChangeMode)));
-            Lava = new LavaRect(width, height, 4);
+            Lava = new LavaRect(width, height, isIce ? 2 : 4);
             Add(Lava);
             Lava.SurfaceColor = colors[0];
             Lava.EdgeColor = colors[1];
@@ -32,6 +33,14 @@ namespace FrostHelper
             Lava.SmallWaveAmplitude = 2f;
             Lava.BigWaveAmplitude = 1f;
             Lava.CurveAmplitude = 1f;
+            if (isIce)
+            {
+                Lava.UpdateMultiplier = 0f;
+                Lava.Spikey = 3f;
+                Lava.SmallWaveAmplitude = 1f;
+            }
+            
+            lavaRect = new Rectangle((int)(data.Position + offset).X, (int)(data.Position + offset).Y, (int)width, (int)height);
             Depth = -8500;
             Add(this.idleSfx = new SoundSource());
             idleSfx.Position = new Vector2(base.Width, base.Height) / 2f;
@@ -96,34 +105,36 @@ namespace FrostHelper
             player.Die((player.Center - Center).SafeNormalize(), false, true);
         }
 
+        private bool InView()
+        {
+            Camera camera = (Scene as Level).Camera;
+            //Logger.Log(lavaRect.Location.ToString(), new Point((int)camera.Position.X, (int)camera.Position.Y).ToString());
+            return lavaRect.Location.X + lavaRect.Width > camera.X - 16f && lavaRect.Location.Y + lavaRect.Height > camera.Y - 16f && lavaRect.Location.X < camera.X + 320f + 16f && lavaRect.Location.Y < camera.Y + 180f + 16f;//lavaRect.Contains(new Point((int)camera.Position.X, (int)camera.Position.Y));//
+        }
+
         public override void Update()
         {
-            bool transitioning = (base.Scene as Level).Transitioning;
-            if (transitioning)
+            Visible = Collidable && InView();
+            if ((Scene as Level).Transitioning)
             {
-                bool flag = this.idleSfx != null;
-                if (flag)
-                {
-                    this.idleSfx.UpdateSfxPosition();
-                }
+                idleSfx?.UpdateSfxPosition();
             }
             else
             {
+                if (Visible)
                 base.Update();
             }
         }
 
         public override void Render()
         {
-            bool collidable = this.Collidable;
-            if (collidable)
+            //if (Collidable)
             {
                 base.Render();
             }
         }
 
-        public static ParticleType P_Deactivate;
-
+        private Rectangle lavaRect;
         public LavaRect Lava;
 
         private Solid solid;

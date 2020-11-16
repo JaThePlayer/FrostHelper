@@ -754,5 +754,74 @@ namespace FrostHelper
             }
             return false;
         }
+
+        #region Hooks
+        // Hook initialization
+        public static void Load()
+        {
+            // legacy
+            On.Celeste.Player.OnCollideH += Player_OnCollideH;
+            On.Celeste.Player.OnCollideV += Player_OnCollideV;
+            On.Celeste.Player.RefillDash += Player_RefillDash;
+            
+        }
+
+        public static void Unload()
+        {
+            // legacy
+            On.Celeste.Player.OnCollideH -= Player_OnCollideH;
+            On.Celeste.Player.OnCollideV -= Player_OnCollideV;
+            On.Celeste.Player.RefillDash -= Player_RefillDash;
+        }
+
+        private static bool Player_RefillDash(On.Celeste.Player.orig_RefillDash orig, Player self)
+        {
+            if (self.StateMachine.State != FrostModule.CustomDreamDashState)
+                return orig(self);
+            return false;
+        }
+
+        
+
+        private static void Player_OnCollideV(On.Celeste.Player.orig_OnCollideV orig, Player self, CollisionData data)
+        {
+            if (self.StateMachine.State == Player.StDash || self.StateMachine.State == Player.StRedDash)
+            {
+                bool flag14 = CustomDreamBlock.DreamDashCheck(self, Vector2.UnitY * (float)Math.Sign(self.Speed.Y));
+                if (flag14)
+                {
+                    self.StateMachine.State = FrostModule.CustomDreamDashState;
+                    DynData<Player> ddata = new DynData<Player>(self);
+                    ddata.Set("dashAttackTimer", 0f);
+                    ddata.Set("gliderBoostTimer", 0f);
+                    return;
+                }
+            }
+            if (self.StateMachine.State != FrostModule.CustomDreamDashState)
+            {
+                orig(self, data);
+            }
+        }
+
+        private static void Player_OnCollideH(On.Celeste.Player.orig_OnCollideH orig, Player self, CollisionData data)
+        {
+            if (self.StateMachine.State == Player.StDash || self.StateMachine.State == Player.StRedDash)
+            {
+                bool flag14 = CustomDreamBlock.DreamDashCheck(self, Vector2.UnitX * (float)Math.Sign(self.Speed.X));
+                if (flag14)
+                {
+                    self.StateMachine.State = FrostModule.CustomDreamDashState;
+                    DynData<Player> ddata = new DynData<Player>(self);
+                    ddata.Set("dashAttackTimer", 0f);
+                    ddata.Set("gliderBoostTimer", 0f);
+                    return;
+                }
+            }
+            if (self.StateMachine.State != FrostModule.CustomDreamDashState)
+            {
+                orig(self, data);
+            }
+        }
+        #endregion
     }
 }

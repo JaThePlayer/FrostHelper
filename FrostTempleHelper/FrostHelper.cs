@@ -5,8 +5,9 @@ using System.Linq;
 using System.Reflection;
 using Celeste;
 using Celeste.Mod;
+using Celeste.Mod.Helpers;
 using Celeste.Mod.Meta;
-using FrostTempleHelper;
+using FrostHelper;
 using Microsoft.Xna.Framework;
 using Mono.Cecil.Cil;
 using Monocle;
@@ -41,6 +42,8 @@ namespace FrostHelper
         public override void LoadContent(bool firstLoad)
         {
             SpriteBank = new SpriteBank(GFX.Game, "Graphics/FrostHelper/CustomSprites.xml");
+            BadelineChaserBlock.Load();
+            BadelineChaserBlockActivator.Load();
         }
 
         // Set up any hooks, event handlers and your mod in general here.
@@ -55,7 +58,8 @@ namespace FrostHelper
             On.Celeste.Mod.Entities.LavaBlockerTrigger.OnLeave += LavaBlockerTrigger_OnLeave;
             // Lightning Color Trigger
             On.Celeste.LightningRenderer.Update += LightningRenderer_Update;
-            
+            On.Celeste.LightningRenderer.Awake += LightningRenderer_Awake;
+            On.Celeste.LightningRenderer.Reset += LightningRenderer_Reset;
             // Register new states
             On.Celeste.Player.ctor += Player_ctor;
 
@@ -63,12 +67,8 @@ namespace FrostHelper
             On.Celeste.Player.CallDashEvents += Player_CallDashEvents;
 
             // For Custom Dream Blocks
-            // legacy
-            On.Celeste.Player.OnCollideH += Player_OnCollideH;
-            On.Celeste.Player.OnCollideV += Player_OnCollideV;
-            On.Celeste.Player.RefillDash += Player_RefillDash;
-            On.Celeste.Player.DreamDashUpdate += Player_DreamDashUpdate;
-            On.Celeste.Player.DreamDashEnd += Player_DreamDashEnd;
+            CustomDreamBlock.Load();
+            CustomDreamBlockV2.Load();
             // Custom dream blocks and feathers
             On.Celeste.Player.UpdateSprite += Player_UpdateSprite;
 
@@ -79,47 +79,29 @@ namespace FrostHelper
             //IL.Celeste.Player.Update += modFeatherState;
             playerUpdateHook = new ILHook(typeof(Player).GetMethod("orig_Update", BindingFlags.Instance | BindingFlags.Public), modFeatherState);
             IL.Celeste.Player.Render += modFeatherState;
+
+            CustomSpinner.LoadHooks();
         }
 
-        private void Player_DreamDashEnd(On.Celeste.Player.orig_DreamDashEnd orig, Player self)
+        private void LightningRenderer_Reset(On.Celeste.LightningRenderer.orig_Reset orig, LightningRenderer self)
         {
-            orig(self);
-            new DynData<Player>(self).Set("lastDreamSpeed", 0f);
-        }
-
-        private int Player_DreamDashUpdate(On.Celeste.Player.orig_DreamDashUpdate orig, Player self)
-        {
-            CustomDreamBlockV2 cdm = self.CollideFirst<CustomDreamBlockV2>(); 
-            if (cdm != null)
+            if (self.Scene is Level)
             {
-                var dyn = new DynData<Player>(self);
-                float lastDreamSpeed = dyn.Get<float>("lastDreamSpeed");
-                if (lastDreamSpeed != cdm.DashSpeed)
+                var session = (self.Scene as Level).Session;
+                Color[] colors = new Color[2]
                 {
-                    self.Speed = self.DashDir * cdm.DashSpeed;
-                    dyn.Set<float>("lastDreamSpeed", cdm.DashSpeed * 1f);
-                }
-                if(cdm.AllowRedirects && self.CanDash)
+                SessionHelper.ReadColorFromSession(session, "fh.lightningColorA", Color.White),
+                SessionHelper.ReadColorFromSession(session, "fh.lightningColorB", Color.White)
+                };
+                if (colors[0] != Color.White)
                 {
-                    bool sameDir = Input.GetAimVector(Facings.Right) == self.DashDir;
-                    bool flag4 = !sameDir || cdm.AllowRedirectsInSameDir;
-                    if (flag4)
-                    {
-                        self.DashDir = Input.GetAimVector(Facings.Right);
-                        self.Speed = self.DashDir * self.Speed.Length();
-                        self.Dashes = Math.Max(0, self.Dashes - 1);
-                        Audio.Play("event:/char/madeline/dreamblock_enter");
-                        if (sameDir)
-                        {
-                            self.Speed *= cdm.SameDirectionSpeedMultiplier;
-                            self.DashDir *= (float)Math.Sign(cdm.SameDirectionSpeedMultiplier);
-                        }
-                        Input.Dash.ConsumeBuffer();
-                    }
+                    LightningColorTrigger.ChangeLightningColor(self, colors);
                 }
             }
-            return orig(self);
+            orig(self);
         }
+
+        
 
         ILHook playerUpdateHook;
 
@@ -145,14 +127,7 @@ namespace FrostHelper
 
         public static int CustomDreamDashState;
 
-        private bool Player_RefillDash(On.Celeste.Player.orig_RefillDash orig, Player self)
-        {
-            if (self.StateMachine.State != CustomDreamDashState)
-                return orig(self);
-            return false;
-        }
-
-        private void Player_UpdateSprite(On.Celeste.Player.orig_UpdateSprite orig, Player self)
+        private static void Player_UpdateSprite(On.Celeste.Player.orig_UpdateSprite orig, Player self)
         {
             if (self.StateMachine.State == CustomDreamDashState)
             {
@@ -160,53 +135,15 @@ namespace FrostHelper
                 {
                     self.Sprite.Play("dreamDashIn", false, false);
                 }
-            } else if (self.StateMachine.State == CustomFeatherState)
+            }
+            else if (self.StateMachine.State == CustomFeatherState)
             {
                 self.Sprite.Scale.X = Calc.Approach(self.Sprite.Scale.X, 1f, 1.75f * Engine.DeltaTime);
                 self.Sprite.Scale.Y = Calc.Approach(self.Sprite.Scale.Y, 1f, 1.75f * Engine.DeltaTime);
-            } else
+            }
+            else
             {
                 orig(self);
-            }
-        }
-
-        private void Player_OnCollideV(On.Celeste.Player.orig_OnCollideV orig, Player self, CollisionData data)
-        {
-            if (self.StateMachine.State == 2 || self.StateMachine.State == 5)
-            {
-                bool flag14 = CustomDreamBlock.DreamDashCheck(self, Vector2.UnitY * (float)Math.Sign(self.Speed.Y));
-                if (flag14)
-                {
-                    self.StateMachine.State = CustomDreamDashState;
-                    DynData<Player> ddata = new DynData<Player>(self);
-                    ddata.Set("dashAttackTimer", 0f);
-                    ddata.Set("gliderBoostTimer", 0f);
-                    return;
-                }
-            }
-            if (self.StateMachine.State != CustomDreamDashState)
-            {
-                orig(self, data);
-            }
-        }
-
-        private void Player_OnCollideH(On.Celeste.Player.orig_OnCollideH orig, Player self, CollisionData data)
-        {
-            if (self.StateMachine.State == 2 || self.StateMachine.State == 5)
-            {
-                bool flag14 = CustomDreamBlock.DreamDashCheck(self, Vector2.UnitX * (float)Math.Sign(self.Speed.X));
-                if (flag14)
-                {
-                    self.StateMachine.State = CustomDreamDashState;
-                    DynData<Player> ddata = new DynData<Player>(self);
-                    ddata.Set("dashAttackTimer", 0f);
-                    ddata.Set("gliderBoostTimer", 0f);
-                    return;
-                }
-            }
-            if (self.StateMachine.State != CustomDreamDashState)
-            {
-                orig(self, data);
             }
         }
         #endregion
@@ -813,16 +750,60 @@ namespace FrostHelper
         // Unload the entirety of your mod's content, remove any event listeners and undo all hooks.
         public override void Unload()
         {
+            // Legacy entity creation (for back when we didn't have the CustomEntity attribute)
             Everest.Events.Level.OnLoadEntity -= OnLoadEntity;
+            // Custom Rising Lava integrations
             On.Celeste.Mod.Entities.LavaBlockerTrigger.Awake -= LavaBlockerTrigger_Awake;
             On.Celeste.Mod.Entities.LavaBlockerTrigger.OnStay -= LavaBlockerTrigger_OnStay;
             On.Celeste.Mod.Entities.LavaBlockerTrigger.OnLeave -= LavaBlockerTrigger_OnLeave;
+            // Lightning Color Trigger
             On.Celeste.LightningRenderer.Update -= LightningRenderer_Update;
+            On.Celeste.LightningRenderer.Awake -= LightningRenderer_Awake;
+            On.Celeste.LightningRenderer.Reset -= LightningRenderer_Reset;
+            // Register new states
             On.Celeste.Player.ctor -= Player_ctor;
+
+            // For custom Boosters
             On.Celeste.Player.CallDashEvents -= Player_CallDashEvents;
+
+            // For Custom Dream Blocks
+            // legacy
+            //On.Celeste.Player.OnCollideH -= Player_OnCollideH;
+            //On.Celeste.Player.OnCollideV -= Player_OnCollideV;
+            //On.Celeste.Player.RefillDash -= Player_RefillDash;
+            //On.Celeste.Player.DreamDashUpdate -= Player_DreamDashUpdate;
+            //On.Celeste.Player.DreamDashEnd -= Player_DreamDashEnd;
+            // Custom dream blocks and feathers
+            On.Celeste.Player.UpdateSprite -= Player_UpdateSprite;
+
+            // custom feathers
+            IL.Celeste.Player.UpdateHair -= modFeatherState;
+            IL.Celeste.Player.OnCollideH -= modFeatherState;
+            IL.Celeste.Player.OnCollideV -= modFeatherState;
+            playerUpdateHook.Dispose();
+            IL.Celeste.Player.Render -= modFeatherState;
+
+            CustomSpinner.UnloadHooks();
         }
 
-
+        private void LightningRenderer_Awake(On.Celeste.LightningRenderer.orig_Awake orig, LightningRenderer self, Scene scene)
+        {
+            orig(self,scene);
+            if (scene is Level)
+            {
+                var session = (scene as Level).Session;
+                Color[] colors = new Color[2]
+                {
+                SessionHelper.ReadColorFromSession(session, "fh.lightningColorA", Color.White),
+                SessionHelper.ReadColorFromSession(session, "fh.lightningColorB", Color.White)
+                };
+                if (colors[0] != Color.White)
+                {
+                    LightningColorTrigger.ChangeLightningColor(self, colors);
+                }
+            }
+        }
+        
         // Make custom rising lava work with Lava Blocker Triggers:
         #region LavaBlockerInteraction
         private void LavaBlockerTrigger_OnLeave(On.Celeste.Mod.Entities.LavaBlockerTrigger.orig_OnLeave orig, Celeste.Mod.Entities.LavaBlockerTrigger self, Player player)
@@ -929,10 +910,39 @@ namespace FrostHelper
             }
             return new Vector2(float.Parse(strSplit[0]), float.Parse(strSplit[1]));
         }
+
+        /// <summary>
+        /// Returns a list of colors from a comma-separated string of types
+        /// </summary>
+        public static Type[] GetTypes(string typeString)
+        {
+            string[] split = typeString.Trim().Split(',');
+            Type[] parsed = new Type[split.Length];
+            for (int i = 0; i < split.Length; i++)
+            {
+
+                parsed[i] = split[i].Trim() == "" ? null : FakeAssembly.GetEntryAssembly().GetType(split[i].Trim(), true, true);
+            }
+            return parsed;
+        }
     }
 
     public class ColorHelper
     {
+        /// <summary>
+        /// Returns a list of colors from a comma-separated string of hex colors OR xna color names
+        /// </summary>
+        public static Color[] GetColors(string colors)
+        {
+            string[] split = colors.Trim().Split(',');
+            Color[] parsed = new Color[split.Length];
+            for (int i = 0; i < split.Length; i++)
+            {
+                parsed[i] = GetColor(split[i]);
+            }
+            return parsed;
+        }
+
         public static Color GetColor(string color)
         {
             foreach (PropertyInfo propertyInfo in colorProps)
@@ -972,5 +982,26 @@ namespace FrostHelper
         }
 
         private static readonly FieldInfo[] easeProps = typeof(Ease).GetFields(BindingFlags.Static | BindingFlags.Public);
+    }
+
+    public static class SessionHelper
+    {
+        public static void WriteColorToSession(Session session, string baseFlag, Color color)
+        {
+            session.SetCounter(baseFlag, Convert.ToInt32(color.R.ToString("x2") + color.G.ToString("x2") + color.B.ToString("x2"), 16));
+            session.SetCounter($"{baseFlag}Alpha", color.A);
+            session.SetCounter($"{baseFlag}Set", 1);
+        }
+
+        public static Color ReadColorFromSession(Session session, string baseFlag, Color baseColor)
+        {
+            if (session.GetCounter($"{baseFlag}Set") == 1)
+            {
+                Color c = Calc.HexToColor(session.GetCounter(baseFlag));
+                c.A = (byte)session.GetCounter($"{baseFlag}Alpha");
+                return c;
+            }
+            return baseColor;
+        }
     }
 }
