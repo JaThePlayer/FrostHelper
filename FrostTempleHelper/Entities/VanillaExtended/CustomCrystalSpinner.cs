@@ -104,8 +104,15 @@ namespace FrostHelper
             bgDirectory = directory + "/bg";
             fgDirectory = directory + "/fg";
             moveWithWind = data.Bool("moveWithWind", false);
-            //List<MTexture> atlasSubtextures = GFX.Game.GetAtlasSubtextures(this.bgDirectory);
-            //MTexture mtexture = Calc.Random.Choose(atlasSubtextures);
+
+            // funny story time: this used to exist in older versions of Frost Helper as a leftover.
+            // I tried removing it in 1.20.3, but this broke some TASes due to spinner cycles.
+            // So now this needs to stay here forever D:
+            // List<MTexture> atlasSubtextures = GFX.Game.GetAtlasSubtextures(this.bgDirectory);
+            // MTexture mtexture = Calc.Random.Choose(atlasSubtextures);
+            // Actually, just calling Random.Next() is enough, so that's nice
+            Calc.Random.Next();
+
             coldDirectory = directory;
             this.destroyColor = destroyColor;
             this.isCore = isCore;
@@ -216,10 +223,6 @@ namespace FrostHelper
         {
             Position.X += move;
             Collider.Position.X += move;
-            //ClearSprites();
-            //expanded = false;
-            //CreateSprites();
-            
         }
 
         public void MoveH(float moveV)
@@ -252,7 +255,7 @@ namespace FrostHelper
             {
                 Calc.PushRandom(randomSeed);
                 Image image;
-                //List<MTexture> atlasSubtextures = GFX.Game.GetAtlasSubtextures(CrystalStaticSpinner.fgTextureLookup[color]);
+
                 List<MTexture> atlasSubtextures = GFX.Game.GetAtlasSubtextures(fgDirectory);
                 MTexture mtexture = Calc.Random.Choose(atlasSubtextures);
                 int imgCount = 0;
@@ -338,7 +341,6 @@ namespace FrostHelper
                 Calc.PopRandom();
             }
         }
-        // Token: 0x060011C7 RID: 4551 RVA: 0x00041EDC File Offset: 0x000400DC
         private void AddSprite(Vector2 offset)
         {
             if (filler == null)
@@ -355,8 +357,7 @@ namespace FrostHelper
             image.Color = Tint;
             filler.Add(image);
         }
-
-        // Token: 0x060011C8 RID: 4552 RVA: 0x00041F84 File Offset: 0x00040184
+        
         private bool SolidCheck(Vector2 position)
         {
             if (AttachToSolid || moveWithWind)
@@ -375,8 +376,7 @@ namespace FrostHelper
             }
             return false;
         }
-
-        // Token: 0x060011C9 RID: 4553 RVA: 0x00041FF0 File Offset: 0x000401F0
+        
         private void ClearSprites()
         {
             if (filler != null)
@@ -389,9 +389,11 @@ namespace FrostHelper
                 border.RemoveSelf();
             }
             border = null;
-            foreach (Image image in base.Components.GetAll<Image>())
+            //foreach (Image image in base.Components.GetAll<Image>())
+            var img = base.Components.GetAll<Image>().ToArray();
+            for (int i = img.Length-1; i > -1; i--)
             {
-                image.RemoveSelf();
+                img[i].RemoveSelf();
             }
             expanded = false;
         }
@@ -420,25 +422,34 @@ namespace FrostHelper
             }
             
         }
-
-        // Token: 0x060011CD RID: 4557 RVA: 0x00042102 File Offset: 0x00040302
+        
         private void OnHoldable(Holdable h)
         {
             h.HitSpinner(this);
         }
-
-        // Token: 0x060011CE RID: 4558 RVA: 0x0004210C File Offset: 0x0004030C
+        
         public override void Removed(Scene scene)
         {
+            
             if (filler != null && filler.Scene == scene)
             {
                 filler.RemoveSelf();
+                filler = null;
             }
             if (border != null && border.Scene == scene)
             {
                 border.RemoveSelf();
-            }
+                border = null;
+            } 
             base.Removed(scene);
+            
+            // Cache things
+            /*
+            if (AttachToSolid)
+            {
+                Remove(Get<StaticMover>());
+            }
+            SpeenCache.Push(this); */
         }
 
         // Token: 0x060011CF RID: 4559 RVA: 0x00042164 File Offset: 0x00040364

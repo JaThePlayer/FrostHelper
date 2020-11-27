@@ -6,7 +6,9 @@ using Celeste.Mod;
 using Microsoft.Xna.Framework;
 using Monocle;
 
-
+/*
+this is horrible
+*/
 namespace FrostHelper
 {
     public class SlowCrushBlock : Solid
@@ -697,8 +699,7 @@ namespace FrostHelper
             }
             yield break;
         }
-
-        // Token: 0x06000D56 RID: 3414 RVA: 0x00031088 File Offset: 0x0002F288
+        
         private bool MoveHCheck(float amount)
         {
             bool flag = base.MoveHCollideSolidsAndBounds(this.level, amount, true, null);
@@ -743,8 +744,7 @@ namespace FrostHelper
             }
             return result;
         }
-
-        // Token: 0x06000D57 RID: 3415 RVA: 0x000311AC File Offset: 0x0002F3AC
+        
         private bool MoveVCheck(float amount)
         {
             bool flag = base.MoveVCollideSolidsAndBounds(this.level, amount, true, null);
@@ -789,110 +789,51 @@ namespace FrostHelper
             }
             return result;
         }
+        
+        public static ParticleType P_Impact => CrushBlock.P_Impact;
+        public static ParticleType P_Crushing => CrushBlock.P_Crushing;
+        public static ParticleType P_Activate => CrushBlock.P_Activate;
 
-        // Token: 0x040007E9 RID: 2025
-        public static ParticleType P_Impact;
-
-        // Token: 0x040007EA RID: 2026
-        public static ParticleType P_Crushing;
-
-        // Token: 0x040007EB RID: 2027
-        public static ParticleType P_Activate;
-
-        // Token: 0x040007EC RID: 2028
         private const float CrushSpeed = 120f; // was 240f
-
-        // Token: 0x040007ED RID: 2029
         private const float CrushAccel = 250f; // was 500f
-
-        // Token: 0x040007EE RID: 2030
         private const float ReturnSpeed = 30f; // was 60f
-
-        // Token: 0x040007EF RID: 2031
         private const float ReturnAccel = 80f; // was 160f
-
-        // Token: 0x040007F0 RID: 2032
+        
         private Color fill;
-
-        // Token: 0x040007F1 RID: 2033
         private Level level;
-
-        // Token: 0x040007F2 RID: 2034
         private bool canActivate;
-
-        // Token: 0x040007F3 RID: 2035
         private Vector2 crushDir;
-
-        // Token: 0x040007F4 RID: 2036
         private List<SlowCrushBlock.MoveState> returnStack;
-
-        // Token: 0x040007F5 RID: 2037
         private Coroutine attackCoroutine;
-
-        // Token: 0x040007F6 RID: 2038
         private bool canMoveVertically;
-
-        // Token: 0x040007F7 RID: 2039
         private bool canMoveHorizontally;
-
-        // Token: 0x040007F8 RID: 2040
         private bool chillOut;
-
-        // Token: 0x040007F9 RID: 2041
         private bool giant;
-
-        // Token: 0x040007FA RID: 2042
         private Sprite face;
-
-        // Token: 0x040007FB RID: 2043
         private string nextFaceDirection;
-
-        // Token: 0x040007FC RID: 2044
         private List<Image> idleImages;
-
-        // Token: 0x040007FD RID: 2045
         private List<Image> activeTopImages;
-
-        // Token: 0x040007FE RID: 2046
         private List<Image> activeRightImages;
-
-        // Token: 0x040007FF RID: 2047
         private List<Image> activeLeftImages;
-
-        // Token: 0x04000800 RID: 2048
         private List<Image> activeBottomImages;
-
-        // Token: 0x04000801 RID: 2049
         private SoundSource currentMoveLoopSfx;
-
-        // Token: 0x04000802 RID: 2050
         private SoundSource returnLoopSfx;
-
-        // Token: 0x0200019C RID: 412
+        
         public enum Axes
         {
-            // Token: 0x04000804 RID: 2052
             Both,
-            // Token: 0x04000805 RID: 2053
             Horizontal,
-            // Token: 0x04000806 RID: 2054
             Vertical
         }
-
-        // Token: 0x0200019D RID: 413
+        
         private struct MoveState
         {
-            // Token: 0x06000D5A RID: 3418 RVA: 0x00031326 File Offset: 0x0002F526
             public MoveState(Vector2 from, Vector2 direction)
             {
                 this.From = from;
                 this.Direction = direction;
             }
-
-            // Token: 0x04000807 RID: 2055
             public Vector2 From;
-
-            // Token: 0x04000808 RID: 2056
             public Vector2 Direction;
         }
     }

@@ -46,7 +46,9 @@ namespace FrostHelper
 
         public Sprite Emblem;
 
-        // Whether this activator has already done collision checks
+        /// <summary>
+        /// Whether this activator has already done collision checks this frame
+        /// </summary>
         public bool DoneCollisionChecks = false;
 
         public BadelineChaserBlockActivator(EntityData data, Vector2 offset) : base(data.Position + offset, data.Width, data.Height, false)
@@ -117,9 +119,7 @@ namespace FrostHelper
                                 }
                                 activator.Collidable = false;
                             }
-                            
                         }
-                        
                     }
                 }
                 

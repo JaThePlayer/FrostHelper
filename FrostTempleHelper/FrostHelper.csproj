@@ -71,11 +71,15 @@
     <Compile Include="Entities\BadelineChaserBlock\BadelineChaserBlockActivator.cs" />
     <Compile Include="Entities\Bubbler.cs" />
     <Compile Include="Entities\EntityMover.cs" />
+    <Compile Include="Entities\SpeedChallengeTalker.cs" />
+    <Compile Include="Entities\SpeedRingChallenge.cs" />
     <Compile Include="Entities\VanillaExtended\ColoredLightbeam.cs" />
     <Compile Include="Entities\DreamBlock\CustomDreamBlockV2.cs" />
     <Compile Include="Entities\VanillaExtended\CustomFeather.cs" />
     <Compile Include="Entities\VanillaExtended\CustomFlutterBird.cs" />
     <Compile Include="Entities\VanillaExtended\CustomSnowball.cs" />
+    <Compile Include="FrostHelperSaveData.cs" />
+    <Compile Include="FrostMapDataProcessor.cs" />
     <Compile Include="Triggers\AnxietyTrigger.cs" />
     <Compile Include="Triggers\CameraTargetv2.cs" />
     <Compile Include="Entities\DreamBlock\CustomDreamBlock.cs" />
@@ -104,6 +108,7 @@
     <Compile Include="Entities\Booster\BlueBooster.cs" />
     <Compile Include="Entities\Booster\YellowBooster.cs" />
     <Compile Include="Triggers\SnowballTrigger.cs" />
+    <Compile Include="UI\SpeedChallengeJournal.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Ignore\README.md" />

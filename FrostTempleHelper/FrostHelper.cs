@@ -22,13 +22,14 @@ namespace FrostHelper
         public static SpriteBank SpriteBank;
         // Only one alive module instance can exist at any given time.
         public static FrostModule Instance;
-        bool initFont = false;
+
         public FrostModule()
         {
             Instance = this;
         }
         // no save data needed
-        public override Type SaveDataType => null;
+        public override Type SaveDataType => typeof(FrostHelperSaveData);
+        public static FrostHelperSaveData SaveData => (FrostHelperSaveData)Instance._SaveData;
 
         // If you don't need to store any settings, => null
         public override Type SettingsType
@@ -37,6 +38,13 @@ namespace FrostHelper
             {
                 return null;
             }
+        }
+
+        public override void PrepareMapDataProcessors(MapDataFixup context)
+        {
+            base.PrepareMapDataProcessors(context);
+
+            context.Add<FrostMapDataProcessor>();
         }
 
         public override void LoadContent(bool firstLoad)
@@ -129,6 +137,7 @@ namespace FrostHelper
 
         private static void Player_UpdateSprite(On.Celeste.Player.orig_UpdateSprite orig, Player self)
         {
+
             if (self.StateMachine.State == CustomDreamDashState)
             {
                 if (self.Sprite.CurrentAnimationID != "dreamDashIn" && self.Sprite.CurrentAnimationID != "dreamDashLoop")
@@ -432,7 +441,7 @@ namespace FrostHelper
                     bool flag14 = flag11;
                     if (flag14)
                     {
-                        bool noGrabbing = SaveData.Instance.Assists.NoGrabbing;
+                        bool noGrabbing = Celeste.SaveData.Instance.Assists.NoGrabbing;
                         if (noGrabbing)
                         {
                             player.Speed = Vector2.Zero;
@@ -840,13 +849,27 @@ namespace FrostHelper
                     throw new Exception("MOD CONFLICT: Please uninstall the FrostHelperExtension mod");
                 }
             }
+
+            //On.Celeste.LevelData.CreateEntityData += LevelData_CreateEntityData;
         }
 
+        /*
+        private EntityData LevelData_CreateEntityData(On.Celeste.LevelData.orig_CreateEntityData orig, LevelData self, BinaryPacker.Element entity)
+        {
+            var data = orig(self, entity);
+            if (data.Name == "FrostHelper/IceSpinner") data.Name = "FHS";
+            return data;
+        } */
 
         private static bool OnLoadEntity(Level level, LevelData levelData, Vector2 offset, EntityData entityData)
         {
             switch (entityData.Name)
             {
+                case "FrostHelper/IceSpinner":
+                case "FrostHelperExt/CustomBloomSpinner":
+                    level.Add(new CustomSpinner(entityData, offset, entityData.Bool("attachToSolid", false), entityData.Attr("directory", "danger/FrostHelper/icecrystal"), entityData.Attr("destroyColor", "639bff"), entityData.Bool("isCore", false), entityData.Attr("tint", "ffffff")));
+                    //level.Add(new CustomSpinner(entityData, offset));
+                    return true; 
                 case "FrostHelper/KeyIce":
                     level.Add(new KeyIce(entityData, offset, new EntityID(levelData.Name, entityData.ID), null));
                     return true;
@@ -855,10 +878,6 @@ namespace FrostHelper
                     return true;
                 case "FrostHelper/CustomZipMover":
                     level.Add(new CustomZipMover(entityData, offset, entityData.Float("percentage", 100f), entityData.Enum("color", CustomZipMover.LineColor.Normal)));
-                    return true;
-                case "FrostHelper/IceSpinner":
-                case "FrostHelperExt/CustomBloomSpinner":
-                    level.Add(new CustomSpinner(entityData, offset, entityData.Bool("attachToSolid", false), entityData.Attr("directory", "danger/FrostHelper/icecrystal"), entityData.Attr("destroyColor", "639bff"), entityData.Bool("isCore", false), entityData.Attr("tint", "")));
                     return true;
                 case "FrostHelper/Skateboard":
                     level.Add(new Skateboard(entityData, offset));

@@ -14,22 +14,18 @@ namespace FrostHelper
         
         public CustomFireBarrier(EntityData data, Vector2 offset) : base(data.Position + offset)
         {
-            var colors = new Color[3];
-            colors[0] = data.HexColor("surfaceColor");
-            colors[1] = data.HexColor("edgeColor");
-            colors[2] = data.HexColor("centerColor");
             float width = data.Width;
             float height = data.Height;
-            this.isIce = data.Bool("isIce", false);
+            isIce = data.Bool("isIce", false);
             Tag = Tags.TransitionUpdate;
             Collider = new Hitbox(width, height, 0f, 0f);
-            Add(new PlayerCollider(new Action<Player>(this.OnPlayer), null, null));
-            Add(new CoreModeListener(new Action<Session.CoreModes>(this.OnChangeMode)));
+            Add(new PlayerCollider(new Action<Player>(OnPlayer), null, null));
+            Add(new CoreModeListener(new Action<Session.CoreModes>(OnChangeMode)));
             Lava = new LavaRect(width, height, isIce ? 2 : 4);
             Add(Lava);
-            Lava.SurfaceColor = colors[0];
-            Lava.EdgeColor = colors[1];
-            Lava.CenterColor = colors[2];
+            Lava.SurfaceColor = data.HexColor("surfaceColor");
+            Lava.EdgeColor = data.HexColor("edgeColor");
+            Lava.CenterColor = data.HexColor("centerColor");
             Lava.SmallWaveAmplitude = 2f;
             Lava.BigWaveAmplitude = 1f;
             Lava.CurveAmplitude = 1f;
@@ -42,14 +38,18 @@ namespace FrostHelper
             
             lavaRect = new Rectangle((int)(data.Position + offset).X, (int)(data.Position + offset).Y, (int)width, (int)height);
             Depth = -8500;
-            Add(this.idleSfx = new SoundSource());
-            idleSfx.Position = new Vector2(base.Width, base.Height) / 2f;
+            if (!isIce)
+            {
+                Add(idleSfx = new SoundSource());
+                idleSfx.Position = new Vector2(Width, Height) / 2f;
+            }
+            
         }
 
         public override void Added(Scene scene)
         {
             base.Added(scene);
-            scene.Add(this.solid = new Solid(this.Position + new Vector2(2f, 3f), base.Width - 4f, base.Height - 5f, false));
+            scene.Add(solid = new Solid(Position + new Vector2(2f, 3f), Width - 4f, Height - 5f, false));
             if (!isIce)
             {
                 Collidable = (solid.Collidable = (SceneAs<Level>().CoreMode == Session.CoreModes.Hot));
@@ -61,7 +61,7 @@ namespace FrostHelper
             bool collidable = Collidable;
             if (collidable)
             {
-                this.idleSfx.Play("event:/env/local/09_core/lavagate_idle", null, 0f);
+                idleSfx?.Play("event:/env/local/09_core/lavagate_idle", null, 0f);
             }
         }
         
@@ -92,11 +92,11 @@ namespace FrostHelper
                     }
                     num += 4;
                 }
-                idleSfx.Stop(true);
+                idleSfx?.Stop(true);
             }
             else
             {
-                idleSfx.Play("event:/env/local/09_core/lavagate_idle", null, 0f);
+                idleSfx?.Play("event:/env/local/09_core/lavagate_idle", null, 0f);
             }
         }
 
@@ -128,10 +128,7 @@ namespace FrostHelper
 
         public override void Render()
         {
-            //if (Collidable)
-            {
-                base.Render();
-            }
+            base.Render();
         }
 
         private Rectangle lavaRect;
