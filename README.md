@@ -9,6 +9,7 @@ Entities:
 - Blue Boosters -> They don't recover your dash
 - Yellow Boosters -> They kill you if you don't fastbubble
 - Gray Boosters -> They immediately fastbubble you
+- Increment Boosters -> They increase the amount of dashes you have after leaving them
 - Toggle Swap Blocks -> Like regular Swap Blocks, but they don't return to their initial position when you stop dashing. Instead, the swap between the 2 positions each dash
 - Temporary Keys and Keydoors -> They don't persist between deaths
 - Static Bumpers -> Like regular ones, but they don't move around randomly. Has customizable sprites, lerp modes for movement
@@ -32,3 +33,6 @@ Triggers:
 - Anxiety Trigger -> Triggers the Anxiety effect, the same as badeline causes
 - Cassette Tempo Trigger -> Allows you to change the cassette tempo mid-room
 - Lightning Color Trigger -> Changes the color of Lightning blocks
+- Chronos Trigger -> Activates the gimmick from the New Year's Mapping Contest map Chronos
+- Forced Fastfall Trigger -> Forces the player to fastfall while in the trigger
+- Cap Dash On Ground Trigger -> Forces the player's dash count to respect the max dash count when they're on the ground (a.k.a you can't conserve the 2 dashes from a two-dash refill)
