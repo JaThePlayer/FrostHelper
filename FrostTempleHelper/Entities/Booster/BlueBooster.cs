@@ -55,7 +55,7 @@ namespace FrostHelper
 
             RespawnTime = data.Float("respawnTime", 1f);
             BoostTime = data.Float("boostTime", 0.3f);
-            ParticleColor = FrostHelper.ColorHelper.GetColor(data.Attr("particleColor", "Yellow"));
+            ParticleColor = ColorHelper.GetColor(data.Attr("particleColor", "Yellow"));
             reappearSfx = data.Attr("reappearSfx", "event:/game/04_cliffside/greenbooster_reappear");
             enterSfx = data.Attr("enterSfx", "event:/game/04_cliffside/greenbooster_enter");
             boostSfx = data.Attr("boostSfx", "event:/game/04_cliffside/greenbooster_dash");
@@ -113,11 +113,11 @@ namespace FrostHelper
         public bool StartedBoosting;
         public static void Boost(Player player, BlueBooster booster)
         {
-            player.StateMachine.State = FrostHelper.FrostModule.blueBoostState;
+            player.StateMachine.State = FrostModule.blueBoostState;
             player.Speed = Vector2.Zero;
             //player.boostTarget = booster.Center;
             //player.boostRed = false;
-            FrostHelper.FrostModule.player_boostTarget.SetValue(player, booster.Center);
+            FrostModule.player_boostTarget.SetValue(player, booster.Center);
             booster.StartedBoosting = true;
             //player.CurrentBooster = booster;
             //LastBooster = booster;

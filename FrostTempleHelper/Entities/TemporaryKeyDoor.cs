@@ -11,34 +11,34 @@ namespace FrostHelper
     {
         public LockBlock(Vector2 position, EntityID id, bool stepMusicProgress, string spriteName, string unlock_sfx) : base(position, 32f, 32f, false)
         {
-            this.ID = id;
-            this.DisableLightsInside = false;
+            ID = id;
+            DisableLightsInside = false;
             this.stepMusicProgress = stepMusicProgress;
-            base.Add(new PlayerCollider(new Action<Player>(this.OnPlayer), new Circle(60f, 16f, 16f), null));
-            base.Add(this.sprite = GFX.SpriteBank.Create("lockdoor_" + spriteName));
-            this.sprite.Play("idle", false, false);
-            this.sprite.Position = new Vector2(base.Width / 2f, base.Height / 2f);
+            Add(new PlayerCollider(new Action<Player>(OnPlayer), new Circle(60f, 16f, 16f), null));
+            Add(sprite = GFX.SpriteBank.Create("lockdoor_" + spriteName));
+            sprite.Play("idle", false, false);
+            sprite.Position = new Vector2(Width / 2f, Height / 2f);
             bool flag = string.IsNullOrWhiteSpace(unlock_sfx);
             if (flag)
             {
-                this.unlockSfxName = "event:/game/03_resort/key_unlock";
+                unlockSfxName = "event:/game/03_resort/key_unlock";
                 bool flag2 = spriteName == "temple_a";
                 if (flag2)
                 {
-                    this.unlockSfxName = "event:/game/05_mirror_temple/key_unlock_light";
+                    unlockSfxName = "event:/game/05_mirror_temple/key_unlock_light";
                 }
                 else
                 {
                     bool flag3 = spriteName == "temple_b";
                     if (flag3)
                     {
-                        this.unlockSfxName = "event:/game/05_mirror_temple/key_unlock_dark";
+                        unlockSfxName = "event:/game/05_mirror_temple/key_unlock_dark";
                     }
                 }
             }
             else
             {
-                this.unlockSfxName = SFX.EventnameByHandle(unlock_sfx);
+                unlockSfxName = SFX.EventnameByHandle(unlock_sfx);
             }
         }
 
@@ -48,16 +48,16 @@ namespace FrostHelper
 
         public void Appear()
         {
-            this.Visible = true;
-            this.sprite.Play("appear", false, false);
-            base.Add(Alarm.Create(Alarm.AlarmMode.Oneshot, delegate
+            Visible = true;
+            sprite.Play("appear", false, false);
+            Add(Alarm.Create(Alarm.AlarmMode.Oneshot, delegate
             {
-                Level level = base.Scene as Level;
-                bool flag = !base.CollideCheck<Solid>(this.Position - Vector2.UnitX);
+                Level level = Scene as Level;
+                bool flag = !CollideCheck<Solid>(Position - Vector2.UnitX);
                 if (flag)
                 {
-                    level.Particles.Emit(LockBlock.P_Appear, 16, this.Position + new Vector2(3f, 16f), new Vector2(2f, 10f), 3.14159274f);
-                    level.Particles.Emit(LockBlock.P_Appear, 16, this.Position + new Vector2(29f, 16f), new Vector2(2f, 10f), 0f);
+                    level.Particles.Emit(P_Appear, 16, Position + new Vector2(3f, 16f), new Vector2(2f, 10f), 3.14159274f);
+                    level.Particles.Emit(P_Appear, 16, Position + new Vector2(29f, 16f), new Vector2(2f, 10f), 0f);
                 }
                 level.Shake(0.3f);
             }, 0.25f, true));
@@ -65,7 +65,7 @@ namespace FrostHelper
 
         private void OnPlayer(Player player)
         {
-            bool flag = !this.opening;
+            bool flag = !opening;
             if (flag)
             {
                 foreach (Follower follower in player.Leader.Followers)
@@ -73,7 +73,7 @@ namespace FrostHelper
                     bool flag2 = follower.Entity is Key && !(follower.Entity as Key).StartedUsing;
                     if (flag2)
                     {
-                        this.TryOpen(player, follower);
+                        TryOpen(player, follower);
                         break;
                     }
                 }
@@ -82,27 +82,27 @@ namespace FrostHelper
 
         private void TryOpen(Player player, Follower fol)
         {
-            this.Collidable = false;
-            bool flag = !base.Scene.CollideCheck<Solid>(player.Center, base.Center);
+            Collidable = false;
+            bool flag = !Scene.CollideCheck<Solid>(player.Center, Center);
             if (flag)
             {
-                this.opening = true;
+                opening = true;
                 (fol.Entity as Key).StartedUsing = true;
-                base.Add(new Coroutine(this.UnlockRoutine(fol), true));
+                Add(new Coroutine(UnlockRoutine(fol), true));
             }
-            this.Collidable = true;
+            Collidable = true;
         }
 
         private IEnumerator UnlockRoutine(Follower fol)
         {
-            SoundEmitter emitter = SoundEmitter.Play(this.unlockSfxName, this, null);
+            SoundEmitter emitter = SoundEmitter.Play(unlockSfxName, this, null);
             emitter.Source.DisposeOnTransition = true;
-            Level level = this.SceneAs<Level>();
+            Level level = SceneAs<Level>();
             Key key = fol.Entity as Key;
-            this.Add(new Coroutine(key.UseRoutine(this.Center + new Vector2(0f, 2f)), true));
+            Add(new Coroutine(key.UseRoutine(Center + new Vector2(0f, 2f)), true));
             yield return 1.2f;
-            this.UnlockingRegistered = true;
-            bool flag = this.stepMusicProgress;
+            UnlockingRegistered = true;
+            bool flag = stepMusicProgress;
             if (flag)
             {
                 AudioTrackState music = level.Session.Audio.Music;
@@ -116,14 +116,14 @@ namespace FrostHelper
             {
                 yield return null;
             }
-            this.Tag |= Tags.TransitionUpdate;
-            this.Collidable = false;
+            Tag |= Tags.TransitionUpdate;
+            Collidable = false;
             emitter.Source.DisposeOnTransition = false;
-            yield return this.sprite.PlayRoutine("open", false);
+            yield return sprite.PlayRoutine("open", false);
             level.Shake(0.3f);
             Input.Rumble(RumbleStrength.Medium, RumbleLength.Medium);
-            yield return this.sprite.PlayRoutine("burst", false);
-            this.RemoveSelf();
+            yield return sprite.PlayRoutine("burst", false);
+            RemoveSelf();
             yield break;
         }
 

@@ -45,15 +45,15 @@ namespace FrostHelper
             Add(new DisplacementRenderHook(new Action(RenderDisplacement)));
             float num = 0;
             particles = new List<Vector2>();
-            while (num < base.Width * base.Height / 16f)
+            while (num < Width * Height / 16f)
             {
-                this.particles.Add(new Vector2(Calc.Random.NextFloat(base.Width - 1f), Calc.Random.NextFloat(base.Height - 1f)));
+                particles.Add(new Vector2(Calc.Random.NextFloat(Width - 1f), Calc.Random.NextFloat(Height - 1f)));
                 num++;
             }
             Node = data.FirstNodeNullable(new Vector2?(offset));
             if (Node != null)
             {
-                Vector2 start = this.Position;
+                Vector2 start = Position;
                 Vector2 end = Node.Value;
                 float num2 = Vector2.Distance(start, end) / 12f;
                 bool flag2 = fastMoving;
@@ -64,7 +64,7 @@ namespace FrostHelper
                 Tween tween = Tween.Create(Tween.TweenMode.YoyoLooping, Ease.SineInOut, num2, true);
                 tween.OnUpdate = delegate (Tween t)
                 {
-                    bool collidable = this.Collidable;
+                    bool collidable = Collidable;
                     if (collidable)
                     {
                         Position = (Vector2.Lerp(start, end, t.Eased));
@@ -74,7 +74,7 @@ namespace FrostHelper
                         Position = (Vector2.Lerp(start, end, t.Eased));
                     }
                 };
-                base.Add(tween);
+                Add(tween);
             }
         }
 
@@ -119,22 +119,22 @@ namespace FrostHelper
                 Solidify = 1f;
                 Flash = 1f;
             }
-            bool flag3 = this.Solidify > 0f;
+            bool flag3 = Solidify > 0f;
             if (flag3)
             {
-                Solidify = Calc.Approach(this.Solidify, 0f, Engine.DeltaTime);
+                Solidify = Calc.Approach(Solidify, 0f, Engine.DeltaTime);
             }
             if (Flashing)
-                Flash = Calc.Approach(this.Flash, 0f, Engine.DeltaTime * 4f);
+                Flash = Calc.Approach(Flash, 0f, Engine.DeltaTime * 4f);
             int num = speeds.Length;
-            float height = base.Height;
+            float height = Height;
             int i = 0;
-            int count = this.particles.Count;
+            int count = particles.Count;
             while (i < count)
             {
-                Vector2 value = this.particles[i] + Vector2.UnitY * speeds[i % num] * Engine.DeltaTime;
+                Vector2 value = particles[i] + Vector2.UnitY * speeds[i % num] * Engine.DeltaTime;
                 value.Y %= height - 1f;
-                this.particles[i] = value;
+                particles[i] = value;
                 i++;
             }
             

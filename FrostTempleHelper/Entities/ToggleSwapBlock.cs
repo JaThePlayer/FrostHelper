@@ -17,49 +17,49 @@ namespace FrostHelper
         bool renderBG = false;
         public ToggleSwapBlock(EntityData data, Vector2 offset) : base(data.Position + offset, (float)data.Width, (float)data.Height, true)
         {
-            this.directory = data.Attr("directory", "objects/swapblock"); 
+            directory = data.Attr("directory", "objects/swapblock"); 
             if (directory == "objects/swapblock")
             {
                 directory = data.Attr("sprite", "objects/swapblock");
             }
-            this.renderBG = data.Bool("renderBG", false);
+            renderBG = data.Bool("renderBG", false);
             Vector2 node = data.Nodes[0] + offset;
-            this.redAlpha = 1f;
-            this.start = this.Position;
-            this.end = node;
+            redAlpha = 1f;
+            start = Position;
+            end = node;
             //this.distanceBasedSpeed = data.Bool("distanceBasedSpeed", true);
-            this.maxForwardSpeed = data.Float("speed", 360f) / Vector2.Distance(this.start, this.end);
+            maxForwardSpeed = data.Float("speed", 360f) / Vector2.Distance(start, end);
             //if (this.distanceBasedSpeed) this.maxForwardSpeed = this.maxForwardSpeed / Vector2.Distance(this.start, this.end);
-            this.maxBackwardSpeed = this.maxForwardSpeed * 0.4f;
+            maxBackwardSpeed = maxForwardSpeed * 0.4f;
             //this.maxForwardSpeed = 360f / Vector2.Distance(this.start, this.end);
             //this.maxBackwardSpeed = this.maxForwardSpeed * 0.4f;
-            this.Direction.X = (float)Math.Sign(this.end.X - this.start.X);
-            this.Direction.Y = (float)Math.Sign(this.end.Y - this.start.Y);
-            base.Add(new DashListener
+            Direction.X = (float)Math.Sign(end.X - start.X);
+            Direction.Y = (float)Math.Sign(end.Y - start.Y);
+            Add(new DashListener
             {
-                OnDash = new Action<Vector2>(this.OnDash)
+                OnDash = new Action<Vector2>(OnDash)
             });
-            int num = (int)MathHelper.Min(base.X, node.X);
-            int num2 = (int)MathHelper.Min(base.Y, node.Y);
-            int num3 = (int)MathHelper.Max(base.X + base.Width, node.X + base.Width);
-            int num4 = (int)MathHelper.Max(base.Y + base.Height, node.Y + base.Height);
-            this.moveRect = new Rectangle(num, num2, num3 - num, num4 - num2);
+            int num = (int)MathHelper.Min(X, node.X);
+            int num2 = (int)MathHelper.Min(Y, node.Y);
+            int num3 = (int)MathHelper.Max(X + Width, node.X + Width);
+            int num4 = (int)MathHelper.Max(Y + Height, node.Y + Height);
+            moveRect = new Rectangle(num, num2, num3 - num, num4 - num2);
             //MTexture mtexture = GFX.Game["objects/swapblock/block"];
             //MTexture mtexture2 = GFX.Game["objects/swapblock/blockRed"];
             //MTexture mtexture3 = GFX.Game["objects/swapblock/target"];
             MTexture mtexture = GFX.Game[directory + "/block"];
             MTexture mtexture2 = GFX.Game[directory + "/blockRed"];
             MTexture mtexture3 = GFX.Game[directory + "/target"];
-            this.nineSliceGreen = new MTexture[3, 3];
-            this.nineSliceRed = new MTexture[3, 3];
-            this.nineSliceTarget = new MTexture[3, 3];
+            nineSliceGreen = new MTexture[3, 3];
+            nineSliceRed = new MTexture[3, 3];
+            nineSliceTarget = new MTexture[3, 3];
             for (int i = 0; i < 3; i++)
             {
                 for (int j = 0; j < 3; j++)
                 {
-                    this.nineSliceGreen[i, j] = mtexture.GetSubtexture(new Rectangle(i * 8, j * 8, 8, 8));
-                    this.nineSliceRed[i, j] = mtexture2.GetSubtexture(new Rectangle(i * 8, j * 8, 8, 8));
-                    this.nineSliceTarget[i, j] = mtexture3.GetSubtexture(new Rectangle(i * 8, j * 8, 8, 8));
+                    nineSliceGreen[i, j] = mtexture.GetSubtexture(new Rectangle(i * 8, j * 8, 8, 8));
+                    nineSliceRed[i, j] = mtexture2.GetSubtexture(new Rectangle(i * 8, j * 8, 8, 8));
+                    nineSliceTarget[i, j] = mtexture3.GetSubtexture(new Rectangle(i * 8, j * 8, 8, 8));
                 }
             }
             middleGreen = new Sprite(GFX.Game, directory + "/midBlock") /*GFX.SpriteBank.Create("swapBlockLight")*/;
@@ -73,8 +73,8 @@ namespace FrostHelper
             middleRed.Play("idle");
             
             Add(middleRed);
-            base.Add(new LightOcclude(0.2f));
-            base.Depth = -9999;
+            Add(new LightOcclude(0.2f));
+            Depth = -9999;
         }
 
         //public ToggleSwapBlock(EntityData data, Vector2 offset) : this(data.Position + offset, (float)data.Width, (float)data.Height, data.Nodes[0] + offset)
@@ -84,55 +84,55 @@ namespace FrostHelper
         public override void Awake(Scene scene)
         {
             base.Awake(scene);
-            scene.Add(this.path = new ToggleSwapBlock.PathRenderer(this));
+            scene.Add(path = new ToggleSwapBlock.PathRenderer(this));
         }
 
         public override void Removed(Scene scene)
         {
             base.Removed(scene);
-            Audio.Stop(this.moveSfx, true);
-            Audio.Stop(this.returnSfx, true);
+            Audio.Stop(moveSfx, true);
+            Audio.Stop(returnSfx, true);
         }
 
         public override void SceneEnd(Scene scene)
         {
             base.SceneEnd(scene);
-            Audio.Stop(this.moveSfx, true);
-            Audio.Stop(this.returnSfx, true);
+            Audio.Stop(moveSfx, true);
+            Audio.Stop(returnSfx, true);
         }
 
         private void OnDash(Vector2 direction)
         {
-            this.Swapping = (this.lerp < 1f);
+            Swapping = (lerp < 1f);
             //if (target == 1) this.target = 0; else this.target = 1;
-            Audio.Stop(this.returnSfx, true);
-            Audio.Stop(this.moveSfx, true);
+            Audio.Stop(returnSfx, true);
+            Audio.Stop(moveSfx, true);
             if (target == 1)
             {
-                returnSfx = Audio.Play("event:/game/05_mirror_temple/swapblock_return", base.Center);
+                returnSfx = Audio.Play("event:/game/05_mirror_temple/swapblock_return", Center);
                 target = 0;
             }
             else
             {
-                moveSfx = Audio.Play("event:/game/05_mirror_temple/swapblock_move", base.Center);
+                moveSfx = Audio.Play("event:/game/05_mirror_temple/swapblock_move", Center);
                 target = 1;
             }
             //target = (target == 1) ? 0 : 1;
-            this.returnTimer = 0.8f;
-            this.burst = (base.Scene as Level).Displacement.AddBurst(base.Center, 0.2f, 0f, 16f, 1f, null, null);
-            if (this.lerp >= 0.2f)
+            returnTimer = 0.8f;
+            burst = (Scene as Level).Displacement.AddBurst(Center, 0.2f, 0f, 16f, 1f, null, null);
+            if (lerp >= 0.2f)
             {
-                this.speed = this.maxForwardSpeed;
+                speed = maxForwardSpeed;
             }
             else
             {
-                this.speed = MathHelper.Lerp(this.maxForwardSpeed * 0.333f, this.maxForwardSpeed, this.lerp / 0.2f);
+                speed = MathHelper.Lerp(maxForwardSpeed * 0.333f, maxForwardSpeed, lerp / 0.2f);
             }
             //Audio.Stop(this.returnSfx, true);
             //Audio.Stop(this.moveSfx, true);
-            if (!this.Swapping)
+            if (!Swapping)
             {
-                Audio.Play("event:/game/05_mirror_temple/swapblock_move_end", base.Center);
+                Audio.Play("event:/game/05_mirror_temple/swapblock_move_end", Center);
                 return;
             }
             //this.moveSfx = Audio.Play("event:/game/05_mirror_temple/swapblock_move", base.Center);
@@ -141,76 +141,76 @@ namespace FrostHelper
         public override void Update()
         {
             base.Update();
-            if (this.returnTimer > 0f)
+            if (returnTimer > 0f)
             {
-                this.returnTimer -= Engine.DeltaTime;
-                if (this.returnTimer <= 0f)
+                returnTimer -= Engine.DeltaTime;
+                if (returnTimer <= 0f)
                 {
                     //this.target = 0;
-                    this.speed = 0f;
+                    speed = 0f;
                     //this.returnSfx = Audio.Play("event:/game/05_mirror_temple/swapblock_return", base.Center);
                 }
             }
-            if (this.burst != null)
+            if (burst != null)
             {
-                this.burst.Position = base.Center;
+                burst.Position = Center;
             }
-            this.redAlpha = Calc.Approach(this.redAlpha, (float)((this.target == 1) ? 0 : 1), Engine.DeltaTime * 32f);
-            if (this.target == 0 && this.lerp == 0f)
+            redAlpha = Calc.Approach(redAlpha, (float)((target == 1) ? 0 : 1), Engine.DeltaTime * 32f);
+            if (target == 0 && lerp == 0f)
             {
-                this.middleRed.SetAnimationFrame(0);
-                this.middleGreen.SetAnimationFrame(0);
+                middleRed.SetAnimationFrame(0);
+                middleGreen.SetAnimationFrame(0);
             }
-            if (this.target == 1)
+            if (target == 1)
             {
-                this.speed = Calc.Approach(this.speed, this.maxForwardSpeed, this.maxForwardSpeed / 0.2f * Engine.DeltaTime);
+                speed = Calc.Approach(speed, maxForwardSpeed, maxForwardSpeed / 0.2f * Engine.DeltaTime);
             }
             else
             {
-                this.speed = Calc.Approach(this.speed, this.maxBackwardSpeed, this.maxBackwardSpeed / 1.5f * Engine.DeltaTime);
+                speed = Calc.Approach(speed, maxBackwardSpeed, maxBackwardSpeed / 1.5f * Engine.DeltaTime);
             }
-            float num = this.lerp;
-            this.lerp = Calc.Approach(this.lerp, (float)this.target, this.speed * Engine.DeltaTime);
-            if (this.lerp != num)
+            float num = lerp;
+            lerp = Calc.Approach(lerp, (float)target, speed * Engine.DeltaTime);
+            if (lerp != num)
             {
-                Vector2 vector = (this.end - this.start) * this.speed;
-                Vector2 position = this.Position;
-                if (this.target == 1)
+                Vector2 vector = (end - start) * speed;
+                Vector2 position = Position;
+                if (target == 1)
                 {
-                    vector = (this.end - this.start) * this.maxForwardSpeed;
+                    vector = (end - start) * maxForwardSpeed;
                 }
-                if (this.lerp < num)
+                if (lerp < num)
                 {
                     vector *= -1f;
                 }
-                if (this.target == 1 && base.Scene.OnInterval(0.02f))
+                if (target == 1 && Scene.OnInterval(0.02f))
                 {
-                    this.MoveParticles(this.end - this.start);
+                    MoveParticles(end - start);
                 }
-                base.MoveTo(Vector2.Lerp(this.start, this.end, this.lerp), vector);
-                if (position != this.Position)
+                MoveTo(Vector2.Lerp(start, end, lerp), vector);
+                if (position != Position)
                 {
-                    Audio.Position(this.moveSfx, base.Center);
-                    Audio.Position(this.returnSfx, base.Center);
-                    if (this.Position == this.start && this.target == 0)
+                    Audio.Position(moveSfx, Center);
+                    Audio.Position(returnSfx, Center);
+                    if (Position == start && target == 0)
                     {
-                        Audio.SetParameter(this.returnSfx, "end", 1f);
-                        Audio.Play("event:/game/05_mirror_temple/swapblock_return_end", base.Center);
+                        Audio.SetParameter(returnSfx, "end", 1f);
+                        Audio.Play("event:/game/05_mirror_temple/swapblock_return_end", Center);
                     }
-                    else if (this.Position == this.end && this.target == 1)
+                    else if (Position == end && target == 1)
                     {
-                        Audio.SetParameter(this.moveSfx, "end", 1f);
-                        Audio.Play("event:/game/05_mirror_temple/swapblock_move_end", base.Center);
+                        Audio.SetParameter(moveSfx, "end", 1f);
+                        Audio.Play("event:/game/05_mirror_temple/swapblock_move_end", Center);
                     }
                 }
             }
-            if (this.Swapping && this.lerp >= 1f)
+            if (Swapping && lerp >= 1f)
             {
-                this.Swapping = false;
+                Swapping = false;
             }
             //Audio.Stop(this.returnSfx, true);
             //Audio.Stop(this.moveSfx, true);
-            this.StopPlayerRunIntoAnimation = (this.lerp <= 0f || this.lerp >= 1f);
+            StopPlayerRunIntoAnimation = (lerp <= 0f || lerp >= 1f);
         }
 
         private void MoveParticles(Vector2 normal)
@@ -221,65 +221,65 @@ namespace FrostHelper
             float num;
             if (normal.X > 0f)
             {
-                position = base.CenterLeft;
-                vector = Vector2.UnitY * (base.Height - 6f);
+                position = CenterLeft;
+                vector = Vector2.UnitY * (Height - 6f);
                 direction = 3.14159274f;
-                num = Math.Max(2f, base.Height / 14f);
+                num = Math.Max(2f, Height / 14f);
             }
             else if (normal.X < 0f)
             {
-                position = base.CenterRight;
-                vector = Vector2.UnitY * (base.Height - 6f);
+                position = CenterRight;
+                vector = Vector2.UnitY * (Height - 6f);
                 direction = 0f;
-                num = Math.Max(2f, base.Height / 14f);
+                num = Math.Max(2f, Height / 14f);
             }
             else if (normal.Y > 0f)
             {
-                position = base.TopCenter;
-                vector = Vector2.UnitX * (base.Width - 6f);
+                position = TopCenter;
+                vector = Vector2.UnitX * (Width - 6f);
                 direction = -1.57079637f;
-                num = Math.Max(2f, base.Width / 14f);
+                num = Math.Max(2f, Width / 14f);
             }
             else
             {
-                position = base.BottomCenter;
-                vector = Vector2.UnitX * (base.Width - 6f);
+                position = BottomCenter;
+                vector = Vector2.UnitX * (Width - 6f);
                 direction = 1.57079637f;
-                num = Math.Max(2f, base.Width / 14f);
+                num = Math.Max(2f, Width / 14f);
             }
-            this.particlesRemainder += num;
-            int num2 = (int)this.particlesRemainder;
-            this.particlesRemainder -= (float)num2;
+            particlesRemainder += num;
+            int num2 = (int)particlesRemainder;
+            particlesRemainder -= (float)num2;
             vector *= 0.5f;
-            base.SceneAs<Level>().Particles.Emit(SwapBlock.P_Move, num2, position, vector, direction);
+            SceneAs<Level>().Particles.Emit(SwapBlock.P_Move, num2, position, vector, direction);
         }
 
         public override void Render()
         {
-            Vector2 vector = this.Position + base.Shake;
-            if (this.lerp != (float)this.target && this.speed > 0f)
+            Vector2 vector = Position + Shake;
+            if (lerp != (float)target && speed > 0f)
             {
-                Vector2 value = (this.end - this.start).SafeNormalize();
-                if (this.target == 1)
+                Vector2 value = (end - start).SafeNormalize();
+                if (target == 1)
                 {
                     value *= -1f;
                 }
-                float num = this.speed / this.maxForwardSpeed;
+                float num = speed / maxForwardSpeed;
                 float num2 = 16f * num;
                 int num3 = 2;
                 while ((float)num3 < num2)
                 {
-                    this.DrawBlockStyle(vector + value * (float)num3, base.Width, base.Height, this.nineSliceGreen, this.middleGreen, Color.White * (1f - (float)num3 / num2));
+                    DrawBlockStyle(vector + value * (float)num3, Width, Height, nineSliceGreen, middleGreen, Color.White * (1f - (float)num3 / num2));
                     num3 += 2;
                 }
             }
-            if (this.redAlpha < 1f)
+            if (redAlpha < 1f)
             {
-                this.DrawBlockStyle(vector, base.Width, base.Height, this.nineSliceGreen, this.middleGreen, Color.White);
+                DrawBlockStyle(vector, Width, Height, nineSliceGreen, middleGreen, Color.White);
             }
-            if (this.redAlpha > 0f)
+            if (redAlpha > 0f)
             {
-                this.DrawBlockStyle(vector, base.Width, base.Height, this.nineSliceRed, this.middleRed, Color.White * this.redAlpha);
+                DrawBlockStyle(vector, Width, Height, nineSliceRed, middleRed, Color.White * redAlpha);
             }
         }
 
@@ -368,32 +368,32 @@ namespace FrostHelper
         {
             public PathRenderer(ToggleSwapBlock block)
             {
-                this.clipTexture = new MTexture();
+                clipTexture = new MTexture();
                 //base..ctor(block.Position);
                 this.block = block;
-                base.Depth = 8999;
-                this.pathTexture = GFX.Game[block.directory +  "/path" + ((block.start.X == block.end.X) ? "V" : "H")];
-                this.timer = Calc.Random.NextFloat();
+                Depth = 8999;
+                pathTexture = GFX.Game[block.directory +  "/path" + ((block.start.X == block.end.X) ? "V" : "H")];
+                timer = Calc.Random.NextFloat();
             }
 
             public override void Update()
             {
                 base.Update();
-                this.timer += Engine.DeltaTime * 4f;
+                timer += Engine.DeltaTime * 4f;
             }
 
             public override void Render()
             {
-                for (int i = this.block.moveRect.Left; i < this.block.moveRect.Right; i += this.pathTexture.Width)
+                for (int i = block.moveRect.Left; i < block.moveRect.Right; i += pathTexture.Width)
                 {
-                    for (int j = this.block.moveRect.Top; j < this.block.moveRect.Bottom; j += this.pathTexture.Height)
+                    for (int j = block.moveRect.Top; j < block.moveRect.Bottom; j += pathTexture.Height)
                     {
-                        this.pathTexture.GetSubtexture(0, 0, Math.Min(this.pathTexture.Width, this.block.moveRect.Right - i), Math.Min(this.pathTexture.Height, this.block.moveRect.Bottom - j), this.clipTexture);
-                        if (block.renderBG) this.clipTexture.DrawCentered(new Vector2((float)(i + this.clipTexture.Width / 2), (float)(j + this.clipTexture.Height / 2)), Color.White);
+                        pathTexture.GetSubtexture(0, 0, Math.Min(pathTexture.Width, block.moveRect.Right - i), Math.Min(pathTexture.Height, block.moveRect.Bottom - j), clipTexture);
+                        if (block.renderBG) clipTexture.DrawCentered(new Vector2((float)(i + clipTexture.Width / 2), (float)(j + clipTexture.Height / 2)), Color.White);
                     }
                 }
-                float scale = 0.5f * (0.5f + ((float)Math.Sin((double)this.timer) + 1f) * 0.25f);
-                this.block.DrawBlockStyle(new Vector2((float)this.block.moveRect.X, (float)this.block.moveRect.Y), (float)this.block.moveRect.Width, (float)this.block.moveRect.Height, this.block.nineSliceTarget, null, Color.White * scale);
+                float scale = 0.5f * (0.5f + ((float)Math.Sin((double)timer) + 1f) * 0.25f);
+                block.DrawBlockStyle(new Vector2((float)block.moveRect.X, (float)block.moveRect.Y), (float)block.moveRect.Width, (float)block.moveRect.Height, block.nineSliceTarget, null, Color.White * scale);
             }
 
             private ToggleSwapBlock block;

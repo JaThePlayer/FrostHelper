@@ -19,12 +19,12 @@ namespace FrostTempleHelper
     {
         public CameraTargetTriggerv2(EntityData data, Vector2 offset) : base(data, offset)
         {
-            this.Target = data.Nodes[0] + offset - new Vector2(320f, 180f) * 0.5f;
-            this.LerpStrength = data.Float("lerpStrength", 0f);
-            this.PositionMode = data.Enum<Trigger.PositionModes>("positionMode", Trigger.PositionModes.NoEffect);
-            this.XOnly = data.Bool("xOnly", false);
-            this.YOnly = data.Bool("yOnly", false);
-            this.DeleteFlag = data.Attr("deleteFlag", "");
+            Target = data.Nodes[0] + offset - new Vector2(320f, 180f) * 0.5f;
+            LerpStrength = data.Float("lerpStrength", 0f);
+            PositionMode = data.Enum<Trigger.PositionModes>("positionMode", PositionModes.NoEffect);
+            XOnly = data.Bool("xOnly", false);
+            YOnly = data.Bool("yOnly", false);
+            DeleteFlag = data.Attr("deleteFlag", "");
         }
 
         public override void OnEnter(Player player)
@@ -34,15 +34,15 @@ namespace FrostTempleHelper
 
         public override void OnStay(Player play)
         {
-            bool flag = string.IsNullOrEmpty(this.DeleteFlag) || !base.SceneAs<Level>().Session.GetFlag(this.DeleteFlag);
+            bool flag = string.IsNullOrEmpty(DeleteFlag) || !SceneAs<Level>().Session.GetFlag(DeleteFlag);
             if (flag)
             {
                 foreach (Player player in Scene.Tracker.GetEntities<Player>())
                 {
-                    player.CameraAnchor = this.Target;
-                    player.CameraAnchorLerp = Vector2.One * MathHelper.Clamp(this.LerpStrength * base.GetPositionLerp(player, this.PositionMode), 0f, 1f);
-                    player.CameraAnchorIgnoreX = this.YOnly;
-                    player.CameraAnchorIgnoreY = this.XOnly;
+                    player.CameraAnchor = Target;
+                    player.CameraAnchorLerp = Vector2.One * MathHelper.Clamp(LerpStrength * GetPositionLerp(player, PositionMode), 0f, 1f);
+                    player.CameraAnchorIgnoreX = YOnly;
+                    player.CameraAnchorIgnoreY = XOnly;
                 }
             }
         }

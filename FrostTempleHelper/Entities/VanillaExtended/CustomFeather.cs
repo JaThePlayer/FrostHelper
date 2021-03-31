@@ -92,69 +92,69 @@ namespace FrostHelper
         public override void Added(Scene scene)
         {
             base.Added(scene);
-            this.level = base.SceneAs<Level>();
+            level = SceneAs<Level>();
         }
 
         public override void Update()
         {
             base.Update();
-            bool flag = this.respawnTimer > 0f;
+            bool flag = respawnTimer > 0f;
             if (flag)
             {
-                this.respawnTimer -= Engine.DeltaTime;
-                bool flag2 = this.respawnTimer <= 0f;
+                respawnTimer -= Engine.DeltaTime;
+                bool flag2 = respawnTimer <= 0f;
                 if (flag2)
                 {
-                    this.Respawn();
+                    Respawn();
                 }
             }
-            this.UpdateY();
-            this.light.Alpha = Calc.Approach(this.light.Alpha, this.sprite.Visible ? 1f : 0f, 4f * Engine.DeltaTime);
-            this.bloom.Alpha = this.light.Alpha * 0.8f;
+            UpdateY();
+            light.Alpha = Calc.Approach(light.Alpha, sprite.Visible ? 1f : 0f, 4f * Engine.DeltaTime);
+            bloom.Alpha = light.Alpha * 0.8f;
         }
 
         public override void Render()
         {
             base.Render();
-            bool flag = this.shielded && this.sprite.Visible;
+            bool flag = shielded && sprite.Visible;
             if (flag)
             {
-                Draw.Circle(this.Position + this.sprite.Position, 10f - this.shieldRadiusWiggle.Value * 2f, Color.White, 3);
+                Draw.Circle(Position + sprite.Position, 10f - shieldRadiusWiggle.Value * 2f, Color.White, 3);
             }
         }
 
         private void Respawn()
         {
-            bool flag = !this.Collidable;
+            bool flag = !Collidable;
             if (flag)
             {
-                this.outline.Visible = false;
-                this.Collidable = true;
-                this.sprite.Visible = true;
-                this.wiggler.Start();
-                Audio.Play("event:/game/06_reflection/feather_reappear", this.Position);
-                this.level.ParticlesFG.Emit(FlyFeather.P_Respawn, 16, this.Position, Vector2.One * 2f, FlyColor);
+                outline.Visible = false;
+                Collidable = true;
+                sprite.Visible = true;
+                wiggler.Start();
+                Audio.Play("event:/game/06_reflection/feather_reappear", Position);
+                level.ParticlesFG.Emit(FlyFeather.P_Respawn, 16, Position, Vector2.One * 2f, FlyColor);
             }
         }
 
         private void UpdateY()
         {
-            this.sprite.X = 0f;
-            this.sprite.Y = (this.bloom.Y = this.sine.Value * 2f);
-            this.sprite.Position += this.moveWiggleDir * this.moveWiggle.Value * -8f;
+            sprite.X = 0f;
+            sprite.Y = (bloom.Y = sine.Value * 2f);
+            sprite.Position += moveWiggleDir * moveWiggle.Value * -8f;
         }
 
         private void OnPlayer(Player player)
         {
             Vector2 speed = player.Speed;
-            bool flag = this.shielded && !player.DashAttacking;
+            bool flag = shielded && !player.DashAttacking;
             if (flag)
             {
-                player.PointBounce(base.Center);
-                this.moveWiggle.Start();
-                this.shieldRadiusWiggle.Start();
-                this.moveWiggleDir = (base.Center - player.Center).SafeNormalize(Vector2.UnitY);
-                Audio.Play("event:/game/06_reflection/feather_bubble_bounce", this.Position);
+                player.PointBounce(Center);
+                moveWiggle.Start();
+                shieldRadiusWiggle.Start();
+                moveWiggleDir = (Center - player.Center).SafeNormalize(Vector2.UnitY);
+                Audio.Play("event:/game/06_reflection/feather_bubble_bounce", Position);
                 Input.Rumble(RumbleStrength.Medium, RumbleLength.Medium);
             }
             else
@@ -163,19 +163,19 @@ namespace FrostHelper
                 {
                     if (player.StateMachine.State != FrostModule.CustomFeatherState && player.StateMachine.State != Player.StStarFly)
                     {
-                        Audio.Play(this.shielded ? "event:/game/06_reflection/feather_bubble_get" : "event:/game/06_reflection/feather_get", this.Position);
+                        Audio.Play(shielded ? "event:/game/06_reflection/feather_bubble_get" : "event:/game/06_reflection/feather_get", Position);
                     }
                     else
                     {
-                        Audio.Play(this.shielded ? "event:/game/06_reflection/feather_bubble_renew" : "event:/game/06_reflection/feather_renew", this.Position);
+                        Audio.Play(shielded ? "event:/game/06_reflection/feather_bubble_renew" : "event:/game/06_reflection/feather_renew", Position);
                     }
-                    this.Collidable = false;
-                    base.Add(new Coroutine(this.CollectRoutine(player, speed), true));
-                    bool flag5 = !this.singleUse;
+                    Collidable = false;
+                    Add(new Coroutine(CollectRoutine(player, speed), true));
+                    bool flag5 = !singleUse;
                     if (flag5)
                     {
-                        this.outline.Visible = true;
-                        this.respawnTimer = 3f;
+                        outline.Visible = true;
+                        respawnTimer = RespawnTime;
                     }
                 }
             }
@@ -199,7 +199,7 @@ namespace FrostHelper
                 if (player.StateMachine.State == FrostModule.CustomFeatherState)
                 {
                     data["starFlyTimer"] = FlyTime;
-                    player.Sprite.Color = this.FlyColor;
+                    player.Sprite.Color = FlyColor;
                     Input.Rumble(RumbleStrength.Medium, RumbleLength.Medium);
                 }
                 else
@@ -213,8 +213,8 @@ namespace FrostHelper
         
         private IEnumerator CollectRoutine(Player player, Vector2 playerSpeed)
         {
-            this.level.Shake(0.3f);
-            this.sprite.Visible = false;
+            level.Shake(0.3f);
+            sprite.Visible = false;
             yield return 0.05f;
             float angle = 0f;
             bool flag = playerSpeed != Vector2.Zero;
@@ -224,10 +224,10 @@ namespace FrostHelper
             }
             else
             {
-                angle = (this.Position - player.Center).Angle();
+                angle = (Position - player.Center).Angle();
             }
-            this.level.ParticlesFG.Emit(P_Collect, 10, this.Position, Vector2.One * 6f, FlyColor);
-            SlashFx.Burst(this.Position, angle);
+            level.ParticlesFG.Emit(P_Collect, 10, Position, Vector2.One * 6f, FlyColor);
+            SlashFx.Burst(Position, angle);
             yield break;
         }
 

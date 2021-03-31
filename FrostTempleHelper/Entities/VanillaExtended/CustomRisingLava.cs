@@ -28,7 +28,6 @@ namespace FrostHelper
             Cold = coldColors;
             Hot = hotColors;
             ReverseCoreMode = reverseCoreMode;
-            
         }
 
         public static Color[] GetColors(EntityData data, bool cold)
@@ -136,20 +135,24 @@ namespace FrostHelper
             }
             else
             {
-                float num = SceneAs<Level>().Camera.Bottom - 12f;
-                if (Top > num + 96f)
+                float num2 = 1f;
+                if (DoRubberbanding)
                 {
-                    Top = num + 96f;
+                    float num = SceneAs<Level>().Camera.Bottom - 12f;
+                    if (Top > num + 96f)
+                    {
+                        Top = num + 96f;
+                    }
+                    if (Top > num)
+                    {
+                        num2 = Calc.ClampedMap(Top - num, 0f, 96f, 1f, 2f);
+                    }
+                    else
+                    {
+                        num2 = Calc.ClampedMap(num - Top, 0f, 32f, 1f, 0.5f);
+                    }
                 }
-                float num2;
-                if (DoRubberbanding && Top > num)
-                {
-                    num2 = Calc.ClampedMap(Top - num, 0f, 96f, 1f, 2f);
-                }
-                else
-                {
-                    num2 = Calc.ClampedMap(num - Top, 0f, 32f, 1f, 0.5f);
-                }
+                
                 if (delay <= 0f)
                 {
                     loopSfx.Param("rising", 1f);

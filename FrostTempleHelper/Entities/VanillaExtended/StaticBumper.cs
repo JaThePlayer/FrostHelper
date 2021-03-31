@@ -30,27 +30,27 @@ namespace FrostHelper
             bool flag = node != null;
             if (flag)
             {
-                Vector2 start = this.Position;
+                Vector2 start = Position;
                 Vector2 end = node.Value;
                 Ease.Easer ease = EaseHelper.GetEase(data.Attr("easing", "CubeInOut"));
                 Tween tween = Tween.Create(Tween.TweenMode.Looping, ease, moveTime, true);
                 tween.OnUpdate = delegate (Tween t)
                 {
-                    bool flag2 = this.goBack;
+                    bool flag2 = goBack;
                     if (flag2)
                     {
-                        this.anchor = Vector2.Lerp(end, start, t.Eased);
+                        anchor = Vector2.Lerp(end, start, t.Eased);
                     }
                     else
                     {
-                        this.anchor = Vector2.Lerp(start, end, t.Eased);
+                        anchor = Vector2.Lerp(start, end, t.Eased);
                     }
                 };
                 tween.OnComplete = delegate (Tween t)
                 {
-                    this.goBack = !this.goBack;
+                    goBack = !goBack;
                 };
-                base.Add(tween);
+                Add(tween);
             }
             UpdatePosition();
             Add(hitWiggler = Wiggler.Create(1.2f, 2f, delegate (float v)
@@ -70,7 +70,7 @@ namespace FrostHelper
                 fireMode = false;
             } else
             {
-                fireMode = (base.SceneAs<Level>().CoreMode == Session.CoreModes.Hot);
+                fireMode = (SceneAs<Level>().CoreMode == Session.CoreModes.Hot);
             }
             spriteEvil.Visible = fireMode;
             sprite.Visible = !fireMode;
@@ -95,34 +95,34 @@ namespace FrostHelper
         public override void Update()
         {
             base.Update();
-            bool flag = this.respawnTimer > 0f;
+            bool flag = respawnTimer > 0f;
             if (flag)
             {
-                this.respawnTimer -= Engine.DeltaTime;
-                bool flag2 = this.respawnTimer <= 0f;
+                respawnTimer -= Engine.DeltaTime;
+                bool flag2 = respawnTimer <= 0f;
                 if (flag2)
                 {
-                    this.light.Visible = true;
-                    this.bloom.Visible = true;
-                    this.sprite.Play("on", false, false);
-                    this.spriteEvil.Play("on", false, false);
-                    bool flag3 = !this.fireMode;
+                    light.Visible = true;
+                    bloom.Visible = true;
+                    sprite.Play("on", false, false);
+                    spriteEvil.Play("on", false, false);
+                    bool flag3 = !fireMode;
                     if (flag3)
                     {
-                        Audio.Play("event:/game/06_reflection/pinballbumper_reset", this.Position);
+                        Audio.Play("event:/game/06_reflection/pinballbumper_reset", Position);
                     }
                 }
             }
             else
             {
-                bool flag4 = base.Scene.OnInterval(0.05f);
+                bool flag4 = Scene.OnInterval(0.05f);
                 if (flag4)
                 {
                     float num = Calc.Random.NextAngle();
-                    ParticleType type = this.fireMode ? Bumper.P_FireAmbience : Bumper.P_Ambience;
-                    float direction = this.fireMode ? -1.57079637f : num;
-                    float length = (float)(this.fireMode ? 12 : 8);
-                    base.SceneAs<Level>().Particles.Emit(type, 1, base.Center + Calc.AngleToVector(num, length), Vector2.One * 2f, direction);
+                    ParticleType type = fireMode ? Bumper.P_FireAmbience : Bumper.P_Ambience;
+                    float direction = fireMode ? -1.57079637f : num;
+                    float length = (float)(fireMode ? 12 : 8);
+                    SceneAs<Level>().Particles.Emit(type, 1, Center + Calc.AngleToVector(num, length), Vector2.One * 2f, direction);
                 }
             }
             UpdatePosition();
@@ -130,44 +130,44 @@ namespace FrostHelper
 
         private void OnPlayer(Player player)
         {
-            bool flag = this.fireMode;
+            bool flag = fireMode;
             if (flag)
             {
                 bool flag2 = !SaveData.Instance.Assists.Invincible;
                 if (flag2)
                 {
-                    Vector2 vector = (player.Center - base.Center).SafeNormalize();
-                    this.hitDir = -vector;
-                    this.hitWiggler.Start();
-                    Audio.Play("event:/game/09_core/hotpinball_activate", this.Position);
-                    this.respawnTimer = respawnTime;
+                    Vector2 vector = (player.Center - Center).SafeNormalize();
+                    hitDir = -vector;
+                    hitWiggler.Start();
+                    Audio.Play("event:/game/09_core/hotpinball_activate", Position);
+                    respawnTimer = respawnTime;
                     player.Die(vector, false, true);
-                    base.SceneAs<Level>().Particles.Emit(Bumper.P_FireHit, 12, base.Center + vector * 12f, Vector2.One * 3f, vector.Angle());
+                    SceneAs<Level>().Particles.Emit(Bumper.P_FireHit, 12, Center + vector * 12f, Vector2.One * 3f, vector.Angle());
                 }
             }
             else
             {
-                bool flag3 = this.respawnTimer <= 0f;
+                bool flag3 = respawnTimer <= 0f;
                 if (flag3)
                 {
-                    bool flag4 = (base.Scene as Level).Session.Area.ID == 9;
+                    bool flag4 = (Scene as Level).Session.Area.ID == 9;
                     if (flag4)
                     {
-                        Audio.Play("event:/game/09_core/pinballbumper_hit", this.Position);
+                        Audio.Play("event:/game/09_core/pinballbumper_hit", Position);
                     }
                     else
                     {
-                        Audio.Play("event:/game/06_reflection/pinballbumper_hit", this.Position);
+                        Audio.Play("event:/game/06_reflection/pinballbumper_hit", Position);
                     }
-                    this.respawnTimer = respawnTime;
-                    Vector2 vector2 = player.ExplodeLaunch(this.Position, false, false);
-                    this.sprite.Play("hit", true, false);
-                    this.spriteEvil.Play("hit", true, false);
-                    this.light.Visible = false;
-                    this.bloom.Visible = false;
-                    base.SceneAs<Level>().DirectionalShake(vector2, 0.15f);
-                    base.SceneAs<Level>().Displacement.AddBurst(base.Center, 0.3f, 8f, 32f, 0.8f, null, null);
-                    base.SceneAs<Level>().Particles.Emit(Bumper.P_Launch, 12, base.Center + vector2 * 12f, Vector2.One * 3f, vector2.Angle());
+                    respawnTimer = respawnTime;
+                    Vector2 vector2 = player.ExplodeLaunch(Position, false, false);
+                    sprite.Play("hit", true, false);
+                    spriteEvil.Play("hit", true, false);
+                    light.Visible = false;
+                    bloom.Visible = false;
+                    SceneAs<Level>().DirectionalShake(vector2, 0.15f);
+                    SceneAs<Level>().Displacement.AddBurst(Center, 0.3f, 8f, 32f, 0.8f, null, null);
+                    SceneAs<Level>().Particles.Emit(Bumper.P_Launch, 12, Center + vector2 * 12f, Vector2.One * 3f, vector2.Angle());
                 }
             }
         }

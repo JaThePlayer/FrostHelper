@@ -16,7 +16,7 @@ namespace FrostHelper
 
         public SpeedChallengeTalker(EntityData data, Vector2 offset) : base(data, offset)
         {
-            Add(new TalkComponent(new Rectangle((int)0, (int)0, data.Width, data.Height), new Vector2(data.Width/2,0), OnTalk));
+            Add(new TalkComponent(new Rectangle(0, 0, data.Width, data.Height), new Vector2(data.Width/2,0), OnTalk));
             challenges = data.Attr("challengeNames", "SpringCollab2020TimeTrial/1-Beginner>sc2020_beg_rainbowBerryRush").Split(',');
             autoAddSID = data.Bool("autoAddSid", false);
         }

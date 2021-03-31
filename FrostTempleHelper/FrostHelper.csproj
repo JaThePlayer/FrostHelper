@@ -55,6 +55,10 @@
       <HintPath>..\..\..\..\MonoMod.Utils.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="OutbackHelper">
+      <HintPath>..\..\..\OutbackHelper\OutbackHelper.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -67,10 +71,17 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="EasierILHook.cs" />
     <Compile Include="Entities\BadelineChaserBlock\BadelineChaserBlock.cs" />
     <Compile Include="Entities\BadelineChaserBlock\BadelineChaserBlockActivator.cs" />
+    <Compile Include="Entities\Booster\GenericCustomBooster.cs" />
+    <Compile Include="Entities\Booster\IncrementBooster.cs" />
     <Compile Include="Entities\Bubbler.cs" />
     <Compile Include="Entities\EntityMover.cs" />
+    <Compile Include="Entities\Noperture\DeadlyLazer.cs" />
+    <Compile Include="Entities\Noperture\PortalGun.cs" />
+    <Compile Include="Entities\Noperture\PortalGunTrigger.cs" />
+    <Compile Include="Entities\Noperture\PortalSurface.cs" />
     <Compile Include="Entities\SpeedChallengeTalker.cs" />
     <Compile Include="Entities\SpeedRingChallenge.cs" />
     <Compile Include="Entities\VanillaExtended\ColoredLightbeam.cs" />
@@ -80,15 +91,19 @@
     <Compile Include="Entities\VanillaExtended\CustomSnowball.cs" />
     <Compile Include="FrostHelperSaveData.cs" />
     <Compile Include="FrostMapDataProcessor.cs" />
+    <Compile Include="OutlineHelper.cs" />
     <Compile Include="Triggers\AnxietyTrigger.cs" />
     <Compile Include="Triggers\CameraTargetv2.cs" />
     <Compile Include="Entities\DreamBlock\CustomDreamBlock.cs" />
     <Compile Include="Entities\Booster\GrayBooster.cs" />
+    <Compile Include="Triggers\CapDashOnGroundTrigger.cs" />
     <Compile Include="Triggers\CassetteTempoTrigger.cs" />
     <Compile Include="Entities\CoreBerry.cs" />
     <Compile Include="Entities\VanillaExtended\CustomFireBarrier.cs" />
     <Compile Include="Entities\VanillaExtended\CustomRisingLava.cs" />
     <Compile Include="Entities\VanillaExtended\CustomSpring.cs" />
+    <Compile Include="Triggers\ChronosTrigger.cs" />
+    <Compile Include="Triggers\ForcedFastfallTrigger.cs" />
     <Compile Include="Triggers\InstantWarp.cs" />
     <Compile Include="Triggers\LightningColorTrigger.cs" />
     <Compile Include="Entities\NoDashArea.cs" />

@@ -30,16 +30,16 @@ namespace FrostHelper
             //pufferSpeed = data.Float("pufferSpeed", -185f);
             speedMult = FrostModule.StringToVec2(data.Attr("speedMult", "1"));
             Vector2 position = data.Position + offset;
-            this.DisabledColor = Color.White;
-            this.Orientation = orientation;
+            DisabledColor = Color.White;
+            Orientation = orientation;
             this.playerCanUse = playerCanUse;
             Remove(Get<PlayerCollider>());
-            base.Add(new PlayerCollider(new Action<Player>(this.OnCollide), null, null));
+            Add(new PlayerCollider(new Action<Player>(OnCollide), null, null));
             Remove(Get<HoldableCollider>());
-            base.Add(new HoldableCollider(new Action<Holdable>(this.OnHoldable), null));
+            Add(new HoldableCollider(new Action<Holdable>(OnHoldable), null));
             Remove(Get<PufferCollider>());
-            PufferCollider pufferCollider = new PufferCollider(new Action<Puffer>(this.OnPuffer), null);
-            base.Add(pufferCollider);
+            PufferCollider pufferCollider = new PufferCollider(new Action<Puffer>(OnPuffer), null);
+            Add(pufferCollider);
             DynData<Spring> dyndata = new DynData<Spring>(this as Spring);
             Sprite spr = dyndata.Get<Sprite>("sprite");
             Remove(spr);
@@ -67,7 +67,7 @@ namespace FrostHelper
             sprite.Play("idle", false, false);
             sprite.Origin.X = sprite.Width / 2f;
             sprite.Origin.Y = sprite.Height;
-            base.Depth = -8501;
+            Depth = -8501;
             /*
             this.staticMover = new StaticMover();
             this.staticMover.OnAttach = delegate (Celeste.Platform p)
@@ -101,33 +101,33 @@ namespace FrostHelper
                     }
                 }
             } */
-            base.Add(this.wiggler = Wiggler.Create(1f, 4f, delegate (float v)
+            Add(wiggler = Wiggler.Create(1f, 4f, delegate (float v)
             {
                 sprite.Scale.Y = 1f + v * 0.2f;
             }, false, false));
-            bool flag4 = orientation == Spring.Orientations.Floor;
+            bool flag4 = orientation == Orientations.Floor;
             if (flag4)
             {
-                base.Collider = new Hitbox(16f, 6f, -8f, -6f);
+                Collider = new Hitbox(16f, 6f, -8f, -6f);
                 pufferCollider.Collider = new Hitbox(16f, 10f, -8f, -10f);
             }
             else
             {
-                bool flag5 = orientation == Spring.Orientations.WallLeft;
+                bool flag5 = orientation == Orientations.WallLeft;
                 if (flag5)
                 {
-                    base.Collider = new Hitbox(6f, 16f, 0f, -8f);
+                    Collider = new Hitbox(6f, 16f, 0f, -8f);
                     pufferCollider.Collider = new Hitbox(12f, 16f, 0f, -8f);
                     sprite.Rotation = 1.57079637f;
                 }
                 else
                 {
-                    bool flag6 = orientation == Spring.Orientations.WallRight;
+                    bool flag6 = orientation == Orientations.WallRight;
                     if (!flag6)
                     {
                         throw new Exception("Orientation not supported!");
                     }
-                    base.Collider = new Hitbox(6f, 16f, -6f, -8f);
+                    Collider = new Hitbox(6f, 16f, -6f, -8f);
                     pufferCollider.Collider = new Hitbox(12f, 16f, -12f, -8f);
                     sprite.Rotation = -1.57079637f;
                 }
@@ -159,46 +159,46 @@ namespace FrostHelper
 
         private void OnCollide(Player player)
         {
-            bool flag = player.StateMachine.State == 9 || !this.playerCanUse;
+            bool flag = player.StateMachine.State == 9 || !playerCanUse;
             if (!flag)
             {
-                bool flag2 = this.Orientation == Spring.Orientations.Floor;
+                bool flag2 = Orientation == Orientations.Floor;
                 if (flag2)
                 {
                     bool flag3 = player.Speed.Y >= 0f;
                     if (flag3)
                     {
-                        this.BounceAnimate();
-                        player.SuperBounce(base.Top);
+                        BounceAnimate();
+                        player.SuperBounce(Top);
                         player.Speed.Y *= speedMult.Y;
                     }
                 }
                 else
                 {
-                    bool flag4 = this.Orientation == Spring.Orientations.WallLeft;
+                    bool flag4 = Orientation == Orientations.WallLeft;
                     if (flag4)
                     {
-                        bool flag5 = player.SideBounce(1, base.Right, base.CenterY);
+                        bool flag5 = player.SideBounce(1, Right, CenterY);
                         if (flag5)
                         {
-                            this.BounceAnimate();
+                            BounceAnimate();
                             player.Speed.X *= speedMult.X;
                             player.Speed.Y *= speedMult.Y;
                         }
                     }
                     else
                     {
-                        bool flag6 = this.Orientation == Spring.Orientations.WallRight;
+                        bool flag6 = Orientation == Orientations.WallRight;
                         if (!flag6)
                         {
                             throw new Exception("Orientation not supported!");
                         }
-                        bool flag7 = player.SideBounce(-1, base.Left, base.CenterY);
+                        bool flag7 = player.SideBounce(-1, Left, CenterY);
                         if (flag7)
                         {
                             player.Speed.X *= speedMult.X;
                             player.Speed.Y *= speedMult.Y;
-                            this.BounceAnimate();
+                            BounceAnimate();
                         }
                     }
                 }
@@ -216,11 +216,11 @@ namespace FrostHelper
             bool flag = h.HitSpring(this);
             if (flag)
             {
-                this.BounceAnimate();
+                BounceAnimate();
                 if (h.Entity is Glider)
                 {
                     Glider glider = (h.Entity as Glider);
-                    if (Orientation == Spring.Orientations.Floor)
+                    if (Orientation == Orientations.Floor)
                     {
                         glider.Speed.Y *= speedMult.Y;
                     } else
@@ -231,7 +231,7 @@ namespace FrostHelper
                 else if (h.Entity is TheoCrystal)
                 {
                     TheoCrystal theo = (h.Entity as TheoCrystal);//.Speed = theoSpeed;
-                    if (Orientation == Spring.Orientations.Floor)
+                    if (Orientation == Orientations.Floor)
                     {
                         theo.Speed.Y *= speedMult.Y;
                     }
@@ -267,7 +267,7 @@ namespace FrostHelper
                         
                         break;
                 } */
-                this.BounceAnimate();
+                BounceAnimate();
             }
         }
         private FieldInfo Puffer_hitSpeed = typeof(Puffer).GetField("hitSpeed", BindingFlags.Instance | BindingFlags.NonPublic);
@@ -277,7 +277,7 @@ namespace FrostHelper
             bool flag = seeker.Speed.Y >= -120f;
             if (flag)
             {
-                this.BounceAnimate();
+                BounceAnimate();
                 seeker.HitSpring();
                 seeker.Speed.Y *= speedMult.Y;
             }

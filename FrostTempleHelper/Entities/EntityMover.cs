@@ -3,7 +3,6 @@ using System;
 using Microsoft.Xna.Framework;
 using Celeste;
 using Celeste.Mod.Entities;
-using Celeste.Mod;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -15,13 +14,25 @@ namespace FrostHelper
         List<Type> Types;
         bool isBlacklist;
         
-        Vector2 end;
+        Vector2 endNode;
 
         // For Tween
         Ease.Easer easer;
         float duration;
 
+        float pauseTime;
         bool mustCollide;
+
+        float pauseTimer = 0f;
+
+        Tween tween;
+        List<Tuple<Entity, Vector2>> entities = new List<Tuple<Entity, Vector2>>();
+
+        bool relativeMode = true;
+        Vector2 distance;
+
+        string onEndSFX;
+
 
         public EntityMover(EntityData data, Vector2 offset) : base(data.Position + offset)
         {
@@ -30,6 +41,10 @@ namespace FrostHelper
             Types = FrostModule.GetTypes(data.Attr("types", "")).ToList();
             isBlacklist = data.Bool("blacklist");
 
+            pauseTime = data.Float("pauseTimeLength", 0f);
+            pauseTimer = data.Float("startPauseTimeLength", 0f);
+            relativeMode = data.Bool("relativeMovementMode", false);
+            onEndSFX = data.Attr("onEndSFX", "");
             if (isBlacklist)
             {
                 // Some basic types we don't want to move D:
@@ -37,11 +52,14 @@ namespace FrostHelper
                     Types.Add(type);
             }
 
-            end = data.FirstNodeNullable(offset).GetValueOrDefault();
+            endNode = data.FirstNodeNullable(offset).GetValueOrDefault();
             easer = EaseHelper.GetEase(data.Attr("easing", "CubeInOut"));
             duration = data.Float("moveDuration", 1f);
             mustCollide = data.Bool("mustCollide", true);
+            distance = new Vector2(endNode.X - Position.X, endNode.Y - Position.Y);
         }
+
+        bool moveBack;
 
         public override void Awake(Scene scene)
         {
@@ -50,41 +68,62 @@ namespace FrostHelper
             {
                 if ((!mustCollide || Collider.Collide(entity.Position)) && (Types.Contains(entity.GetType()) != isBlacklist))
                 {
-                    //entities.Add(entity);
-                    var t = Tween.Create(Tween.TweenMode.Looping, easer, duration, true);
-                    Vector2 start = entity.Position;
-                    bool moveBack = false;
-                    t.OnUpdate = (Tween tw) =>
-                    {
-                        if (moveBack)
-                        {
-                            tw.Entity.Position = Vector2.Lerp(end, start, t.Eased);
-                        }
-                        else
-                        {
-                            tw.Entity.Position = Vector2.Lerp(start, end, t.Eased);
-                        }
-                    };
-                    t.OnComplete = delegate (Tween tw)
-                    {
-                        moveBack = !moveBack;
-                    };
-                    entity.Add(t);
+                    entities.Add(new Tuple<Entity, Vector2>(entity, entity.Position));
                 }
             }
+            var t = Tween.Create(Tween.TweenMode.Looping, easer, duration, true);
+            t.OnUpdate = (Tween tw) =>
+            {
+                foreach (var item in entities)
+                {
+                    if (item == null) {
+                        continue;
+                    }
+                    Vector2 start = item.Item2;
+                    Vector2 end = relativeMode ? item.Item2 + distance : endNode;
+                    if (moveBack) {
+                        if (item.Item1 is Solid solid)
+                        {   
+                            try {
+                                solid.MoveTo(Vector2.Lerp(end, start, tw.Eased));
+                            } catch { }
+                        } else {
+                            item.Item1.Position = Vector2.Lerp(end, start, tw.Eased);
+                        }
+                    } else {
+                        if (item.Item1 is Solid solid)
+                        {
+                            try
+                            {
+                                solid.MoveTo(Vector2.Lerp(start, end, tw.Eased));
+                            }
+                            catch { }
+                        } else {
+                            item.Item1.Position = Vector2.Lerp(start, end, tw.Eased);
+                        }
+                    }
+                    
+                }
+            };
+            
+            t.OnComplete = delegate (Tween tw)
+            {
+                moveBack = !moveBack;
+                pauseTimer = pauseTime;
+                if (onEndSFX != "") {
+                    Audio.Play(onEndSFX);
+                }
+            };
+            Add(tween = t);
         }
 
         public override void Update()
         {
-            base.Update();
-            /*
-            foreach (var entity in entities)
-            {
-                if (entity != null)
-                {
-
-                }
-            } */
+            if (pauseTimer > 0f) {
+                pauseTimer -= Engine.DeltaTime;
+            } else {
+                tween.Update();
+            }
         }
     }
 }

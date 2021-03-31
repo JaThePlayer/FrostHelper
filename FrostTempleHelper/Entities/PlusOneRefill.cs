@@ -39,33 +39,33 @@ namespace FrostHelper
                 SceneAs<Level>().ParticlesFG.Emit(Refill.P_Regen, 5, Center, Vector2.One * 4f, particleColor);
                 SceneAs<Level>().ParticlesFG.Emit(Refill.P_Regen, 5, Center, Vector2.One * 4f, particleColor);
             }
-            base.Collider = new Hitbox(16f, 16f, -8f, -8f);
-            base.Add(new PlayerCollider(new Action<Player>(this.OnPlayer), null, null));
+            Collider = new Hitbox(16f, 16f, -8f, -8f);
+            Add(new PlayerCollider(new Action<Player>(OnPlayer), null, null));
             string str = spritepath;
-            base.Add(this.outline = new Image(GFX.Game[str + "/outline"]));
-            this.outline.CenterOrigin();
-            this.outline.Visible = false;
-            base.Add(this.sprite = new Sprite(GFX.Game, str + "/idle"));
-            this.sprite.AddLoop("idle", "", 0.1f);
-            this.sprite.Play("idle", false, false);
-            this.sprite.CenterOrigin();
-            base.Add(this.flash = new Sprite(GFX.Game, str + "/flash"));
-            this.flash.Add("flash", "", 0.05f);
-            this.flash.OnFinish = delegate (string anim)
+            Add(outline = new Image(GFX.Game[str + "/outline"]));
+            outline.CenterOrigin();
+            outline.Visible = false;
+            Add(sprite = new Sprite(GFX.Game, str + "/idle"));
+            sprite.AddLoop("idle", "", 0.1f);
+            sprite.Play("idle", false, false);
+            sprite.CenterOrigin();
+            Add(flash = new Sprite(GFX.Game, str + "/flash"));
+            flash.Add("flash", "", 0.05f);
+            flash.OnFinish = delegate (string anim)
             {
-                this.flash.Visible = false;
+                flash.Visible = false;
             };
-            this.flash.CenterOrigin();
-            base.Add(this.wiggler = Wiggler.Create(1f, 4f, delegate (float v)
+            flash.CenterOrigin();
+            Add(wiggler = Wiggler.Create(1f, 4f, delegate (float v)
             {
-                this.sprite.Scale = (this.flash.Scale = Vector2.One * (1f + v * 0.2f));
+                sprite.Scale = (flash.Scale = Vector2.One * (1f + v * 0.2f));
             }, false, false));
-            base.Add(new MirrorReflection());
-            base.Add(this.bloom = new BloomPoint(0.8f, 16f));
-            base.Add(this.light = new VertexLight(Color.White, 1f, 16, 40));
-            base.Add(this.sine = new SineWave(0.6f));
-            this.sine.Randomize();
-            this.UpdateY();
+            Add(new MirrorReflection());
+            Add(bloom = new BloomPoint(0.8f, 16f));
+            Add(light = new VertexLight(Color.White, 1f, 16, 40));
+            Add(sine = new SineWave(0.6f));
+            sine.Randomize();
+            UpdateY();
 
             Depth = Depths.DreamBlocks - 1;
         }
@@ -75,7 +75,7 @@ namespace FrostHelper
         public override void Added(Scene scene)
         {
             base.Added(scene);
-            this.level = base.SceneAs<Level>();
+            level = SceneAs<Level>();
         }
 
         public override void Update()
@@ -153,7 +153,7 @@ namespace FrostHelper
             Celeste.Celeste.Freeze(0.05f);
             yield return null;
             level.Shake(0.3f);
-            sprite.Visible = (this.flash.Visible = false);
+            sprite.Visible = (flash.Visible = false);
             if (!oneUse)
             {
                 outline.Visible = true;

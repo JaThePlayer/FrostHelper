@@ -45,9 +45,9 @@ namespace FrostHelper
     {
         public CustomJournalPage(CustomJournal journal)
         {
-            this.TextJustify = new Vector2(0.5f, 0.5f);
-            this.TextColor = Color.Black * 0.6f;
-            this.Journal = journal;
+            TextJustify = new Vector2(0.5f, 0.5f);
+            TextColor = Color.Black * 0.6f;
+            Journal = journal;
         }
 
         public virtual void Redraw(VirtualRenderTarget buffer)
@@ -82,7 +82,7 @@ namespace FrostHelper
             {
                 get
                 {
-                    return this.rows.Count;
+                    return rows.Count;
                 }
             }
 
@@ -90,75 +90,75 @@ namespace FrostHelper
             {
                 get
                 {
-                    if (this.rows.Count <= 0)
+                    if (rows.Count <= 0)
                     {
                         return null;
                     }
-                    return this.rows[0];
+                    return rows[0];
                 }
             }
 
             public CustomJournalPage.Table AddColumn(CustomJournalPage.Cell label)
             {
-                if (this.rows.Count == 0)
+                if (rows.Count == 0)
                 {
-                    this.AddRow();
+                    AddRow();
                 }
-                this.rows[0].Add(label);
+                rows[0].Add(label);
                 return this;
             }
 
             public CustomJournalPage.Row AddRow()
             {
                 CustomJournalPage.Row row = new CustomJournalPage.Row();
-                this.rows.Add(row);
+                rows.Add(row);
                 return row;
             }
 
             public float Height()
             {
-                return 100f + 60f * (float)(this.rows.Count - 1);
+                return 100f + 60f * (float)(rows.Count - 1);
             }
 
             public void Render(Vector2 position)
             {
-                if (this.Header == null)
+                if (Header == null)
                 {
                     return;
                 }
                 float num = 0f;
                 float num2 = 0f;
-                for (int i = 0; i < this.Header.Count; i++)
+                for (int i = 0; i < Header.Count; i++)
                 {
-                    num2 += this.Header[i].Width() + 20f;
+                    num2 += Header[i].Width() + 20f;
                 }
-                for (int j = 0; j < this.Header.Count; j++)
+                for (int j = 0; j < Header.Count; j++)
                 {
-                    float num3 = this.Header[j].Width();
-                    this.Header[j].Render(position + new Vector2(num + num3 * 0.5f, 40f), num3);
+                    float num3 = Header[j].Width();
+                    Header[j].Render(position + new Vector2(num + num3 * 0.5f, 40f), num3);
                     int num4 = 1;
                     float num5 = 130f;
-                    for (int k = 1; k < this.rows.Count; k++)
+                    for (int k = 1; k < rows.Count; k++)
                     {
                         Vector2 vector = position + new Vector2(num + num3 * 0.5f, num5);
-                        if (this.rows[k].Count > 0)
+                        if (rows[k].Count > 0)
                         {
                             if (num4 % 2 == 0)
                             {
                                 Draw.Rect(vector.X - num3 * 0.5f, vector.Y - 27f, num3 + 20f, 54f, Color.Black * 0.08f);
                             }
-                            if (j < this.rows[k].Count && this.rows[k][j] != null)
+                            if (j < rows[k].Count && rows[k][j] != null)
                             {
-                                CustomJournalPage.Cell cell = this.rows[k][j];
+                                CustomJournalPage.Cell cell = rows[k][j];
                                 if (cell.SpreadOverColumns > 1)
                                 {
                                     for (int l = j + 1; l < j + cell.SpreadOverColumns; l++)
                                     {
-                                        vector.X += this.Header[l].Width() * 0.5f;
+                                        vector.X += Header[l].Width() * 0.5f;
                                     }
                                     vector.X += (float)(cell.SpreadOverColumns - 1) * 20f * 0.5f;
                                 }
-                                this.rows[k][j].Render(vector, num3);
+                                rows[k][j].Render(vector, num3);
                             }
                             num4++;
                             num5 += 60f;
@@ -191,7 +191,7 @@ namespace FrostHelper
         {
             public Row Add(Cell entry)
             {
-                this.Entries.Add(entry);
+                Entries.Add(entry);
                 return this;
             }
 
@@ -199,7 +199,7 @@ namespace FrostHelper
             {
                 get
                 {
-                    return this.Entries.Count;
+                    return Entries.Count;
                 }
             }
 
@@ -207,13 +207,13 @@ namespace FrostHelper
             {
                 get
                 {
-                    return this.Entries[index];
+                    return Entries[index];
                 }
             }
 
             public Row()
             {
-                this.Entries = new List<Cell>();
+                Entries = new List<Cell>();
             }
 
             public List<CustomJournalPage.Cell> Entries;
@@ -232,7 +232,7 @@ namespace FrostHelper
 
             protected Cell()
             {
-                this.SpreadOverColumns = 1;
+                SpreadOverColumns = 1;
             }
 
             public int SpreadOverColumns;
@@ -247,7 +247,7 @@ namespace FrostHelper
 
             public override float Width()
             {
-                return this.width;
+                return width;
             }
 
             private float width;
@@ -267,22 +267,22 @@ namespace FrostHelper
 
             public override float Width()
             {
-                if (this.forceWidth)
+                if (forceWidth)
                 {
-                    return this.width;
+                    return width;
                 }
-                return Math.Max(this.width, ActiveFont.Measure(this.text).X * this.scale);
+                return Math.Max(width, ActiveFont.Measure(text).X * scale);
             }
 
             public override void Render(Vector2 center, float columnWidth)
             {
-                float num = ActiveFont.Measure(this.text).X * this.scale;
+                float num = ActiveFont.Measure(text).X * scale;
                 float scaleFactor = 1f;
-                if (!this.forceWidth && num > columnWidth)
+                if (!forceWidth && num > columnWidth)
                 {
                     scaleFactor = columnWidth / num;
                 }
-                ActiveFont.Draw(this.text, center + new Vector2(-columnWidth / 2f + columnWidth * this.justify.X, 0f), this.justify, Vector2.One * this.scale * scaleFactor, this.color);
+                ActiveFont.Draw(text, center + new Vector2(-columnWidth / 2f + columnWidth * justify.X, 0f), justify, Vector2.One * scale * scaleFactor, color);
             }
 
             private string text;
@@ -308,12 +308,12 @@ namespace FrostHelper
 
             public override float Width()
             {
-                return Math.Max((float)MTN.Journal[this.icon].Width, this.width);
+                return Math.Max((float)MTN.Journal[icon].Width, width);
             }
 
             public override void Render(Vector2 center, float columnWidth)
             {
-                MTN.Journal[this.icon].DrawCentered(center);
+                MTN.Journal[icon].DrawCentered(center);
             }
 
             private string icon;
@@ -332,29 +332,29 @@ namespace FrostHelper
 
             public IconsCell(params string[] icons)
             {
-                this.iconSpacing = 4f;
+                iconSpacing = 4f;
                 this.icons = icons;
             }
 
             public override float Width()
             {
                 float num = 0f;
-                for (int i = 0; i < this.icons.Length; i++)
+                for (int i = 0; i < icons.Length; i++)
                 {
-                    num += (float)MTN.Journal[this.icons[i]].Width;
+                    num += (float)MTN.Journal[icons[i]].Width;
                 }
-                return num + (float)(this.icons.Length - 1) * this.iconSpacing;
+                return num + (float)(icons.Length - 1) * iconSpacing;
             }
 
             public override void Render(Vector2 center, float columnWidth)
             {
-                float num = this.Width();
+                float num = Width();
                 Vector2 position = center + new Vector2(-num * 0.5f, 0f);
-                for (int i = 0; i < this.icons.Length; i++)
+                for (int i = 0; i < icons.Length; i++)
                 {
-                    MTexture mtexture = MTN.Journal[this.icons[i]];
+                    MTexture mtexture = MTN.Journal[icons[i]];
                     mtexture.DrawJustified(position, new Vector2(0f, 0.5f));
-                    position.X += (float)mtexture.Width + this.iconSpacing;
+                    position.X += (float)mtexture.Width + iconSpacing;
                 }
             }
 
@@ -370,7 +370,7 @@ namespace FrostHelper
         {
             get
             {
-                return this.Pages[this.PageIndex];
+                return Pages[PageIndex];
             }
         }
 
@@ -378,7 +378,7 @@ namespace FrostHelper
         {
             get
             {
-                return this.Pages[this.PageIndex + 1];
+                return Pages[PageIndex + 1];
             }
         }
 
@@ -386,7 +386,7 @@ namespace FrostHelper
         {
             get
             {
-                return this.Pages[this.PageIndex - 1];
+                return Pages[PageIndex - 1];
             }
         }
 
@@ -395,23 +395,23 @@ namespace FrostHelper
             PageIndex = 0;
             Visible = true;
             X = -1920f;
-            this.turningPage = false;
-            this.turningScale = 1f;
-            this.rotation = 0f;
-            this.dot = 0f;
-            this.dotTarget = 0f;
-            this.dotEase = 0f;
-            this.leftArrowEase = 0f;
-            this.rightArrowEase = 0f;
-            this.NextPageBuffer = VirtualContent.CreateRenderTarget("journal-a", 1610, 1000, false, true, 0);
-            this.CurrentPageBuffer = VirtualContent.CreateRenderTarget("journal-b", 1610, 1000, false, true, 0);
+            turningPage = false;
+            turningScale = 1f;
+            rotation = 0f;
+            dot = 0f;
+            dotTarget = 0f;
+            dotEase = 0f;
+            leftArrowEase = 0f;
+            rightArrowEase = 0f;
+            NextPageBuffer = VirtualContent.CreateRenderTarget("journal-a", 1610, 1000, false, true, 0);
+            CurrentPageBuffer = VirtualContent.CreateRenderTarget("journal-b", 1610, 1000, false, true, 0);
 
             int num = 0;
-            foreach (CustomJournalPage CustomJournalPage in this.Pages)
+            foreach (CustomJournalPage CustomJournalPage in Pages)
             {
                 CustomJournalPage.PageIndex = num++;
             }
-            this.Pages[0].Redraw(this.CurrentPageBuffer);
+            Pages[0].Redraw(CurrentPageBuffer);
             //this.cameraStart = this.Overworld.Mountain.UntiltedCamera;
             //this.cameraEnd = this.cameraStart;
             //this.cameraEnd.Position = this.cameraEnd.Position + -this.cameraStart.Rotation.Forward() * 1f;
@@ -419,53 +419,53 @@ namespace FrostHelper
             //this.Overworld.Mountain.AllowUserRotation = false;
             for (float p = 0f; p < 1f; p += Engine.DeltaTime / 0.4f)
             {
-                this.rotation = -0.025f * Ease.BackOut(p);
-                this.X = -1920f + 1920f * Ease.CubeInOut(p);
-                this.dotEase = p;
+                rotation = -0.025f * Ease.BackOut(p);
+                X = -1920f + 1920f * Ease.CubeInOut(p);
+                dotEase = p;
                 yield return null;
             }
-            this.dotEase = 1f;
+            dotEase = 1f;
             yield break;
         }
 
         public override void HandleGraphicsReset()
         {
             base.HandleGraphicsReset();
-            if (this.Pages.Count > 0)
+            if (Pages.Count > 0)
             {
-                this.Page.Redraw(this.CurrentPageBuffer);
+                Page.Redraw(CurrentPageBuffer);
             }
         }
 
         public IEnumerator TurnPage(int direction)
         {
-            this.turningPage = true;
+            turningPage = true;
             if (direction < 0)
             {
-                this.PageIndex--;
-                this.turningScale = -1f;
-                this.dotTarget -= 1f;
-                this.Page.Redraw(this.CurrentPageBuffer);
-                this.NextPage.Redraw(this.NextPageBuffer);
-                while ((this.turningScale = Calc.Approach(this.turningScale, 1f, Engine.DeltaTime * 8f)) < 1f)
+                PageIndex--;
+                turningScale = -1f;
+                dotTarget -= 1f;
+                Page.Redraw(CurrentPageBuffer);
+                NextPage.Redraw(NextPageBuffer);
+                while ((turningScale = Calc.Approach(turningScale, 1f, Engine.DeltaTime * 8f)) < 1f)
                 {
                     yield return null;
                 }
             }
             else
             {
-                this.NextPage.Redraw(this.NextPageBuffer);
-                this.turningScale = 1f;
-                this.dotTarget += 1f;
-                while ((this.turningScale = Calc.Approach(this.turningScale, -1f, Engine.DeltaTime * 8f)) > -1f)
+                NextPage.Redraw(NextPageBuffer);
+                turningScale = 1f;
+                dotTarget += 1f;
+                while ((turningScale = Calc.Approach(turningScale, -1f, Engine.DeltaTime * 8f)) > -1f)
                 {
                     yield return null;
                 }
-                this.PageIndex++;
-                this.Page.Redraw(this.CurrentPageBuffer);
+                PageIndex++;
+                Page.Redraw(CurrentPageBuffer);
             }
-            this.turningScale = 1f;
-            this.turningPage = false;
+            turningScale = 1f;
+            turningPage = false;
             yield break;
         }
 
@@ -474,7 +474,7 @@ namespace FrostHelper
             Audio.Play("event:/ui/world_map/journal/back");
            // this.Overworld.Mountain.EaseCamera(this.Overworld.Mountain.Area, this.cameraStart, new float?(0.4f), true, false);
             //UserIO.SaveHandler(false, true);
-            yield return this.EaseOut(0.4f);
+            yield return EaseOut(0.4f);
             //while (UserIO.Saving)
             //{
             //    yield return null;
@@ -490,32 +490,32 @@ namespace FrostHelper
 
         private IEnumerator EaseOut(float duration)
         {
-            float rotFrom = this.rotation;
+            float rotFrom = rotation;
             for (float p = 0f; p < 1f; p += Engine.DeltaTime / duration)
             {
-                this.rotation = rotFrom * (1f - Ease.BackOut(p));
-                this.X = 0f + -1920f * Ease.CubeInOut(p);
-                this.dotEase = 1f - p;
+                rotation = rotFrom * (1f - Ease.BackOut(p));
+                X = 0f + -1920f * Ease.CubeInOut(p);
+                dotEase = 1f - p;
                 yield return null;
             }
-            this.dotEase = 0f;
+            dotEase = 0f;
             yield break;
         }
 
         public override void Update()
         {
             base.Update();
-            this.dot = Calc.Approach(this.dot, this.dotTarget, Engine.DeltaTime * 8f);
-            this.leftArrowEase = Calc.Approach(this.leftArrowEase, (float)((this.dotTarget > 0f) ? 1 : 0), Engine.DeltaTime * 5f) * this.dotEase;
-            this.rightArrowEase = Calc.Approach(this.rightArrowEase, (float)((this.dotTarget < (float)(this.Pages.Count - 1)) ? 1 : 0), Engine.DeltaTime * 5f) * this.dotEase;
+            dot = Calc.Approach(dot, dotTarget, Engine.DeltaTime * 8f);
+            leftArrowEase = Calc.Approach(leftArrowEase, (float)((dotTarget > 0f) ? 1 : 0), Engine.DeltaTime * 5f) * dotEase;
+            rightArrowEase = Calc.Approach(rightArrowEase, (float)((dotTarget < (float)(Pages.Count - 1)) ? 1 : 0), Engine.DeltaTime * 5f) * dotEase;
             if (!turningPage && Pages.Count > 0)
             {
-                this.Page.Update();
-                if (!this.PageTurningLocked)
+                Page.Update();
+                if (!PageTurningLocked)
                 {
-                    if (Input.MenuLeft.Pressed && this.PageIndex > 0)
+                    if (Input.MenuLeft.Pressed && PageIndex > 0)
                     {
-                        if (this.PageIndex == 1)
+                        if (PageIndex == 1)
                         {
                             Audio.Play("event:/ui/world_map/journal/page_cover_back");
                         }
@@ -523,11 +523,11 @@ namespace FrostHelper
                         {
                             Audio.Play("event:/ui/world_map/journal/page_main_back");
                         }
-                        base.Add(new Coroutine(this.TurnPage(-1), true));
+                        Add(new Coroutine(TurnPage(-1), true));
                     }
-                    else if (Input.MenuRight.Pressed && this.PageIndex < this.Pages.Count - 1)
+                    else if (Input.MenuRight.Pressed && PageIndex < Pages.Count - 1)
                     {
-                        if (this.PageIndex == 0)
+                        if (PageIndex == 0)
                         {
                             Audio.Play("event:/ui/world_map/journal/page_cover_forward");
                         }
@@ -535,12 +535,12 @@ namespace FrostHelper
                         {
                             Audio.Play("event:/ui/world_map/journal/page_main_forward");
                         }
-                        base.Add(new Coroutine(this.TurnPage(1), true));
+                        Add(new Coroutine(TurnPage(1), true));
                     }
                 }
-                if (!this.PageTurningLocked && (Input.MenuJournal.Pressed || Input.MenuCancel.Pressed))
+                if (!PageTurningLocked && (Input.MenuJournal.Pressed || Input.MenuCancel.Pressed))
                 {
-                    this.Close();
+                    Close();
                 }
             }
         }
@@ -552,9 +552,9 @@ namespace FrostHelper
 
         public override void Render()
         {
-            Vector2 vector = this.Position + new Vector2(128f, 120f);
-            float num = Ease.CubeInOut(Math.Max(0f, this.turningScale));
-            float num2 = Ease.CubeInOut(Math.Abs(Math.Min(0f, this.turningScale)));
+            Vector2 vector = Position + new Vector2(128f, 120f);
+            float num = Ease.CubeInOut(Math.Max(0f, turningScale));
+            float num2 = Ease.CubeInOut(Math.Abs(Math.Min(0f, turningScale)));
             if (SaveData.Instance.CheatMode)
             {
                 MTN.FileSelect["cheatmode"].DrawCentered(vector + new Vector2(80f, 360f), Color.White, 1f, 1.57079637f);
@@ -564,40 +564,40 @@ namespace FrostHelper
                 MTN.FileSelect["assist"].DrawCentered(vector + new Vector2(100f, 370f), Color.White, 1f, 1.57079637f);
             }
             MTexture mtexture = MTN.Journal["edge"];
-            mtexture.Draw(vector + new Vector2((float)(-(float)mtexture.Width), 0f), Vector2.Zero, Color.White, 1f, this.rotation);
-            if (this.PageIndex > 0)
+            mtexture.Draw(vector + new Vector2((float)(-(float)mtexture.Width), 0f), Vector2.Zero, Color.White, 1f, rotation);
+            if (PageIndex > 0)
             {
-                MTN.Journal[this.PrevPage.PageTexture].Draw(vector, Vector2.Zero, this.backColor, new Vector2(-1f, 1f), this.rotation);
+                MTN.Journal[PrevPage.PageTexture].Draw(vector, Vector2.Zero, backColor, new Vector2(-1f, 1f), rotation);
             }
-            if (this.turningPage)
+            if (turningPage)
             {
-                MTN.Journal[this.NextPage.PageTexture].Draw(vector, Vector2.Zero, Color.White, 1f, this.rotation);
-                Draw.SpriteBatch.Draw(this.NextPageBuffer, vector, new Rectangle?(this.NextPageBuffer.Bounds), Color.White, this.rotation, Vector2.Zero, Vector2.One, SpriteEffects.None, 0f);
+                MTN.Journal[NextPage.PageTexture].Draw(vector, Vector2.Zero, Color.White, 1f, rotation);
+                Draw.SpriteBatch.Draw(NextPageBuffer, vector, new Rectangle?(NextPageBuffer.Bounds), Color.White, rotation, Vector2.Zero, Vector2.One, SpriteEffects.None, 0f);
             }
-            if (this.turningPage && num2 > 0f)
+            if (turningPage && num2 > 0f)
             {
-                MTN.Journal[this.Page.PageTexture].Draw(vector, Vector2.Zero, this.backColor, new Vector2(-1f * num2, 1f), this.rotation);
+                MTN.Journal[Page.PageTexture].Draw(vector, Vector2.Zero, backColor, new Vector2(-1f * num2, 1f), rotation);
             }
             if (num > 0f)
             {
-                MTN.Journal[this.Page.PageTexture].Draw(vector, Vector2.Zero, Color.White, new Vector2(num, 1f), this.rotation);
+                MTN.Journal[Page.PageTexture].Draw(vector, Vector2.Zero, Color.White, new Vector2(num, 1f), rotation);
                 //Page.Redraw(CurrentPageBuffer);
-                Draw.SpriteBatch.Draw(this.CurrentPageBuffer, vector, new Rectangle?(this.CurrentPageBuffer.Bounds), Color.White, this.rotation, Vector2.Zero, new Vector2(num, 1f), SpriteEffects.None, 0f);
+                Draw.SpriteBatch.Draw(CurrentPageBuffer, vector, new Rectangle?(CurrentPageBuffer.Bounds), Color.White, rotation, Vector2.Zero, new Vector2(num, 1f), SpriteEffects.None, 0f);
             }
-            if (this.Pages.Count > 0)
+            if (Pages.Count > 0)
             {
-                int count = this.Pages.Count;
+                int count = Pages.Count;
                 MTexture mtexture2 = GFX.Gui["dot_outline"];
                 int num3 = mtexture2.Width * count;
-                Vector2 value = new Vector2(960f, 1040f - 40f * Ease.CubeOut(this.dotEase));
+                Vector2 value = new Vector2(960f, 1040f - 40f * Ease.CubeOut(dotEase));
                 for (int i = 0; i < count; i++)
                 {
                     mtexture2.DrawCentered(value + new Vector2((float)(-(float)num3 / 2) + (float)mtexture2.Width * ((float)i + 0.5f), 0f), Color.White * 0.25f);
                 }
-                float x = 1f + Calc.YoYo(this.dot % 1f) * 4f;
-                mtexture2.DrawCentered(value + new Vector2((float)(-(float)num3 / 2) + (float)mtexture2.Width * (this.dot + 0.5f), 0f), Color.White, new Vector2(x, 1f));
-                GFX.Gui["dotarrow_outline"].DrawCentered(value + new Vector2((float)(-(float)num3 / 2 - 50), 32f * (1f - Ease.CubeOut(this.leftArrowEase))), Color.White * this.leftArrowEase, new Vector2(-1f, 1f));
-                GFX.Gui["dotarrow_outline"].DrawCentered(value + new Vector2((float)(num3 / 2 + 50), 32f * (1f - Ease.CubeOut(this.rightArrowEase))), Color.White * this.rightArrowEase);
+                float x = 1f + Calc.YoYo(dot % 1f) * 4f;
+                mtexture2.DrawCentered(value + new Vector2((float)(-(float)num3 / 2) + (float)mtexture2.Width * (dot + 0.5f), 0f), Color.White, new Vector2(x, 1f));
+                GFX.Gui["dotarrow_outline"].DrawCentered(value + new Vector2((float)(-(float)num3 / 2 - 50), 32f * (1f - Ease.CubeOut(leftArrowEase))), Color.White * leftArrowEase, new Vector2(-1f, 1f));
+                GFX.Gui["dotarrow_outline"].DrawCentered(value + new Vector2((float)(num3 / 2 + 50), 32f * (1f - Ease.CubeOut(rightArrowEase))), Color.White * rightArrowEase);
             }
         }
 

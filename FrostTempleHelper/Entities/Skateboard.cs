@@ -24,38 +24,38 @@ namespace FrostHelper
 
         public Skateboard(EntityData entityData, Vector2 offset) : base(entityData.Position + offset + new Vector2(0, 8), 25, false)
         {
-            this.dir = entityData.Enum<Skateboard.Directions>("direction", Skateboard.Directions.Old);
-            this.hasRoadAndBarriers = false;
-            this.startY = entityData.Position.Y + 8;
-            base.Depth = 1;
+            dir = entityData.Enum<Skateboard.Directions>("direction", Directions.Old);
+            hasRoadAndBarriers = false;
+            startY = entityData.Position.Y + 8;
+            Depth = Depths.Pickups;
             string sprite = entityData.Attr("sprite", "objects/FrostHelper/skateboard");
             //base.Add(this.bodySprite = new Image(GFX.Game["scenery/car/body"]));
-            base.Add(this.bodySprite = new Image(GFX.Game[sprite]));
-            this.bodySprite.Active = true;
+            Add(bodySprite = new Image(GFX.Game[sprite]));
+            bodySprite.Active = true;
             bodySprite.Scale = dir == Directions.Right ? new Vector2(-1,1) : new Vector2(1, 1);
             if (dir == Directions.Old)
             {
                 bodySprite.Scale = new Vector2(-1, 1);
             }
-            this.bodySprite.Origin = new Vector2(bodySprite.Width / 2f, this.bodySprite.Height);
+            bodySprite.Origin = new Vector2(bodySprite.Width / 2f, bodySprite.Height);
             Hitbox hitbox = new Hitbox(20f, 6f, -10f, -7f);
             Hitbox hitbox2 = new Hitbox(19f, 4f, 8f, -11f);
-            base.Collider = new ColliderList(new Collider[]
+            Collider = new ColliderList(new Collider[]
             {
                 hitbox,
              //   hitbox2
             });
-            this.speedX = entityData.Float("speed", 90f);
+            speedX = entityData.Float("speed", 90f);
             if (dir == Directions.Left) speedX = -speedX;
-            this.SurfaceSoundIndex = 2;
+            SurfaceSoundIndex = 2;
             keepMoving = entityData.Bool("keepMoving", false);
         }
 
         public override void Added(Scene scene)
         {
-            this.orig_Added(scene);
+            orig_Added(scene);
             Level level = scene as Level;
-            this.level = base.SceneAs<Level>();
+            this.level = SceneAs<Level>();
             //if (dir == Directions.Right)
             
             //speedX = (dir == Directions.Right) ? 30f : -30f;
@@ -76,43 +76,43 @@ namespace FrostHelper
             };
             return false;
         }
-
+        
         public override void Update()
         {
-            Player player = base.Scene.Tracker.GetEntity<Player>();
-            bool flag = HasNonGhostRider();
-            if (base.Y > this.startY && (!flag || base.Y > this.startY + 1f))
+            Player player = Scene.Tracker.GetEntity<Player>();
+            bool ridden = HasNonGhostRider();
+            if (Y > startY && (!ridden || Y > startY + 1f))
             {
                 float moveV = -10f * Engine.DeltaTime;
-                base.MoveV(moveV);
+                MoveV(moveV);
             }
-            if (base.Y <= this.startY && !this.didHaveRider && flag)
+            if (Y <= startY && !didHaveRider && ridden)
             {
-                base.MoveV(2f);
+                MoveV(2f);
             }
-            if (this.didHaveRider && !flag)
+            if (didHaveRider && !ridden)
             {
-                Audio.Play("event:/game/00_prologue/car_up", this.Position);
+                Audio.Play("event:/game/00_prologue/car_up", Position);
             }
-            if (flag || (keepMoving == true && hasMoved == true))
+            if (ridden || (keepMoving == true && hasMoved == true))
             {
                 //speedX = (dir == Directions.Right) ? Calc.Approach(speedX, 120f, 250f * Engine.DeltaTime) : Calc.Approach(speedX, -120f, -250f * Engine.DeltaTime);
                 if (dir == Directions.Old) speedX = Calc.Approach(speedX, 120f, 250f * Engine.DeltaTime);
                 //speedX = (dir == Directions.Right) ? speedX : -speedX;
-                bool a = this.MoveHCheck(speedX * Engine.DeltaTime);
+                bool a = MoveHCheck(speedX * Engine.DeltaTime);
                 //if (hit) base.MoveH(1f);
                 hasMoved = true;
             }
 
-            this.MoveVCheck(75f * Engine.DeltaTime);
+            MoveVCheck(75f * Engine.DeltaTime);
             //this.MoveVCheck(speedY);
-            this.didHaveRider = flag;
+            didHaveRider = ridden;
             base.Update();
         }
 
         public override int GetLandSoundIndex(Entity entity)
         {
-            Audio.Play("event:/game/00_prologue/car_down", this.Position);
+            Audio.Play("event:/game/00_prologue/car_down", Position);
             return -1;
         }
 
@@ -125,18 +125,18 @@ namespace FrostHelper
         private bool MoveHCheck(float amount)
         {
             //Level level = scene as Level;
-            bool flag = base.MoveHCollideSolidsAndBounds(this.level, amount, true, null);
+            bool flag = MoveHCollideSolidsAndBounds(level, amount, true, null);
             bool result;
             if (flag)
             {
-                bool flag2 = amount < 0f && base.Left <= (float)this.level.Bounds.Left;
+                bool flag2 = amount < 0f && Left <= (float)level.Bounds.Left;
                 if (flag2)
                 {
                     result = true;
                 }
                 else
                 {
-                    bool flag3 = amount > 0f && base.Right >= (float)this.level.Bounds.Right;
+                    bool flag3 = amount > 0f && Right >= (float)level.Bounds.Right;
                     if (flag3)
                     {
                         result = true;
@@ -148,11 +148,11 @@ namespace FrostHelper
                             for (int j = 1; j >= -1; j -= 2)
                             {
                                 Vector2 value = new Vector2((float)Math.Sign(amount), (float)(i * j));
-                                bool flag4 = !base.CollideCheck<Solid>(this.Position + value);
+                                bool flag4 = !CollideCheck<Solid>(Position + value);
                                 if (flag4)
                                 {
-                                    this.MoveVExact(i * j);
-                                    this.MoveHExact(Math.Sign(amount));
+                                    MoveVExact(i * j);
+                                    MoveHExact(Math.Sign(amount));
                                     return false;
                                 }
                             }
@@ -170,18 +170,18 @@ namespace FrostHelper
 
         private bool MoveVCheck(float amount)
         {
-            bool flag = MoveVCollideSolidsAndBounds(this.level, amount, true, null, true);
+            bool flag = MoveVCollideSolidsAndBounds(level, amount, true, null, true);
             bool result;
             if (flag)
             {
-                bool flag2 = amount < 0f && base.Top <= (float)this.level.Bounds.Top;
+                bool flag2 = amount < 0f && Top <= (float)level.Bounds.Top;
                 if (flag2)
                 {
                     result = true;
                 }
                 else
                 {
-                    bool flag3 = amount > 0f && base.Bottom >= (float)(this.level.Bounds.Bottom + 32);
+                    bool flag3 = amount > 0f && Bottom >= (float)(level.Bounds.Bottom + 32);
                     if (flag3)
                     {
                         result = true;
@@ -193,11 +193,11 @@ namespace FrostHelper
                             for (int j = 1; j >= -1; j -= 2)
                             {
                                 Vector2 value = new Vector2((float)(i * j), (float)Math.Sign(amount));
-                                bool flag4 = !base.CollideCheck<Solid>(this.Position + value);
+                                bool flag4 = !CollideCheck<Solid>(Position + value);
                                 if (flag4)
                                 {
-                                    this.MoveHExact(i * j);
-                                    this.MoveVExact(Math.Sign(amount));
+                                    MoveHExact(i * j);
+                                    MoveVExact(Math.Sign(amount));
                                     return false;
                                 }
                             }

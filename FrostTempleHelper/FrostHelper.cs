@@ -8,6 +8,8 @@ using Celeste.Mod;
 using Celeste.Mod.Helpers;
 using Celeste.Mod.Meta;
 using FrostHelper;
+using FrostHelper.Entities.Boosters;
+using FrostTempleHelper.Entities.azcplo1k;
 using Microsoft.Xna.Framework;
 using Mono.Cecil.Cil;
 using Monocle;
@@ -19,6 +21,7 @@ namespace FrostHelper
 {
     public class FrostModule : EverestModule
     {
+        static bool outBackHelper = false;
         public static SpriteBank SpriteBank;
         // Only one alive module instance can exist at any given time.
         public static FrostModule Instance;
@@ -51,7 +54,12 @@ namespace FrostHelper
         {
             SpriteBank = new SpriteBank(GFX.Game, "Graphics/FrostHelper/CustomSprites.xml");
             BadelineChaserBlock.Load();
-            BadelineChaserBlockActivator.Load();
+            BadelineChaserBlockActivator.Load(); 
+            if (Everest.Loader.DependencyLoaded(new EverestModuleMetadata() { Name = "OutbackHelper" }))
+            {
+                outBackHelper = true;
+                typeof(FrostModule).Assembly.GetType("FrostTempleHelper.Entities.azcplo1k.abcdhr").GetMethod("Load").Invoke(null, new object[0]);
+            }
         }
 
         // Set up any hooks, event handlers and your mod in general here.
@@ -85,10 +93,18 @@ namespace FrostHelper
             IL.Celeste.Player.OnCollideH += modFeatherState;
             IL.Celeste.Player.OnCollideV += modFeatherState;
             //IL.Celeste.Player.Update += modFeatherState;
-            playerUpdateHook = new ILHook(typeof(Player).GetMethod("orig_Update", BindingFlags.Instance | BindingFlags.Public), modFeatherState);
+            
             IL.Celeste.Player.Render += modFeatherState;
 
+            // Generic Red Boosters
+            IL.Celeste.Player.OnBoundsH += modRedDashState;
+            IL.Celeste.Player.OnBoundsV += modRedDashState;
+            IL.Celeste.DashBlock.OnDashed += modRedDashState;
+
             CustomSpinner.LoadHooks();
+            //PortalGun.Load();
+            ForcedFastfallTrigger.Load();
+            playerUpdateHook = new ILHook(typeof(Player).GetMethod("orig_Update", BindingFlags.Instance | BindingFlags.Public), modFeatherState);
         }
 
         private void LightningRenderer_Reset(On.Celeste.LightningRenderer.orig_Reset orig, LightningRenderer self)
@@ -116,10 +132,26 @@ namespace FrostHelper
         void modFeatherState(ILContext il)
         {
             ILCursor cursor = new ILCursor(il);
-            while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdcI4(19)))
+            while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdcI4(19) && instr.Previous.MatchCallvirt<StateMachine>("get_State")))
             {
                 cursor.Emit(OpCodes.Pop);
                 cursor.EmitDelegate<Func<int>>(getFeatherState);
+            }
+            cursor.Index = 0;
+            while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdcI4(5) && instr.Previous.MatchCallvirt<StateMachine>("get_State")))
+            {
+                cursor.Emit(OpCodes.Pop);
+                cursor.EmitDelegate<Func<int>>(getRedDashState);
+            }
+        }
+
+        void modRedDashState(ILContext il)
+        {
+            ILCursor cursor = new ILCursor(il);
+            while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdcI4(5) && instr.Previous.MatchCallvirt<StateMachine>("get_State")))
+            {
+                cursor.Emit(OpCodes.Pop);
+                cursor.EmitDelegate<Func<int>>(getRedDashState);
             }
         }
 
@@ -130,7 +162,15 @@ namespace FrostHelper
             else
                 return 19;
         }
-        
+
+        static int getRedDashState()
+        {
+            if (Engine.Scene is Level)
+                return StateGetPlayer().StateMachine.State == GenericCustomBooster.CustomRedBoostState ? GenericCustomBooster.CustomRedBoostState : 5;
+            else
+                return 5;
+        }
+
         #region CustomDreamBlock
 
         public static int CustomDreamDashState;
@@ -205,6 +245,18 @@ namespace FrostHelper
                         return;
                     }
                 }
+                foreach (GenericCustomBooster b in self.Scene.Tracker.GetEntities<GenericCustomBooster>())
+                {
+                    if (b.StartedBoosting)
+                    {
+                        b.PlayerBoosted(self, self.DashDir);
+                        return;
+                    }
+                    if (b.BoostingPlayer)
+                    {
+                        return;
+                    }
+                }
             }
             catch {}
             orig(self);
@@ -219,6 +271,8 @@ namespace FrostHelper
             YellowBoostState = self.StateMachine.AddState(new Func<int>(YellowBoostUpdate), YellowBoostCoroutine, YellowBoostBegin, YellowBoostEnd);
             blueBoostState = self.StateMachine.AddState(new Func<int>(BlueBoostUpdate), BlueBoostCoroutine, BlueBoostBegin, BlueBoostEnd);
             grayBoostState = self.StateMachine.AddState(new Func<int>(GrayBoostUpdate), GrayBoostCoroutine, GrayBoostBegin, GrayBoostEnd);
+            GenericCustomBooster.CustomBoostState = self.StateMachine.AddState(new Func<int>(GenericCustomBooster.BoostUpdate), GenericCustomBooster.BoostCoroutine, GenericCustomBooster.BoostBegin, GenericCustomBooster.BoostEnd);
+            GenericCustomBooster.CustomRedBoostState = self.StateMachine.AddState(new Func<int>(GenericCustomBooster.RedDashUpdate), GenericCustomBooster.RedDashCoroutine, GenericCustomBooster.RedDashBegin, GenericCustomBooster.RedDashEnd);
             CustomDreamDashState = self.StateMachine.AddState(new Func<int>(CustomDreamBlock.DreamDashUpdate), null, CustomDreamBlock.DreamDashBegin, CustomDreamBlock.DreamDashEnd);
             CustomFeatherState = self.StateMachine.AddState(StarFlyUpdate, CustomFeatherCoroutine, CustomFeatherBegin, CustomFeatherEnd);
         }
@@ -545,12 +599,13 @@ namespace FrostHelper
             Vector2 vector = Calc.Approach(player.ExactPosition, boostTarget - player.Collider.Center + value, 80f * Engine.DeltaTime);
             player.MoveToX(vector.X, null);
             player.MoveToY(vector.Y, null);
-            bool pressed = Input.Dash.Pressed;
+            bool pressed = Input.Dash.Pressed || Input.CrouchDashPressed;
             // the state we should be in afterwards
             int result;
             if (pressed)
             {
                 Input.Dash.ConsumePress();
+                Input.CrouchDash.ConsumePress();
                 result = Player.StDash;
             }
             else
@@ -635,12 +690,13 @@ namespace FrostHelper
             Vector2 vector = Calc.Approach(player.ExactPosition, boostTarget - player.Collider.Center + value, 80f * Engine.DeltaTime);
             player.MoveToX(vector.X, null);
             player.MoveToY(vector.Y, null);
-            bool pressed = Input.Dash.Pressed;
+            bool pressed = Input.Dash.Pressed || Input.CrouchDashPressed;
             // the state we should be in afterwards
             int result;
             if (pressed)
             {
                 Input.Dash.ConsumePress();
+                Input.CrouchDash.ConsumePress();
                 result = Player.StDash;
             }
             else
@@ -776,12 +832,8 @@ namespace FrostHelper
             On.Celeste.Player.CallDashEvents -= Player_CallDashEvents;
 
             // For Custom Dream Blocks
-            // legacy
-            //On.Celeste.Player.OnCollideH -= Player_OnCollideH;
-            //On.Celeste.Player.OnCollideV -= Player_OnCollideV;
-            //On.Celeste.Player.RefillDash -= Player_RefillDash;
-            //On.Celeste.Player.DreamDashUpdate -= Player_DreamDashUpdate;
-            //On.Celeste.Player.DreamDashEnd -= Player_DreamDashEnd;
+            CustomDreamBlock.Unload();
+            CustomDreamBlockV2.Unload();
             // Custom dream blocks and feathers
             On.Celeste.Player.UpdateSprite -= Player_UpdateSprite;
 
@@ -789,10 +841,22 @@ namespace FrostHelper
             IL.Celeste.Player.UpdateHair -= modFeatherState;
             IL.Celeste.Player.OnCollideH -= modFeatherState;
             IL.Celeste.Player.OnCollideV -= modFeatherState;
-            playerUpdateHook.Dispose();
+            //IL.Celeste.Player.Update -= modFeatherState;
+
             IL.Celeste.Player.Render -= modFeatherState;
 
             CustomSpinner.UnloadHooks();
+            if (outBackHelper)
+                typeof(FrostModule).Assembly.GetType("FrostTempleHelper.Entities.azcplo1k.abcdhr").GetMethod("Unload").Invoke(null, new object[0]);
+            playerUpdateHook.Dispose();
+            playerUpdateHook = null;
+            //PortalGun.Unload();
+            ForcedFastfallTrigger.Unload();
+
+            // Generic Red Boosters
+            IL.Celeste.Player.OnBoundsH -= modRedDashState;
+            IL.Celeste.Player.OnBoundsV -= modRedDashState;
+            IL.Celeste.DashBlock.OnDashed -= modRedDashState;
         }
 
         private void LightningRenderer_Awake(On.Celeste.LightningRenderer.orig_Awake orig, LightningRenderer self, Scene scene)
@@ -940,7 +1004,7 @@ namespace FrostHelper
             for (int i = 0; i < split.Length; i++)
             {
 
-                parsed[i] = split[i].Trim() == "" ? null : FakeAssembly.GetEntryAssembly().GetType(split[i].Trim(), true, true);
+                parsed[i] = split[i].Trim() == "" ? null : Assembly.GetEntryAssembly().GetType(split[i].Trim(), true, true);
             }
             return parsed;
         }

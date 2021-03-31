@@ -100,7 +100,6 @@ namespace FrostHelper
 
         public override void Update()
         {
-
             Player entity = Scene.Tracker.GetEntity<Player>();
             bool lastCollidable = Collidable;
             Collidable = true;

@@ -16,9 +16,9 @@ namespace FrostHelper
         {
             get
             {
-                for (int i = this.follower.FollowIndex - 1; i > -1; i--)
+                for (int i = follower.FollowIndex - 1; i > -1; i--)
                 {
-                    bool flag = this.follower.Leader.Followers[i].Entity is TemporaryKey;
+                    bool flag = follower.Leader.Followers[i].Entity is TemporaryKey;
                     if (flag)
                     {
                         return false;
@@ -53,8 +53,8 @@ namespace FrostHelper
             {
                 OnOut = delegate (float f)
                 {
-                    this.StartedUsing = false;
-                    if (!this.IsUsed)
+                    StartedUsing = false;
+                    if (!IsUsed)
                     {
                         Dissolve();
                     }
@@ -76,84 +76,84 @@ namespace FrostHelper
 
         public override void Update()
         {
-            Level level = base.Scene as Level;
+            Level level = Scene as Level;
             Session session = (level != null) ? level.Session : null;
-            bool flag = this.IsUsed && !this.wasUsed;
+            bool flag = IsUsed && !wasUsed;
             if (flag)
             {
 //                session.DoNotLoad.Add(this.ID);
-                this.wasUsed = true;
+                wasUsed = true;
             }
-            bool flag2 = !this.dissolved && !this.IsUsed && !base.Turning;
+            bool flag2 = !dissolved && !IsUsed && !base.Turning;
             if (flag2)
             {
-                bool flag3 = session != null && session.Keys.Contains(this.ID);
+                bool flag3 = session != null && session.Keys.Contains(ID);
                 if (flag3)
                 {
-                    session.DoNotLoad.Remove(this.ID);
-                    session.Keys.Remove(this.ID);
+                    session.DoNotLoad.Remove(ID);
+                    session.Keys.Remove(ID);
                     session.UpdateLevelStartDashes();
                 }
-                int followIndex = this.follower.FollowIndex;
-                bool flag4 = this.follower.Leader != null && this.follower.DelayTimer <= 0f && this.IsFirstTemporaryKey;
+                int followIndex = follower.FollowIndex;
+                bool flag4 = follower.Leader != null && follower.DelayTimer <= 0f && IsFirstTemporaryKey;
             }
             base.Update();
         }
 
         public void Dissolve()
         {
-            bool flag = this.dissolved || this.IsUsed || base.Turning;
+            bool flag = dissolved || IsUsed || base.Turning;
             if (!flag)
             {
-                this.dissolved = true;
-                bool flag2 = this.follower.Leader != null;
+                dissolved = true;
+                bool flag2 = follower.Leader != null;
                 if (flag2)
                 {
-                    Player player = this.follower.Leader.Entity as Player;
+                    Player player = follower.Leader.Entity as Player;
                     player.StrawberryCollectResetTimer = 2.5f;
-                    this.follower.Leader.LoseFollower(this.follower);
+                    follower.Leader.LoseFollower(follower);
                 }
-                base.Add(new Coroutine(DissolveRoutine(), true));
+                Add(new Coroutine(DissolveRoutine(), true));
             }
         }
 
         private IEnumerator DissolveRoutine()
         {
-            Level level = base.Scene as Level;
+            Level level = Scene as Level;
             Session session = level.Session;
             if (session.DoNotLoad.Contains(ID))
-            session.DoNotLoad.Remove(this.ID);
+            session.DoNotLoad.Remove(ID);
             if (session.Keys.Contains(ID))
-                session.Keys.Remove(this.ID);
+                session.Keys.Remove(ID);
             session.UpdateLevelStartDashes();
-            Audio.Play("event:/game/general/seed_poof", this.Position);
-            this.Collidable = false;
-            this.sprite.Scale = Vector2.One * 0.5f;
+            Audio.Play("event:/game/general/seed_poof", Position);
+            Collidable = false;
+            sprite.Scale = Vector2.One * 0.5f;
             yield return 0.05f;
             Input.Rumble(RumbleStrength.Medium, RumbleLength.Medium);
             int num;
             for (int i = 0; i < 6; i = num + 1)
             {
                 float dir = Calc.Random.NextFloat(6.28318548f);
-                level.ParticlesFG.Emit(StrawberrySeed.P_Burst, 1, this.Position + Calc.AngleToVector(dir, 4f), Vector2.Zero, dir);
+                level.ParticlesFG.Emit(StrawberrySeed.P_Burst, 1, Position + Calc.AngleToVector(dir, 4f), Vector2.Zero, dir);
                 num = i;
             }
-            this.sprite.Scale = Vector2.Zero;
-            this.Visible = false;
-            bool flag = level.Session.Level != this.startLevel;
+            sprite.Scale = Vector2.Zero;
+            Visible = false;
+            bool flag = level.Session.Level != startLevel;
             if (flag)
             {
-                base.RemoveSelf();
+                RemoveSelf();
                 yield break;
             }
             yield return 0.3f;
-            this.dissolved = false;
-            Audio.Play("event:/game/general/seed_reappear", this.Position);
-            this.Position = this.start;
-            this.sprite.Scale = Vector2.One;
-            this.Visible = true;
-            this.Collidable = true;
-            level.Displacement.AddBurst(this.Position, 0.2f, 8f, 28f, 0.2f, null, null);
+            dissolved = false;
+            Audio.Play("event:/game/general/seed_reappear", Position);
+            Position = start;
+            sprite.Scale = Vector2.One;
+            Visible = true;
+            Collidable = true;
+            level.Displacement.AddBurst(Position, 0.2f, 8f, 28f, 0.2f, null, null);
             yield break;
         }
 
@@ -162,9 +162,9 @@ namespace FrostHelper
             base.Removed(scene);
             Session session = (scene as Level).Session;
             if (session.DoNotLoad.Contains(ID))
-                session.DoNotLoad.Remove(this.ID);
+                session.DoNotLoad.Remove(ID);
             if (session.Keys.Contains(ID))
-                session.Keys.Remove(this.ID);
+                session.Keys.Remove(ID);
         }
 
         private Sprite sprite;

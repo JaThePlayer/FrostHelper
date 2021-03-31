@@ -39,7 +39,7 @@ namespace FrostHelper
                 previewSprite.CenterOrigin();
                 previewSprite.Play("idle", false, false);
                 previewSprite.Position = nodes.Last() - Position;
-                previewSprite.SetColor(new Color(color, 128f) * 0.3f);
+                previewSprite.SetColor(new Color(color.R, color.G, color.B, 128f) * 0.3f);
             }
         }
 
