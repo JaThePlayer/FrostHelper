@@ -3,11 +3,9 @@ using Microsoft.Xna.Framework;
 using Monocle;
 using MonoMod.Utils;
 using System;
+using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FrostHelper
 {
@@ -68,141 +66,114 @@ namespace FrostHelper
             sprite.Origin.X = sprite.Width / 2f;
             sprite.Origin.Y = sprite.Height;
             Depth = -8501;
-            /*
-            this.staticMover = new StaticMover();
-            this.staticMover.OnAttach = delegate (Celeste.Platform p)
-            {
-                base.Depth = p.Depth + 1;
-            };
-            bool flag = orientation == Spring.Orientations.Floor;
-            if (flag)
-            {
-                this.staticMover.SolidChecker = ((Solid s) => base.CollideCheck(s, this.Position + Vector2.UnitY));
-                this.staticMover.JumpThruChecker = ((JumpThru jt) => base.CollideCheck(jt, this.Position + Vector2.UnitY));
-                base.Add(this.staticMover);
-            }
-            else
-            {
-                bool flag2 = orientation == Spring.Orientations.WallLeft;
-                if (flag2)
-                {
-                    this.staticMover.SolidChecker = ((Solid s) => base.CollideCheck(s, this.Position - Vector2.UnitX));
-                    this.staticMover.JumpThruChecker = ((JumpThru jt) => base.CollideCheck(jt, this.Position - Vector2.UnitX));
-                    base.Add(this.staticMover);
-                }
-                else
-                {
-                    bool flag3 = orientation == Spring.Orientations.WallRight;
-                    if (flag3)
-                    {
-                        this.staticMover.SolidChecker = ((Solid s) => base.CollideCheck(s, this.Position + Vector2.UnitX));
-                        this.staticMover.JumpThruChecker = ((JumpThru jt) => base.CollideCheck(jt, this.Position + Vector2.UnitX));
-                        base.Add(this.staticMover);
-                    }
-                }
-            } */
+
             Add(wiggler = Wiggler.Create(1f, 4f, delegate (float v)
             {
                 sprite.Scale.Y = 1f + v * 0.2f;
             }, false, false));
-            bool flag4 = orientation == Orientations.Floor;
-            if (flag4)
+
+            switch (orientation)
             {
-                Collider = new Hitbox(16f, 6f, -8f, -6f);
-                pufferCollider.Collider = new Hitbox(16f, 10f, -8f, -10f);
-            }
-            else
-            {
-                bool flag5 = orientation == Orientations.WallLeft;
-                if (flag5)
-                {
+                case Orientations.Floor:
+                    Collider = new Hitbox(16f, 6f, -8f, -6f);
+                    pufferCollider.Collider = new Hitbox(16f, 10f, -8f, -10f);
+                    break;
+                case Orientations.WallLeft:
                     Collider = new Hitbox(6f, 16f, 0f, -8f);
                     pufferCollider.Collider = new Hitbox(12f, 16f, 0f, -8f);
                     sprite.Rotation = 1.57079637f;
-                }
-                else
-                {
-                    bool flag6 = orientation == Orientations.WallRight;
-                    if (!flag6)
-                    {
-                        throw new Exception("Orientation not supported!");
-                    }
+                    break;
+                case Orientations.WallRight:
                     Collider = new Hitbox(6f, 16f, -6f, -8f);
                     pufferCollider.Collider = new Hitbox(12f, 16f, -12f, -8f);
                     sprite.Rotation = -1.57079637f;
-                }
+                    break;
+                default:
+                    throw new Exception("Orientation not supported!");
             }
-            dyndata.Set<Sprite>("sprite", sprite);
-        }
-        /*
-        private void OnEnable()
-        {
-            this.Visible = (this.Collidable = true);
-            this.sprite.Color = Color.White;
-            this.sprite.Play("idle", false, false);
-        }
 
-        private void OnDisable()
-        {
-            this.Collidable = false;
-            bool visibleWhenDisabled = this.VisibleWhenDisabled;
-            if (visibleWhenDisabled)
+            dyndata.Set<Sprite>("sprite", sprite);
+            OneUse = data.Bool("oneUse", false);
+            if (OneUse)
             {
-                this.sprite.Play("disabled", false, false);
-                this.sprite.Color = this.DisabledColor;
+                Add(new Coroutine(OneUseParticleRoutine()));
             }
-            else
-            {
-                this.Visible = false;
-            }
-        } */
+        }
 
         private void OnCollide(Player player)
         {
-            bool flag = player.StateMachine.State == 9 || !playerCanUse;
-            if (!flag)
+            if (!(player.StateMachine.State == Player.StDreamDash || !playerCanUse))
             {
-                bool flag2 = Orientation == Orientations.Floor;
-                if (flag2)
+                switch (Orientation)
                 {
-                    bool flag3 = player.Speed.Y >= 0f;
-                    if (flag3)
-                    {
-                        BounceAnimate();
-                        player.SuperBounce(Top);
-                        player.Speed.Y *= speedMult.Y;
-                    }
-                }
-                else
-                {
-                    bool flag4 = Orientation == Orientations.WallLeft;
-                    if (flag4)
-                    {
-                        bool flag5 = player.SideBounce(1, Right, CenterY);
-                        if (flag5)
+                    case Orientations.Floor:
+                        if (player.Speed.Y >= 0f)
+                        {
+                            BounceAnimate();
+                            player.SuperBounce(Top);
+                            player.Speed.Y *= speedMult.Y;
+
+                            TryBreak();
+                        }
+                        break;
+                    case Orientations.WallLeft:
+                        if (player.SideBounce(1, Right, CenterY))
                         {
                             BounceAnimate();
                             player.Speed.X *= speedMult.X;
                             player.Speed.Y *= speedMult.Y;
+
+                            TryBreak();
                         }
-                    }
-                    else
-                    {
-                        bool flag6 = Orientation == Orientations.WallRight;
-                        if (!flag6)
-                        {
-                            throw new Exception("Orientation not supported!");
-                        }
-                        bool flag7 = player.SideBounce(-1, Left, CenterY);
-                        if (flag7)
+                        break;
+                    case Orientations.WallRight:
+                        if (player.SideBounce(-1, Left, CenterY))
                         {
                             player.Speed.X *= speedMult.X;
                             player.Speed.Y *= speedMult.Y;
                             BounceAnimate();
+
+                            TryBreak();
                         }
-                    }
+                        break;
+                    default:
+                        throw new Exception("Orientation not supported!");
                 }
             }
+        }
+
+        public void TryBreak()
+        {
+            if (OneUse)
+            {
+                Add(new Coroutine(BreakRoutine()));
+            }
+        }
+
+        public IEnumerator BreakRoutine()
+        {
+            Collidable = false;
+            Input.Rumble(RumbleStrength.Medium, RumbleLength.Medium);
+            Audio.Play("event:/game/general/platform_disintegrate", Center);
+            foreach (Image image in Components.GetAll<Image>())
+            {
+                SceneAs<Level>().Particles.Emit(CrumblePlatform.P_Crumble, 2, Position + image.Position, Vector2.One * 3f);
+            }
+
+            float t = 1f;
+            while (t > 0f)
+            {
+                foreach (Image image in Components.GetAll<Image>())
+                {
+                    image.Scale = Vector2.One * t;
+                    image.Rotation += Engine.DeltaTime * 4;
+                }
+                t -= Engine.DeltaTime * 4;
+                yield return null;
+            }
+            Visible = false;
+            RemoveSelf();
+            yield break;
         }
 
         private void BounceAnimate()
@@ -217,6 +188,7 @@ namespace FrostHelper
             if (flag)
             {
                 BounceAnimate();
+                TryBreak();
                 if (h.Entity is Glider)
                 {
                     Glider glider = (h.Entity as Glider);
@@ -246,56 +218,94 @@ namespace FrostHelper
 
         private void OnPuffer(Puffer p)
         {
-            bool flag = p.HitSpring(this);
-            if (flag)
+            if (p.HitSpring(this))
             {
                 Vector2 pufferSpeed = (Vector2)Puffer_hitSpeed.GetValue(p);
                 Puffer_hitSpeed.SetValue(p, pufferSpeed * speedMult);
-                /*
-                switch (Orientation)
-                {
-                    case Orientations.Floor:
-                        // 224f * -Vector2.UnitY
-                        Puffer_hitSpeed.SetValue(p, pufferSpeed * speedMult);
-                        break;
-                    case Orientations.WallLeft:
-                        // 280f * Vector2.UnitX
-                        Puffer_hitSpeed.SetValue(p, pufferSpeed * speedMult);
-                        break;
-                    case Orientations.WallRight:
-                        // 280f * Vector2.UnitX
-                        
-                        break;
-                } */
                 BounceAnimate();
+                TryBreak();
             }
         }
         private FieldInfo Puffer_hitSpeed = typeof(Puffer).GetField("hitSpeed", BindingFlags.Instance | BindingFlags.NonPublic);
 
         private void OnSeeker(Seeker seeker)
         {
-            bool flag = seeker.Speed.Y >= -120f;
-            if (flag)
+            if (seeker.Speed.Y >= -120f)
             {
                 BounceAnimate();
                 seeker.HitSpring();
                 seeker.Speed.Y *= speedMult.Y;
+
+                TryBreak();
             }
         }
 
-        public override void Render()
+        private static ParticleType P_Crumble_Up = new ParticleType
         {
-            base.Render();
+            Color = Calc.HexToColor("847E87"),
+            FadeMode = ParticleType.FadeModes.Late,
+            Size = 1f,
+            Direction = MathHelper.PiOver2,
+            SpeedMin = -5f,
+            SpeedMax = -25f,
+            LifeMin = 0.8f,
+            LifeMax = 1f,
+            Acceleration = Vector2.UnitY * -20f
+        };
+
+        private static ParticleType P_Crumble_Left = new ParticleType
+        {
+            Color = Calc.HexToColor("847E87"),
+            FadeMode = ParticleType.FadeModes.Late,
+            Size = 1f,
+            Direction = 0f,
+            SpeedMin = 5f,
+            SpeedMax = 25f,
+            LifeMin = 0.8f,
+            LifeMax = 1f,
+            Acceleration = Vector2.UnitY * 20f
+        };
+
+        private static ParticleType P_Crumble_Right = new ParticleType
+        {
+            Color = Calc.HexToColor("847E87"),
+            FadeMode = ParticleType.FadeModes.Late,
+            Size = 1f,
+            Direction = 0f,
+            SpeedMin = -5f,
+            SpeedMax = -25f,
+            LifeMin = 0.8f,
+            LifeMax = 1f,
+            Acceleration = Vector2.UnitY * -20f
+        };
+
+        public override void Update()
+        {
+            base.Update();
         }
 
-        //private Sprite sprite;
+        private IEnumerator OneUseParticleRoutine()
+        {
+            while (true)
+            {
+                switch (Orientation)
+                {
+                    case Orientations.Floor:
+                        SceneAs<Level>().Particles.Emit(P_Crumble_Up, 2, Position, Vector2.One * 3f);
+                        break;
+                    case Orientations.WallRight:
+                        SceneAs<Level>().Particles.Emit(P_Crumble_Right, 2, Position, Vector2.One * 2f);
+                        break;
+                    case Orientations.WallLeft:
+                        SceneAs<Level>().Particles.Emit(P_Crumble_Left, 2, Position, Vector2.One * 2f);
+                        break;
+                }
+                yield return 0.25f;
+            }
+        }
 
         private Wiggler wiggler;
-
         private bool playerCanUse;
-
-        //public Color DisabledColor;
-
-        //public bool VisibleWhenDisabled;
+        public bool OneUse;
     }
 }

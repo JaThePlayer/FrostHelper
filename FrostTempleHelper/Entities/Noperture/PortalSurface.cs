@@ -2,11 +2,7 @@
 using Celeste.Mod.Entities;
 using Microsoft.Xna.Framework;
 using Monocle;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FrostTempleHelper.Entities.azcplo1k
 {
@@ -17,8 +13,8 @@ namespace FrostTempleHelper.Entities.azcplo1k
         public Color Color;
 
         public static Dictionary<string, Color> Colors = new Dictionary<string, Color>() {
-            ["Purple"] = new Color(1f, 0.3f, 1f, 1f),//(1.0, 0.3, 1.0, 1.0),
-            ["Blue"] = new Color(0.3f, 0.3f, 1f, 1f),//(0.3, 0.3, 1.0, 1.0),
+            ["Purple"] = new Color(1f, 0.3f, 1f, 1f),
+            ["Blue"] = new Color(0.3f, 0.3f, 1f, 1f),
             ["Red"] = new Color(1.0f, 0.3f, 0.3f, 1.0f),
             ["Yellow"] = new Color(1.0f, 1.0f, 0.3f, 1.0f),
             ["Green"] = new Color(0.3f, 1.0f, 0.3f, 1.0f),

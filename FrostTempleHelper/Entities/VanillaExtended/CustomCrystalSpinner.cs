@@ -1,14 +1,12 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using Celeste;
-using Celeste.Mod;
 using Celeste.Mod.Entities;
 using Microsoft.Xna.Framework;
 using Monocle;
-using System.Linq;
 using System.Reflection;
 using Microsoft.Xna.Framework.Graphics;
+using Celeste.Mod;
 
 namespace FrostHelper
 {
@@ -56,9 +54,8 @@ namespace FrostHelper
         public string tint = "";
         public bool moveWithWind;
         public bool DashThrough;
-
+        public string SpritePathSuffix = "";
         public Color Tint;
-
         public int ID;
 
         private void OnChangeMode(Session.CoreModes coreMode)
@@ -77,20 +74,15 @@ namespace FrostHelper
 
         private void ToggleSprite()
         {
-            if (iceMode)
-            {
-                bgDirectory = directory + "/bg";
-                fgDirectory = directory + "/fg";
-            }
-            else
-            {
-                bgDirectory = directory + "/hot/bg";
-                fgDirectory = directory + "/hot/fg";
-            }
+            UpdateDirectoryFields(iceMode);
             ClearSprites();
             CreateSprites();
             expanded = false;
-            orig_Awake(Scene);
+            base.Awake(Scene);
+            if (InView())
+            {
+                CreateSprites();
+            }
         }
 
         public CustomSpinner(EntityData data, Vector2 position, bool attachToSolid, string directory, string destroyColor, bool isCore, string tint) : base(data.Position + position)
@@ -98,12 +90,13 @@ namespace FrostHelper
             ID = data.ID;
             DashThrough = data.Bool("dashThrough", false);
             this.tint = tint;
-            if (tint == "")
-                tint = "FFFFFF";
-            Tint = Calc.HexToColor(tint);
+            Tint = ColorHelper.GetColor(tint);
             this.directory = directory;
-            bgDirectory = directory + "/bg";
-            fgDirectory = directory + "/fg";
+
+            // for VivHelper compatibility
+            SpritePathSuffix = data.Attr("spritePathSuffix", "");
+
+            UpdateDirectoryFields(false);
             moveWithWind = data.Bool("moveWithWind", false);
 
             // funny story time: this used to exist in older versions of Frost Helper as a leftover.
@@ -129,8 +122,9 @@ namespace FrostHelper
             Add(new HoldableCollider(new Action<Holdable>(OnHoldable), null));
             Add(new LedgeBlocker(null));
             Depth = -8500;
+
             AttachToSolid = attachToSolid;
-            if (attachToSolid)
+            if (AttachToSolid)
             {
                 Add(new StaticMover
                 {
@@ -139,6 +133,7 @@ namespace FrostHelper
                     OnDestroy = new Action(RemoveSelf)
                 });
             }
+
             randomSeed = Calc.Random.Next();
             if (isCore)
             {
@@ -149,6 +144,22 @@ namespace FrostHelper
                 Add(new BloomPoint(Collider.Center, bloomAlpha, data.Float("bloomRadius", 0f)));
         }
 
+        private string GetBGSpritePath(bool hotCoreMode)
+        {
+            return directory + (hotCoreMode ? "/hot/bg" : "/bg") + SpritePathSuffix;
+        }
+
+        private string GetFGSpritePath(bool hotCoreMode)
+        {
+            return directory + (hotCoreMode ? "/hot/fg" : "/fg") + SpritePathSuffix;
+        }
+
+        private void UpdateDirectoryFields(bool hotCoreMode)
+        {
+            bgDirectory = GetBGSpritePath(hotCoreMode);
+            fgDirectory = GetFGSpritePath(hotCoreMode);
+        }
+
         public override void Awake(Scene scene)
         {
             if (isCore)
@@ -156,16 +167,18 @@ namespace FrostHelper
                 Add(new CoreModeListener(new Action<Session.CoreModes>(OnChangeMode)));
                 if ((scene as Level).CoreMode == Session.CoreModes.Cold)
                 {
-                    bgDirectory = directory + "/bg";
-                    fgDirectory = directory + "/fg";
+                    UpdateDirectoryFields(false);
                 }
                 else
                 {
-                    bgDirectory = directory + "/hot/bg";
-                    fgDirectory = directory + "/hot/fg";
+                    UpdateDirectoryFields(true);
                 }
             }
-            orig_Awake(scene);
+            base.Awake(scene);
+            if (InView())
+            {
+                CreateSprites();
+            }
         }
         
         public void ForceInstantiate()
@@ -294,7 +307,6 @@ namespace FrostHelper
                 foreach (Entity entity in Scene.Tracker.GetEntities<CustomSpinner>())
                 {
                     CustomSpinner crystalStaticSpinner = (CustomSpinner)entity;
-                    // crystalStaticSpinner != this
                     if (crystalStaticSpinner.ID > ID && crystalStaticSpinner.AttachToSolid == AttachToSolid && (crystalStaticSpinner.Position - Position).LengthSquared() < 576f)
                     {
                         AddSprite((Position + crystalStaticSpinner.Position) / 2f - Position);
@@ -343,8 +355,7 @@ namespace FrostHelper
                 Calc.PopRandom();
             }
         }
-        
-        //public List<Image> FillerImages = new List<Image>();
+
         public void AddSprite(Vector2 offset)
         {
             if (filler == null)
@@ -356,7 +367,6 @@ namespace FrostHelper
                 };
                 Scene.Add(filler);
             }
-            //List<MTexture> atlasSubtextures = GFX.Game.GetAtlasSubtextures(CrystalStaticSpinner.bgTextureLookup[color]);
             List<MTexture> atlasSubtextures = GFX.Game.GetAtlasSubtextures(bgDirectory);
             Image image = new Image(Calc.Random.Choose(atlasSubtextures))
             {
@@ -366,9 +376,6 @@ namespace FrostHelper
                 Active = false
             };
             image.CenterOrigin();
-            //Add(image);
-            //image.Added(this);
-            //FillerImages.Add(image);
             filler.Add(image);
         }
         
@@ -413,9 +420,9 @@ namespace FrostHelper
         {
             foreach (Component component in Components)
             {
-                if (component is Image)
+                if (component is Image img)
                 {
-                    (component as Image).Position = pos;
+                    img.Position = pos;
                 }
             }
         }
@@ -466,15 +473,6 @@ namespace FrostHelper
             RemoveSelf();
         }
         
-        public void orig_Awake(Scene scene)
-        {
-            base.Awake(scene);
-            if (InView())
-            {
-                CreateSprites();
-            }
-        }
-        
         public bool iceMode;
         public string directory;
         public string coldDirectory;
@@ -487,7 +485,7 @@ namespace FrostHelper
         
         private Entity filler;
         
-        private CustomSpinner.Border border;
+        private Border border;
         
         private float offset;
         
@@ -519,21 +517,7 @@ namespace FrostHelper
                 
                 if (fg != null)
                 {
-                    // new method, faster, only used if the spinner has 4 sprites due to edge cases
-                    DrawBorder(fg);
-                    /*
-                    var outline =  OutlineHelper.Get(fg.Texture.Texture.Name.Substring("Graphics/Atlases/Gameplay/".Length));
-                    
-                    //var outline = OutlineTextureHelper.GetOutlineTexture(fg.Texture);
-                    
-                    //Logger.Log("", fg.Texture.Texture.Name.Substring("Graphics/Atlases/Gameplay/".Length));
-                    Rectangle? clipRect = new Rectangle?(fg.Texture.ClipRect);
-                    float scaleFix = fg.Texture.ScaleFix;
-                    Vector2 origin = (fg.Origin - fg.Texture.DrawOffset) / scaleFix;
-                    Vector2 drawPos = fg.RenderPosition;// - Vector2.One * 2f;
-                    float rotation = fg.Rotation;
-                    
-                    Draw.SpriteBatch.Draw(outline, drawPos, null, Color.Red, rotation, Vector2.Zero, scaleFix, SpriteEffects.None, 0f);*/
+                    OutlineHelper.RenderOutline(fg);
                 }
                 else
                 {
@@ -542,7 +526,8 @@ namespace FrostHelper
                     {
                         if (c is Image img)
                         {
-                           DrawBorder(img);
+                            DrawBorder(img);
+                            //OutlineHelper.RenderOutline(img);
                         }
                     }
                 }
@@ -552,32 +537,13 @@ namespace FrostHelper
                     {
                         if (c is Image img)
                         {
-                            DrawBorder(img);
+                            OutlineHelper.RenderOutline(img);
                         }
                     }
             }
 
             private void DrawBorder(Image image)
             {
-                /*
-                Vector2 position = image.Position;
-
-                Color color = image.Color;
-                image.Color = Color.Black;
-
-                image.Position = position + new Vector2(0f, -1f);
-                image.Render();
-                image.Position.Y += 2f; //= position + new Vector2(0f, 1f);
-                image.Render();
-                image.Position = position + new Vector2(-1f, 0f);
-                image.Render();
-                image.Position.X += 2f; //= position + new Vector2(1f, 0f);
-                image.Render();
-
-                image.Position = position;
-                image.Color = color;*/
-
-                
                 Texture2D texture = image.Texture.Texture.Texture_Safe;
                 Rectangle? clipRect = new Rectangle?(image.Texture.ClipRect);
                 float scaleFix = image.Texture.ScaleFix;
@@ -588,58 +554,7 @@ namespace FrostHelper
                 Draw.SpriteBatch.Draw(texture, drawPos + Vector2.UnitY, clipRect, Color.Black, rotation, origin, scaleFix, SpriteEffects.None, 0f);
                 Draw.SpriteBatch.Draw(texture, drawPos - Vector2.UnitX, clipRect, Color.Black, rotation, origin, scaleFix, SpriteEffects.None, 0f);
                 Draw.SpriteBatch.Draw(texture, drawPos + Vector2.UnitX, clipRect, Color.Black, rotation, origin, scaleFix, SpriteEffects.None, 0f);
-
-                
             }
         }
-
-        /* private class Border : Entity
-        {
-
-            public Border(Entity parent, Entity filler)
-            {
-                drawing = new Entity[2];
-                drawing[0] = parent;
-                drawing[1] = filler;
-                Depth = parent.Depth + 2;
-            }
-            
-            public override void Render()
-            {
-                if (!drawing[0].Visible)
-                {
-                    return;
-                }
-                DrawBorder(drawing[0]);
-                if (drawing[1] != null)
-                    DrawBorder(drawing[1]);
-            }
-
-            private void DrawBorder(Entity entity)
-            {
-                foreach (Component component in entity.Components)
-                {
-                    if (component is Image image)
-                    {
-                        Color color = image.Color;
-                        Vector2 position = image.Position;
-                        image.Color = Color.Black;
-                        
-                        image.Position = position + new Vector2(0f, -1f);
-                        image.Render();
-                        image.Position = position + new Vector2(0f, 1f);
-                        image.Render();
-                        image.Position = position + new Vector2(-1f, 0f);
-                        image.Render();
-                        image.Position = position + new Vector2(1f, 0f);
-                        image.Render();
-                        image.Color = color;
-                        image.Position = position;
-                    }
-                }
-            }
-            
-            private Entity[] drawing;
-        } */
     }
 }

@@ -2,39 +2,47 @@
 using System.Collections;
 using System.Collections.Generic;
 using Celeste;
-using Celeste.Mod;
 using Microsoft.Xna.Framework;
 using Monocle;
 
-/*
-this is horrible
-*/
 namespace FrostHelper
 {
-    public class SlowCrushBlock : Solid
+    public class CustomCrushBlock : Solid
     {
-        bool core;
-
-        public SlowCrushBlock(Vector2 position, float width, float height, SlowCrushBlock.Axes axes, bool chillOut = false, bool core = false) : base(position, width, height, false)
+        public float CrushSpeed;
+        public float CrushAccel;
+        public float ReturnSpeed;
+        public float ReturnAccel;
+        public string Directory;
+        
+        public CustomCrushBlock(EntityData data, Vector2 offset) : base(data.Position + offset, data.Width, data.Height, false)
         {
-            this.core = core;
-            fill = Calc.HexToColor("62222b");
+            CrushAccel = data.Float("crushAcceleration", 250f);
+            ReturnAccel = data.Float("returnAcceleration", 160f);
+            ReturnSpeed = data.Float("returnSpeed", 60f);
+            CrushSpeed = data.Float("crushSpeed", 120f);
+            chillOut = data.Bool("chillout", false);
+            Directory = data.Attr("directory", "objects/FrostHelper/slowcrushblock/");
+            if (!Directory.EndsWith("/"))
+                Directory += '/';
+
+            fillColor = Calc.HexToColor("62222b");
             idleImages = new List<Image>();
             activeTopImages = new List<Image>();
             activeRightImages = new List<Image>();
             activeLeftImages = new List<Image>();
             activeBottomImages = new List<Image>();
             OnDashCollide = new DashCollision(OnDashed);
-            returnStack = new List<SlowCrushBlock.MoveState>();
-            this.chillOut = chillOut;
+            returnStack = new List<MoveState>();
+            
             giant = (Width >= 48f && Height >= 48f && chillOut);
             canActivate = true;
             attackCoroutine = new Coroutine(true);
             attackCoroutine.RemoveOnComplete = false;
             Add(attackCoroutine);
-            List<MTexture> atlasSubtextures = GFX.Game.GetAtlasSubtextures("objects/FrostHelper/slowcrushblock/block");
+            List<MTexture> atlasSubtextures = GFX.Game.GetAtlasSubtextures(Directory + "block");
             MTexture idle;
-            switch (axes)
+            switch (data.Enum("axes", Axes.Both))
             {
                 default:
                     idle = atlasSubtextures[3];
@@ -81,10 +89,6 @@ namespace FrostHelper
             Add(new LightOcclude(0.2f));
             Add(returnLoopSfx = new SoundSource());
             Add(new WaterInteraction(() => crushDir != Vector2.Zero));
-        }
-        
-        public SlowCrushBlock(EntityData data, Vector2 offset) : this(data.Position + offset, (float)data.Width, (float)data.Height, data.Enum<SlowCrushBlock.Axes>("axes", Axes.Both), data.Bool("chillout", false), data.Bool("core", false))
-        {
         }
         
         public override void Added(Scene scene)
@@ -138,88 +142,80 @@ namespace FrostHelper
         {
             Vector2 position = Position;
             Position += Shake;
-            Draw.Rect(X + 2f, Y + 2f, Width - 4f, Height - 4f, fill);
+            Draw.Rect(X + 2f, Y + 2f, Width - 4f, Height - 4f, fillColor);
             base.Render();
             Position = position;
         }
         
-        private bool Submerged
-        {
-            get
-            {
-                return Scene.CollideCheck<Water>(new Rectangle((int)(Center.X - 4f), (int)Center.Y, 8, 4));
-            }
-        }
-        
+        private bool Submerged => Scene.CollideCheck<Water>(new Rectangle((int)(Center.X - 4f), (int)Center.Y, 8, 4));
+
         private void AddImage(MTexture idle, int x, int y, int tx, int ty, int borderX = 0, int borderY = 0)
         {
             MTexture subtexture = idle.GetSubtexture(tx * 8, ty * 8, 8, 8, null);
-            Vector2 vector = new Vector2((float)(x * 8), (float)(y * 8));
+            Vector2 imagePosition = new Vector2((x * 8), (y * 8));
             bool flag = borderX != 0;
             if (flag)
             {
                 Add(new Image(subtexture)
                 {
                     Color = Color.Black,
-                    Position = vector + new Vector2((float)borderX, 0f)
+                    Position = imagePosition + new Vector2(borderX, 0f)
                 });
             }
-            bool flag2 = borderY != 0;
-            if (flag2)
+
+            if (borderY != 0)
             {
                 Add(new Image(subtexture)
                 {
                     Color = Color.Black,
-                    Position = vector + new Vector2(0f, (float)borderY)
+                    Position = imagePosition + new Vector2(0f, borderY)
                 });
             }
             Image image = new Image(subtexture);
-            image.Position = vector;
+            image.Position = imagePosition;
             Add(image);
             idleImages.Add(image);
-            bool flag3 = borderX != 0 || borderY != 0;
-            if (flag3)
+
+            if (borderX != 0 || borderY != 0)
             {
-                bool flag4 = borderX < 0;
-                if (flag4)
+                if (borderX < 0)
                 {
-                    Image image2 = new Image(GFX.Game["objects/FrostHelper/slowcrushblock/lit_left"].GetSubtexture(0, ty * 8, 8, 8, null));
-                    activeLeftImages.Add(image2);
-                    image2.Position = vector;
-                    image2.Visible = false;
-                    Add(image2);
+                    Image leftImg = new Image(GFX.Game[Directory + "lit_left"].GetSubtexture(0, ty * 8, 8, 8, null));
+                    activeLeftImages.Add(leftImg);
+                    leftImg.Position = imagePosition;
+                    leftImg.Visible = false;
+                    Add(leftImg);
                 }
                 else
                 {
-                    bool flag5 = borderX > 0;
-                    if (flag5)
+                    if (borderX > 0)
                     {
-                        Image image3 = new Image(GFX.Game["objects/FrostHelper/slowcrushblock/lit_right"].GetSubtexture(0, ty * 8, 8, 8, null));
-                        activeRightImages.Add(image3);
-                        image3.Position = vector;
-                        image3.Visible = false;
-                        Add(image3);
+                        Image rightImg = new Image(GFX.Game[Directory + "lit_right"].GetSubtexture(0, ty * 8, 8, 8, null));
+                        activeRightImages.Add(rightImg);
+                        rightImg.Position = imagePosition;
+                        rightImg.Visible = false;
+                        Add(rightImg);
                     }
                 }
-                bool flag6 = borderY < 0;
-                if (flag6)
+
+                if (borderY < 0)
                 {
-                    Image image4 = new Image(GFX.Game["objects/FrostHelper/slowcrushblock/lit_top"].GetSubtexture(tx * 8, 0, 8, 8, null));
-                    activeTopImages.Add(image4);
-                    image4.Position = vector;
-                    image4.Visible = false;
-                    Add(image4);
+                    Image topImage = new Image(GFX.Game[Directory + "lit_top"].GetSubtexture(tx * 8, 0, 8, 8, null));
+                    activeTopImages.Add(topImage);
+                    topImage.Position = imagePosition;
+                    topImage.Visible = false;
+                    Add(topImage);
                 }
                 else
                 {
                     bool flag7 = borderY > 0;
                     if (flag7)
                     {
-                        Image image5 = new Image(GFX.Game["objects/FrostHelper/slowcrushblock/lit_bottom"].GetSubtexture(tx * 8, 0, 8, 8, null));
-                        activeBottomImages.Add(image5);
-                        image5.Position = vector;
-                        image5.Visible = false;
-                        Add(image5);
+                        Image bottomImage = new Image(GFX.Game[Directory + "lit_bottom"].GetSubtexture(tx * 8, 0, 8, 8, null));
+                        activeBottomImages.Add(bottomImage);
+                        bottomImage.Position = imagePosition;
+                        bottomImage.Visible = false;
+                        Add(bottomImage);
                     }
                 }
             }
@@ -263,41 +259,30 @@ namespace FrostHelper
         
         private bool CanActivate(Vector2 direction)
         {
-            bool flag = giant && direction.X <= 0f;
             bool result;
-            if (flag)
+            if (giant && direction.X <= 0f)
             {
-                result = false;
+                return false;
             }
-            else
+
+            if (canActivate && crushDir != direction)
             {
-                bool flag2 = canActivate && crushDir != direction;
-                if (flag2)
+                if (direction.X != 0f && !canMoveHorizontally)
                 {
-                    bool flag3 = direction.X != 0f && !canMoveHorizontally;
-                    if (flag3)
-                    {
-                        result = false;
-                    }
-                    else
-                    {
-                        bool flag4 = direction.Y != 0f && !canMoveVertically;
-                        result = !flag4;
-                    }
+                    return false;
                 }
-                else
-                {
-                    result = false;
-                }
+
+                return !(direction.Y != 0f && !canMoveVertically);
             }
-            return result;
+
+            return false;
         }
         
         private void Attack(Vector2 direction)
         {
             Audio.Play("event:/game/06_reflection/crushblock_activate", Center);
-            bool flag = currentMoveLoopSfx != null;
-            if (flag)
+
+            if (currentMoveLoopSfx != null)
             {
                 currentMoveLoopSfx.Param("end", 1f);
                 SoundSource sfx = currentMoveLoopSfx;
@@ -309,6 +294,7 @@ namespace FrostHelper
             Add(currentMoveLoopSfx = new SoundSource());
             currentMoveLoopSfx.Position = new Vector2(Width, Height) / 2f;
             currentMoveLoopSfx.Play("event:/game/06_reflection/crushblock_move_loop", null, 0f);
+
             face.Play("hit", false, false);
             crushDir = direction;
             canActivate = false;
@@ -316,8 +302,8 @@ namespace FrostHelper
             ClearRemainder();
             TurnOffImages();
             ActivateParticles(crushDir);
-            bool flag2 = crushDir.X < 0f;
-            if (flag2)
+
+            if (crushDir.X < 0f)
             {
                 foreach (Image image in activeLeftImages)
                 {
@@ -327,8 +313,7 @@ namespace FrostHelper
             }
             else
             {
-                bool flag3 = crushDir.X > 0f;
-                if (flag3)
+                if (crushDir.X > 0f)
                 {
                     foreach (Image image2 in activeRightImages)
                     {
@@ -338,8 +323,7 @@ namespace FrostHelper
                 }
                 else
                 {
-                    bool flag4 = crushDir.Y < 0f;
-                    if (flag4)
+                    if (crushDir.Y < 0f)
                     {
                         foreach (Image image3 in activeTopImages)
                         {
@@ -349,8 +333,7 @@ namespace FrostHelper
                     }
                     else
                     {
-                        bool flag5 = crushDir.Y > 0f;
-                        if (flag5)
+                        if (crushDir.Y > 0f)
                         {
                             foreach (Image image4 in activeBottomImages)
                             {
@@ -361,21 +344,20 @@ namespace FrostHelper
                     }
                 }
             }
-            bool flag6 = true;
-            bool flag7 = returnStack.Count > 0;
-            if (flag7)
+
+            bool addToReturnStack = true;
+            if (returnStack.Count > 0)
             {
-                SlowCrushBlock.MoveState moveState = returnStack[returnStack.Count - 1];
-                bool flag8 = moveState.Direction == direction || moveState.Direction == -direction;
-                if (flag8)
+                MoveState moveState = returnStack[returnStack.Count - 1];
+                if (moveState.Direction == direction || moveState.Direction == -direction)
                 {
-                    flag6 = false;
+                    addToReturnStack = false;
                 }
             }
-            bool flag9 = flag6;
-            if (flag9)
+
+            if (addToReturnStack)
             {
-                returnStack.Add(new SlowCrushBlock.MoveState(Position, crushDir));
+                returnStack.Add(new MoveState(Position, crushDir));
             }
         }
         
@@ -440,21 +422,19 @@ namespace FrostHelper
             bool slowing = false;
             float speed = 0f;
             Action som = null; // = null wasn't there
-            for (; ; )
+            while (true)
             {
-                bool flag2 = !chillOut;
-                if (flag2)
+                if (!chillOut)
                 {
-                    speed = Calc.Approach(speed, 120f, 250f * Engine.DeltaTime); // was speed, 240f, 500f
+                    speed = Calc.Approach(speed, CrushSpeed, CrushAccel * Engine.DeltaTime); // was speed, 240f, 500f
                 }
                 else
                 {
-                    bool flag3 = slowing || CollideCheck<SolidTiles>(Position + crushDir * 256f);
-                    if (flag3)
+                    if (slowing || CollideCheck<SolidTiles>(Position + crushDir * 256f))
                     {
-                        speed = Calc.Approach(speed, 12f, 250f * Engine.DeltaTime * 0.25f); // was speed, 24f, 500f
-                        bool flag4 = !slowing;
-                        if (flag4)
+                        speed = Calc.Approach(speed, 12f, CrushAccel * Engine.DeltaTime * 0.25f); // was speed, 24f, 500f
+
+                        if (!slowing)
                         {
                             slowing = true;
                             float duration = 0.5f;
@@ -473,12 +453,11 @@ namespace FrostHelper
                     }
                     else
                     {
-                        speed = Calc.Approach(speed, 120f, 250f * Engine.DeltaTime); // was speed, 240f, 500f
+                        speed = Calc.Approach(speed, CrushSpeed, CrushAccel * Engine.DeltaTime); // was speed, 240f, 500f
                     }
                 }
-                bool flag5 = crushDir.X != 0f;
                 bool hit;
-                if (flag5)
+                if (crushDir.X != 0f)
                 {
                     hit = MoveHCheck(speed * crushDir.X * Engine.DeltaTime);
                 }
@@ -486,34 +465,31 @@ namespace FrostHelper
                 {
                     hit = MoveVCheck(speed * crushDir.Y * Engine.DeltaTime);
                 }
-                bool flag6 = hit;
-                if (flag6)
+
+                if (hit)
                 {
                     break;
                 }
-                bool flag7 = Scene.OnInterval(0.02f);
-                if (flag7)
+
+                if (Scene.OnInterval(0.02f))
                 {
-                    bool flag8 = crushDir == Vector2.UnitX;
                     Vector2 at;
                     float dir;
-                    if (flag8)
+                    if (crushDir == Vector2.UnitX)
                     {
                         at = new Vector2(Left + 1f, Calc.Random.Range(Top + 3f, Bottom - 3f));
                         dir = 3.14159274f;
                     }
                     else
                     {
-                        bool flag9 = crushDir == -Vector2.UnitX;
-                        if (flag9)
+                        if (crushDir == -Vector2.UnitX)
                         {
                             at = new Vector2(Right - 1f, Calc.Random.Range(Top + 3f, Bottom - 3f));
                             dir = 0f;
                         }
                         else
                         {
-                            bool flag10 = crushDir == Vector2.UnitY;
-                            if (flag10)
+                            if (crushDir == Vector2.UnitY)
                             {
                                 at = new Vector2(Calc.Random.Range(Left + 3f, Right - 3f), Top + 1f);
                                 dir = -1.57079637f;
@@ -526,18 +502,18 @@ namespace FrostHelper
                         }
                     }
                     level.Particles.Emit(CrushBlock.P_Crushing, at, dir);
-                    at = default(Vector2);
+                    at = default;
                 }
                 yield return null;
             }
+
             FallingBlock fallingBlock = CollideFirst<FallingBlock>(Position + crushDir);
-            bool flag11 = fallingBlock != null;
-            if (flag11)
+            if (fallingBlock != null)
             {
                 fallingBlock.Triggered = true;
             }
-            bool flag12 = crushDir == -Vector2.UnitX;
-            if (flag12)
+
+            if (crushDir == -Vector2.UnitX)
             {
                 Vector2 add = new Vector2(0f, 2f);
                 int i = 0;
@@ -550,16 +526,15 @@ namespace FrostHelper
                         SceneAs<Level>().ParticlesFG.Emit(CrushBlock.P_Impact, at2 + add, 0f);
                         SceneAs<Level>().ParticlesFG.Emit(CrushBlock.P_Impact, at2 - add, 0f);
                     }
-                    at2 = default(Vector2);
+                    at2 = default;
                     int num = i;
                     i = num + 1;
                 }
-                add = default(Vector2);
+                add = default;
             }
             else
             {
-                bool flag14 = crushDir == Vector2.UnitX;
-                if (flag14)
+                if (crushDir == Vector2.UnitX)
                 {
                     Vector2 add2 = new Vector2(0f, 2f);
                     int j = 0;
@@ -572,11 +547,11 @@ namespace FrostHelper
                             SceneAs<Level>().ParticlesFG.Emit(CrushBlock.P_Impact, at3 + add2, 3.14159274f);
                             SceneAs<Level>().ParticlesFG.Emit(CrushBlock.P_Impact, at3 - add2, 3.14159274f);
                         }
-                        at3 = default(Vector2);
+                        at3 = default;
                         int num = j;
                         j = num + 1;
                     }
-                    add2 = default(Vector2);
+                    add2 = default;
                 }
                 else
                 {
@@ -651,8 +626,8 @@ namespace FrostHelper
                 {
                     yield return null;
                     StopPlayerRunIntoAnimation = false;
-                    SlowCrushBlock.MoveState ret = returnStack[returnStack.Count - 1];
-                    speed2 = Calc.Approach(speed2, 60f, 160f * Engine.DeltaTime);
+                    CustomCrushBlock.MoveState ret = returnStack[returnStack.Count - 1];
+                    speed2 = Calc.Approach(speed2, ReturnSpeed, ReturnAccel * Engine.DeltaTime);
                     waypointSfxDelay -= Engine.DeltaTime;
                     bool flag21 = ret.Direction.X != 0f;
                     if (flag21)
@@ -684,8 +659,7 @@ namespace FrostHelper
                         }
                         else
                         {
-                            bool flag26 = waypointSfxDelay <= 0f;
-                            if (flag26)
+                            if (waypointSfxDelay <= 0f)
                             {
                                 Audio.Play("event:/game/06_reflection/crushblock_rest_waypoint", Center);
                             }
@@ -694,7 +668,7 @@ namespace FrostHelper
                         StartShaking(0.2f);
                         yield return 0.2f;
                     }
-                    ret = default(SlowCrushBlock.MoveState);
+                    ret = default;
                 }
             }
             yield break;
@@ -794,16 +768,13 @@ namespace FrostHelper
         public static ParticleType P_Crushing => CrushBlock.P_Crushing;
         public static ParticleType P_Activate => CrushBlock.P_Activate;
 
-        private const float CrushSpeed = 120f; // was 240f
-        private const float CrushAccel = 250f; // was 500f
-        private const float ReturnSpeed = 30f; // was 60f
-        private const float ReturnAccel = 80f; // was 160f
         
-        private Color fill;
+        
+        private Color fillColor;
         private Level level;
         private bool canActivate;
         private Vector2 crushDir;
-        private List<SlowCrushBlock.MoveState> returnStack;
+        private List<CustomCrushBlock.MoveState> returnStack;
         private Coroutine attackCoroutine;
         private bool canMoveVertically;
         private bool canMoveHorizontally;

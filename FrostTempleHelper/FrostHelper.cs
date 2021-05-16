@@ -5,11 +5,8 @@ using System.Linq;
 using System.Reflection;
 using Celeste;
 using Celeste.Mod;
-using Celeste.Mod.Helpers;
 using Celeste.Mod.Meta;
-using FrostHelper;
 using FrostHelper.Entities.Boosters;
-using FrostTempleHelper.Entities.azcplo1k;
 using Microsoft.Xna.Framework;
 using Mono.Cecil.Cil;
 using Monocle;
@@ -62,6 +59,12 @@ namespace FrostHelper
             }
         }
 
+        private static List<ILHook> registeredHooks = new List<ILHook>();
+        public static void RegisterILHook(ILHook hook)
+        {
+            registeredHooks.Add(hook);
+        }
+
         // Set up any hooks, event handlers and your mod in general here.
         // Load runs before Celeste itself has initialized properly.
         public override void Load()
@@ -81,9 +84,12 @@ namespace FrostHelper
 
             // For custom Boosters
             On.Celeste.Player.CallDashEvents += Player_CallDashEvents;
+            RegisterILHook(new ILHook(typeof(Player).GetMethod("orig_WindMove", BindingFlags.NonPublic | BindingFlags.Instance), modBoosterState));
 
             // For Custom Dream Blocks
+#pragma warning disable CS0618 // Type or member is obsolete
             CustomDreamBlock.Load();
+#pragma warning restore CS0618 // Type or member is obsolete
             CustomDreamBlockV2.Load();
             // Custom dream blocks and feathers
             On.Celeste.Player.UpdateSprite += Player_UpdateSprite;
@@ -100,11 +106,12 @@ namespace FrostHelper
             IL.Celeste.Player.OnBoundsH += modRedDashState;
             IL.Celeste.Player.OnBoundsV += modRedDashState;
             IL.Celeste.DashBlock.OnDashed += modRedDashState;
+            RegisterILHook(new ILHook(typeof(Player).GetProperty("DashAttacking", BindingFlags.Instance | BindingFlags.Public).GetGetMethod(true), modRedDashState));
 
             CustomSpinner.LoadHooks();
             //PortalGun.Load();
             ForcedFastfallTrigger.Load();
-            playerUpdateHook = new ILHook(typeof(Player).GetMethod("orig_Update", BindingFlags.Instance | BindingFlags.Public), modFeatherState);
+            RegisterILHook(new ILHook(typeof(Player).GetMethod("orig_Update", BindingFlags.Instance | BindingFlags.Public), modFeatherState));
         }
 
         private void LightningRenderer_Reset(On.Celeste.LightningRenderer.orig_Reset orig, LightningRenderer self)
@@ -124,10 +131,6 @@ namespace FrostHelper
             }
             orig(self);
         }
-
-        
-
-        ILHook playerUpdateHook;
 
         void modFeatherState(ILContext il)
         {
@@ -155,12 +158,37 @@ namespace FrostHelper
             }
         }
 
+        void modBoosterState(ILContext il)
+        {
+            ILCursor cursor = new ILCursor(il);
+            while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdcI4(Player.StBoost) && instr.Previous.MatchCallvirt<StateMachine>("get_State")))
+            {
+                cursor.Emit(OpCodes.Pop);
+                cursor.EmitDelegate<Func<int>>(getBoosterState);
+            }
+        }
+
         static int getFeatherState()
         {
             if (Engine.Scene is Level)
                 return StateGetPlayer().StateMachine.State == CustomFeatherState ? CustomFeatherState : 19;
             else
                 return 19;
+        }
+
+        static int getBoosterState()
+        {
+            if (Engine.Scene is Level)
+            {
+                int state = StateGetPlayer().StateMachine.State;
+                if (state == GenericCustomBooster.CustomBoostState) return GenericCustomBooster.CustomBoostState;
+                if (state == blueBoostState) return blueBoostState;
+                if (state == YellowBoostState) return YellowBoostState;
+                if (state == grayBoostState) return grayBoostState;
+                //return StateGetPlayer().StateMachine.State == GenericCustomBooster.CustomRedBoostState ? GenericCustomBooster.CustomRedBoostState : Player.StBoost;
+            }
+
+            return Player.StBoost;
         }
 
         static int getRedDashState()
@@ -221,7 +249,9 @@ namespace FrostHelper
                         return;
                     }
                 }
+#pragma warning disable CS0618 // Type or member is obsolete
                 foreach (BlueBooster b in self.Scene.Tracker.GetEntities<BlueBooster>())
+#pragma warning restore CS0618 // Type or member is obsolete
                 {
                     if (b.StartedBoosting)
                     {
@@ -273,7 +303,9 @@ namespace FrostHelper
             grayBoostState = self.StateMachine.AddState(new Func<int>(GrayBoostUpdate), GrayBoostCoroutine, GrayBoostBegin, GrayBoostEnd);
             GenericCustomBooster.CustomBoostState = self.StateMachine.AddState(new Func<int>(GenericCustomBooster.BoostUpdate), GenericCustomBooster.BoostCoroutine, GenericCustomBooster.BoostBegin, GenericCustomBooster.BoostEnd);
             GenericCustomBooster.CustomRedBoostState = self.StateMachine.AddState(new Func<int>(GenericCustomBooster.RedDashUpdate), GenericCustomBooster.RedDashCoroutine, GenericCustomBooster.RedDashBegin, GenericCustomBooster.RedDashEnd);
+#pragma warning disable CS0618 // Type or member is obsolete
             CustomDreamDashState = self.StateMachine.AddState(new Func<int>(CustomDreamBlock.DreamDashUpdate), null, CustomDreamBlock.DreamDashBegin, CustomDreamBlock.DreamDashEnd);
+#pragma warning restore CS0618 // Type or member is obsolete
             CustomFeatherState = self.StateMachine.AddState(StarFlyUpdate, CustomFeatherCoroutine, CustomFeatherBegin, CustomFeatherEnd);
         }
 
@@ -718,6 +750,7 @@ namespace FrostHelper
         private IEnumerator BlueBoostCoroutine()
         {
             Player player = StateGetPlayer();
+#pragma warning disable CS0618 // Type or member is obsolete
             BlueBooster booster = null;
             foreach (BlueBooster b in player.Scene.Tracker.GetEntities<BlueBooster>())
             {
@@ -727,6 +760,7 @@ namespace FrostHelper
                     break;
                 }
             }
+#pragma warning restore CS0618 // Type or member is obsolete
             yield return booster.BoostTime;
             player.StateMachine.State = Player.StDash;
             yield break;
@@ -832,7 +866,9 @@ namespace FrostHelper
             On.Celeste.Player.CallDashEvents -= Player_CallDashEvents;
 
             // For Custom Dream Blocks
+#pragma warning disable CS0618 // Type or member is obsolete
             CustomDreamBlock.Unload();
+#pragma warning restore CS0618 // Type or member is obsolete
             CustomDreamBlockV2.Unload();
             // Custom dream blocks and feathers
             On.Celeste.Player.UpdateSprite -= Player_UpdateSprite;
@@ -848,8 +884,7 @@ namespace FrostHelper
             CustomSpinner.UnloadHooks();
             if (outBackHelper)
                 typeof(FrostModule).Assembly.GetType("FrostTempleHelper.Entities.azcplo1k.abcdhr").GetMethod("Unload").Invoke(null, new object[0]);
-            playerUpdateHook.Dispose();
-            playerUpdateHook = null;
+
             //PortalGun.Unload();
             ForcedFastfallTrigger.Unload();
 
@@ -857,6 +892,12 @@ namespace FrostHelper
             IL.Celeste.Player.OnBoundsH -= modRedDashState;
             IL.Celeste.Player.OnBoundsV -= modRedDashState;
             IL.Celeste.DashBlock.OnDashed -= modRedDashState;
+
+            foreach (var hook in registeredHooks)
+            {
+                hook.Dispose();
+            }
+            registeredHooks = new List<ILHook>();
         }
 
         private void LightningRenderer_Awake(On.Celeste.LightningRenderer.orig_Awake orig, LightningRenderer self, Scene scene)
@@ -913,17 +954,7 @@ namespace FrostHelper
                     throw new Exception("MOD CONFLICT: Please uninstall the FrostHelperExtension mod");
                 }
             }
-
-            //On.Celeste.LevelData.CreateEntityData += LevelData_CreateEntityData;
         }
-
-        /*
-        private EntityData LevelData_CreateEntityData(On.Celeste.LevelData.orig_CreateEntityData orig, LevelData self, BinaryPacker.Element entity)
-        {
-            var data = orig(self, entity);
-            if (data.Name == "FrostHelper/IceSpinner") data.Name = "FHS";
-            return data;
-        } */
 
         private static bool OnLoadEntity(Level level, LevelData levelData, Vector2 offset, EntityData entityData)
         {
@@ -938,7 +969,7 @@ namespace FrostHelper
                     level.Add(new KeyIce(entityData, offset, new EntityID(levelData.Name, entityData.ID), null));
                     return true;
                 case "FrostHelper/SlowCrushBlock":
-                    level.Add(new SlowCrushBlock(entityData, offset));
+                    level.Add(new CustomCrushBlock(entityData, offset));
                     return true;
                 case "FrostHelper/CustomZipMover":
                     level.Add(new CustomZipMover(entityData, offset, entityData.Float("percentage", 100f), entityData.Enum("color", CustomZipMover.LineColor.Normal)));
@@ -973,8 +1004,11 @@ namespace FrostHelper
                 case "FrostHelper/CustomDreamBlock":
                     if (entityData.Bool("old", false))
                     {
+#pragma warning disable CS0618 // Type or member is obsolete
                         level.Add(new CustomDreamBlock(entityData, offset));
-                    } else
+#pragma warning restore CS0618 // Type or member is obsolete
+                    }
+                    else
                     {
                         level.Add(new CustomDreamBlockV2(entityData, offset));
                     }
@@ -1008,63 +1042,6 @@ namespace FrostHelper
             }
             return parsed;
         }
-    }
-
-    public class ColorHelper
-    {
-        /// <summary>
-        /// Returns a list of colors from a comma-separated string of hex colors OR xna color names
-        /// </summary>
-        public static Color[] GetColors(string colors)
-        {
-            string[] split = colors.Trim().Split(',');
-            Color[] parsed = new Color[split.Length];
-            for (int i = 0; i < split.Length; i++)
-            {
-                parsed[i] = GetColor(split[i]);
-            }
-            return parsed;
-        }
-
-        public static Color GetColor(string color)
-        {
-            foreach (PropertyInfo propertyInfo in colorProps)
-            {
-                bool flag = color.Equals(propertyInfo.Name, StringComparison.OrdinalIgnoreCase);
-                if (flag)
-                {
-                    return (Color)propertyInfo.GetValue(default(Color), null);
-                }
-            }
-            try
-            {
-                return Calc.HexToColor(color.Replace("#", ""));
-            }
-            catch
-            {
-            }
-            return Color.Transparent;
-        }
-
-        private static readonly PropertyInfo[] colorProps = typeof(Color).GetProperties();
-    }
-
-    public class EaseHelper
-    {
-        public static Ease.Easer GetEase(string name)
-        {
-            foreach (FieldInfo propertyInfo in easeProps)
-            {
-                bool flag = name.Equals(propertyInfo.Name, StringComparison.OrdinalIgnoreCase);
-                if (flag)
-                {
-                    return (Ease.Easer)propertyInfo.GetValue(default(Ease));
-                }
-            }
-            return Ease.Linear;
-        }
-
-        private static readonly FieldInfo[] easeProps = typeof(Ease).GetFields(BindingFlags.Static | BindingFlags.Public);
     }
 
     public static class SessionHelper

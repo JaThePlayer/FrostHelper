@@ -4,10 +4,8 @@ using Microsoft.Xna.Framework;
 using System.Reflection;
 using Celeste.Mod.Entities;
 using System.Collections.Generic;
-using System;
 using System.Linq;
 using System.Collections;
-using Celeste.Mod;
 
 namespace FrostHelper
 {

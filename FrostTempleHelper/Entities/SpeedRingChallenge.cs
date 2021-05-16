@@ -1,10 +1,8 @@
 ﻿using Celeste;
 using Celeste.Mod.Entities;
-using FMOD.Studio;
 using Microsoft.Xna.Framework;
 using Monocle;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -163,11 +161,15 @@ namespace FrostHelper
         public override void Render()
         {
             base.Render();
-            lerp += 3f * Engine.DeltaTime;
-            if (lerp >= 1f)
+            if (!(Scene as Level).Paused)
             {
-                lerp = 0f;
+                lerp += 3f * Engine.DeltaTime;
+                if (lerp >= 1f)
+                {
+                    lerp = 0f;
+                }
             }
+            
             DrawRing(Collider.Center + Position);//currentNodeID == -1 ? Collider.Center : nodes[currentNodeID]);
         }
         float lerp;

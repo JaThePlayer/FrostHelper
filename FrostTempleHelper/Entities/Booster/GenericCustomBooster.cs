@@ -172,8 +172,8 @@ namespace FrostHelper.Entities.Boosters
 
             }
             PlayerReleased();
-            bool flag2 = player.StateMachine.State == 4;
-            if (flag2)
+
+            if (player.StateMachine.State == CustomBoostState)
             {
                 sprite.Visible = false;
             }
@@ -281,6 +281,24 @@ namespace FrostHelper.Entities.Boosters
         static GenericCustomBooster()
         {
             playerOffset = new Vector2(0f, -2f);
+        }
+
+        public virtual void HandleBoostBegin(Player player)
+        {
+            Level level = player.SceneAs<Level>();
+            bool doNotDropTheo = false;
+            if (level != null)
+            {
+                MapMetaModeProperties meta = level.Session.MapData.GetMeta();
+                doNotDropTheo = (meta != null) && meta.TheoInBubble.GetValueOrDefault();
+            }
+            player.RefillDash();
+            player.RefillStamina();
+            if (doNotDropTheo)
+            {
+                return;
+            }
+            player.Drop();
         }
 
         
@@ -472,6 +490,8 @@ namespace FrostHelper.Entities.Boosters
         public static void BoostBegin()
         {
             Player player = FrostModule.StateGetPlayer();
+            GetBoosterThatIsBoostingPlayer(player).HandleBoostBegin(player);
+            /*
             Level level = player.SceneAs<Level>();
             bool? flag;
             if (level == null)
@@ -490,7 +510,7 @@ namespace FrostHelper.Entities.Boosters
             {
                 return;
             }
-            player.Drop();
+            player.Drop();*/
         }
 
         public static int BoostUpdate()
@@ -541,6 +561,20 @@ namespace FrostHelper.Entities.Boosters
             yield return booster.BoostTime;
             player.StateMachine.State = RedDash ? CustomRedBoostState : Player.StDash;
             yield break;
+        }
+
+        protected static GenericCustomBooster GetBoosterThatIsBoostingPlayer(Player player)
+        {
+            GenericCustomBooster booster = null;
+            foreach (GenericCustomBooster b in Engine.Scene.Tracker.GetEntities<GenericCustomBooster>())
+            {
+                if (b.CollideCheck(player))
+                {
+                    booster = b;
+                    break;
+                }
+            }
+            return booster;
         }
 
         #endregion

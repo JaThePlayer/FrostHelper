@@ -1,15 +1,12 @@
 ﻿using Celeste;
 using Celeste.Mod.OutbackHelper;
-using FrostHelper;
 using Microsoft.Xna.Framework;
-using Mono.Cecil.Cil;
 using Monocle;
-using MonoMod.Cil;
 using MonoMod.Utils;
-using System;
 using System.Collections.Generic;
 
-namespace FrostTempleHelper.Entities.azcplo1k {
+namespace FrostTempleHelper.Entities.azcplo1k
+{
     class abcdhr : Component
     {
 

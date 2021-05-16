@@ -3,7 +3,6 @@ using Microsoft.Xna.Framework;
 using Monocle;
 using Celeste;
 using Celeste.Mod.Entities;
-using Celeste.Mod;
 
 namespace FrostHelper
 {

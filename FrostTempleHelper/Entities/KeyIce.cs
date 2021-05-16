@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
 using Celeste;
-using Celeste.Mod;
 using Microsoft.Xna.Framework;
 using Monocle;
 
 
-namespace FrostHelper {
+namespace FrostHelper
+{
     public class KeyIce : Key
     {
         private bool IsFirstIceKey

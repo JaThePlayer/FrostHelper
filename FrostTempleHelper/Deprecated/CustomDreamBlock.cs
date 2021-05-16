@@ -1,5 +1,4 @@
 ﻿using Celeste;
-using Celeste.Mod.Entities;
 using Microsoft.Xna.Framework;
 using Monocle;
 using MonoMod.Utils;
@@ -11,6 +10,7 @@ namespace FrostHelper
     // State 9 is vanilla Dream Block Dash
     //[CustomEntity("FrostHelper/CustomDreamBlock")]
     [Tracked]
+    [Obsolete("Use CustomDreamBlockV2 instead")]
     public class CustomDreamBlock : Solid
     {
         public CustomDreamBlock(EntityData data, Vector2 offset) : base(data.Position + offset, (float)data.Width, (float)data.Height, true)

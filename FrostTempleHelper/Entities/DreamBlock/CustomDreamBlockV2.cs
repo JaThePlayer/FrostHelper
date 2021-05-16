@@ -1,10 +1,10 @@
 ﻿using Celeste;
-using Celeste.Mod.Entities;
 using Microsoft.Xna.Framework;
+using Mono.Cecil.Cil;
 using Monocle;
+using MonoMod.Cil;
 using MonoMod.Utils;
 using System;
-using System.Collections;
 using System.Reflection;
 
 
@@ -23,6 +23,8 @@ namespace FrostHelper
         public bool AllowRedirects;
         public bool AllowRedirectsInSameDir;
         public float SameDirectionSpeedMultiplier;
+        public bool ConserveSpeed;
+
 
         public Color ActiveBackColor;
 
@@ -53,6 +55,7 @@ namespace FrostHelper
             node = data.FirstNodeNullable(new Vector2?(offset));
             moveSpeedMult = data.Float("moveSpeedMult", 1f);
             easer = EaseHelper.GetEase(data.Attr("moveEase", "SineInOut"));
+            ConserveSpeed = data.Bool("conserveSpeed", false);
             // legacy
             fastMoving = data.Bool("fastMoving", false);
         }
@@ -124,12 +127,40 @@ namespace FrostHelper
         {
             On.Celeste.Player.DreamDashUpdate += Player_DreamDashUpdate;
             On.Celeste.Player.DreamDashEnd += Player_DreamDashEnd;
+
+            IL.Celeste.Player.DreamDashBegin += Player_DreamDashBegin;
         }
+
+        
 
         public static void Unload()
         {
             On.Celeste.Player.DreamDashUpdate -= Player_DreamDashUpdate;
             On.Celeste.Player.DreamDashEnd -= Player_DreamDashEnd;
+
+            IL.Celeste.Player.DreamDashBegin -= Player_DreamDashBegin;
+        }
+
+        private static void Player_DreamDashBegin(ILContext il)
+        {
+            ILCursor cursor = new ILCursor(il);
+
+            while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchStfld<Player>("Speed")))
+            {
+                cursor.Index--;
+                cursor.Emit(OpCodes.Ldarg_0);
+                cursor.EmitDelegate<Func<Vector2, Player, Vector2>>((orig, player) => 
+                {
+                    CustomDreamBlockV2 currentDreamBlock = player.CollideFirst<CustomDreamBlockV2>(player.Position + Vector2.UnitX * Math.Sign(player.Speed.X)) ?? player.CollideFirst<CustomDreamBlockV2>(player.Position + Vector2.UnitY * Math.Sign(player.Speed.Y));
+                    if (currentDreamBlock != null && currentDreamBlock.ConserveSpeed)
+                    {
+                        return player.Speed * Math.Sign(currentDreamBlock.DashSpeed);
+                    }
+                    return orig;
+                });
+
+                break;
+            }
         }
 
         private static void Player_DreamDashEnd(On.Celeste.Player.orig_DreamDashEnd orig, Player self)
@@ -140,21 +171,28 @@ namespace FrostHelper
 
         private static int Player_DreamDashUpdate(On.Celeste.Player.orig_DreamDashUpdate orig, Player self)
         {
-            CustomDreamBlockV2 cdm = self.CollideFirst<CustomDreamBlockV2>();
-            if (cdm != null)
+            CustomDreamBlockV2 currentDreamBlock = self.CollideFirst<CustomDreamBlockV2>();
+            if (currentDreamBlock != null)
             {
                 var dyn = new DynData<Player>(self);
-                float lastDreamSpeed = dyn.Get<float>("lastDreamSpeed");
-                if (lastDreamSpeed != cdm.DashSpeed)
+                
+
+                if (!currentDreamBlock.ConserveSpeed)
                 {
-                    self.Speed = self.DashDir * cdm.DashSpeed;
-                    dyn.Set<float>("lastDreamSpeed", cdm.DashSpeed * 1f);
+                    float lastDreamSpeed = dyn.Get<float>("lastDreamSpeed");
+                    if (lastDreamSpeed != currentDreamBlock.DashSpeed)
+                    {
+                        self.Speed = self.DashDir * currentDreamBlock.DashSpeed;
+                        dyn.Set<float>("lastDreamSpeed", currentDreamBlock.DashSpeed * 1f);
+                    }
                 }
-                if (cdm.AllowRedirects && self.CanDash)
+                
+
+                // Redirects
+                if (currentDreamBlock.AllowRedirects && self.CanDash)
                 {
                     bool sameDir = Input.GetAimVector(Facings.Right) == self.DashDir;
-                    bool flag4 = !sameDir || cdm.AllowRedirectsInSameDir;
-                    if (flag4)
+                    if (!sameDir || currentDreamBlock.AllowRedirectsInSameDir)
                     {
                         self.DashDir = Input.GetAimVector(Facings.Right);
                         self.Speed = self.DashDir * self.Speed.Length();
@@ -162,8 +200,8 @@ namespace FrostHelper
                         Audio.Play("event:/char/madeline/dreamblock_enter");
                         if (sameDir)
                         {
-                            self.Speed *= cdm.SameDirectionSpeedMultiplier;
-                            self.DashDir *= (float)Math.Sign(cdm.SameDirectionSpeedMultiplier);
+                            self.Speed *= currentDreamBlock.SameDirectionSpeedMultiplier;
+                            self.DashDir *= (float)Math.Sign(currentDreamBlock.SameDirectionSpeedMultiplier);
                         }
                         Input.Dash.ConsumeBuffer();
                     }

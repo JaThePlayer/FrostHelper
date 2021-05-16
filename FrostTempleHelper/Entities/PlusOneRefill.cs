@@ -3,14 +3,12 @@ using System.Collections;
 using Microsoft.Xna.Framework;
 using Monocle;
 using Celeste;
-using Celeste.Mod;
 
 namespace FrostHelper
 {
     [Celeste.Mod.Entities.CustomEntity("FrostHelper/PlusOneRefill")]
     public class PlusOneRefill : Entity
     {
-        bool initialized = false;
         string spritepath;
         int dashCount;
         float respawnTime;
@@ -33,7 +31,6 @@ namespace FrostHelper
 
         public void Initialize(bool fromcctor)
         {
-            initialized = true;
             if (!fromcctor)
             {
                 SceneAs<Level>().ParticlesFG.Emit(Refill.P_Regen, 5, Center, Vector2.One * 4f, particleColor);
@@ -41,15 +38,14 @@ namespace FrostHelper
             }
             Collider = new Hitbox(16f, 16f, -8f, -8f);
             Add(new PlayerCollider(new Action<Player>(OnPlayer), null, null));
-            string str = spritepath;
-            Add(outline = new Image(GFX.Game[str + "/outline"]));
+            Add(outline = new Image(GFX.Game[spritepath + "/outline"]));
             outline.CenterOrigin();
             outline.Visible = false;
-            Add(sprite = new Sprite(GFX.Game, str + "/idle"));
+            Add(sprite = new Sprite(GFX.Game, spritepath + "/idle"));
             sprite.AddLoop("idle", "", 0.1f);
             sprite.Play("idle", false, false);
             sprite.CenterOrigin();
-            Add(flash = new Sprite(GFX.Game, str + "/flash"));
+            Add(flash = new Sprite(GFX.Game, spritepath + "/flash"));
             flash.Add("flash", "", 0.05f);
             flash.OnFinish = delegate (string anim)
             {
@@ -69,8 +65,6 @@ namespace FrostHelper
 
             Depth = Depths.DreamBlocks - 1;
         }
-
-        
 
         public override void Added(Scene scene)
         {

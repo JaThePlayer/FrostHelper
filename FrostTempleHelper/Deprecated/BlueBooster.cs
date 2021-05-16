@@ -1,11 +1,7 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Reflection;
 using Celeste;
-using Celeste.Mod.Entities;
 using Microsoft.Xna.Framework;
 using Monocle;
 
@@ -14,8 +10,9 @@ namespace FrostHelper
     /// <summary>
     /// A booster that doesn't recover your dash
     /// </summary>
-    [CustomEntity("FrostHelper/BlueBooster")]
+    //[CustomEntity("FrostHelper/BlueBooster")]
     [Tracked]
+    [Obsolete("Use NewBlueBooster instead")]
     public class BlueBooster : Entity
     {
         public bool BoostingPlayer { get; private set; }
@@ -111,11 +108,13 @@ namespace FrostHelper
         }
 
         public bool StartedBoosting;
+        private static FieldInfo Player_boostTarget = typeof(Player).GetField("boostTarget", BindingFlags.NonPublic | BindingFlags.Instance);
         public static void Boost(Player player, BlueBooster booster)
         {
             player.StateMachine.State = FrostModule.blueBoostState;
             player.Speed = Vector2.Zero;
             //player.boostTarget = booster.Center;
+            Player_boostTarget.SetValue(player, booster.Center);
             //player.boostRed = false;
             FrostModule.player_boostTarget.SetValue(player, booster.Center);
             booster.StartedBoosting = true;
@@ -139,7 +138,7 @@ namespace FrostHelper
         private IEnumerator BoostRoutine(Player player, Vector2 dir)
         {
             float angle = (-dir).Angle();
-            while ((player.StateMachine.State == 2 || player.StateMachine.State == 5) && BoostingPlayer)
+            while ((player.StateMachine.State == Player.StDash || player.StateMachine.State == Player.StRedDash) && BoostingPlayer)
             {
                 if (player.Dead)
                 {
@@ -158,7 +157,7 @@ namespace FrostHelper
                 
             }
             PlayerReleased();
-            bool flag2 = player.StateMachine.State == 4;
+            bool flag2 = player.StateMachine.State == FrostModule.blueBoostState; // == 4
             if (flag2)
             {
                 sprite.Visible = false;
