@@ -63,10 +63,10 @@ namespace FrostHelper
             if (entity != null && CheckIfPlayerOutOfBounds(entity))
             {
                 spawnSfx.Play("event:/game/04_cliffside/snowball_spawn", null, 0f);
-                Collidable = (Visible = true);
+                Collidable = Visible = true;
                 resetTimer = 0f;
                 X = GetResetXPosition();
-                atY = (Y = entity.CenterY);
+                atY = Y = entity.CenterY;
                 Sine.Reset();
                 Sprite.Play("spin", false, false);
                 return;

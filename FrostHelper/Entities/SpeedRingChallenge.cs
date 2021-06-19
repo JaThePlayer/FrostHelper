@@ -15,7 +15,6 @@ namespace FrostHelper
         SpeedRingTimerDisplay timer;
 
         public readonly EntityID ID;
-        Vector2 offset;
 
         public readonly string ChallengeNameID;
 
@@ -42,7 +41,6 @@ namespace FrostHelper
 
         public SpeedRingChallenge(EntityData data, Vector2 offset, EntityID id) : base(data.Position + offset)
         {
-            this.offset = offset;
             ID = id;
             nodes = data.NodesOffset(offset);
             TimeLimit = TimeSpan.FromSeconds(data.Float("timeLimit", 1f)).Ticks;
@@ -106,7 +104,7 @@ namespace FrostHelper
                     }
                 }
 
-                Vector2 particlePos = (currentNodeID == -1 ? Position : nodes[currentNodeID]) + (Height / 2)*Vector2.UnitY;
+                Vector2 particlePos = (currentNodeID == -1 ? Position : nodes[currentNodeID]) + Height / 2*Vector2.UnitY;
                 Scene.Add(new SummitCheckpoint.ConfettiRenderer(particlePos));
                 Audio.Play("event:/game/07_summit/checkpoint_confetti", particlePos);
 
@@ -202,27 +200,21 @@ namespace FrostHelper
         float fadeTime;
         bool fading;
 
-        Wiggler wiggler;
         readonly SpeedRingChallenge TrackedChallenge;
 
 
         string Name;
         Vector2 NameMeasure;
-        /*
-        public void Track(SpeedRingChallenge challenge)
-        {
-            TrackedChallenge = challenge;
-        } */
 
         public SpeedRingTimerDisplay(SpeedRingChallenge challenge)
         {
-            Tag = (Tags.HUD | Tags.PauseUpdate);
-            calculateBaseSizes();
-            Add(wiggler = Wiggler.Create(0.5f, 4f, null, false, false));
+            Tag = Tags.HUD | Tags.PauseUpdate;
+            CalculateBaseSizes();
+            Add(Wiggler.Create(0.5f, 4f, null, false, false));
             TrackedChallenge = challenge;
             fadeTime = 3f;
 
-            createTween(0.1f, t => {
+            CreateTween(0.1f, t => {
                 Position = Vector2.Lerp(OffscreenPos, OnscreenPos, t.Eased);
             });
 
@@ -231,7 +223,7 @@ namespace FrostHelper
         }
 
 
-        private void createTween(float fadeTime, Action<Tween> onUpdate)
+        private void CreateTween(float fadeTime, Action<Tween> onUpdate)
         {
             Tween tween = Tween.Create(Tween.TweenMode.Oneshot, Ease.CubeInOut, fadeTime, true);
             tween.OnUpdate = onUpdate;
@@ -244,7 +236,7 @@ namespace FrostHelper
             fading = true;
         }
 
-        private void calculateBaseSizes()
+        private void CalculateBaseSizes()
         {
             // compute the max size of a digit and separators in the English font, for the timer part.
             PixelFont font = Dialog.Languages["english"].Font;
@@ -259,25 +251,16 @@ namespace FrostHelper
                 }
             }
             spacerWidth = pixelFontSize.Measure('.').X;
-            numberHeight = pixelFontSize.Measure("0:.").Y;
-
-            /*
-            // measure the ranks in the font for the current language.
-            rankMeasurements = new Dictionary<string, Vector2>() {
-                { "Gold", ActiveFont.Measure(Dialog.Clean("collabutils2_speedberry_gold") + " ") * targetTimeScale},
-                { "Silver", ActiveFont.Measure(Dialog.Clean("collabutils2_speedberry_silver") + " ") * targetTimeScale},
-                { "Bronze", ActiveFont.Measure(Dialog.Clean("collabutils2_speedberry_bronze") + " ") * targetTimeScale}
-            }; */
         }
 
-        private void drawTime(Vector2 position, string timeString, Color color, float scale = 1f, float alpha = 1f)
+        private void DrawTime(Vector2 position, string timeString, Color color, float scale = 1f, float alpha = 1f)
         {
             PixelFont font = Dialog.Languages["english"].Font;
             float fontFaceSize = Dialog.Languages["english"].FontFaceSize;
             float currentScale = scale;
             float currentX = position.X;
             float currentY = position.Y;
-            color = color * alpha;
+            color *= alpha;
             Color colorDoubleAlpha = color * alpha;
 
             foreach (char c in timeString)
@@ -304,7 +287,7 @@ namespace FrostHelper
                 fadeTime -= Engine.DeltaTime;
                 if (fadeTime < 0)
                 {
-                    createTween(0.6f, (t) =>
+                    CreateTween(0.6f, (t) =>
                     {
                         Position = Vector2.Lerp(OnscreenPos, OffscreenPos, t.Eased);
                     });
@@ -316,13 +299,13 @@ namespace FrostHelper
             {
                 ActiveFont.DrawOutline(Name, Position - (NameMeasure.X * Vector2.UnitX / 2 * 0.7f), new Vector2(0f, 1f), Vector2.One * 0.7f, Color.White, 2f, Color.Black);
                 string txt = TimeSpan.FromTicks(TimeSpent).ShortGameplayFormat();
-                drawTime(Position - (getTimeWidth(txt) * Vector2.UnitX/2) + NameMeasure.Y * Vector2.UnitY*1.2f*0.7f, txt, TimeSpent > TrackedChallenge.TimeLimit ? Color.Gray : Color.Gold);
+                DrawTime(Position - (GetTimeWidth(txt) * Vector2.UnitX/2) + NameMeasure.Y * Vector2.UnitY*1.2f*0.7f, txt, TimeSpent > TrackedChallenge.TimeLimit ? Color.Gray : Color.Gold);
                 txt = TimeSpan.FromTicks(TrackedChallenge.TimeLimit).ShortGameplayFormat();
-                drawTime(Position - (getTimeWidth(txt) * Vector2.UnitX / 2 * 0.7f) + NameMeasure.Y * Vector2.UnitY * 1.8f * 0.7f, txt, Color.Gold, 0.7f);
+                DrawTime(Position - (GetTimeWidth(txt) * Vector2.UnitX / 2 * 0.7f) + NameMeasure.Y * Vector2.UnitY * 1.8f * 0.7f, txt, Color.Gold, 0.7f);
             }
         }
 
-        private float getTimeWidth(string timeString, float scale = 1f)
+        private float GetTimeWidth(string timeString, float scale = 1f)
         {
             float currentScale = scale;
             float currentWidth = 0f;
@@ -342,7 +325,6 @@ namespace FrostHelper
 
         static float spacerWidth;
         static float numberWidth;
-        static float numberHeight;
 
         public long TimeSpent => TrackedChallenge.TimeSpent;
     }

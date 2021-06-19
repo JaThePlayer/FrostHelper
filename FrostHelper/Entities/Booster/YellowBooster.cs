@@ -28,7 +28,7 @@ namespace FrostHelper
             sprite = new Sprite(GFX.Game, data.Attr("directory", "objects/FrostHelper/yellowBooster/"));
             sprite.Visible = true;
             sprite.CenterOrigin();
-            sprite.Justify = (new Vector2(0.5f, 0.5f));
+            sprite.Justify = new Vector2(0.5f, 0.5f);
             sprite.AddLoop("loop", "booster", 0.1f, 0, 1, 2, 3, 4);
             sprite.AddLoop("inside", "booster", 0.1f, 5, 6, 7, 8);
             sprite.AddLoop("spin", "booster", 0.06f, 18, 19, 20, 21, 22, 23, 24, 25);
@@ -48,7 +48,7 @@ namespace FrostHelper
             Add(new MirrorReflection());
             Add(loopingSfx = new SoundSource());
             dashListener.OnDash = new Action<Vector2>(OnPlayerDashed);
-            particleType = (Booster.P_Burst);
+            particleType = Booster.P_Burst;
 
             RespawnTime = data.Float("respawnTime", 1f);
             BoostTime = data.Float("boostTime", 0.3f);
@@ -104,7 +104,7 @@ namespace FrostHelper
                 Audio.Play(enterSfx, Position);
                 wiggler.Start();
                 sprite.Play("inside", false, false);
-                sprite.FlipX = (player.Facing == Facings.Left);
+                sprite.FlipX = player.Facing == Facings.Left;
             }
         }
 
@@ -126,9 +126,9 @@ namespace FrostHelper
             StartedBoosting = false;
             Audio.Play(boostSfx, Position);
             BoostingPlayer = true;
-            Tag = (Tags.Persistent | Tags.TransitionUpdate);
+            Tag = Tags.Persistent | Tags.TransitionUpdate;
             sprite.Play("spin", false, false);
-            sprite.FlipX = (player.Facing == Facings.Left);
+            sprite.FlipX = player.Facing == Facings.Left;
             outline.Visible = true;
             wiggler.Start();
             dashRoutine.Replace(BoostRoutine(player, direction));

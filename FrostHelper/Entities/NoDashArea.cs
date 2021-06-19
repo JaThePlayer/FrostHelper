@@ -65,11 +65,11 @@ namespace FrostHelper
                     bool collidable = Collidable;
                     if (collidable)
                     {
-                        Position = (Vector2.Lerp(start, end, t.Eased));
+                        Position = Vector2.Lerp(start, end, t.Eased);
                     }
                     else
                     {
-                        Position = (Vector2.Lerp(start, end, t.Eased));
+                        Position = Vector2.Lerp(start, end, t.Eased);
                     }
                 };
                 Add(tween);

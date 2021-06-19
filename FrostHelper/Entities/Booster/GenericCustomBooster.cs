@@ -63,7 +63,7 @@ namespace FrostHelper.Entities.Boosters
                 Visible = true
             };
             sprite.CenterOrigin();
-            sprite.Justify = (new Vector2(0.5f, 0.5f));
+            sprite.Justify = new Vector2(0.5f, 0.5f);
             sprite.AddLoop("loop", "booster", 0.1f, 0, 1, 2, 3, 4);
             sprite.AddLoop("inside", "booster", 0.1f, 5, 6, 7, 8);
             sprite.AddLoop("spin", "booster", 0.06f, 18, 19, 20, 21, 22, 23, 24, 25);
@@ -87,7 +87,7 @@ namespace FrostHelper.Entities.Boosters
             Add(loopingSfx = new SoundSource());
 
             Red = data.Bool("red", false);
-            particleType = (Red ? Booster.P_BurstRed : Booster.P_Burst);
+            particleType = Red ? Booster.P_BurstRed : Booster.P_Burst;
 
             RespawnTime = data.Float("respawnTime", 1f);
             BoostTime = data.Float("boostTime", 0.3f);
@@ -143,7 +143,7 @@ namespace FrostHelper.Entities.Boosters
                 Audio.Play(enterSfx, Position);
                 wiggler.Start();
                 sprite.Play("inside", false, false);
-                sprite.FlipX = (player.Facing == Facings.Left);
+                sprite.FlipX = player.Facing == Facings.Left;
             }
         }
 
@@ -176,9 +176,9 @@ namespace FrostHelper.Entities.Boosters
             StartedBoosting = false;
             Audio.Play(boostSfx, Position);
             BoostingPlayer = true;
-            Tag = (Tags.Persistent | Tags.TransitionUpdate);
+            Tag = Tags.Persistent | Tags.TransitionUpdate;
             sprite.Play("spin", false, false);
-            sprite.FlipX = (player.Facing == Facings.Left);
+            sprite.FlipX = player.Facing == Facings.Left;
             outline.Visible = true;
             wiggler.Start();
             dashRoutine.Replace(BoostRoutine(player, direction));
@@ -406,7 +406,7 @@ namespace FrostHelper.Entities.Boosters
             Input.Rumble(RumbleStrength.Strong, RumbleLength.Medium);
             data["dashAttackTimer"] = 0.3f;
             data["gliderBoostTimer"] = 0.55f;
-            player.DashDir = (player.Speed = Vector2.Zero);
+            player.DashDir = player.Speed = Vector2.Zero;
             if (!data.Get<bool>("onGround") && player.Ducking && player.CanUnDuck)
             {
                 player.Ducking = false;
@@ -516,7 +516,7 @@ namespace FrostHelper.Entities.Boosters
 
             yield return null;
             player.Speed = (Vector2)Player_CorrectDashPrecision.Invoke(player, new object[] { data.Get<Vector2>("lastAim") }) * 240f;
-            data["gliderBoostDir"] = (player.DashDir = data.Get<Vector2>("lastAim"));
+            data["gliderBoostDir"] = player.DashDir = data.Get<Vector2>("lastAim");
             player.SceneAs<Level>().DirectionalShake(player.DashDir, 0.2f);
             if (player.DashDir.X != 0f)
             {

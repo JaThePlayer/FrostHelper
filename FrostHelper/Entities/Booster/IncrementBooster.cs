@@ -30,6 +30,6 @@ namespace FrostHelper.Entities.Boosters
             }
         }
 
-        private int GetDashIncrementAmt() => (Red ? 2 : 1);
+        private int GetDashIncrementAmt() => Red ? 2 : 1;
     }
 }

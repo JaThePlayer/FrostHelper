@@ -231,7 +231,7 @@ namespace FrostHelper
             else
             {
                 MapMetaModeProperties meta = level.Session.MapData.GetMeta();
-                flag = ((meta != null) ? meta.TheoInBubble : null);
+                flag = meta?.TheoInBubble;
             }
             bool? flag2 = flag;
             player.RefillDash();

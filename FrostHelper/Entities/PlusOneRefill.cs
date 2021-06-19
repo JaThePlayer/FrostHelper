@@ -54,7 +54,7 @@ namespace FrostHelper
             flash.CenterOrigin();
             Add(wiggler = Wiggler.Create(1f, 4f, delegate (float v)
             {
-                sprite.Scale = (flash.Scale = Vector2.One * (1f + v * 0.2f));
+                sprite.Scale = flash.Scale = Vector2.One * (1f + v * 0.2f);
             }, false, false));
             Add(new MirrorReflection());
             Add(bloom = new BloomPoint(0.8f, 16f));
@@ -113,7 +113,7 @@ namespace FrostHelper
 
         private void UpdateY()
         {
-            flash.Y = (sprite.Y = (bloom.Y = sine.Value * 2f));
+            flash.Y = sprite.Y = bloom.Y = sine.Value * 2f;
         }
 
         public override void Render()
@@ -147,7 +147,7 @@ namespace FrostHelper
             Celeste.Celeste.Freeze(0.05f);
             yield return null;
             level.Shake(0.3f);
-            sprite.Visible = (flash.Visible = false);
+            sprite.Visible = flash.Visible = false;
             if (!oneUse)
             {
                 outline.Visible = true;

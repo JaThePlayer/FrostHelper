@@ -39,7 +39,7 @@ namespace FrostHelper.Entities.WallBouncePresentation
 				num = i;
 			}
 			text = null;
-			pos = default(Vector2);
+			pos = default;
 			yield return PressButton();
 			list = FancyText.Parse(Presentation.GetDialog("PAGE2_LIST"), Width, 32, 1f, new Color?(Color.Black * 0.7f), null);
 			float delay = 0f;

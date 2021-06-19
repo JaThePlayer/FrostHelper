@@ -14,8 +14,6 @@ namespace FrostTempleHelper
     public class CoreBerry : Strawberry, IStrawberry
     {
         public bool IsIce;
-        Vector2 start;
-        string startLevel;
         Sprite indicator;
         public CoreBerry(EntityData data, Vector2 position, EntityID gid) : base(data, position, gid)
         {
@@ -90,24 +88,9 @@ namespace FrostTempleHelper
             indicator.CenterOrigin();
             indicator.Visible = false;
             Add(indicator);
-            /*
-            if (SaveData.Instance.CheckStrawberry(ID))
-            {
-                sprite.Visible = false;
-                indicator.Visible = true;
-            } else
-            {
-                sprite.Visible = true;
-                indicator.Visible = false;
-            } */
+
             Level level = scene as Level;
-            if (level != null)
-            {
-                start = Position;
-                startLevel = level.Session.Level;
-            }
-            //OnChangeMode((scene as Level).Session.CoreMode);
-            Session.CoreModes mode = (scene as Level).Session.CoreMode;
+            Session.CoreModes mode = level.Session.CoreMode;
             if (!IsIce)
             {
                 // berry hot
@@ -161,14 +144,9 @@ namespace FrostTempleHelper
             }
             
             sprite.Scale = Vector2.Zero;
-            //Visible = false;
-            //RemoveSelf();
-            hidden = true;
             sprite.Visible = false;
             indicator.Visible = true;
             yield break;
         }
-
-        bool hidden;
     }
 }

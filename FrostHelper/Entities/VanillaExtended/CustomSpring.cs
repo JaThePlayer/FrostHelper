@@ -4,7 +4,6 @@ using Monocle;
 using MonoMod.Utils;
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Reflection;
 
 namespace FrostHelper
@@ -12,20 +11,13 @@ namespace FrostHelper
     public class CustomSpring : Spring
     {
         string dir;
-        //float pufferSpeed;
-        //Vector2 jellySpeed;
-        //Vector2 theoSpeed;
-        //Vector2 playerSpeed;
 
         Vector2 speedMult;
-        public CustomSpring(EntityData data, Vector2 offset, Spring.Orientations orientation) : base(data.Position + offset, orientation, data.Bool("playerCanUse", true))
+        public CustomSpring(EntityData data, Vector2 offset, Orientations orientation) : base(data.Position + offset, orientation, data.Bool("playerCanUse", true))
         {
             bool playerCanUse = data.Bool("playerCanUse", true);
             dir = data.Attr("directory", "objects/spring/");
-            //jellySpeed = FrostModule.StringToVec2(data.Attr("jellySpeed", "160,-80"));
-            //theoSpeed = FrostModule.StringToVec2(data.Attr("theoSpeed", "220,-80"));
-            //playerSpeed = FrostModule.StringToVec2(data.Attr("playerSpeed", "-185,240"));
-            //pufferSpeed = data.Float("pufferSpeed", -185f);
+
             speedMult = FrostModule.StringToVec2(data.Attr("speedMult", "1"));
             Vector2 position = data.Position + offset;
             DisabledColor = Color.White;
@@ -46,20 +38,7 @@ namespace FrostHelper
             sprite.Add("idle", "", 0f, new int[1]);
             sprite.Add("bounce", "", 0.07f, "idle", new int[]
             {
-                0,
-                1,
-                2,
-                2,
-                2,
-                2,
-                2,
-                2,
-                2,
-                2,
-                2,
-                3,
-                4,
-                5
+                0,1,2,2,2,2,2,2,2,2,2,3,4,5
             });
             sprite.Add("disabled", "white", 0.07f);
             sprite.Play("idle", false, false);
@@ -67,7 +46,7 @@ namespace FrostHelper
             sprite.Origin.Y = sprite.Height;
             Depth = -8501;
 
-            Add(wiggler = Wiggler.Create(1f, 4f, delegate (float v)
+            Add(Wiggler.Create(1f, 4f, delegate (float v)
             {
                 sprite.Scale.Y = 1f + v * 0.2f;
             }, false, false));
@@ -191,7 +170,7 @@ namespace FrostHelper
                 TryBreak();
                 if (h.Entity is Glider)
                 {
-                    Glider glider = (h.Entity as Glider);
+                    Glider glider = h.Entity as Glider;
                     if (Orientation == Orientations.Floor)
                     {
                         glider.Speed.Y *= speedMult.Y;
@@ -202,7 +181,7 @@ namespace FrostHelper
                 }
                 else if (h.Entity is TheoCrystal)
                 {
-                    TheoCrystal theo = (h.Entity as TheoCrystal);//.Speed = theoSpeed;
+                    TheoCrystal theo = h.Entity as TheoCrystal;//.Speed = theoSpeed;
                     if (Orientation == Orientations.Floor)
                     {
                         theo.Speed.Y *= speedMult.Y;
@@ -212,7 +191,6 @@ namespace FrostHelper
                         theo.Speed *= speedMult;
                     }
                 }
-                //((h.Entity) as Actor)
             }
         }
 
@@ -227,18 +205,6 @@ namespace FrostHelper
             }
         }
         private FieldInfo Puffer_hitSpeed = typeof(Puffer).GetField("hitSpeed", BindingFlags.Instance | BindingFlags.NonPublic);
-
-        private void OnSeeker(Seeker seeker)
-        {
-            if (seeker.Speed.Y >= -120f)
-            {
-                BounceAnimate();
-                seeker.HitSpring();
-                seeker.Speed.Y *= speedMult.Y;
-
-                TryBreak();
-            }
-        }
 
         private static ParticleType P_Crumble_Up = new ParticleType
         {
@@ -279,11 +245,6 @@ namespace FrostHelper
             Acceleration = Vector2.UnitY * -20f
         };
 
-        public override void Update()
-        {
-            base.Update();
-        }
-
         private IEnumerator OneUseParticleRoutine()
         {
             while (true)
@@ -304,7 +265,6 @@ namespace FrostHelper
             }
         }
 
-        private Wiggler wiggler;
         private bool playerCanUse;
         public bool OneUse;
     }

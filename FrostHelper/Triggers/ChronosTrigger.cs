@@ -12,7 +12,7 @@ namespace FrostHelper
         public float StartTime;
         public float CurrentTime;
 
-        public bool Triggered = false;
+        public new bool Triggered = false;
 
         Player player;
 
@@ -124,8 +124,6 @@ namespace FrostHelper
     {
         float fadeTime;
         bool fading;
-
-        Wiggler wiggler;
         public ChronosTrigger TrackedTrigger;
 
         private void createTween(float fadeTime, Action<Tween> onUpdate)
@@ -137,9 +135,9 @@ namespace FrostHelper
 
         public ChronosDisplay(ChronosTrigger challenge)
         {
-            Tag = (Tags.HUD | Tags.PauseUpdate | Tags.Persistent);
+            Tag = Tags.HUD | Tags.PauseUpdate | Tags.Persistent;
 
-            Add(wiggler = Wiggler.Create(0.5f, 4f, null, false, false));
+            Add(Wiggler.Create(0.5f, 4f, null, false, false));
             TrackedTrigger = challenge;
             fadeTime = 3f;
 
@@ -168,7 +166,7 @@ namespace FrostHelper
             // base
             Draw.Rect(Position, Engine.Width / 4f, 40f, Color.Gray);
             // fill
-            Draw.Rect(Position, (Engine.Width / 4f) * (Math.Max(TrackedTrigger.CurrentTime,0f) / TrackedTrigger.StartTime), 40f, Color.Green);
+            Draw.Rect(Position, Engine.Width / 4f * (Math.Max(TrackedTrigger.CurrentTime,0f) / TrackedTrigger.StartTime), 40f, Color.Green);
             // outline
             Draw.HollowRect(Position + Vector2.UnitY*2f, Engine.Width / 4f, 40f, Color.White);
         }

@@ -710,13 +710,13 @@ namespace FrostHelper
                         bool flag6;
                         if (flag4)
                         {
-                            flag5 = (player.Speed.Y <= 0f);
-                            flag6 = (player.Speed.Y >= 0f);
+                            flag5 = player.Speed.Y <= 0f;
+                            flag6 = player.Speed.Y >= 0f;
                         }
                         else
                         {
-                            flag5 = (player.Speed.X <= 0f);
-                            flag6 = (player.Speed.X >= 0f);
+                            flag5 = player.Speed.X <= 0f;
+                            flag6 = player.Speed.X >= 0f;
                         }
                         if (flag5)
                         {

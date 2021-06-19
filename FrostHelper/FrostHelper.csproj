@@ -109,6 +109,7 @@
     <Compile Include="FrostHelperSaveData.cs" />
     <Compile Include="FrostMapDataProcessor.cs" />
     <Compile Include="Attributes.cs" />
+    <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="OutlineHelper.cs" />
     <Compile Include="SessionHelper.cs" />
     <Compile Include="Triggers\AnxietyTrigger.cs" />

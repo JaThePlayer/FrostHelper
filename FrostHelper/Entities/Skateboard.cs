@@ -5,7 +5,6 @@ using Celeste.Mod.Entities;
 using Microsoft.Xna.Framework;
 using Monocle;
 
-
 namespace FrostHelper
 {
     [CustomEntity("FrostHelper/Skateboard")]
@@ -18,7 +17,7 @@ namespace FrostHelper
             Old
         }
 
-        Skateboard.Directions dir;
+        Directions dir;
         bool keepMoving;
         bool hasMoved = false;
         bool interactWithEntities = false;
@@ -28,12 +27,11 @@ namespace FrostHelper
 
         public Skateboard(EntityData entityData, Vector2 offset) : base(entityData.Position + offset + new Vector2(0, 8), 25, false)
         {
-            dir = entityData.Enum<Skateboard.Directions>("direction", Directions.Old);
+            dir = entityData.Enum("direction", Directions.Old);
             hasRoadAndBarriers = false;
             startY = entityData.Position.Y + 8;
             Depth = Depths.Pickups;
             string sprite = entityData.Attr("sprite", "objects/FrostHelper/skateboard");
-            //base.Add(this.bodySprite = new Image(GFX.Game["scenery/car/body"]));
             Add(bodySprite = new Image(GFX.Game[sprite]));
             bodySprite.Active = true;
             bodySprite.Scale = dir == Directions.Right ? new Vector2(-1,1) : new Vector2(1, 1);
@@ -42,13 +40,7 @@ namespace FrostHelper
                 bodySprite.Scale = new Vector2(-1, 1);
             }
             bodySprite.Origin = new Vector2(bodySprite.Width / 2f, bodySprite.Height);
-            Hitbox hitbox = new Hitbox(20f, 6f, -10f, -7f);
-            Hitbox hitbox2 = new Hitbox(19f, 4f, 8f, -11f);
-            Collider = new ColliderList(new Collider[]
-            {
-                hitbox,
-             //   hitbox2
-            });
+            Collider = new Hitbox(20f, 6f, -10f, -7f);
             targetSpeedX = entityData.Float("speed", 90f);
             if (dir == Directions.Left) targetSpeedX = -targetSpeedX;
             SurfaceSoundIndex = 2;
@@ -58,12 +50,7 @@ namespace FrostHelper
 
         public override void Added(Scene scene)
         {
-            orig_Added(scene);
-            Level level = scene as Level;
-            this.level = SceneAs<Level>();
-            //if (dir == Directions.Right)
-            
-            //speedX = (dir == Directions.Right) ? 30f : -30f;
+            level = SceneAs<Level>();
         }
 
         bool HasNonGhostRider()
@@ -116,7 +103,6 @@ namespace FrostHelper
 
         public override void Update()
         {
-            Player player = Scene.Tracker.GetEntity<Player>();
             bool ridden = HasNonGhostRider();
             if (Y > startY && (!ridden || Y > startY + 1f))
             {
@@ -156,12 +142,6 @@ namespace FrostHelper
         {
             Audio.Play("event:/game/00_prologue/car_down", Position);
             return -1;
-        }
-
-        public void orig_Added(Scene scene)
-        {
-            base.Added(scene);
-            Level level = scene as Level;
         }
 
         private bool MoveHCheck(float amount)

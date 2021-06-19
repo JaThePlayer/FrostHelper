@@ -101,7 +101,7 @@ namespace FrostHelper
 
         private void OnDash(Vector2 direction)
         {
-            Swapping = (lerp < 1f);
+            Swapping = lerp < 1f;
             //if (target == 1) this.target = 0; else this.target = 1;
             Audio.Stop(returnSfx, true);
             Audio.Stop(moveSfx, true);
@@ -208,7 +208,7 @@ namespace FrostHelper
             }
             //Audio.Stop(this.returnSfx, true);
             //Audio.Stop(this.moveSfx, true);
-            StopPlayerRunIntoAnimation = (lerp <= 0f || lerp >= 1f);
+            StopPlayerRunIntoAnimation = lerp <= 0f || lerp >= 1f;
         }
 
         private void MoveParticles(Vector2 normal)

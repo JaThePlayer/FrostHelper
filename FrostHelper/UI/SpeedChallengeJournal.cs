@@ -564,7 +564,7 @@ namespace FrostHelper
                 MTN.FileSelect["assist"].DrawCentered(vector + new Vector2(100f, 370f), Color.White, 1f, 1.57079637f);
             }
             MTexture mtexture = MTN.Journal["edge"];
-            mtexture.Draw(vector + new Vector2((float)(-mtexture.Width), 0f), Vector2.Zero, Color.White, 1f, rotation);
+            mtexture.Draw(vector + new Vector2((float)-mtexture.Width, 0f), Vector2.Zero, Color.White, 1f, rotation);
             if (PageIndex > 0)
             {
                 MTN.Journal[PrevPage.PageTexture].Draw(vector, Vector2.Zero, backColor, new Vector2(-1f, 1f), rotation);

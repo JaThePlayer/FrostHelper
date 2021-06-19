@@ -95,9 +95,9 @@ namespace FrostHelper
         public override void Added(Scene scene)
         {
             base.Added(scene);
-            X = (SceneAs<Level>().Bounds.Left - 10);
-            Y = (SceneAs<Level>().Bounds.Bottom + 16);
-            iceMode = (SceneAs<Level>().Session.CoreMode == Session.CoreModes.Cold);
+            X = SceneAs<Level>().Bounds.Left - 10;
+            Y = SceneAs<Level>().Bounds.Bottom + 16;
+            iceMode = SceneAs<Level>().Session.CoreMode == Session.CoreModes.Cold;
             if (ReverseCoreMode)
                 iceMode = !iceMode;
             loopSfx.Play("event:/game/09_core/rising_threat", "room_state", iceMode ? 1 : 0);
@@ -127,7 +127,7 @@ namespace FrostHelper
 
         private void OnChangeMode(Session.CoreModes mode)
         {
-            iceMode = (mode == Session.CoreModes.Cold);
+            iceMode = mode == Session.CoreModes.Cold;
             if (ReverseCoreMode)
                 iceMode = !iceMode;
             loopSfx.Param("room_state", iceMode ? 1 : 0);
@@ -205,13 +205,13 @@ namespace FrostHelper
                     Y += Speed * num2 * Engine.DeltaTime;
                 }
             }
-            lerp = Calc.Approach(lerp, (iceMode ? 1 : 0), Engine.DeltaTime * 4f);
+            lerp = Calc.Approach(lerp, iceMode ? 1 : 0, Engine.DeltaTime * 4f);
             bottomRect.SurfaceColor = Color.Lerp(Hot[0], Cold[0], lerp);
             bottomRect.EdgeColor = Color.Lerp(Hot[1], Cold[1], lerp);
             bottomRect.CenterColor = Color.Lerp(Hot[2], Cold[2], lerp);
             bottomRect.Spikey = lerp * 5f;
             bottomRect.UpdateMultiplier = (1f - lerp) * 2f;
-            bottomRect.Fade = (iceMode ? 128 : 32);
+            bottomRect.Fade = iceMode ? 128 : 32;
         }
 
         Color[] Hot = new Color[]

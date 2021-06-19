@@ -42,7 +42,7 @@ namespace FrostHelper.Entities.WallBouncePresentation
 			infoText = FancyText.Parse(Presentation.GetDialog("PAGE3_INFO"), Width - 240, 32, 1f, new Color?(Color.Black * 0.7f), null);
 			yield return PressButton();
 			Audio.Play("event:/new_content/game/10_farewell/ppt_its_easy");
-			easyText = new AreaCompleteTitle(new Vector2(Width / 2f, (Height - 150)), Presentation.GetCleanDialog("PAGE3_EASY"), 2f, true);
+			easyText = new AreaCompleteTitle(new Vector2(Width / 2f, Height - 150), Presentation.GetCleanDialog("PAGE3_EASY"), 2f, true);
 			yield return 1f;
 			yield break;
 		}
@@ -67,7 +67,7 @@ namespace FrostHelper.Entities.WallBouncePresentation
 			}
 			if (infoText != null)
 			{
-				infoText.Draw(new Vector2(Width / 2f, (Height - 350)), new Vector2(0.5f, 0f), Vector2.One, 1f, 0, int.MaxValue);
+				infoText.Draw(new Vector2(Width / 2f, Height - 350), new Vector2(0.5f, 0f), Vector2.One, 1f, 0, int.MaxValue);
 			}
 			if (easyText != null)
 			{

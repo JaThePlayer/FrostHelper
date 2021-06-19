@@ -10,24 +10,6 @@ namespace FrostHelper
     [Celeste.Mod.Entities.CustomEntity("FrostHelper/TemporaryKey")]
     public class TemporaryKey : Key
     {
-        private bool IsFirstTemporaryKey
-        {
-            get
-            {
-                for (int i = follower.FollowIndex - 1; i > -1; i--)
-                {
-                    bool flag = follower.Leader.Followers[i].Entity is TemporaryKey;
-                    if (flag)
-                    {
-                        return false;
-                    }
-                }
-                return true;
-            }
-        }
-
-        private Alarm alarm;
-        private Tween tween;
         public new bool Turning { get; private set; }
 
         public TemporaryKey(EntityData data, Vector2 offset, EntityID id) : base(data.Position + offset, id, data.NodesOffset(offset))
@@ -63,8 +45,7 @@ namespace FrostHelper
         public override void Added(Scene scene)
         {
             base.Added(scene);
-            Level level = scene as Level;
-            if (level != null)
+            if (scene is Level level)
             {
                 start = Position;
                 startLevel = level.Session.Level;
@@ -74,22 +55,16 @@ namespace FrostHelper
         public override void Update()
         {
             Level level = Scene as Level;
-            Session session = (level != null) ? level.Session : null;
+            Session session = level?.Session;
             if (IsUsed && !wasUsed)
             {
                 wasUsed = true;
             }
-            if (!dissolved && !IsUsed && !base.Turning)
+            if (!dissolved && !IsUsed && !base.Turning && session != null && session.Keys.Contains(ID))
             {
-                bool flag3 = session != null && session.Keys.Contains(ID);
-                if (flag3)
-                {
-                    session.DoNotLoad.Remove(ID);
-                    session.Keys.Remove(ID);
-                    session.UpdateLevelStartDashes();
-                }
-                int followIndex = follower.FollowIndex;
-                bool flag4 = follower.Leader != null && follower.DelayTimer <= 0f && IsFirstTemporaryKey;
+                session.DoNotLoad.Remove(ID);
+                session.Keys.Remove(ID);
+                session.UpdateLevelStartDashes();
             }
             base.Update();
         }

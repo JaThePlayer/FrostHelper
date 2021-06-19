@@ -51,10 +51,10 @@ namespace FrostHelper
             scene.Add(solid = new Solid(Position + new Vector2(2f, 3f), Width - 4f, Height - 5f, false));
             if (!isIce)
             {
-                Collidable = (solid.Collidable = (SceneAs<Level>().CoreMode == Session.CoreModes.Hot));
+                Collidable = solid.Collidable = SceneAs<Level>().CoreMode == Session.CoreModes.Hot;
             } else
             {
-                Collidable = (solid.Collidable = (SceneAs<Level>().CoreMode == Session.CoreModes.Cold));
+                Collidable = solid.Collidable = SceneAs<Level>().CoreMode == Session.CoreModes.Cold;
             }
             
             bool collidable = Collidable;
@@ -68,11 +68,11 @@ namespace FrostHelper
         {
             if (!isIce)
             {
-                Collidable = (solid.Collidable = (SceneAs<Level>().CoreMode == Session.CoreModes.Hot));
+                Collidable = solid.Collidable = SceneAs<Level>().CoreMode == Session.CoreModes.Hot;
             }
             else
             {
-                Collidable = (solid.Collidable = (SceneAs<Level>().CoreMode == Session.CoreModes.Cold));
+                Collidable = solid.Collidable = SceneAs<Level>().CoreMode == Session.CoreModes.Cold;
             }
             bool flag = !Collidable;
             if (flag)
@@ -85,7 +85,7 @@ namespace FrostHelper
                     int num2 = 0;
                     while (num2 < Height)
                     {
-                        Vector2 vector = Position + new Vector2((num + 2), (num2 + 2)) + Calc.Random.Range(-Vector2.One * 2f, Vector2.One * 2f);
+                        Vector2 vector = Position + new Vector2(num + 2, num2 + 2) + Calc.Random.Range(-Vector2.One * 2f, Vector2.One * 2f);
                         level.Particles.Emit(FireBarrier.P_Deactivate, vector, (vector - center).Angle());
                         num2 += 4;
                     }

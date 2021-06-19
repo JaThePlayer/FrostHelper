@@ -61,7 +61,7 @@ namespace FrostHelper.Entities.WallBouncePresentation
 		public override void Render()
 		{
 			ActiveFont.DrawOutline(Presentation.GetCleanDialog("PAGE4_TITLE"), new Vector2(128f, 100f), Vector2.Zero, Vector2.One * 1.5f, Color.White, 2f, Color.Black);
-			tutorial.Render(new Vector2(Width / 2f, Height / 2f - 100f), 4f);
+			tutorial.Render(new Vector2(Width / 2f, Height / 2f - 100f));
 			if (list != null)
 			{
 				list.Draw(new Vector2(160f, Height - 400), new Vector2(0f, 0f), Vector2.One, 1f, 0, listIndex);

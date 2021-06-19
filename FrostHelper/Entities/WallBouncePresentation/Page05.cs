@@ -95,7 +95,6 @@ namespace FrostHelper.Entities.WallBouncePresentation
 					step = num + 1;
 					yield return null;
 				}
-				yield break;
 			}
 
 			public void Update()
@@ -106,7 +105,7 @@ namespace FrostHelper.Entities.WallBouncePresentation
 
 			public void Render()
 			{
-				Tutorial.Render(Position, 4f);
+				Tutorial.Render(Position);
 				Info.DrawJustifyPerLine(Position + Vector2.UnitY * 200f, new Vector2(0.5f, 0f), Vector2.One * 0.8f, 1f, 0, int.MaxValue);
 				if (xEase > 0f)
 				{

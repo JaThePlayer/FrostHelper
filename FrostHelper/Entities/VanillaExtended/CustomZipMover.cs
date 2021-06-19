@@ -41,7 +41,7 @@ namespace FrostHelper
 
         private void OnChangeMode(Session.CoreModes coreMode)
         {
-            iceModeNext = (coreMode == Session.CoreModes.Cold);
+            iceModeNext = coreMode == Session.CoreModes.Cold;
         }
 
         private void CheckModeChange()
@@ -57,43 +57,21 @@ namespace FrostHelper
         {
             if (iceMode)
             {
-                //if (this.color == CustomZipMover.LineColor.Core)
-                //{
-                // this.hexcolor = "006bb3"; // 0 107 179
-                //this.hexlightcolor = "0099ff";
-                // innercogstr = "objects/FrostHelper/customZipMover/redcog/cold/innercog";
-                // cogstr = "objects/FrostHelper/customZipMover/redcog/cold/cog";
-                // blockstr = "objects/FrostHelper/customZipMover/redcog/cold/block";
-                //}
-                //else
-                //{
                 hexcolor = coldhexcolor;
                 hexlightcolor = coldhexlightcolor;
                 innercogstr = directory + "/cold/innercog";
                 cogstr = directory + "/cold/cog";
                 blockstr = directory + "/cold/block";
-                //}
-                percentage = percentage / 4;
+                percentage /= 4;
             }
             else
             {
-                //if (this.color == CustomZipMover.LineColor.Core)
-                //{
-                //    hexcolor = "e62e00"; // 230 46 0
-                //    hexlightcolor = "ff5c33";
-                //    innercogstr = "objects/FrostHelper/customZipMover/redcog/innercog";
-                //    cogstr = "objects/FrostHelper/customZipMover/redcog/cog";
-                //    blockstr = "objects/FrostHelper/customZipMover/redcog/block";
-                //}
-                //else
-                //{
                 hexcolor = hothexcolor;
                 hexlightcolor = hothexlightcolor;
                 innercogstr = directory + "/innercog";
                 cogstr = directory + "/cog";
                 blockstr = directory + "/block";
-                //}
-                percentage = percentage * 4;
+                percentage *= 4;
             }
             ropeColor = Calc.HexToColor(hexcolor);
             ropeLightColor = Calc.HexToColor(hexlightcolor);
@@ -102,14 +80,15 @@ namespace FrostHelper
 
         public CustomZipMover(EntityData data, Vector2 offset) : this(data, offset, data.Float("percentage", 100f), data.Enum("color", LineColor.Normal)) { }
 
-        public CustomZipMover(Vector2 position, int width, int height, Vector2 target, float percentage, CustomZipMover.LineColor color, String linecolor, String linelightcolor, String directory, bool isCore, String coldlinecolor, String coldlinelightcolor, String tint, bool drawLine) : base(position, width, height, false)
+#pragma warning disable IDE0060 // Remove unused parameter
+        public CustomZipMover(Vector2 position, int width, int height, Vector2 target, float percentage, LineColor color, string linecolor, string linelightcolor, string directory, bool isCore, string coldlinecolor, String coldlinelightcolor, String tint, bool drawLine) : base(position, width, height, false)
+#pragma warning restore IDE0060 // Remove unused parameter
         {
             if (tint != "")
             {
                 this.tint = Calc.HexToColor(tint);
             }
             this.drawLine = drawLine;
-            this.color = color;
             innercogstr = "objects/FrostHelper/customZipMover/";
             lightstr = innercogstr;
             cogstr = innercogstr;
@@ -217,7 +196,9 @@ namespace FrostHelper
             Add(sfx);
         }
 
+#pragma warning disable IDE0060 // Remove unused parameter
         public CustomZipMover(EntityData data, Vector2 offset, float percentage, LineColor color) : this(data.Position + offset, data.Width, data.Height, data.Nodes[0] + offset, data.Float("percentage", 100f), data.Enum<CustomZipMover.LineColor>("color", LineColor.Custom), data.Attr("lineColor", "663931"), data.Attr("lineLightColor", "ff5c33"), data.Attr("directory", "objects/zipmover"), data.Bool("isCore", false), data.Attr("coldLineColor", "663931"), data.Attr("coldLineLightColor", "663931"), data.Attr("tint", ""), data.Bool("showLine", true))
+#pragma warning restore IDE0060 // Remove unused parameter
         {
             this.percentage = data.Float("percentage", 100f);
             FillMiddle = data.Bool("fillMiddle", true);
@@ -228,7 +209,7 @@ namespace FrostHelper
             base.Added(scene);
             if (isCore)
             {
-                iceModeNext = (iceMode = (SceneAs<Level>().CoreMode == Session.CoreModes.Cold));
+                iceModeNext = iceMode = SceneAs<Level>().CoreMode == Session.CoreModes.Cold;
                 ToggleSprite();
             }
             scene.Add(pathRenderer = new CustomZipMover.ZipMoverPathRenderer(this));
@@ -324,90 +305,6 @@ namespace FrostHelper
             Position = position;
         }
 
-        private void ScrapeParticlesCheck(Vector2 to)
-        {
-            if (Scene.OnInterval(0.03f))
-            {
-                bool flag = to.Y != ExactPosition.Y;
-                bool flag2 = to.X != ExactPosition.X;
-                if (flag && !flag2)
-                {
-                    int num = Math.Sign(to.Y - ExactPosition.Y);
-                    Vector2 value;
-                    if (num == 1)
-                    {
-                        value = BottomLeft;
-                    }
-                    else
-                    {
-                        value = TopLeft;
-                    }
-                    int num2 = 4;
-                    if (num == 1)
-                    {
-                        num2 = Math.Min((int)Height - 12, 20);
-                    }
-                    int num3 = (int)Height;
-                    if (num == -1)
-                    {
-                        num3 = Math.Max(16, (int)Height - 16);
-                    }
-                    if (Scene.CollideCheck<Solid>(value + new Vector2(-2f, (num * -2))))
-                    {
-                        for (int i = num2; i < num3; i += 8)
-                        {
-                            SceneAs<Level>().ParticlesFG.Emit(ZipMover.P_Scrape, TopLeft + new Vector2(0f, i + num * 2f), (num == 1) ? -0.7853982f : 0.7853982f);
-                        }
-                    }
-                    if (Scene.CollideCheck<Solid>(value + new Vector2(Width + 2f, (num * -2))))
-                    {
-                        for (int j = num2; j < num3; j += 8)
-                        {
-                            SceneAs<Level>().ParticlesFG.Emit(ZipMover.P_Scrape, TopRight + new Vector2(-1f, j + num * 2f), (num == 1) ? -2.3561945f : 2.3561945f);
-                        }
-                        return;
-                    }
-                }
-                else if (flag2 && !flag)
-                {
-                    int num4 = Math.Sign(to.X - ExactPosition.X);
-                    Vector2 value2;
-                    if (num4 == 1)
-                    {
-                        value2 = TopRight;
-                    }
-                    else
-                    {
-                        value2 = TopLeft;
-                    }
-                    int num5 = 4;
-                    if (num4 == 1)
-                    {
-                        num5 = Math.Min((int)Width - 12, 20);
-                    }
-                    int num6 = (int)Width;
-                    if (num4 == -1)
-                    {
-                        num6 = Math.Max(16, (int)Width - 16);
-                    }
-                    if (Scene.CollideCheck<Solid>(value2 + new Vector2(num4 * -2, -2f)))
-                    {
-                        for (int k = num5; k < num6; k += 8)
-                        {
-                            SceneAs<Level>().ParticlesFG.Emit(ZipMover.P_Scrape, TopLeft + new Vector2(k + num4 * 2f, -1f), (num4 == 1) ? 2.3561945f : 0.7853982f);
-                        }
-                    }
-                    if (Scene.CollideCheck<Solid>(value2 + new Vector2(num4 * -2, Height + 2f)))
-                    {
-                        for (int l = num5; l < num6; l += 8)
-                        {
-                            SceneAs<Level>().ParticlesFG.Emit(ZipMover.P_Scrape, BottomLeft + new Vector2(l + num4 * 2f, 0f), (num4 == 1) ? -2.3561945f : -0.7853982f);
-                        }
-                    }
-                }
-            }
-        }
-
         private IEnumerator Sequence()
         {
             Vector2 start = Position;
@@ -461,7 +358,6 @@ namespace FrostHelper
                     yield return null;
                 }
             }
-            yield break;
         }
 
         private float mod(float x, float m)
@@ -469,7 +365,6 @@ namespace FrostHelper
             return (x % m + m) % m;
         }
 
-        private readonly LineColor color;
         public float percentage;
         public static ParticleType P_Scrape;
         public static ParticleType P_Sparks;

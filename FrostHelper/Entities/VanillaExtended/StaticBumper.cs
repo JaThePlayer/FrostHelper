@@ -72,7 +72,7 @@ namespace FrostHelper
                 fireMode = false;
             } else
             {
-                fireMode = (SceneAs<Level>().CoreMode == Session.CoreModes.Hot);
+                fireMode = SceneAs<Level>().CoreMode == Session.CoreModes.Hot;
             }
             spriteEvil.Visible = fireMode;
             sprite.Visible = !fireMode;
@@ -80,7 +80,7 @@ namespace FrostHelper
 
         private void OnChangeMode(Session.CoreModes coreMode)
         {
-            fireMode = (coreMode == Session.CoreModes.Hot);
+            fireMode = coreMode == Session.CoreModes.Hot;
             spriteEvil.Visible = fireMode;
             sprite.Visible = !fireMode;
         }

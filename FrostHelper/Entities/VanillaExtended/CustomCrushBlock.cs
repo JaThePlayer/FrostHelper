@@ -37,7 +37,7 @@ namespace FrostHelper
             OnDashCollide = new DashCollision(OnDashed);
             returnStack = new List<MoveState>();
             
-            giant = (Width >= 48f && Height >= 48f && chillOut);
+            giant = Width >= 48f && Height >= 48f && chillOut;
             canActivate = true;
             attackCoroutine = new Coroutine(true);
             attackCoroutine.RemoveOnComplete = false;
@@ -48,7 +48,7 @@ namespace FrostHelper
             {
                 default:
                     idle = atlasSubtextures[3];
-                    canMoveHorizontally = (canMoveVertically = true);
+                    canMoveHorizontally = canMoveVertically = true;
                     break;
                 case Axes.Horizontal:
                     idle = atlasSubtextures[1];
@@ -154,7 +154,7 @@ namespace FrostHelper
         private void AddImage(MTexture idle, int x, int y, int tx, int ty, int borderX = 0, int borderY = 0)
         {
             MTexture subtexture = idle.GetSubtexture(tx * 8, ty * 8, 8, 8, null);
-            Vector2 imagePosition = new Vector2((x * 8), (y * 8));
+            Vector2 imagePosition = new Vector2(x * 8, y * 8);
             bool flag = borderX != 0;
             if (flag)
             {
@@ -261,7 +261,6 @@ namespace FrostHelper
         
         private bool CanActivate(Vector2 direction)
         {
-            bool result;
             if (giant && direction.X <= 0f)
             {
                 return false;
@@ -443,12 +442,12 @@ namespace FrostHelper
                             Action onComplete;
                             if ((onComplete = som) == null)
                             {
-                                onComplete = (som = delegate ()
+                                onComplete = som = delegate ()
                                 {
                                     face.Play("hurt", false, false);
                                     currentMoveLoopSfx.Stop(true);
                                     TurnOffImages();
-                                });
+                                };
                             }
                             Alarm.Set(this, duration, onComplete, Alarm.AlarmMode.Oneshot);
                         }
@@ -571,11 +570,11 @@ namespace FrostHelper
                                 SceneAs<Level>().ParticlesFG.Emit(CrushBlock.P_Impact, at4 + add3, 1.57079637f);
                                 SceneAs<Level>().ParticlesFG.Emit(CrushBlock.P_Impact, at4 - add3, 1.57079637f);
                             }
-                            at4 = default(Vector2);
+                            at4 = default;
                             int num = k;
                             k = num + 1;
                         }
-                        add3 = default(Vector2);
+                        add3 = default;
                     }
                     else
                     {
@@ -593,11 +592,11 @@ namespace FrostHelper
                                     SceneAs<Level>().ParticlesFG.Emit(CrushBlock.P_Impact, at5 + add4, -1.57079637f);
                                     SceneAs<Level>().ParticlesFG.Emit(CrushBlock.P_Impact, at5 - add4, -1.57079637f);
                                 }
-                                at5 = default(Vector2);
+                                at5 = default;
                                 int num = l;
                                 l = num + 1;
                             }
-                            add4 = default(Vector2);
+                            add4 = default;
                         }
                     }
                 }

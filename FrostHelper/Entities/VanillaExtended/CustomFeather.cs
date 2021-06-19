@@ -144,7 +144,6 @@ namespace FrostHelper
             player.Speed = dir * 250f;
             data["starFlyLastDir"] = dir;
             player.SceneAs<Level>().Particles.Emit(feather.P_Boost, 12, player.Center, Vector2.One * 4f, feather.FlyColor, (-dir).Angle());
-            dir = default(Vector2);
             Input.Rumble(RumbleStrength.Strong, RumbleLength.Medium);
             player.SceneAs<Level>().DirectionalShake((Vector2)data["starFlyLastDir"], 0.3f);
             while ((float)data["starFlyTimer"] > 0.5f)
@@ -337,7 +336,6 @@ namespace FrostHelper
 
         #endregion
 
-
         /// <summary>
         /// the maximum speed you fly with this feather
         /// </summary>
@@ -424,8 +422,8 @@ namespace FrostHelper
         public override void Update()
         {
             base.Update();
-            bool flag = respawnTimer > 0f;
-            if (flag)
+
+            if (respawnTimer > 0f)
             {
                 respawnTimer -= Engine.DeltaTime;
                 bool flag2 = respawnTimer <= 0f;
@@ -442,8 +440,8 @@ namespace FrostHelper
         public override void Render()
         {
             base.Render();
-            bool flag = shielded && sprite.Visible;
-            if (flag)
+
+            if (shielded && sprite.Visible)
             {
                 Draw.Circle(Position + sprite.Position, 10f - shieldRadiusWiggle.Value * 2f, Color.White, 3);
             }
@@ -451,8 +449,7 @@ namespace FrostHelper
 
         private void Respawn()
         {
-            bool flag = !Collidable;
-            if (flag)
+            if (!Collidable)
             {
                 outline.Visible = false;
                 Collidable = true;
@@ -466,7 +463,7 @@ namespace FrostHelper
         private void UpdateY()
         {
             sprite.X = 0f;
-            sprite.Y = (bloom.Y = sine.Value * 2f);
+            sprite.Y = bloom.Y = sine.Value * 2f;
             sprite.Position += moveWiggleDir * moveWiggle.Value * -8f;
         }
 
@@ -542,9 +539,8 @@ namespace FrostHelper
             level.Shake(0.3f);
             sprite.Visible = false;
             yield return 0.05f;
-            float angle = 0f;
-            bool flag = playerSpeed != Vector2.Zero;
-            if (flag)
+            float angle;
+            if (playerSpeed != Vector2.Zero)
             {
                 angle = playerSpeed.Angle();
             }

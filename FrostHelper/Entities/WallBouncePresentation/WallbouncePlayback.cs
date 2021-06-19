@@ -80,10 +80,9 @@ namespace FrostHelper.Entities.WallBouncePresentation
 					Engine.Scene.Add(speedRing);
 				}
 			}
-			hasUpdated = true;
 		}
 
-		public void Render(Vector2 position, float scale)
+		public void Render(Vector2 position)
 		{
 			Matrix transformationMatrix = Matrix.CreateScale(4f) * Matrix.CreateTranslation(position.X, position.Y, 0f);
 			Draw.SpriteBatch.End();
@@ -111,16 +110,10 @@ namespace FrostHelper.Entities.WallBouncePresentation
 			}
 			if (Playback.Visible)
 			{
-				//Console.WriteLine(Playback.Sprite.Scale); 
-				//Playback.Sprite.Scale.X = Math.Abs(Playback.Sprite.Scale.X);
-				//Playback.Hair.Facing = Facings.Right;
 				Playback.Render();
 			}
-			if (OnRender != null)
-			{
-				OnRender();
-			}
-			Draw.SpriteBatch.End();
+            OnRender?.Invoke();
+            Draw.SpriteBatch.End();
 			Draw.SpriteBatch.Begin();
 		}
 
@@ -130,8 +123,6 @@ namespace FrostHelper.Entities.WallBouncePresentation
 		}
 
 		public Action OnRender;
-
-		private bool hasUpdated;
 
 		private float dashTrailTimer;
 
