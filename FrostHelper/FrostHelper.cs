@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
+using System.IO;
 using System.Reflection;
 using Celeste;
 using Celeste.Mod;
 using Celeste.Mod.Meta;
 using FrostHelper.Entities.Boosters;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Mono.Cecil.Cil;
 using Monocle;
 using MonoMod.Cil;
@@ -49,12 +50,34 @@ namespace FrostHelper
                 outBackHelper = true;
                 typeof(FrostModule).Assembly.GetType("FrostTempleHelper.Entities.azcplo1k.abcdhr").GetMethod("Load").Invoke(null, new object[0]);
             }
+
+            AttributeHelper.InvokeAllWithAttribute(typeof(OnLoadContent));
         }
 
         private static List<ILHook> registeredHooks = new List<ILHook>();
         public static void RegisterILHook(ILHook hook)
         {
             registeredHooks.Add(hook);
+        }
+
+        //[Command("createrainbow", "REMOVE THIS JA AAAAAA")]
+        public static void CmdCreateRainbowImg()
+        {
+            int width = 1920;
+            int height = 1080;
+            Texture2D texture = new Texture2D(Engine.Graphics.GraphicsDevice, width, height);
+            Color[] colors = new Color[width * height];
+
+            for (int i = 0; i < width * height; i++)
+            {
+                colors[i] = ColorHelper.GetHue(Engine.Scene, new Vector2(i % width, i / width));
+            }
+
+
+            texture.SetData(colors);
+            using (FileStream stream = File.Create(@"C:\Users\Jasio\Desktop\rainbow4.png"))
+                texture.SaveAsPng(stream, width, height);
+            texture.Dispose();
         }
 
         // Set up any hooks, event handlers and your mod in general here.
@@ -351,6 +374,7 @@ namespace FrostHelper
                 case "FrostHelper/KeyIce":
                     level.Add(new KeyIce(entityData, offset, new EntityID(levelData.Name, entityData.ID), entityData.NodesOffset(offset)));
                     return true;
+                    /*
                 case "FrostHelper/SpringLeft":
                     level.Add(new CustomSpring(entityData, offset, Spring.Orientations.WallLeft));
                     return true;
@@ -359,7 +383,7 @@ namespace FrostHelper
                     return true;
                 case "FrostHelper/SpringFloor":
                     level.Add(new CustomSpring(entityData, offset, Spring.Orientations.Floor));
-                    return true;
+                    return true;*/
                 case "FrostHelper/CustomDreamBlock":
                     if (entityData.Bool("old", false))
                     {
@@ -400,6 +424,17 @@ namespace FrostHelper
                 parsed[i] = TypeHelper.EntityNameToType(split[i].Trim());
             }
             return parsed;
+        }
+
+        public static char[] GetCharArrayFromCommaSeparatedList(string list)
+        {
+            string[] split = list.Trim().Split(',');
+            char[] ret = new char[split.Length];
+            for (int i = 0; i < split.Length; i++)
+            {
+                ret[i] = split[i][0];
+            }
+            return ret;
         }
     }
 }

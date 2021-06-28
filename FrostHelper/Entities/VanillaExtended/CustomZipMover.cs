@@ -78,22 +78,16 @@ namespace FrostHelper
             innerCogs = GFX.Game.GetAtlasSubtextures(innercogstr);
         }
 
-        public CustomZipMover(EntityData data, Vector2 offset) : this(data, offset, data.Float("percentage", 100f), data.Enum("color", LineColor.Normal)) { }
-
-#pragma warning disable IDE0060 // Remove unused parameter
-        public CustomZipMover(Vector2 position, int width, int height, Vector2 target, float percentage, LineColor color, string linecolor, string linelightcolor, string directory, bool isCore, string coldlinecolor, String coldlinelightcolor, String tint, bool drawLine) : base(position, width, height, false)
-#pragma warning restore IDE0060 // Remove unused parameter
+        public CustomZipMover(EntityData data, Vector2 offset) : base(data.Position + offset, data.Width, data.Height, false) 
         {
-            if (tint != "")
-            {
-                this.tint = Calc.HexToColor(tint);
-            }
-            this.drawLine = drawLine;
+            tint = Calc.HexToColor(data.Attr("tint", "ffffff"));
+
+            drawLine = data.Bool("showLine", true);
             innercogstr = "objects/FrostHelper/customZipMover/";
             lightstr = innercogstr;
             cogstr = innercogstr;
             blockstr = innercogstr;
-            switch (color) // legacy support
+            switch (data.Enum("color", LineColor.Custom)) // legacy support
             {
                 case LineColor.Red:
                     hexcolor = "e62e00"; // 230 46 0
@@ -138,29 +132,29 @@ namespace FrostHelper
                     cogstr += "redcog/cog";
                     blockstr += "redcog/block";
                     lightstr += "redcog/light";
-                    this.isCore = true;
-                    this.directory = "objects/FrostHelper/customZipMover/redcog";
+                    isCore = true;
+                    directory = "objects/FrostHelper/customZipMover/redcog";
                     break;
                 case LineColor.Custom:
-                    hexcolor = linecolor;
-                    hexlightcolor = linelightcolor;
-                    coldhexcolor = coldlinecolor;
-                    coldhexlightcolor = coldlinelightcolor;
-                    hothexcolor = linecolor;
-                    hothexlightcolor = linelightcolor;
-                    this.directory = directory;
+                    hexcolor = data.Attr("lineColor", "663931");
+                    hexlightcolor = data.Attr("lineLightColor", "ff5c33");
+                    coldhexcolor = data.Attr("coldLineColor", "663931");
+                    coldhexlightcolor = data.Attr("coldLineLightColor", "663931");
+                    hothexcolor = data.Attr("lineColor", "663931");
+                    hothexlightcolor = data.Attr("lineLightColor", "ff5c33");
+                    directory = data.Attr("directory", "objects/zipmover");
                     // legacy support - bluecog was moved to redcog/cold to make core mode work correctly with them without hardcoding. We need this to make maps using the old directory still work. Ahorn doesn't have this however, so that new users won't accidentaly use this.
-                    if (this.directory == "objects/FrostHelper/customZipMover/bluecog") this.directory = "objects/FrostHelper/customZipMover/redcog/cold";
-                    innercogstr = this.directory + "/innercog";
-                    cogstr = this.directory + "/cog";
-                    blockstr = this.directory + "/block";
-                    lightstr = this.directory + "/light";
-                    this.isCore = isCore;
+                    if (directory == "objects/FrostHelper/customZipMover/bluecog") directory = "objects/FrostHelper/customZipMover/redcog/cold";
+                    innercogstr = directory + "/innercog";
+                    cogstr = directory + "/cog";
+                    blockstr = directory + "/block";
+                    lightstr = directory + "/light";
+                    isCore = data.Bool("isCore", false);
                     break;
                 default:
-                    throw new ArgumentOutOfRangeException("color", color, null);
+                    throw new ArgumentOutOfRangeException("color", data.Enum("color", LineColor.Normal), null);
             }
-            if (this.isCore)
+            if (isCore)
             {
                 Add(new CoreModeListener(new Action<Session.CoreModes>(OnChangeMode)));
             }
@@ -172,7 +166,7 @@ namespace FrostHelper
             sfx = new SoundSource();
             Depth = -9999;
             start = Position;
-            this.target = target;
+            target = data.Nodes[0] + offset;
             Add(new Coroutine(Sequence(), true));
             Add(new LightOcclude(1f));
             //base.Add(this.streetlight = new Sprite(GFX.Game, "objects/zipmover/light"));
@@ -182,8 +176,14 @@ namespace FrostHelper
             streetlight.Active = false;
             streetlight.SetAnimationFrame(1);
             streetlight.Position = new Vector2(Width / 2f - streetlight.Width / 2f, 0f);
-            Add(bloom = new BloomPoint(1f, 6f));
-            bloom.Position = new Vector2(Width / 2f, 4f);
+
+            float bloomAlpha = data.Float("bloomAlpha", 1f);
+            if (bloomAlpha != 0.0f)
+            {
+                Add(bloom = new BloomPoint(bloomAlpha, data.Float("bloomRadius", 6f)));
+                bloom.Position = new Vector2(Width / 2f, 4f);
+            }
+
             for (int i = 0; i < 3; i++)
             {
                 for (int j = 0; j < 3; j++)
@@ -194,13 +194,8 @@ namespace FrostHelper
             SurfaceSoundIndex = 7;
             sfx.Position = new Vector2(Width, Height) / 2f;
             Add(sfx);
-        }
 
-#pragma warning disable IDE0060 // Remove unused parameter
-        public CustomZipMover(EntityData data, Vector2 offset, float percentage, LineColor color) : this(data.Position + offset, data.Width, data.Height, data.Nodes[0] + offset, data.Float("percentage", 100f), data.Enum<CustomZipMover.LineColor>("color", LineColor.Custom), data.Attr("lineColor", "663931"), data.Attr("lineLightColor", "ff5c33"), data.Attr("directory", "objects/zipmover"), data.Bool("isCore", false), data.Attr("coldLineColor", "663931"), data.Attr("coldLineLightColor", "663931"), data.Attr("tint", ""), data.Bool("showLine", true))
-#pragma warning restore IDE0060 // Remove unused parameter
-        {
-            this.percentage = data.Float("percentage", 100f);
+            percentage = data.Float("percentage", 100f);
             FillMiddle = data.Bool("fillMiddle", true);
         }
 
@@ -212,7 +207,7 @@ namespace FrostHelper
                 iceModeNext = iceMode = SceneAs<Level>().CoreMode == Session.CoreModes.Cold;
                 ToggleSprite();
             }
-            scene.Add(pathRenderer = new CustomZipMover.ZipMoverPathRenderer(this));
+            scene.Add(pathRenderer = new ZipMoverPathRenderer(this));
         }
 
         public override void Removed(Scene scene)

@@ -1,6 +1,5 @@
 ﻿using Celeste;
 using Celeste.Mod.Entities;
-using Celeste.Mod.Meta;
 using Microsoft.Xna.Framework;
 using Monocle;
 

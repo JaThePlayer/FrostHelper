@@ -37,7 +37,7 @@ namespace FrostHelper
             
             lavaRect = new Rectangle((int)(data.Position + offset).X, (int)(data.Position + offset).Y, (int)width, (int)height);
             Depth = -8500;
-            if (!isIce)
+            if (!isIce && !data.Bool("silent", false))
             {
                 Add(idleSfx = new SoundSource());
                 idleSfx.Position = new Vector2(Width, Height) / 2f;

@@ -50,6 +50,7 @@ namespace FrostHelper
 
         public override void Added(Scene scene)
         {
+            base.Added(scene);
             level = SceneAs<Level>();
         }
 

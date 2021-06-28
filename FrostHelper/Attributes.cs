@@ -11,6 +11,12 @@ namespace FrostHelper
     public class OnLoad : Attribute { }
 
     /// <summary>
+    /// Method gets called when FrostModule.LoadContent() is called
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Method, Inherited = false, AllowMultiple = false)]
+    public class OnLoadContent : Attribute { }
+
+    /// <summary>
     /// Method gets called when FrostModule.Unload() is called
     /// </summary>
     [AttributeUsage(AttributeTargets.Method, Inherited = false, AllowMultiple = false)]

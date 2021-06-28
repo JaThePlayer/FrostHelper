@@ -8,7 +8,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>FrostHelper</RootNamespace>
-    <AssemblyName>FrostHelper</AssemblyName>
+    <AssemblyName>FrostTempleHelper</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
@@ -17,7 +17,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
+    <OutputPath>bin\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -25,7 +25,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
+    <OutputPath>bin\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -72,7 +72,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ColorHelper.cs" />
+    <Compile Include="Components\Rainbowifier.cs" />
     <Compile Include="Components\SkateboardInteraction.cs" />
+    <Compile Include="DecalRegistry\Rainbow.cs" />
     <Compile Include="EaseHelper.cs" />
     <Compile Include="EasierILHook.cs" />
     <Compile Include="Entities\BadelineChaserBlock\BadelineChaserBlock.cs" />
@@ -83,10 +85,12 @@
     <Compile Include="Entities\Booster\GrayBooster.cs" />
     <Compile Include="Entities\Bubbler.cs" />
     <Compile Include="Entities\EntityMover.cs" />
+    <Compile Include="Entities\Rainbow\EntityRainbowifyController.cs" />
     <Compile Include="Entities\Noperture\DeadlyLazer.cs" />
     <Compile Include="Entities\Noperture\PortalGun.cs" />
     <Compile Include="Entities\Noperture\PortalGunTrigger.cs" />
     <Compile Include="Entities\Noperture\PortalSurface.cs" />
+    <Compile Include="Entities\Rainbow\RainbowTilesetController.cs" />
     <Compile Include="Entities\SpeedChallengeTalker.cs" />
     <Compile Include="Entities\SpeedRingChallenge.cs" />
     <Compile Include="Entities\VanillaExtended\ColoredLightbeam.cs" />

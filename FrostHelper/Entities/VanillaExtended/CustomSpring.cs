@@ -1,18 +1,31 @@
 ﻿using Celeste;
+using Celeste.Mod.Entities;
 using Microsoft.Xna.Framework;
 using Monocle;
 using MonoMod.Utils;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Reflection;
 
 namespace FrostHelper
 {
+    [CustomEntity("FrostHelper/SpringLeft", "FrostHelper/SpringRight", "FrostHelper/SpringFloor")]
     public class CustomSpring : Spring
     {
         string dir;
 
         Vector2 speedMult;
+
+        private static Dictionary<string, Orientations> EntityDataNameToOrientation = new Dictionary<string, Orientations>()
+        {
+            ["FrostHelper/SpringLeft"] = Orientations.WallLeft,
+            ["FrostHelper/SpringRight"] = Orientations.WallRight,
+            ["FrostHelper/SpringFloor"] = Orientations.Floor
+        };
+
+        public CustomSpring(EntityData data, Vector2 offset) : this(data, offset, EntityDataNameToOrientation[data.Name]) { }
+
         public CustomSpring(EntityData data, Vector2 offset, Orientations orientation) : base(data.Position + offset, orientation, data.Bool("playerCanUse", true))
         {
             bool playerCanUse = data.Bool("playerCanUse", true);

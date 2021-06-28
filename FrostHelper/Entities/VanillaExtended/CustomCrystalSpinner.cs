@@ -6,7 +6,6 @@ using Microsoft.Xna.Framework;
 using Monocle;
 using System.Reflection;
 using Microsoft.Xna.Framework.Graphics;
-using Celeste.Mod;
 
 namespace FrostHelper
 {
@@ -165,8 +164,21 @@ namespace FrostHelper
             fgDirectory = GetFGSpritePath(hotCoreMode);
         }
 
+        public static bool ConnectorRendererJustAdded = false;
+        public override void Added(Scene scene)
+        {
+            base.Added(scene);
+            if (!ConnectorRendererJustAdded)
+            {
+                GetConnectorRenderer();
+                GetBorderRenderer();
+                ConnectorRendererJustAdded = true;
+            }
+        }
+
         public override void Awake(Scene scene)
         {
+            ConnectorRendererJustAdded = false;
             if (isCore)
             {
                 Add(new CoreModeListener(new Action<Session.CoreModes>(OnChangeMode)));
@@ -325,7 +337,8 @@ namespace FrostHelper
                     Add(image);
                     //image.Visible = false;
                     image.Active = false;
-                    Scene.Add(border = new Border(image, filler, this));
+                    //Scene.Add(border = new Border(image, filler, this));
+                    GetBorderRenderer().Spinners.Add(this);
                 } else
                 {
                     // only spawn quarter images if it's needed to avoid edge cases
@@ -353,11 +366,34 @@ namespace FrostHelper
                         image.Color = Tint;
                         Add(image);
                     }
-                    Scene.Add(border = new Border(null, filler, this));
+                    //Scene.Add(border = new Border(null, filler, this));
+                    GetBorderRenderer().Spinners.Add(this);
                 }
                 expanded = true;
                 Calc.PopRandom();
             }
+        }
+
+        public SpinnerConnectorRenderer GetConnectorRenderer()
+        {
+            SpinnerConnectorRenderer renderer = Scene.Tracker.GetEntity<SpinnerConnectorRenderer>();
+            if (renderer is null)
+            {
+                renderer = new SpinnerConnectorRenderer();
+                Scene.Add(renderer);
+            }
+            return renderer;
+        }
+
+        public SpinnerBorderRenderer GetBorderRenderer()
+        {
+            SpinnerBorderRenderer renderer = Scene.Tracker.GetEntity<SpinnerBorderRenderer>();
+            if (renderer is null)
+            {
+                renderer = new SpinnerBorderRenderer();
+                Scene.Add(renderer);
+            }
+            return renderer;
         }
 
         public void AddSprite(Vector2 offset)
@@ -369,7 +405,9 @@ namespace FrostHelper
                     Depth = Depth + 1,
                     Active = false
                 };
-                Scene.Add(filler);
+                //Scene.Add(filler);
+                SpinnerConnectorRenderer renderer = GetConnectorRenderer();
+                renderer.Spinners.Add(this);
             }
             List<MTexture> atlasSubtextures = GFX.Game.GetAtlasSubtextures(bgDirectory);
             Image image = new Image(Calc.Random.Choose(atlasSubtextures))
@@ -407,6 +445,7 @@ namespace FrostHelper
             if (filler != null)
             {
                 filler.RemoveSelf();
+                filler = null;
             }
             if (border != null)
             {
@@ -461,10 +500,17 @@ namespace FrostHelper
             {
                 border.RemoveSelf();
                 border = null;
-            } 
+            }
+            Scene.Tracker.GetEntity<SpinnerConnectorRenderer>()?.Spinners.Remove(this);
             base.Removed(scene);
         }
-        
+
+        public override void SceneEnd(Scene scene)
+        {
+            base.SceneEnd(scene);
+            scene.Tracker.GetEntity<SpinnerConnectorRenderer>()?.Spinners.Remove(this);
+        }
+
         public void Destroy(bool boss = false)
         {
             if (InView())
@@ -497,6 +543,74 @@ namespace FrostHelper
         
         private int randomSeed;
         
+
+        [Tracked]
+        public class SpinnerConnectorRenderer : Entity
+        {
+            public List<CustomSpinner> Spinners = new List<CustomSpinner>();
+
+            public SpinnerConnectorRenderer() : base()
+            {
+                Active = false;
+                Depth = -8500 + 1;
+                Tag = Tags.Persistent;
+            }
+
+            public override void Render()
+            {
+                foreach (var item in Spinners)
+                {
+                    item.filler?.Render();
+                }
+            }
+        }
+
+        [Tracked]
+        public class SpinnerBorderRenderer : Entity
+        {
+            public List<CustomSpinner> Spinners = new List<CustomSpinner>();
+
+            public SpinnerBorderRenderer() : base()
+            {
+                Active = false;
+                Depth = -8500 + 2;
+
+                Tag = Tags.Persistent;
+            }
+
+            public override void Render()
+            {
+                foreach (var item in Spinners)
+                {
+                    foreach (Component c in item.Components)
+                    {
+                        if (c is Image img)
+                            DrawBorder(img);
+                    }
+                    if (item.filler != null)
+                    foreach (Component c in item.filler)
+                    {
+                        if (c is Image img)
+                            DrawBorder(img);
+                    }
+                }
+            }
+
+            private void DrawBorder(Image image)
+            {
+                Texture2D texture = image.Texture.Texture.Texture_Safe;
+                Rectangle? clipRect = new Rectangle?(image.Texture.ClipRect);
+                float scaleFix = image.Texture.ScaleFix;
+                Vector2 origin = (image.Origin - image.Texture.DrawOffset) / scaleFix;
+                Vector2 drawPos = image.RenderPosition;
+                float rotation = image.Rotation;
+                Draw.SpriteBatch.Draw(texture, drawPos - Vector2.UnitY, clipRect, Color.Black, rotation, origin, scaleFix, SpriteEffects.None, 0f);
+                Draw.SpriteBatch.Draw(texture, drawPos + Vector2.UnitY, clipRect, Color.Black, rotation, origin, scaleFix, SpriteEffects.None, 0f);
+                Draw.SpriteBatch.Draw(texture, drawPos - Vector2.UnitX, clipRect, Color.Black, rotation, origin, scaleFix, SpriteEffects.None, 0f);
+                Draw.SpriteBatch.Draw(texture, drawPos + Vector2.UnitX, clipRect, Color.Black, rotation, origin, scaleFix, SpriteEffects.None, 0f);
+            }
+        }
+
         private class Border : Entity
         {
             private Image fg;

@@ -320,12 +320,6 @@ namespace FrostHelper.Entities.Boosters
             sprite.Position = position;
         }
 
-        // Note: this type is marked as 'beforefieldinit'.
-        static GenericCustomBooster()
-        {
-            playerOffset = new Vector2(0f, -2f);
-        }
-
         public virtual void HandleBoostBegin(Player player)
         {
             Level level = player.SceneAs<Level>();
@@ -344,7 +338,9 @@ namespace FrostHelper.Entities.Boosters
             player.Drop();
         }
 
-        
+        public virtual void Flash()
+        {
+        }
 
         public static ParticleType P_Burst => Booster.P_Burst;
 
@@ -354,7 +350,7 @@ namespace FrostHelper.Entities.Boosters
 
         public static ParticleType P_RedAppear => Booster.P_RedAppear;
 
-        public static readonly Vector2 playerOffset;
+        public static readonly Vector2 playerOffset = new Vector2(0f, -2f);
 
         public Sprite sprite;
 
@@ -375,8 +371,6 @@ namespace FrostHelper.Entities.Boosters
         public float respawnTimer;
 
         public float cannotUseTimer;
-
-        //private bool red = false;
 
         public SoundSource loopingSfx;
 
@@ -536,26 +530,6 @@ namespace FrostHelper.Entities.Boosters
         {
             Player player = FrostModule.StateGetPlayer();
             GetBoosterThatIsBoostingPlayer(player).HandleBoostBegin(player);
-            /*
-            Level level = player.SceneAs<Level>();
-            bool? flag;
-            if (level == null)
-            {
-                flag = null;
-            }
-            else
-            {
-                MapMetaModeProperties meta = level.Session.MapData.GetMeta();
-                flag = ((meta != null) ? meta.TheoInBubble : null);
-            }
-            bool? flag2 = flag;
-            player.RefillDash();
-            player.RefillStamina();
-            if (flag2.GetValueOrDefault())
-            {
-                return;
-            }
-            player.Drop();*/
         }
 
         public static int BoostUpdate()
@@ -596,7 +570,17 @@ namespace FrostHelper.Entities.Boosters
         {
             Player player = FrostModule.StateGetPlayer();
             GenericCustomBooster booster = GetBoosterThatIsBoostingPlayer(player);
-            yield return booster.BoostTime;
+            if (booster.BoostTime > 0.25f)
+            {
+                yield return booster.BoostTime - 0.25f;
+                Audio.Play(booster.boostSfx, booster.Position);
+                booster.Flash();
+                yield return 0.25f;
+            } else
+            {
+                yield return booster.BoostTime;
+            }
+            
             player.StateMachine.State = RedDash ? CustomRedBoostState : Player.StDash;
             yield break;
         }
