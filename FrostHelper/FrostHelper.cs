@@ -374,16 +374,6 @@ namespace FrostHelper
                 case "FrostHelper/KeyIce":
                     level.Add(new KeyIce(entityData, offset, new EntityID(levelData.Name, entityData.ID), entityData.NodesOffset(offset)));
                     return true;
-                    /*
-                case "FrostHelper/SpringLeft":
-                    level.Add(new CustomSpring(entityData, offset, Spring.Orientations.WallLeft));
-                    return true;
-                case "FrostHelper/SpringRight":
-                    level.Add(new CustomSpring(entityData, offset, Spring.Orientations.WallRight));
-                    return true;
-                case "FrostHelper/SpringFloor":
-                    level.Add(new CustomSpring(entityData, offset, Spring.Orientations.Floor));
-                    return true;*/
                 case "FrostHelper/CustomDreamBlock":
                     if (entityData.Bool("old", false))
                     {

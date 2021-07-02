@@ -22,9 +22,9 @@ namespace FrostHelper
             Add(new CoreModeListener(new Action<Session.CoreModes>(OnChangeMode)));
             Lava = new LavaRect(width, height, isIce ? 2 : 4);
             Add(Lava);
-            Lava.SurfaceColor = data.HexColor("surfaceColor");
-            Lava.EdgeColor = data.HexColor("edgeColor");
-            Lava.CenterColor = data.HexColor("centerColor");
+            Lava.SurfaceColor = ColorHelper.GetColor(data.Attr("surfaceColor")).Clone();
+            Lava.EdgeColor = ColorHelper.GetColor(data.Attr("edgeColor")).Clone();
+            Lava.CenterColor = ColorHelper.GetColor(data.Attr("centerColor")).Clone();
             Lava.SmallWaveAmplitude = 2f;
             Lava.BigWaveAmplitude = 1f;
             Lava.CurveAmplitude = 1f;

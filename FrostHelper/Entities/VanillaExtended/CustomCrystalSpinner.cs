@@ -58,7 +58,10 @@ namespace FrostHelper
         public bool DashThrough;
         public string SpritePathSuffix = "";
         public Color Tint;
+        public Color BorderColor;
         public int ID;
+
+        private bool registeredToRenderers = false;
 
         private void OnChangeMode(Session.CoreModes coreMode)
         {
@@ -95,6 +98,7 @@ namespace FrostHelper
             DashThrough = data.Bool("dashThrough", false);
             this.tint = tint;
             Tint = ColorHelper.GetColor(tint);
+            BorderColor = ColorHelper.GetColor(data.Attr("borderColor", "000000"));
             this.directory = directory;
 
             // for VivHelper compatibility
@@ -211,6 +215,7 @@ namespace FrostHelper
                 Collidable = false;
                 if (InView())
                 {
+                    RegisterToRenderers();
                     Visible = true;
                     if (!expanded)
                     {
@@ -224,6 +229,7 @@ namespace FrostHelper
                 if (Scene.OnInterval(0.25f, offset) && !InView())
                 {
                     Visible = false;
+                    UnregisterFromRenderers();
                 }
                 if (Scene.OnInterval(0.05f, offset))
                 {
@@ -281,10 +287,35 @@ namespace FrostHelper
             return X > camera.X - 16f && Y > camera.Y - 16f && X < camera.X + 336f && Y < camera.Y + 196f;
         }
 
+
+        private void UnregisterFromRenderers()
+        {
+            if (registeredToRenderers)
+            {
+                Scene.Tracker.GetEntity<SpinnerConnectorRenderer>()?.Spinners.Remove(this);
+                Scene.Tracker.GetEntity<SpinnerBorderRenderer>()?.Spinners.Remove(this);
+                registeredToRenderers = false;
+            }
+            
+        }
+
+        private void RegisterToRenderers()
+        {
+            if (!registeredToRenderers)
+            {
+                Scene.Tracker.GetEntity<SpinnerConnectorRenderer>()?.Spinners.Add(this);
+                Scene.Tracker.GetEntity<SpinnerBorderRenderer>()?.Spinners.Add(this);
+                registeredToRenderers = true;
+            }
+        }
+
         private void CreateSprites()
         {
             if (!expanded)
             {
+                UnregisterFromRenderers();
+                RegisterToRenderers();
+
                 Calc.PushRandom(randomSeed);
                 Image image;
 
@@ -338,7 +369,6 @@ namespace FrostHelper
                     //image.Visible = false;
                     image.Active = false;
                     //Scene.Add(border = new Border(image, filler, this));
-                    GetBorderRenderer().Spinners.Add(this);
                 } else
                 {
                     // only spawn quarter images if it's needed to avoid edge cases
@@ -367,7 +397,6 @@ namespace FrostHelper
                         Add(image);
                     }
                     //Scene.Add(border = new Border(null, filler, this));
-                    GetBorderRenderer().Spinners.Add(this);
                 }
                 expanded = true;
                 Calc.PopRandom();
@@ -406,8 +435,8 @@ namespace FrostHelper
                     Active = false
                 };
                 //Scene.Add(filler);
-                SpinnerConnectorRenderer renderer = GetConnectorRenderer();
-                renderer.Spinners.Add(this);
+                //SpinnerConnectorRenderer renderer = GetConnectorRenderer();
+                //renderer.Spinners.Add(this);
             }
             List<MTexture> atlasSubtextures = GFX.Game.GetAtlasSubtextures(bgDirectory);
             Image image = new Image(Calc.Random.Choose(atlasSubtextures))
@@ -445,6 +474,7 @@ namespace FrostHelper
             if (filler != null)
             {
                 filler.RemoveSelf();
+                
                 filler = null;
             }
             if (border != null)
@@ -457,6 +487,8 @@ namespace FrostHelper
                 image.RemoveSelf();
             }
             expanded = false;
+
+            UnregisterFromRenderers();
         }
 
         private void OnShake(Vector2 pos)
@@ -501,14 +533,14 @@ namespace FrostHelper
                 border.RemoveSelf();
                 border = null;
             }
-            Scene.Tracker.GetEntity<SpinnerConnectorRenderer>()?.Spinners.Remove(this);
+            UnregisterFromRenderers();
             base.Removed(scene);
         }
 
         public override void SceneEnd(Scene scene)
         {
             base.SceneEnd(scene);
-            scene.Tracker.GetEntity<SpinnerConnectorRenderer>()?.Spinners.Remove(this);
+            UnregisterFromRenderers();
         }
 
         public void Destroy(bool boss = false)
@@ -547,7 +579,7 @@ namespace FrostHelper
         [Tracked]
         public class SpinnerConnectorRenderer : Entity
         {
-            public List<CustomSpinner> Spinners = new List<CustomSpinner>();
+            public HashSet<CustomSpinner> Spinners = new HashSet<CustomSpinner>();
 
             public SpinnerConnectorRenderer() : base()
             {
@@ -558,6 +590,7 @@ namespace FrostHelper
 
             public override void Render()
             {
+                //Console.WriteLine(Spinners.Count);
                 foreach (var item in Spinners)
                 {
                     item.filler?.Render();
@@ -568,7 +601,7 @@ namespace FrostHelper
         [Tracked]
         public class SpinnerBorderRenderer : Entity
         {
-            public List<CustomSpinner> Spinners = new List<CustomSpinner>();
+            public HashSet<CustomSpinner> Spinners = new HashSet<CustomSpinner>();
 
             public SpinnerBorderRenderer() : base()
             {
@@ -582,21 +615,22 @@ namespace FrostHelper
             {
                 foreach (var item in Spinners)
                 {
+                    var color = item.BorderColor;
                     foreach (Component c in item.Components)
                     {
                         if (c is Image img)
-                            DrawBorder(img);
+                            DrawBorder(img, color);
                     }
                     if (item.filler != null)
                     foreach (Component c in item.filler)
                     {
                         if (c is Image img)
-                            DrawBorder(img);
+                            DrawBorder(img, color);
                     }
                 }
             }
 
-            private void DrawBorder(Image image)
+            public static void DrawBorder(Image image, Color color)
             {
                 Texture2D texture = image.Texture.Texture.Texture_Safe;
                 Rectangle? clipRect = new Rectangle?(image.Texture.ClipRect);
@@ -604,10 +638,10 @@ namespace FrostHelper
                 Vector2 origin = (image.Origin - image.Texture.DrawOffset) / scaleFix;
                 Vector2 drawPos = image.RenderPosition;
                 float rotation = image.Rotation;
-                Draw.SpriteBatch.Draw(texture, drawPos - Vector2.UnitY, clipRect, Color.Black, rotation, origin, scaleFix, SpriteEffects.None, 0f);
-                Draw.SpriteBatch.Draw(texture, drawPos + Vector2.UnitY, clipRect, Color.Black, rotation, origin, scaleFix, SpriteEffects.None, 0f);
-                Draw.SpriteBatch.Draw(texture, drawPos - Vector2.UnitX, clipRect, Color.Black, rotation, origin, scaleFix, SpriteEffects.None, 0f);
-                Draw.SpriteBatch.Draw(texture, drawPos + Vector2.UnitX, clipRect, Color.Black, rotation, origin, scaleFix, SpriteEffects.None, 0f);
+                Draw.SpriteBatch.Draw(texture, drawPos - Vector2.UnitY, clipRect, color, rotation, origin, scaleFix, SpriteEffects.None, 0f);
+                Draw.SpriteBatch.Draw(texture, drawPos + Vector2.UnitY, clipRect, color, rotation, origin, scaleFix, SpriteEffects.None, 0f);
+                Draw.SpriteBatch.Draw(texture, drawPos - Vector2.UnitX, clipRect, color, rotation, origin, scaleFix, SpriteEffects.None, 0f);
+                Draw.SpriteBatch.Draw(texture, drawPos + Vector2.UnitX, clipRect, color, rotation, origin, scaleFix, SpriteEffects.None, 0f);
             }
         }
 

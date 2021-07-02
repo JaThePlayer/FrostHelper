@@ -82,7 +82,7 @@ namespace FrostHelper
             for (int i = 0; i < colors.Length; i++)
             {
                 string path = (cold ? "cold" : "hot") + "Color" + (i + 1);
-                colors[i] = data.HexColor(path);
+                colors[i] = ColorHelper.GetColor(data.Attr(path));
             }
             return colors;
         }

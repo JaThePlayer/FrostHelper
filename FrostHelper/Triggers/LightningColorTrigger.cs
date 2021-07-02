@@ -92,8 +92,8 @@ namespace FrostHelper
         public LightningColorTrigger(EntityData data, Vector2 offset) : base(data, offset)
         {
             persistent = data.Bool("persistent", false);
-            Color c1 = data.HexColor("color1", Calc.HexToColor("fcf579"));
-            Color c2 = data.HexColor("color2", Calc.HexToColor("8cf7e2"));
+            Color c1 = ColorHelper.GetColor(data.Attr("color1", "fcf579"));
+            Color c2 = ColorHelper.GetColor(data.Attr("color2", "8cf7e2"));
             electricityColors = new Color[]
             {
                 c1, c2

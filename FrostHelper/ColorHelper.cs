@@ -39,20 +39,54 @@ namespace FrostHelper
         public static Color GetColor(string color)
         {
             if (cache.TryGetValue(color, out Color val))
-                return val;
+                return val.Clone();
 
             try
             {
-                val = Calc.HexToColor(color.Replace("#", ""));
+                val = HexToColor(color.Replace("#", ""));
                 cache[color] = val;
                 return val;
             }
-            catch
+            catch (Exception e)
             {
                 cache[color] = Color.Transparent;
             }
 
             return Color.Transparent;
+        }
+
+        public static Color Clone(this Color c)
+        {
+            return new Color(c.R, c.G, c.B, c.A);
+        }
+
+        /// <summary>
+        /// Same as Calc.HexToColor, but supports transparency
+        /// </summary>
+        /// <param name="hex"></param>
+        /// <returns></returns>
+        private static Color HexToColor(string hex)
+        {
+            int num = 0;
+            int len = hex.Length;
+            if (len >= 8)
+            {
+                float r = (Calc.HexToByte(hex[num]) * 16 + Calc.HexToByte(hex[num + 1])) / 255f;
+                float g = (Calc.HexToByte(hex[num + 2]) * 16 + Calc.HexToByte(hex[num + 3])) / 255f;
+                float b = (Calc.HexToByte(hex[num + 4]) * 16 + Calc.HexToByte(hex[num + 5])) / 255f;
+                float a = (Calc.HexToByte(hex[num + 6]) * 16 + Calc.HexToByte(hex[num + 7])) / 255f;
+                return new Color(r, g, b, a);
+            }
+
+            if (len - num >= 6)
+            {
+                float r = (Calc.HexToByte(hex[num]) * 16 + Calc.HexToByte(hex[num + 1])) / 255f;
+                float g = (Calc.HexToByte(hex[num + 2]) * 16 + Calc.HexToByte(hex[num + 3])) / 255f;
+                float b = (Calc.HexToByte(hex[num + 4]) * 16 + Calc.HexToByte(hex[num + 5])) / 255f;
+                return new Color(r, g, b);
+            }
+            
+            return default;
         }
 
         // From Communal Helper:
