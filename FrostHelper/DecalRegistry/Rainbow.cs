@@ -48,7 +48,6 @@ namespace FrostHelper.DecalRegistry
                     {
                         return Color.White;
                     }
-                    
                 });
                 return;
             }

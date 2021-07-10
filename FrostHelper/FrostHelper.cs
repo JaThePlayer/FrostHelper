@@ -118,39 +118,27 @@ namespace FrostHelper
             while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdcI4(Player.StBoost) && instr.Previous.MatchCallvirt<StateMachine>("get_State")))
             {
                 cursor.Emit(OpCodes.Pop);
-                cursor.EmitDelegate<Func<int>>(GetBoosterState);
+                cursor.Emit(OpCodes.Ldarg_0); // this
+                cursor.EmitDelegate<Func<Player, int>>(GetBoosterState);
             }
         }
 
-        public static int GetFeatherState()
+        public static int GetFeatherState(Player player)
         {
-            Player player;
-            if (Engine.Scene is Level && (player = StateGetPlayer()) != null)
-                return player.StateMachine.State == CustomFeather.CustomFeatherState ? CustomFeather.CustomFeatherState : 19;
-            else
-                return 19;
+            return player.StateMachine.State == CustomFeather.CustomFeatherState ? CustomFeather.CustomFeatherState : 19;
         }
 
-        public static int GetBoosterState()
+        public static int GetBoosterState(Player player)
         {
-            Player player;
-            if (Engine.Scene is Level && (player = StateGetPlayer()) != null)
-            {
-                int state = player.StateMachine.State;
-                if (state == GenericCustomBooster.CustomBoostState) return GenericCustomBooster.CustomBoostState;
-                if (state == YellowBoostState) return YellowBoostState;
-            }
-
+            int state = player.StateMachine.State;
+            if (state == GenericCustomBooster.CustomBoostState) return GenericCustomBooster.CustomBoostState;
+            if (state == YellowBoostState) return YellowBoostState;
             return Player.StBoost;
         }
 
-        public static int GetRedDashState()
+        public static int GetRedDashState(Player player)
         {
-            Player player;
-            if (Engine.Scene is Level && (player = StateGetPlayer()) != null)
-                return player.StateMachine.State == GenericCustomBooster.CustomRedBoostState ? GenericCustomBooster.CustomRedBoostState : 5;
-            else
-                return 5;
+            return player.StateMachine.State == GenericCustomBooster.CustomRedBoostState ? GenericCustomBooster.CustomRedBoostState : 5;
         }
 
         #region CustomDreamBlock
@@ -208,11 +196,11 @@ namespace FrostHelper
                     if (b.StartedBoosting)
                     {
                         b.PlayerBoosted(self, self.DashDir);
-                        return;
+                        break;
                     }
                     if (b.BoostingPlayer)
                     {
-                        return;
+                        break;
                     }
                 }
             }
@@ -226,11 +214,11 @@ namespace FrostHelper
             new DynData<Player>(self).Set("lastDreamSpeed", 0f);
             // Let's define new states
             // .AddState is defined in StateMachineExt
-            YellowBoostState = self.StateMachine.AddState(new Func<int>(YellowBoostUpdate), YellowBoostCoroutine, YellowBoostBegin, YellowBoostEnd);
-            GenericCustomBooster.CustomBoostState = self.StateMachine.AddState(new Func<int>(GenericCustomBooster.BoostUpdate), GenericCustomBooster.BoostCoroutine, GenericCustomBooster.BoostBegin, GenericCustomBooster.BoostEnd);
-            GenericCustomBooster.CustomRedBoostState = self.StateMachine.AddState(new Func<int>(GenericCustomBooster.RedDashUpdate), GenericCustomBooster.RedDashCoroutine, GenericCustomBooster.RedDashBegin, GenericCustomBooster.RedDashEnd);
+            YellowBoostState = self.StateMachine.AddState(YellowBoostUpdate, YellowBoostCoroutine, YellowBoostBegin, YellowBoostEnd);
+            GenericCustomBooster.CustomBoostState = self.StateMachine.AddState(GenericCustomBooster.BoostUpdate, GenericCustomBooster.BoostCoroutine, GenericCustomBooster.BoostBegin, GenericCustomBooster.BoostEnd);
+            GenericCustomBooster.CustomRedBoostState = self.StateMachine.AddState(GenericCustomBooster.RedDashUpdate, GenericCustomBooster.RedDashCoroutine, GenericCustomBooster.RedDashBegin, GenericCustomBooster.RedDashEnd);
 #pragma warning disable CS0618 // Type or member is obsolete
-            CustomDreamDashState = self.StateMachine.AddState(new Func<int>(CustomDreamBlock.DreamDashUpdate), null, CustomDreamBlock.DreamDashBegin, CustomDreamBlock.DreamDashEnd);
+            CustomDreamDashState = self.StateMachine.AddState(CustomDreamBlock.DreamDashUpdate, null, CustomDreamBlock.DreamDashBegin, CustomDreamBlock.DreamDashEnd);
 #pragma warning restore CS0618 // Type or member is obsolete
             CustomFeather.CustomFeatherState = self.StateMachine.AddState(CustomFeather.StarFlyUpdate, CustomFeather.CustomFeatherCoroutine, CustomFeather.CustomFeatherBegin, CustomFeather.CustomFeatherEnd);
         }
@@ -241,9 +229,9 @@ namespace FrostHelper
 
         public static int YellowBoostState;
         
-        private void YellowBoostBegin()
+        private void YellowBoostBegin(Entity e)
         {
-            Player player = StateGetPlayer();
+            Player player = e as Player;
             player.CurrentBooster = null;
             Level level = player.SceneAs<Level>();
             bool? flag;
@@ -266,9 +254,9 @@ namespace FrostHelper
             player.Drop();
         }
 
-        private int YellowBoostUpdate()
+        private int YellowBoostUpdate(Entity e)
         {
-            Player player = StateGetPlayer();
+            Player player = e as Player;
             Vector2 boostTarget = (Vector2)player_boostTarget.GetValue(player);
             Vector2 value = Input.Aim.Value * 3f;
             Vector2 vector = Calc.Approach(player.ExactPosition, boostTarget - player.Collider.Center + value, 80f * Engine.DeltaTime);
@@ -290,18 +278,18 @@ namespace FrostHelper
             return result;
         }
 
-        private void YellowBoostEnd()
+        private void YellowBoostEnd(Entity e)
         {
-            Player player = StateGetPlayer();
+            Player player = e as Player;
             Vector2 boostTarget = (Vector2)player_boostTarget.GetValue(player);
             Vector2 vector = (boostTarget - player.Collider.Center).Floor();
             player.MoveToX(vector.X, null);
             player.MoveToY(vector.Y, null);
         }
 
-        private IEnumerator YellowBoostCoroutine()
+        private IEnumerator YellowBoostCoroutine(Entity e)
         {
-            Player player = StateGetPlayer();
+            Player player = e as Player;
             YellowBooster booster = null;
             foreach (YellowBooster b in player.Scene.Tracker.GetEntities<YellowBooster>())
             {

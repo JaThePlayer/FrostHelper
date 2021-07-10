@@ -474,9 +474,9 @@ namespace FrostHelper
         }
 
         // CUSTOM DREAM DASH STATE
-        public static int DreamDashUpdate()
+        public static int DreamDashUpdate(Entity e)
         {
-            Player player = FrostModule.StateGetPlayer();
+            Player player = e as Player;
             DynData<Player> data = new DynData<Player>(player);
             Input.Rumble(RumbleStrength.Light, RumbleLength.Medium);
             Vector2 position = player.Position;
@@ -590,9 +590,9 @@ namespace FrostHelper
             return FrostModule.CustomDreamDashState;
         }
 
-        public static void DreamDashBegin()
+        public static void DreamDashBegin(Entity e)
         {
-            Player player = FrostModule.StateGetPlayer();
+            Player player = e as Player;
             DynData<Player> data = new DynData<Player>(player);
             SoundSource dreamSfxLoop = data.Get<SoundSource>("dreamSfxLoop");
             bool flag = dreamSfxLoop == null;
@@ -612,9 +612,9 @@ namespace FrostHelper
             player.Loop(dreamSfxLoop, "event:/char/madeline/dreamblock_travel");
         }
 
-        public static void DreamDashEnd()
+        public static void DreamDashEnd(Entity e)
         {
-            Player player = FrostModule.StateGetPlayer();
+            Player player = e as Player;
             DynData<Player> data = new DynData<Player>(player);
             player.Depth = 0;
             if (!data.Get<bool>("dreamJump"))

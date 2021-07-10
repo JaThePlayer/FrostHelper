@@ -39,7 +39,7 @@ namespace FrostHelper
         public static Color GetColor(string color)
         {
             if (cache.TryGetValue(color, out Color val))
-                return val.Clone();
+                return val;
 
             try
             {

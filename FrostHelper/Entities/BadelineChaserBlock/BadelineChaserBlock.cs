@@ -40,7 +40,6 @@ namespace FrostHelper
         {
             MoveV(amount);
         }
-        public StaticMover StaticMover;
 
         public BadelineChaserBlock(EntityData data, Vector2 offset) : base(data.Position + offset, data.Width, data.Height, false)
         {
@@ -52,6 +51,7 @@ namespace FrostHelper
             Emblem.CenterOrigin();
             Emblem.Play(Reversed ? "pressed" : "solid");
             AllowStaticMovers = true;
+            Depth = Depths.Solids;
         }
 
         bool justChangedState;
@@ -73,8 +73,7 @@ namespace FrostHelper
         public override void Awake(Scene scene)
         {
             base.Awake(scene);
-            Color color = Calc.HexToColor("667da5");
-            Color disabledColor = new Color(color.R / 255f * (color.R / 255f), color.G / 255f * (color.G / 255f), color.B / 255f * (color.B / 255f), 1f);
+            Color disabledColor = Calc.HexToColor("724F86");
             foreach (var mover in staticMovers)
             {
                 Spikes spikes = mover.Entity as Spikes;
@@ -134,16 +133,19 @@ namespace FrostHelper
             }
             else
             {
-                //if (entity != null && entity.Top >= Bottom - 1f)
+                if (entity != null && entity.Top >= Bottom - 1f)
                 {
                     Depth = 10;
                 }
-                //else
+                else
                 {
                     Depth = -10;
                 }
             }
-
+            foreach (StaticMover staticMover in staticMovers)
+            {
+                staticMover.Entity.Depth = Depth + 1;
+            }
             base.Update();
 
             

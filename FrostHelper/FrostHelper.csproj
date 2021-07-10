@@ -126,6 +126,7 @@
     <Compile Include="Entities\VanillaExtended\CustomRisingLava.cs" />
     <Compile Include="Entities\VanillaExtended\CustomSpring.cs" />
     <Compile Include="Triggers\ChronosTrigger.cs" />
+    <Compile Include="Triggers\FlagIfVariantTrigger.cs" />
     <Compile Include="Triggers\ForcedFastfallTrigger.cs" />
     <Compile Include="Triggers\InstantWarp.cs" />
     <Compile Include="Triggers\LightningColorTrigger.cs" />

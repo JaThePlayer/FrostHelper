@@ -191,7 +191,7 @@ namespace FrostHelper
                 // Redirects
                 if (currentDreamBlock.AllowRedirects && self.CanDash)
                 {
-                    Vector2 aimVector = Input.GetAimVector(Facings.Right);
+                    Vector2 aimVector = Input.GetAimVector(self.Facing);
                     bool sameDir = aimVector == self.DashDir;
                     if (!sameDir || currentDreamBlock.AllowRedirectsInSameDir)
                     {
@@ -204,6 +204,10 @@ namespace FrostHelper
                             self.Speed *= currentDreamBlock.SameDirectionSpeedMultiplier;
                             self.DashDir *= Math.Sign(currentDreamBlock.SameDirectionSpeedMultiplier);
                         }
+
+                        if (self.Speed.X != 0.0f)
+                            self.Facing = (Facings)Math.Sign(self.Speed.X);
+
                         Input.Dash.ConsumeBuffer();
                         Input.Dash.ConsumePress();
                         Input.CrouchDash.ConsumeBuffer();

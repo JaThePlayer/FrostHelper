@@ -21,7 +21,7 @@ namespace FrostHelper.Entities.Boosters
         {
             IL.Celeste.Player.OnBoundsH += modRedDashState;
             IL.Celeste.Player.OnBoundsV += modRedDashState;
-            IL.Celeste.DashBlock.OnDashed += modRedDashState;
+            IL.Celeste.DashBlock.OnDashed += modRedDashStateDashBlock;
             FrostModule.RegisterILHook(new ILHook(typeof(Player).GetProperty("DashAttacking", BindingFlags.Instance | BindingFlags.Public).GetGetMethod(true), modRedDashState));
         }
 
@@ -30,7 +30,7 @@ namespace FrostHelper.Entities.Boosters
         {
             IL.Celeste.Player.OnBoundsH -= modRedDashState;
             IL.Celeste.Player.OnBoundsV -= modRedDashState;
-            IL.Celeste.DashBlock.OnDashed -= modRedDashState;
+            IL.Celeste.DashBlock.OnDashed -= modRedDashStateDashBlock;
         }
 
         static void modRedDashState(ILContext il)
@@ -39,7 +39,19 @@ namespace FrostHelper.Entities.Boosters
             while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdcI4(5) && instr.Previous.MatchCallvirt<StateMachine>("get_State")))
             {
                 cursor.Emit(OpCodes.Pop);
-                cursor.EmitDelegate<Func<int>>(FrostModule.GetRedDashState);
+                cursor.Emit(OpCodes.Ldarg_0); // this
+                cursor.EmitDelegate<Func<Player, int>>(FrostModule.GetRedDashState);
+            }
+        }
+
+        static void modRedDashStateDashBlock(ILContext il)
+        {
+            ILCursor cursor = new ILCursor(il);
+            while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdcI4(5) && instr.Previous.MatchCallvirt<StateMachine>("get_State")))
+            {
+                cursor.Emit(OpCodes.Pop);
+                cursor.Emit(OpCodes.Ldarg_1); // arg 1
+                cursor.EmitDelegate<Func<Player, int>>(FrostModule.GetRedDashState);
             }
         }
         #endregion
@@ -197,8 +209,7 @@ namespace FrostHelper.Entities.Boosters
                 {
                     sprite.RenderPosition = player.Center + Booster.playerOffset;
                     loopingSfx.Position = sprite.Position;
-                    bool flag = Scene.OnInterval(0.02f);
-                    if (flag)
+                    if (Scene.OnInterval(0.02f))
                     {
                         (Scene as Level).ParticlesBG.Emit(particleType, 2, player.Center - dir * 3f + new Vector2(0f, -2f), new Vector2(3f, 3f), ParticleColor, angle);
                     }
@@ -222,8 +233,7 @@ namespace FrostHelper.Entities.Boosters
 
         public virtual void OnPlayerDashed(Vector2 direction)
         {
-            bool boostingPlayer = BoostingPlayer;
-            if (boostingPlayer)
+            if (BoostingPlayer)
             {
                 BoostingPlayer = false;
             }
@@ -242,8 +252,7 @@ namespace FrostHelper.Entities.Boosters
 
         public virtual void PlayerDied()
         {
-            bool boostingPlayer = BoostingPlayer;
-            if (boostingPlayer)
+            if (BoostingPlayer)
             {
                 PlayerReleased();
                 dashRoutine.Active = false;
@@ -279,7 +288,8 @@ namespace FrostHelper.Entities.Boosters
                     Respawn();
                 }
             }
-            Player player = Scene.Tracker.GetEntity<Player>();
+
+            Player player = Scene.Tracker.GetNearestEntity<Player>(Position);
 
             if (!dashRoutine.Active && respawnTimer <= 0f)
             {
@@ -292,7 +302,7 @@ namespace FrostHelper.Entities.Boosters
                 sprite.Position = Calc.Approach(sprite.Position, target, 80f * Engine.DeltaTime);
             }
 
-            if (GetBoosterThatIsBoostingPlayer(player) == this)
+            if (GetBoosterThatIsBoostingPlayer(player) == this && BoostTime > 0f)
             {
                 sprite.Position = player.Center + Booster.playerOffset - Position;
 
@@ -301,7 +311,7 @@ namespace FrostHelper.Entities.Boosters
                     outline.Visible = true;
             }
 
-            if (sprite.CurrentAnimationID == "inside" && !BoostingPlayer && !CollideCheck<Player>())
+            if (sprite.CurrentAnimationID == "inside" && !BoostingPlayer && !CollideCheck(player))
             {
                 sprite.Play("loop", false, false);
             }
@@ -385,9 +395,9 @@ namespace FrostHelper.Entities.Boosters
         public static MethodInfo player_WallJumpCheck = typeof(Player).GetMethod("WallJumpCheck", BindingFlags.Instance | BindingFlags.NonPublic);
 
         public static int CustomRedBoostState;
-        public static void RedDashBegin()
+        public static void RedDashBegin(Entity e)
         {
-            Player player = FrostModule.StateGetPlayer();
+            Player player = e as Player;
             DynData<Player> data = new DynData<Player>(player);
             data["calledDashEvents"] = false;
             data["dashStartedOnGround"] = false;
@@ -409,15 +419,13 @@ namespace FrostHelper.Entities.Boosters
             Player_DashAssistInit.Invoke(player, new object[] { });
         }
 
-        public static void RedDashEnd()
+        public static void RedDashEnd(Entity e)
         {
-            Player player = FrostModule.StateGetPlayer();
-            //Player_CallDashEvents.Invoke(player, new object[] { });
         }
 
-        public static int RedDashUpdate()
+        public static int RedDashUpdate(Entity e)
         {
-            Player player = FrostModule.StateGetPlayer();
+            Player player = e as Player;
             DynData<Player> data = new DynData<Player>(player);
 
             data["StartedDashing"] = false;
@@ -503,9 +511,9 @@ namespace FrostHelper.Entities.Boosters
             return CustomRedBoostState;//5;
         }
 
-        public static IEnumerator RedDashCoroutine()
+        public static IEnumerator RedDashCoroutine(Entity e)
         {
-            Player player = FrostModule.StateGetPlayer();
+            Player player = e as Player;
             DynData<Player> data = new DynData<Player>(player);
 
             yield return null;
@@ -526,15 +534,15 @@ namespace FrostHelper.Entities.Boosters
         public static int CustomBoostState;
         public static bool RedDash;
 
-        public static void BoostBegin()
+        public static void BoostBegin(Entity e)
         {
-            Player player = FrostModule.StateGetPlayer();
+            Player player = e as Player;
             GetBoosterThatIsBoostingPlayer(player).HandleBoostBegin(player);
         }
 
-        public static int BoostUpdate()
+        public static int BoostUpdate(Entity e)
         {
-            Player player = FrostModule.StateGetPlayer();
+            Player player = e as Player;
             Vector2 boostTarget = (Vector2)FrostModule.player_boostTarget.GetValue(player);
             Vector2 value = Input.Aim.Value * 3f;
             Vector2 vector = Calc.Approach(player.ExactPosition, boostTarget - player.Collider.Center + value, 80f * Engine.DeltaTime);
@@ -556,9 +564,9 @@ namespace FrostHelper.Entities.Boosters
             return result;
         }
 
-        public static void BoostEnd()
+        public static void BoostEnd(Entity e)
         {
-            Player player = FrostModule.StateGetPlayer();
+            Player player = e as Player;
             Vector2 boostTarget = (Vector2)FrostModule.player_boostTarget.GetValue(player);
             Vector2 vector = (boostTarget - player.Collider.Center).Floor();
             player.MoveToX(vector.X, null);
@@ -566,9 +574,9 @@ namespace FrostHelper.Entities.Boosters
             new DynData<Player>(player).Set<GenericCustomBooster>("fh.customBooster", null);
         }
 
-        public static IEnumerator BoostCoroutine()
+        public static IEnumerator BoostCoroutine(Entity e)
         {
-            Player player = FrostModule.StateGetPlayer();
+            Player player = e as Player;
             GenericCustomBooster booster = GetBoosterThatIsBoostingPlayer(player);
             if (booster.BoostTime > 0.25f)
             {
@@ -585,9 +593,9 @@ namespace FrostHelper.Entities.Boosters
             yield break;
         }
 
-        protected static GenericCustomBooster GetBoosterThatIsBoostingPlayer(Player player)
+        protected static GenericCustomBooster GetBoosterThatIsBoostingPlayer(Entity e)
         {
-            return new DynData<Player>(player).Get<GenericCustomBooster>("fh.customBooster");
+            return new DynData<Player>(e as Player).Get<GenericCustomBooster>("fh.customBooster");
         }
 
         #endregion

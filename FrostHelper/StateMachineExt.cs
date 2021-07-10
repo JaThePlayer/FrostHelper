@@ -1,4 +1,5 @@
-﻿using Monocle;
+﻿using Celeste;
+using Monocle;
 using System;
 using System.Collections;
 using System.Reflection;
@@ -11,7 +12,7 @@ namespace FrostHelper
         /// Adds a state to a StateMachine
         /// </summary>
         /// <returns>The index of the new state</returns>
-        public static int AddState(this StateMachine machine, Func<int> onUpdate, Func<IEnumerator> coroutine = null, Action begin = null, Action end = null)
+        public static int AddState(this StateMachine machine, Func<Entity, int> onUpdate, Func<Entity, IEnumerator> coroutine = null, Action<Entity> begin = null, Action<Entity> end = null)
         {
             Action[] begins = (Action[])StateMachine_begins.GetValue(machine);
             Func<int>[] updates = (Func<int>[])StateMachine_updates.GetValue(machine);
@@ -29,7 +30,7 @@ namespace FrostHelper
             StateMachine_ends.SetValue(machine, ends);
             StateMachine_coroutines.SetValue(machine, coroutines);
             // And now we add the new functions
-            machine.SetCallbacks(nextIndex, onUpdate, coroutine, begin, end);
+            machine.SetCallbacks(nextIndex, () => onUpdate(machine.Entity), () => coroutine(machine.Entity), () => begin(machine.Entity), () => end(machine.Entity));
             return nextIndex;
         }
         private static FieldInfo StateMachine_begins = typeof(StateMachine).GetField("begins", BindingFlags.Instance | BindingFlags.NonPublic);

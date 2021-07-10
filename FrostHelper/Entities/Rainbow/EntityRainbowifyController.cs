@@ -126,7 +126,6 @@ namespace FrostHelper
             affectedBackdrops = new List<Backdrop>();
             foreach (var backdrop in (scene as Level).Background.Backdrops)
             {
-                Console.WriteLine(backdrop.GetType().FullName);
                 if (Types.Contains(backdrop.GetType()))
                     affectedBackdrops.Add(backdrop);
             }

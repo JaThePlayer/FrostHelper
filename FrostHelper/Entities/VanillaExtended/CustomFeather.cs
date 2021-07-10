@@ -21,19 +21,29 @@ namespace FrostHelper
         public static void LoadHooks()
         {
             IL.Celeste.Player.UpdateHair += modFeatherState;
+            IL.Celeste.Player.UpdateSprite += modFeatherState;
             IL.Celeste.Player.OnCollideH += modFeatherState;
             IL.Celeste.Player.OnCollideV += modFeatherState;
             IL.Celeste.Player.Render += modFeatherState;
+            IL.Celeste.Player.BeforeDownTransition += modFeatherState;
+            IL.Celeste.Player.BeforeUpTransition += modFeatherState;
+            IL.Celeste.Player.HiccupJump += modFeatherState;
+
             FrostModule.RegisterILHook(new ILHook(typeof(Player).GetMethod("orig_Update", BindingFlags.Instance | BindingFlags.Public), modFeatherState));
+            FrostModule.RegisterILHook(new ILHook(typeof(Player).GetMethod("orig_UpdateSprite", BindingFlags.Instance | BindingFlags.NonPublic), modFeatherState));
         }
 
         [OnUnload]
         public static void UnloadHooks()
         {
             IL.Celeste.Player.UpdateHair -= modFeatherState;
+            IL.Celeste.Player.UpdateSprite -= modFeatherState;
             IL.Celeste.Player.OnCollideH -= modFeatherState;
             IL.Celeste.Player.OnCollideV -= modFeatherState;
             IL.Celeste.Player.Render -= modFeatherState;
+            IL.Celeste.Player.BeforeDownTransition -= modFeatherState;
+            IL.Celeste.Player.BeforeUpTransition -= modFeatherState;
+            IL.Celeste.Player.HiccupJump -= modFeatherState;
         }
 
         static void modFeatherState(ILContext il)
@@ -42,13 +52,15 @@ namespace FrostHelper
             while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdcI4(19) && instr.Previous.MatchCallvirt<StateMachine>("get_State")))
             {
                 cursor.Emit(OpCodes.Pop);
-                cursor.EmitDelegate<Func<int>>(FrostModule.GetFeatherState);
+                cursor.Emit(OpCodes.Ldarg_0); // this
+                cursor.EmitDelegate<Func<Player, int>>(FrostModule.GetFeatherState);
             }
             cursor.Index = 0;
             while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdcI4(5) && instr.Previous.MatchCallvirt<StateMachine>("get_State")))
             {
                 cursor.Emit(OpCodes.Pop);
-                cursor.EmitDelegate<Func<int>>(FrostModule.GetRedDashState);
+                cursor.Emit(OpCodes.Ldarg_0); // this
+                cursor.EmitDelegate<Func<Player, int>>(FrostModule.GetRedDashState);
             }
         }
         #endregion
@@ -59,9 +71,9 @@ namespace FrostHelper
         public static MethodInfo player_WallJump = typeof(Player).GetMethod("WallJump", BindingFlags.Instance | BindingFlags.NonPublic);
         public static MethodInfo player_WallJumpCheck = typeof(Player).GetMethod("WallJumpCheck", BindingFlags.Instance | BindingFlags.NonPublic);
 
-        public static void CustomFeatherBegin()
+        public static void CustomFeatherBegin(Entity e)
         {
-            Player player = FrostModule.StateGetPlayer();
+            Player player = e as Player;
             DynData<Player> data = new DynData<Player>(player);
             CustomFeather feather = (CustomFeather)data["fh.customFeather"];
             player.Sprite.Play("startStarFly", false, false);
@@ -93,9 +105,9 @@ namespace FrostHelper
             data["starFlyLoopSfx"] = starFlyLoopSfx;
             data["starFlyWarningSfx"] = starFlyWarningSfx;
         }
-        public static void CustomFeatherEnd()
+        public static void CustomFeatherEnd(Entity e)
         {
-            Player player = FrostModule.StateGetPlayer();
+            Player player = e as Player;
             DynData<Player> data = new DynData<Player>(player);
             CustomFeather feather = (CustomFeather)data["fh.customFeather"];
             player.Play("event:/game/06_reflection/feather_state_end", null, 0f);
@@ -113,9 +125,9 @@ namespace FrostHelper
                 player.SceneAs<Level>().Particles.Emit(feather.P_Boost, 12, player.Center, Vector2.One * 4f, (-player.Speed).Angle());
             }
         }
-        public static IEnumerator CustomFeatherCoroutine()
+        public static IEnumerator CustomFeatherCoroutine(Entity e)
         {
-            Player player = FrostModule.StateGetPlayer();
+            Player player = e as Player;
             DynData<Player> data = new DynData<Player>(player);
             CustomFeather feather = (CustomFeather)data["fh.customFeather"];
             while (player.Sprite.CurrentAnimationID == "startStarFly")
@@ -154,9 +166,9 @@ namespace FrostHelper
             yield break;
         }
 
-        public static int StarFlyUpdate()
+        public static int StarFlyUpdate(Entity e)
         {
-            Player player = FrostModule.StateGetPlayer();
+            Player player = e as Player;
             Level level = player.SceneAs<Level>();
             DynData<Player> data = new DynData<Player>(player);
             BloomPoint bloomPoint = (BloomPoint)data["starFlyBloom"];

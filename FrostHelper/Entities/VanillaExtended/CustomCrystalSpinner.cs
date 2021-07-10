@@ -491,13 +491,26 @@ namespace FrostHelper
             UnregisterFromRenderers();
         }
 
-        private void OnShake(Vector2 pos)
+        private void OnShake(Vector2 amount)
         {
             foreach (Component component in Components)
             {
-                if (component is Image img)
+                if (component is Image image)
                 {
-                    img.Position = pos;
+                    // change from vanilla: instead of setting the position, add to it.
+                    image.Position += amount;
+                }
+            }
+
+            // addition from vanilla: also shake spinner connectors.
+            if (filler != null)
+            {
+                foreach (Component component in filler.Components)
+                {
+                    if (component is Image image)
+                    {
+                        image.Position += amount;
+                    }
                 }
             }
         }
