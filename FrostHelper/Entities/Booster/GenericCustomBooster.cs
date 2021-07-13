@@ -593,7 +593,7 @@ namespace FrostHelper.Entities.Boosters
             yield break;
         }
 
-        protected static GenericCustomBooster GetBoosterThatIsBoostingPlayer(Entity e)
+        public static GenericCustomBooster GetBoosterThatIsBoostingPlayer(Entity e)
         {
             return new DynData<Player>(e as Player).Get<GenericCustomBooster>("fh.customBooster");
         }

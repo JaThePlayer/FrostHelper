@@ -13,8 +13,14 @@ namespace FrostHelper
     {
         string directory = "objects/swapblock";
         bool renderBG = false;
+
+        public string MoveSFX, MoveEndSFX;
+
         public ToggleSwapBlock(EntityData data, Vector2 offset) : base(data.Position + offset, data.Width, data.Height, true)
         {
+            MoveSFX = data.Attr("moveSFX", "event:/game/05_mirror_temple/swapblock_move");
+            MoveEndSFX = data.Attr("moveEndSFX", "event:/game/05_mirror_temple/swapblock_move_end");
+
             directory = data.Attr("directory", "objects/swapblock"); 
             if (directory == "objects/swapblock")
             {
@@ -25,26 +31,19 @@ namespace FrostHelper
             redAlpha = 1f;
             start = Position;
             end = node;
-            //this.distanceBasedSpeed = data.Bool("distanceBasedSpeed", true);
             maxForwardSpeed = data.Float("speed", 360f) / Vector2.Distance(start, end);
-            //if (this.distanceBasedSpeed) this.maxForwardSpeed = this.maxForwardSpeed / Vector2.Distance(this.start, this.end);
             maxBackwardSpeed = maxForwardSpeed * 0.4f;
-            //this.maxForwardSpeed = 360f / Vector2.Distance(this.start, this.end);
-            //this.maxBackwardSpeed = this.maxForwardSpeed * 0.4f;
             Direction.X = Math.Sign(end.X - start.X);
             Direction.Y = Math.Sign(end.Y - start.Y);
             Add(new DashListener
             {
-                OnDash = new Action<Vector2>(OnDash)
+                OnDash = OnDash
             });
             int num = (int)MathHelper.Min(X, node.X);
             int num2 = (int)MathHelper.Min(Y, node.Y);
             int num3 = (int)MathHelper.Max(X + Width, node.X + Width);
             int num4 = (int)MathHelper.Max(Y + Height, node.Y + Height);
             moveRect = new Rectangle(num, num2, num3 - num, num4 - num2);
-            //MTexture mtexture = GFX.Game["objects/swapblock/block"];
-            //MTexture mtexture2 = GFX.Game["objects/swapblock/blockRed"];
-            //MTexture mtexture3 = GFX.Game["objects/swapblock/target"];
             MTexture mtexture = GFX.Game[directory + "/block"];
             MTexture mtexture2 = GFX.Game[directory + "/blockRed"];
             MTexture mtexture3 = GFX.Game[directory + "/target"];
@@ -60,7 +59,7 @@ namespace FrostHelper
                     nineSliceTarget[i, j] = mtexture3.GetSubtexture(new Rectangle(i * 8, j * 8, 8, 8));
                 }
             }
-            middleGreen = new Sprite(GFX.Game, directory + "/midBlock") /*GFX.SpriteBank.Create("swapBlockLight")*/;
+            middleGreen = new Sprite(GFX.Game, directory + "/midBlock");
             middleGreen.AddLoop("idle", "", 0.08f);
             middleGreen.Justify = new Vector2(0.5f, 0.5f);
             middleGreen.Play("idle");
@@ -75,14 +74,10 @@ namespace FrostHelper
             Depth = -9999;
         }
 
-        //public ToggleSwapBlock(EntityData data, Vector2 offset) : this(data.Position + offset, (float)data.Width, (float)data.Height, data.Nodes[0] + offset)
-        //{
-        //}
-
         public override void Awake(Scene scene)
         {
             base.Awake(scene);
-            scene.Add(path = new ToggleSwapBlock.PathRenderer(this));
+            scene.Add(path = new PathRenderer(this));
         }
 
         public override void Removed(Scene scene)
@@ -101,21 +96,12 @@ namespace FrostHelper
 
         private void OnDash(Vector2 direction)
         {
+            
             Swapping = lerp < 1f;
-            //if (target == 1) this.target = 0; else this.target = 1;
             Audio.Stop(returnSfx, true);
             Audio.Stop(moveSfx, true);
-            if (target == 1)
-            {
-                returnSfx = Audio.Play("event:/game/05_mirror_temple/swapblock_return", Center);
-                target = 0;
-            }
-            else
-            {
-                moveSfx = Audio.Play("event:/game/05_mirror_temple/swapblock_move", Center);
-                target = 1;
-            }
-            //target = (target == 1) ? 0 : 1;
+            moveSfx = Audio.Play(MoveSFX, Center);
+            target = (target == 1) ? 0 : 1;
             returnTimer = 0.8f;
             burst = (Scene as Level).Displacement.AddBurst(Center, 0.2f, 0f, 16f, 1f, null, null);
             if (lerp >= 0.2f)
@@ -126,14 +112,11 @@ namespace FrostHelper
             {
                 speed = MathHelper.Lerp(maxForwardSpeed * 0.333f, maxForwardSpeed, lerp / 0.2f);
             }
-            //Audio.Stop(this.returnSfx, true);
-            //Audio.Stop(this.moveSfx, true);
             if (!Swapping)
             {
-                Audio.Play("event:/game/05_mirror_temple/swapblock_move_end", Center);
+                Audio.Play(MoveEndSFX, Center);
                 return;
             }
-            //this.moveSfx = Audio.Play("event:/game/05_mirror_temple/swapblock_move", base.Center);
         }
 
         public override void Update()
@@ -144,9 +127,7 @@ namespace FrostHelper
                 returnTimer -= Engine.DeltaTime;
                 if (returnTimer <= 0f)
                 {
-                    //this.target = 0;
                     speed = 0f;
-                    //this.returnSfx = Audio.Play("event:/game/05_mirror_temple/swapblock_return", base.Center);
                 }
             }
             if (burst != null)
@@ -193,12 +174,12 @@ namespace FrostHelper
                     if (Position == start && target == 0)
                     {
                         Audio.SetParameter(returnSfx, "end", 1f);
-                        Audio.Play("event:/game/05_mirror_temple/swapblock_return_end", Center);
+                        Audio.Play(MoveEndSFX, Center);
                     }
                     else if (Position == end && target == 1)
                     {
                         Audio.SetParameter(moveSfx, "end", 1f);
-                        Audio.Play("event:/game/05_mirror_temple/swapblock_move_end", Center);
+                        Audio.Play(MoveEndSFX, Center);
                     }
                 }
             }

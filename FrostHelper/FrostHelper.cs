@@ -176,8 +176,12 @@ namespace FrostHelper
         private void Player_CallDashEvents(On.Celeste.Player.orig_CallDashEvents orig, Player self)
         {
             // sometimes crashes? Can't reproduce this myself and I have no clue why it happens, just gonna try catch this :/
+            bool callOrig = true;
             try
             {
+                if (GenericCustomBooster.GetBoosterThatIsBoostingPlayer(self) != null)
+                    return;
+
                 foreach (YellowBooster b in self.Scene.Tracker.GetEntities<YellowBooster>())
                 {
                     b.sprite.SetColor(Color.White);
@@ -193,19 +197,27 @@ namespace FrostHelper
                 }
                 foreach (GenericCustomBooster b in self.Scene.Tracker.GetEntities<GenericCustomBooster>())
                 {
-                    if (b.StartedBoosting)
+                    if (b.StartedBoosting && b.CollideCheck(self))
                     {
+                        callOrig = false;
                         b.PlayerBoosted(self, self.DashDir);
-                        break;
                     }
-                    if (b.BoostingPlayer)
+                    if (b.BoostingPlayer && GenericCustomBooster.GetBoosterThatIsBoostingPlayer(self) == b)
                     {
-                        break;
+                        callOrig = false;
                     }
                 }
             }
             catch {}
-            orig(self);
+
+            if (callOrig)
+            {
+                orig(self);
+            } else
+            {
+                player_calledDashEvents.SetValue(self, true);
+            }
+            
         }
 
         private void Player_ctor(On.Celeste.Player.orig_ctor orig, Player self, Vector2 position, PlayerSpriteMode spriteMode)
@@ -224,7 +236,7 @@ namespace FrostHelper
         }
 
         public static FieldInfo player_boostTarget = typeof(Player).GetField("boostTarget", BindingFlags.Instance | BindingFlags.NonPublic);
-
+        public static FieldInfo player_calledDashEvents = typeof(Player).GetField("calledDashEvents", BindingFlags.Instance | BindingFlags.NonPublic);
         #region YellowBoost
 
         public static int YellowBoostState;
