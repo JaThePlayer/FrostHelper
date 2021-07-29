@@ -71,6 +71,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Colliders\ShapeHitbox.cs" />
     <Compile Include="ColorHelper.cs" />
     <Compile Include="Components\Rainbowifier.cs" />
     <Compile Include="Components\SkateboardInteraction.cs" />
@@ -98,6 +99,8 @@
     <Compile Include="Entities\VanillaExtended\CustomFeather.cs" />
     <Compile Include="Entities\VanillaExtended\CustomFlutterBird.cs" />
     <Compile Include="Entities\VanillaExtended\CustomSnowball.cs" />
+    <Compile Include="Entities\VanillaExtended\FireBarriers\ArbitraryShapeFireBarrier.cs" />
+    <Compile Include="Entities\VanillaExtended\FireBarriers\LavaShape.cs" />
     <Compile Include="Entities\Voidstone.cs" />
     <Compile Include="Entities\WallBouncePresentation\Page00.cs" />
     <Compile Include="Entities\WallBouncePresentation\Page01.cs" />
@@ -111,18 +114,27 @@
     <Compile Include="Entities\WallBouncePresentation\WallbouncePresentationPage.cs" />
     <Compile Include="Entities\WallBouncePresentation\WallbounceTutorialMachine.cs" />
     <Compile Include="FrostHelperSaveData.cs" />
+    <Compile Include="FrostHelperSession.cs" />
     <Compile Include="FrostMapDataProcessor.cs" />
     <Compile Include="Attributes.cs" />
     <Compile Include="GlobalSuppressions.cs" />
+    <Compile Include="ModIntegration\CelesteTASIntegration.cs" />
+    <Compile Include="ModIntegration\IntegrationUtils.cs" />
     <Compile Include="OutlineHelper.cs" />
     <Compile Include="SessionHelper.cs" />
+    <Compile Include="Triangulator\CyclicalList.cs" />
+    <Compile Include="Triangulator\IndexableCyclicalLinkedList.cs" />
+    <Compile Include="Triangulator\LineSegment.cs" />
+    <Compile Include="Triangulator\Triangle.cs" />
+    <Compile Include="Triangulator\Triangulator.cs" />
+    <Compile Include="Triangulator\Vertex.cs" />
     <Compile Include="Triggers\AnxietyTrigger.cs" />
     <Compile Include="Triggers\CameraTargetv2.cs" />
     <Compile Include="Deprecated\CustomDreamBlock.cs" />
     <Compile Include="Triggers\CapDashOnGroundTrigger.cs" />
     <Compile Include="Triggers\CassetteTempoTrigger.cs" />
     <Compile Include="Entities\CoreBerry.cs" />
-    <Compile Include="Entities\VanillaExtended\CustomFireBarrier.cs" />
+    <Compile Include="Entities\VanillaExtended\FireBarriers\CustomFireBarrier.cs" />
     <Compile Include="Entities\VanillaExtended\CustomRisingLava.cs" />
     <Compile Include="Entities\VanillaExtended\CustomSpring.cs" />
     <Compile Include="Triggers\ChronosTrigger.cs" />

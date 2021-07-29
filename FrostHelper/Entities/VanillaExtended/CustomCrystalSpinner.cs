@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework;
 using Monocle;
 using System.Reflection;
 using Microsoft.Xna.Framework.Graphics;
+using System.Runtime.CompilerServices;
 
 namespace FrostHelper
 {
@@ -18,12 +19,29 @@ namespace FrostHelper
         public static void LoadHooks()
         {
             On.Celeste.Mod.Entities.CrystalShatterTrigger.OnEnter += CrystalShatterTrigger_OnEnter;
+            On.Celeste.Player.SummitLaunchUpdate += Player_SummitLaunchUpdate;
+
         }
-        
+
+        private static int Player_SummitLaunchUpdate(On.Celeste.Player.orig_SummitLaunchUpdate orig, Player self)
+        {
+            var ret = orig(self);
+            CustomSpinner crystalStaticSpinner = self.Scene.CollideFirst<CustomSpinner>(new Rectangle((int)(self.X - 4f), (int)(self.Y - 40f), 8, 12));
+            if (crystalStaticSpinner != null)
+            {
+                crystalStaticSpinner.Destroy(false);
+                (self.Scene as Level).Shake(0.3f);
+                Input.Rumble(RumbleStrength.Medium, RumbleLength.Short);
+                Celeste.Celeste.Freeze(0.01f);
+            }
+            return ret;
+        }
+
         [OnUnload]
         public static void UnloadHooks()
         {
             On.Celeste.Mod.Entities.CrystalShatterTrigger.OnEnter -= CrystalShatterTrigger_OnEnter;
+            On.Celeste.Player.SummitLaunchUpdate -= Player_SummitLaunchUpdate;
         }
 
         // smh
@@ -60,8 +78,11 @@ namespace FrostHelper
         public Color Tint;
         public Color BorderColor;
         public int ID;
+        public bool Rainbow;
+        public bool HasCollider;
 
         private bool registeredToRenderers = false;
+        private PlayerCollider playerCollider;
 
         private void OnChangeMode(Session.CoreModes coreMode)
         {
@@ -94,6 +115,7 @@ namespace FrostHelper
 
         public CustomSpinner(EntityData data, Vector2 position, bool attachToSolid, string directory, string destroyColor, bool isCore, string tint) : base(data.Position + position)
         {
+            Rainbow = data.Bool("rainbow", false);
             ID = data.ID;
             DashThrough = data.Bool("dashThrough", false);
             this.tint = tint;
@@ -120,17 +142,22 @@ namespace FrostHelper
             this.isCore = isCore;
             offset = Calc.Random.NextFloat();
             Tag = Tags.TransitionUpdate;
-            Collider = new ColliderList(new Collider[]
+
+            HasCollider = data.Bool("collidable", true);
+            if (HasCollider)
             {
+                Collider = new ColliderList(new Collider[]
+                            {
                 new Circle(6f, 0f, 0f),
                 new Hitbox(16f, 4f, -8f, -3f)
-            });
+                            });
+                playerCollider = new PlayerCollider(new Action<Player>(OnPlayer), null, null);
+                Add(playerCollider);
+                Add(new HoldableCollider(new Action<Holdable>(OnHoldable), null));
+                Add(new LedgeBlocker(null));
+            }
             Visible = false;
-            Add(new PlayerCollider(new Action<Player>(OnPlayer), null, null));
-            Add(new HoldableCollider(new Action<Holdable>(OnHoldable), null));
-            Add(new LedgeBlocker(null));
             Depth = -8500;
-
             AttachToSolid = attachToSolid;
             if (AttachToSolid)
             {
@@ -149,7 +176,7 @@ namespace FrostHelper
             }
             float bloomAlpha = data.Float("bloomAlpha", 0.0f);
             if (bloomAlpha != 0.0f)
-                Add(new BloomPoint(Collider.Center, bloomAlpha, data.Float("bloomRadius", 0f)));
+                Add(new BloomPoint(Collidable ? Collider.Center : Position + new Vector2(8f, 8f), bloomAlpha, data.Float("bloomRadius", 0f)));
         }
 
         private string GetBGSpritePath(bool hotCoreMode)
@@ -201,6 +228,27 @@ namespace FrostHelper
                 CreateSprites();
             }
         }
+
+        public void UpdateHue()
+        {
+            foreach (Component component in Components)
+            {
+                if (component is Image image)
+                {
+                    image.Color = ColorHelper.GetHue(Scene, Position + image.Position);
+                }
+            }
+            if (filler != null)
+            {
+                foreach (Component component2 in filler.Components)
+                {
+                    if (component2 is Image image2)
+                    {
+                        image2.Color = ColorHelper.GetHue(Scene, Position + image2.Position);
+                    }
+                }
+            }
+        }
         
         public void ForceInstantiate()
         {
@@ -221,17 +269,22 @@ namespace FrostHelper
                     {
                         CreateSprites();
                     }
+                    if (Rainbow)
+                        UpdateHue();
                 }
             }
             else
             {   
                 base.Update();
+                if (Rainbow && Scene.OnInterval(0.08f, offset))
+                    UpdateHue();
+
                 if (Scene.OnInterval(0.25f, offset) && !InView())
                 {
                     Visible = false;
                     UnregisterFromRenderers();
                 }
-                if (Scene.OnInterval(0.05f, offset))
+                if (HasCollider && Scene.OnInterval(0.05f, offset))
                 {
                     Player entity = Scene.Tracker.GetEntity<Player>();
                     if (entity != null)
@@ -260,7 +313,8 @@ namespace FrostHelper
         public void MoveHExact(int move)
         {
             Position.X += move;
-            Collider.Position.X += move;
+            if (HasCollider)
+                Collider.Position.X += move;
         }
 
         public void MoveH(float moveV)
@@ -447,6 +501,8 @@ namespace FrostHelper
                 Active = false
             };
             image.CenterOrigin();
+            if (Rainbow)
+                image.Color = ColorHelper.GetHue(Scene, Position + offset);
             filler.Add(image);
         }
         
@@ -561,7 +617,7 @@ namespace FrostHelper
             if (InView())
             {
                 Audio.Play("event:/game/06_reflection/fall_spike_smash", Position);
-                Color color = Calc.HexToColor(destroyColor);
+                Color color = Rainbow ? ColorHelper.GetHue(Scene, Position) : Calc.HexToColor(destroyColor);
 
                 CrystalDebris.Burst(Position, color, boss, 8);
             }
@@ -620,7 +676,6 @@ namespace FrostHelper
             {
                 Active = false;
                 Depth = -8500 + 2;
-
                 Tag = Tags.Persistent;
             }
 
@@ -629,22 +684,42 @@ namespace FrostHelper
                 foreach (var item in Spinners)
                 {
                     var color = item.BorderColor;
-                    foreach (Component c in item.Components)
+                    var spinnerComponents = item.Components;
+                    for (int i = 0; i < spinnerComponents.Count; i++)
                     {
-                        if (c is Image img)
+                        if (spinnerComponents[i] is Image img)
                             DrawBorder(img, color);
                     }
                     if (item.filler != null)
-                    foreach (Component c in item.filler)
                     {
-                        if (c is Image img)
-                            DrawBorder(img, color);
-                    }
+                        var fillerComponents = item.filler.Components;
+
+                        Image image = fillerComponents[0] as Image;
+                        Texture2D texture = image.Texture.Texture.Texture_Safe;
+                        Rectangle? clipRect = new Rectangle?(image.Texture.ClipRect);
+                        float scaleFix = image.Texture.ScaleFix;
+                        Vector2 origin = (image.Origin - image.Texture.DrawOffset) / scaleFix;
+                        for (int i = 0; i < fillerComponents.Count; i++)
+                        {
+                            //if (fillerComponents[i] is Image img)
+                            //    DrawBorder(fillerComponents[i] as Image, color);
+                            
+                            var img = fillerComponents[i] as Image;
+                            Vector2 drawPos = img.RenderPosition;
+                            float rotation = img.Rotation;
+                            Draw.SpriteBatch.Draw(texture, drawPos - Vector2.UnitY, clipRect, color, rotation, origin, scaleFix, SpriteEffects.None, 0f);
+                            Draw.SpriteBatch.Draw(texture, drawPos + Vector2.UnitY, clipRect, color, rotation, origin, scaleFix, SpriteEffects.None, 0f);
+                            Draw.SpriteBatch.Draw(texture, drawPos - Vector2.UnitX, clipRect, color, rotation, origin, scaleFix, SpriteEffects.None, 0f);
+                            Draw.SpriteBatch.Draw(texture, drawPos + Vector2.UnitX, clipRect, color, rotation, origin, scaleFix, SpriteEffects.None, 0f);
+                        }
+                    } 
                 }
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static void DrawBorder(Image image, Color color)
             {
+                
                 Texture2D texture = image.Texture.Texture.Texture_Safe;
                 Rectangle? clipRect = new Rectangle?(image.Texture.ClipRect);
                 float scaleFix = image.Texture.ScaleFix;
@@ -709,6 +784,7 @@ namespace FrostHelper
                     }
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private void DrawBorder(Image image)
             {
                 Texture2D texture = image.Texture.Texture.Texture_Safe;

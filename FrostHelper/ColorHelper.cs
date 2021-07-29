@@ -89,6 +89,11 @@ namespace FrostHelper
             return default;
         }
 
+        public static string ColorToHex(Color color)
+        {
+            return $"{color.R:X2}{color.G:X2}{color.B:X2}";
+        }
+
         // From Communal Helper:
 
         // Used to maintain compatibility with Max's Helping Hand RainbowSpinnerColorController

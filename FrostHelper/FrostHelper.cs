@@ -31,7 +31,8 @@ namespace FrostHelper
         // no save data needed
         public override Type SaveDataType => typeof(FrostHelperSaveData);
         public static FrostHelperSaveData SaveData => (FrostHelperSaveData)Instance._SaveData;
-        public override Type SettingsType => null;
+        public override Type SessionType => typeof(FrostHelperSession);
+        public static FrostHelperSession Session => (FrostHelperSession)Instance._Session;
 
         public override void PrepareMapDataProcessors(MapDataFixup context)
         {
@@ -233,6 +234,12 @@ namespace FrostHelper
             CustomDreamDashState = self.StateMachine.AddState(CustomDreamBlock.DreamDashUpdate, null, CustomDreamBlock.DreamDashBegin, CustomDreamBlock.DreamDashEnd);
 #pragma warning restore CS0618 // Type or member is obsolete
             CustomFeather.CustomFeatherState = self.StateMachine.AddState(CustomFeather.StarFlyUpdate, CustomFeather.CustomFeatherCoroutine, CustomFeather.CustomFeatherBegin, CustomFeather.CustomFeatherEnd);
+
+            ModIntegration.CelesteTASIntegration.RegisterState(YellowBoostState, "Yellow Boost");
+            ModIntegration.CelesteTASIntegration.RegisterState(GenericCustomBooster.CustomBoostState, "Custom Boost");
+            ModIntegration.CelesteTASIntegration.RegisterState(GenericCustomBooster.CustomRedBoostState, "Custom Red Boost");
+            ModIntegration.CelesteTASIntegration.RegisterState(CustomDreamDashState, "Custom Dream Dash (Obsolete)");
+            ModIntegration.CelesteTASIntegration.RegisterState(CustomFeather.CustomFeatherState, "Custom Feather");
         }
 
         public static FieldInfo player_boostTarget = typeof(Player).GetField("boostTarget", BindingFlags.Instance | BindingFlags.NonPublic);
