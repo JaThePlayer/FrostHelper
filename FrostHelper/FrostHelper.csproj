@@ -73,6 +73,7 @@
   <ItemGroup>
     <Compile Include="Colliders\ShapeHitbox.cs" />
     <Compile Include="ColorHelper.cs" />
+    <Compile Include="Components\MultiImage.cs" />
     <Compile Include="Components\Rainbowifier.cs" />
     <Compile Include="Components\SkateboardInteraction.cs" />
     <Compile Include="DecalRegistry\Rainbow.cs" />
@@ -101,6 +102,7 @@
     <Compile Include="Entities\VanillaExtended\CustomSnowball.cs" />
     <Compile Include="Entities\VanillaExtended\FireBarriers\ArbitraryShapeFireBarrier.cs" />
     <Compile Include="Entities\VanillaExtended\FireBarriers\LavaShape.cs" />
+    <Compile Include="Entities\VanillaExtended\SidewaysTempleGate.cs" />
     <Compile Include="Entities\Voidstone.cs" />
     <Compile Include="Entities\WallBouncePresentation\Page00.cs" />
     <Compile Include="Entities\WallBouncePresentation\Page01.cs" />
@@ -121,6 +123,7 @@
     <Compile Include="ModIntegration\CelesteTASIntegration.cs" />
     <Compile Include="ModIntegration\IntegrationUtils.cs" />
     <Compile Include="OutlineHelper.cs" />
+    <Compile Include="ReflectionHelper.cs" />
     <Compile Include="SessionHelper.cs" />
     <Compile Include="Triangulator\CyclicalList.cs" />
     <Compile Include="Triangulator\IndexableCyclicalLinkedList.cs" />
@@ -138,6 +141,7 @@
     <Compile Include="Entities\VanillaExtended\CustomRisingLava.cs" />
     <Compile Include="Entities\VanillaExtended\CustomSpring.cs" />
     <Compile Include="Triggers\ChronosTrigger.cs" />
+    <Compile Include="Triggers\CustomRisingLavaStartHeightTrigger.cs" />
     <Compile Include="Triggers\FlagIfVariantTrigger.cs" />
     <Compile Include="Triggers\ForcedFastfallTrigger.cs" />
     <Compile Include="Triggers\InstantWarp.cs" />

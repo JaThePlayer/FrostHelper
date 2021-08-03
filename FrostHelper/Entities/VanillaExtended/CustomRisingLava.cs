@@ -107,21 +107,25 @@ namespace FrostHelper
         public override void Awake(Scene scene)
         {
             base.Awake(scene);
+            Player entity = Scene.Tracker.GetEntity<Player>();
+
+            CustomRisingLavaStartHeightTrigger trigger;
+            if ((trigger = entity.CollideFirst<CustomRisingLavaStartHeightTrigger>()) != null)
+            {
+                Y = trigger.Node.Y;
+            }
+
             if (intro)
             {
                 waiting = true;
+                Visible = true;
             }
             else
             {
-                Player entity = Scene.Tracker.GetEntity<Player>();
                 if (entity != null && entity.JustRespawned)
                 {
                     waiting = true;
                 }
-            }
-            if (intro)
-            {
-                Visible = true;
             }
         }
 

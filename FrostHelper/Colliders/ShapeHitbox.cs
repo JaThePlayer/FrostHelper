@@ -9,7 +9,7 @@ namespace FrostHelper.Colliders
         [OnLoad]
         public static void Load()
         {
-            On.Monocle.Collider.Collide_Collider += Collider_Collide_Collider;
+            //On.Monocle.Collider.Collide_Collider += Collider_Collide_Collider;
         }
 
         private static bool Collider_Collide_Collider(On.Monocle.Collider.orig_Collide_Collider orig, Collider self, Collider collider)
@@ -31,7 +31,7 @@ namespace FrostHelper.Colliders
         [OnUnload]
         public static void Unload()
         {
-            On.Monocle.Collider.Collide_Collider -= Collider_Collide_Collider;
+            //On.Monocle.Collider.Collide_Collider -= Collider_Collide_Collider;
         }
 
         public Vector2[] Points;

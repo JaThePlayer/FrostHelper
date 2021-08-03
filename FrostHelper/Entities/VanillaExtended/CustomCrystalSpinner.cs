@@ -80,6 +80,8 @@ namespace FrostHelper
         public int ID;
         public bool Rainbow;
         public bool HasCollider;
+        public bool RenderBorder;
+        public bool HasDeco;
 
         private bool registeredToRenderers = false;
         private PlayerCollider playerCollider;
@@ -116,6 +118,8 @@ namespace FrostHelper
         public CustomSpinner(EntityData data, Vector2 position, bool attachToSolid, string directory, string destroyColor, bool isCore, string tint) : base(data.Position + position)
         {
             Rainbow = data.Bool("rainbow", false);
+            RenderBorder = data.Bool("drawOutline", true);
+            
             ID = data.ID;
             DashThrough = data.Bool("dashThrough", false);
             this.tint = tint;
@@ -177,6 +181,12 @@ namespace FrostHelper
             float bloomAlpha = data.Float("bloomAlpha", 0.0f);
             if (bloomAlpha != 0.0f)
                 Add(new BloomPoint(Collidable ? Collider.Center : Position + new Vector2(8f, 8f), bloomAlpha, data.Float("bloomRadius", 0f)));
+
+
+            if (GFX.Game.Has(GetBGSpritePath(false) + "Deco00"))
+            {
+                HasDeco = true;
+            }
         }
 
         private string GetBGSpritePath(bool hotCoreMode)
@@ -203,6 +213,8 @@ namespace FrostHelper
             {
                 GetConnectorRenderer();
                 GetBorderRenderer();
+                if (HasDeco)
+                    GetDecoRenderer();
                 ConnectorRendererJustAdded = true;
             }
         }
@@ -347,7 +359,10 @@ namespace FrostHelper
             if (registeredToRenderers)
             {
                 Scene.Tracker.GetEntity<SpinnerConnectorRenderer>()?.Spinners.Remove(this);
-                Scene.Tracker.GetEntity<SpinnerBorderRenderer>()?.Spinners.Remove(this);
+                if (RenderBorder)
+                    Scene.Tracker.GetEntity<SpinnerBorderRenderer>()?.Spinners.Remove(this);
+                if (HasDeco)
+                    Scene.Tracker.GetEntity<SpinnerDecoRenderer>()?.Spinners.Remove(this);
                 registeredToRenderers = false;
             }
             
@@ -358,7 +373,10 @@ namespace FrostHelper
             if (!registeredToRenderers)
             {
                 Scene.Tracker.GetEntity<SpinnerConnectorRenderer>()?.Spinners.Add(this);
-                Scene.Tracker.GetEntity<SpinnerBorderRenderer>()?.Spinners.Add(this);
+                if (RenderBorder)
+                    Scene.Tracker.GetEntity<SpinnerBorderRenderer>()?.Spinners.Add(this);
+                if (HasDeco)
+                    Scene.Tracker.GetEntity<SpinnerDecoRenderer>()?.Spinners.Add(this);
                 registeredToRenderers = true;
             }
         }
@@ -452,6 +470,23 @@ namespace FrostHelper
                     }
                     //Scene.Add(border = new Border(null, filler, this));
                 }
+                if (HasDeco)
+                {
+                    if (deco is null)
+                    {
+                        deco = new Entity(Position);
+                    }
+                    var decoAtlasSubtextures = GFX.Game.GetAtlasSubtextures(fgDirectory + "Deco");
+                    Image decoImage = new Image(decoAtlasSubtextures[atlasSubtextures.IndexOf(mtexture)])
+                    {
+                        Color = Tint,
+                        Active = false
+                    };
+                    decoImage.CenterOrigin();
+                    deco.Add(decoImage);
+                }
+                
+
                 expanded = true;
                 Calc.PopRandom();
             }
@@ -463,6 +498,17 @@ namespace FrostHelper
             if (renderer is null)
             {
                 renderer = new SpinnerConnectorRenderer();
+                Scene.Add(renderer);
+            }
+            return renderer;
+        }
+
+        public SpinnerDecoRenderer GetDecoRenderer()
+        {
+            SpinnerDecoRenderer renderer = Scene.Tracker.GetEntity<SpinnerDecoRenderer>();
+            if (renderer is null)
+            {
+                renderer = new SpinnerDecoRenderer();
                 Scene.Add(renderer);
             }
             return renderer;
@@ -488,9 +534,6 @@ namespace FrostHelper
                     Depth = Depth + 1,
                     Active = false
                 };
-                //Scene.Add(filler);
-                //SpinnerConnectorRenderer renderer = GetConnectorRenderer();
-                //renderer.Spinners.Add(this);
             }
             List<MTexture> atlasSubtextures = GFX.Game.GetAtlasSubtextures(bgDirectory);
             Image image = new Image(Calc.Random.Choose(atlasSubtextures))
@@ -504,6 +547,24 @@ namespace FrostHelper
             if (Rainbow)
                 image.Color = ColorHelper.GetHue(Scene, Position + offset);
             filler.Add(image);
+
+            if (HasDeco)
+            {
+                if (deco is null)
+                {
+                    deco = new Entity(Position);
+                }
+                var decoAtlasSubtextures = GFX.Game.GetAtlasSubtextures(bgDirectory + "Deco");
+                Image decoImage = new Image(decoAtlasSubtextures[atlasSubtextures.IndexOf(image.Texture)])
+                {
+                    Position = offset,
+                    Rotation = image.Rotation,
+                    Color = Tint,
+                    Active = false
+                };
+                decoImage.CenterOrigin();
+                deco.Add(decoImage);
+            }
         }
         
         private bool SolidCheck(Vector2 position)
@@ -623,7 +684,7 @@ namespace FrostHelper
             }
             RemoveSelf();
         }
-        
+
         public bool iceMode;
         public string directory;
         public string coldDirectory;
@@ -635,6 +696,7 @@ namespace FrostHelper
         public bool AttachToSolid;
         
         private Entity filler;
+        private Entity deco;
         
         private Border border;
         
@@ -663,6 +725,29 @@ namespace FrostHelper
                 foreach (var item in Spinners)
                 {
                     item.filler?.Render();
+                }
+            }
+        }
+
+        [Tracked]
+        public class SpinnerDecoRenderer : Entity
+        {
+            public HashSet<CustomSpinner> Spinners = new HashSet<CustomSpinner>();
+
+            public SpinnerDecoRenderer() : base()
+            {
+                Active = false;
+                //Depth = -8500 - 1;
+                Depth = -10000 - 1;
+                Tag = Tags.Persistent;
+            }
+
+            public override void Render()
+            {
+                //Console.WriteLine(Spinners.Count);
+                foreach (var item in Spinners)
+                {
+                    item.deco?.Render();
                 }
             }
         }

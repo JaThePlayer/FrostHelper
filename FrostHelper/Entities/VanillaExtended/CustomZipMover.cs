@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Celeste;
 using Celeste.Mod.Entities;
+using FrostHelper.Components;
 using Microsoft.Xna.Framework;
 using Monocle;
 
@@ -73,15 +74,19 @@ namespace FrostHelper
                 blockstr = directory + "/block";
                 percentage *= 4;
             }
-            ropeColor = Calc.HexToColor(hexcolor);
-            ropeLightColor = Calc.HexToColor(hexlightcolor);
+            ropeColor = ColorHelper.GetColor(hexcolor);
+            ropeLightColor = ColorHelper.GetColor(hexlightcolor);
             innerCogs = GFX.Game.GetAtlasSubtextures(innercogstr);
+
+            CreateSprites();
         }
+
+        public bool Rainbow;
 
         public CustomZipMover(EntityData data, Vector2 offset) : base(data.Position + offset, data.Width, data.Height, false) 
         {
-            tint = Calc.HexToColor(data.Attr("tint", "ffffff"));
-
+            tint = ColorHelper.GetColor(data.Attr("tint", "ffffff"));
+            Rainbow = data.Bool("rainbow", false);
             drawLine = data.Bool("showLine", true);
             innercogstr = "objects/FrostHelper/customZipMover/";
             lightstr = innercogstr;
@@ -158,8 +163,8 @@ namespace FrostHelper
             {
                 Add(new CoreModeListener(new Action<Session.CoreModes>(OnChangeMode)));
             }
-            ropeColor = Calc.HexToColor(hexcolor);
-            ropeLightColor = Calc.HexToColor(hexlightcolor);
+            ropeColor = ColorHelper.GetColor(hexcolor);
+            ropeLightColor = ColorHelper.GetColor(hexlightcolor);
             edges = new MTexture[3, 3];
             innerCogs = GFX.Game.GetAtlasSubtextures(innercogstr);
             temp = new MTexture();
@@ -169,20 +174,6 @@ namespace FrostHelper
             target = data.Nodes[0] + offset;
             Add(new Coroutine(Sequence(), true));
             Add(new LightOcclude(1f));
-            //base.Add(this.streetlight = new Sprite(GFX.Game, "objects/zipmover/light"));
-            Add(streetlight = new Sprite(GFX.Game, lightstr));
-            streetlight.Add("frames", "", 1f);
-            streetlight.Play("frames", false, false);
-            streetlight.Active = false;
-            streetlight.SetAnimationFrame(1);
-            streetlight.Position = new Vector2(Width / 2f - streetlight.Width / 2f, 0f);
-
-            float bloomAlpha = data.Float("bloomAlpha", 1f);
-            if (bloomAlpha != 0.0f)
-            {
-                Add(bloom = new BloomPoint(bloomAlpha, data.Float("bloomRadius", 6f)));
-                bloom.Position = new Vector2(Width / 2f, 4f);
-            }
 
             for (int i = 0; i < 3; i++)
             {
@@ -191,6 +182,16 @@ namespace FrostHelper
                     edges[i, j] = GFX.Game[blockstr].GetSubtexture(i * 8, j * 8, 8, 8, null);
                 }
             }
+
+            CreateSprites();
+
+            float bloomAlpha = data.Float("bloomAlpha", 1f);
+            if (bloomAlpha != 0.0f)
+            {
+                Add(bloom = new BloomPoint(bloomAlpha, data.Float("bloomRadius", 6f)));
+                bloom.Position = new Vector2(Width / 2f, 4f);
+            }
+
             SurfaceSoundIndex = 7;
             sfx.Position = new Vector2(Width, Height) / 2f;
             Add(sfx);
@@ -221,8 +222,128 @@ namespace FrostHelper
         {
             base.Update();
             CheckModeChange();
-            bloom.Y = streetlight.CurrentAnimationFrame * 3;
+            if (bloom != null)
+                bloom.Y = streetlight.CurrentAnimationFrame * 3;
         }
+
+
+        public MultiImage BorderImages;
+        public void CreateSprites()
+        {
+            foreach (var item in Components)
+            {
+                if (item is Image || item is MultiImage || item is Sprite)
+                {
+                    Remove(item);
+                }
+            }
+
+            #region Cogs
+            if (false)
+            {
+                // too lazy
+                List<Image> cogImages = new List<Image>();
+
+                int num = 1;
+                float num2 = 0f;
+                int cogTextureCount = innerCogs.Count;
+                int i = 4;
+                while (i <= Height - 4f)
+                {
+                    int num4 = num;
+                    int j = 4;
+                    while (j <= Width - 4f)
+                    {
+                        int index = (int)(mod((num2 + num * percent * 3.14159274f * 4f) / 1.57079637f, 1f) * cogTextureCount);
+                        MTexture mtexture = innerCogs[index];
+                        Rectangle rectangle = new Rectangle(0, 0, mtexture.Width, mtexture.Height);
+                        Vector2 zero = Vector2.Zero;
+                        if (j <= 4)
+                        {
+                            zero.X = 2f;
+                            rectangle.X = 2;
+                            rectangle.Width -= 2;
+                        }
+                        else if (j >= Width - 4f)
+                        {
+                            zero.X = -2f;
+                            rectangle.Width -= 2;
+                        }
+                        if (i <= 4)
+                        {
+                            zero.Y = 2f;
+                            rectangle.Y = 2;
+                            rectangle.Height -= 2;
+                        }
+                        else if (i >= Height - 4f)
+                        {
+                            zero.Y = -2f;
+                            rectangle.Height -= 2;
+                        }
+                        mtexture = mtexture.GetSubtexture(rectangle.X, rectangle.Y, rectangle.Width, rectangle.Height, temp);
+                        cogImages.Add(new Image(mtexture) 
+                        { 
+                            Color = tint * ((num < 0) ? 0.5f : 1f),
+                            Position = new Vector2(j, i) + zero,
+                        }.CenterOrigin());
+                        //mtexture.DrawCentered(Position + new Vector2(j, i) + zero, tint * ((num < 0) ? 0.5f : 1f));
+                        num = -num;
+                        num2 += 1.04719758f;
+                        j += 8;
+                    }
+                    if (num4 == num)
+                    {
+                        num = -num;
+                    }
+                    i += 8;
+                }
+                Add(new MultiImage(cogImages));
+            }
+            #endregion
+            #region Border
+            {
+                float widthBy8 = Width / 8f;
+                float heightBy8 = Height / 8f;
+                int edgeCount = (int)((widthBy8 * 2) + (heightBy8 * 2) - 4);
+                Image[] edgeImages = new Image[edgeCount];
+                int imageIndex = 0;
+
+                int i = 0;
+                while (i < widthBy8)
+                {
+                    int j = 0;
+                    while (j < heightBy8)
+                    {
+                        int num8 = (i == 0) ? 0 : ((i == Width / 8f - 1f) ? 2 : 1);
+                        int num9 = (j == 0) ? 0 : ((j == Height / 8f - 1f) ? 2 : 1);
+                        if (num8 != 1 || num9 != 1)
+                        {
+                            //edges[num8, num9].Draw(new Vector2(X + (i * 8), Y + (j * 8)), new Vector2(0, 0), tint);
+                            edgeImages[imageIndex++] = new Image(edges[num8, num9])
+                            {
+                                Color = tint,
+                                Origin = Vector2.Zero,
+                                Position = new Vector2(i * 8, j * 8),
+                            };
+                        }
+                        j++;
+                    }
+                    i++;
+                }
+
+                BorderImages = new MultiImage(edgeImages);
+                Add(BorderImages);
+            }
+            #endregion
+
+            Add(streetlight = new Sprite(GFX.Game, lightstr));
+            streetlight.Add("frames", "", 1f);
+            streetlight.Play("frames", false, false);
+            streetlight.Active = false;
+            streetlight.SetAnimationFrame(1);
+            streetlight.Position = new Vector2(Width / 2f - streetlight.Width / 2f, 0f);
+        }
+
 
         bool FillMiddle;
         public override void Render()
@@ -231,6 +352,8 @@ namespace FrostHelper
             Position += Shake;
             if (FillMiddle)
                 Draw.Rect(X, Y, Width, Height, Color.Black);
+
+            #region Cogs
             int num = 1;
             float num2 = 0f;
             int count = innerCogs.Count;
@@ -268,8 +391,9 @@ namespace FrostHelper
                         rectangle.Height -= 2;
                     }
                     mtexture = mtexture.GetSubtexture(rectangle.X, rectangle.Y, rectangle.Width, rectangle.Height, temp);
-                    //mtexture.DrawCentered(this.Position + new Vector2((float)num5, (float)num3) + zero, Color.White * ((num < 0) ? 0.5f : 1f));
-                    mtexture.DrawCentered(Position + new Vector2(num5, num3) + zero, tint * ((num < 0) ? 0.5f : 1f));
+                    Vector2 renderPos = Position + new Vector2(num5, num3) + zero;
+                    Color color = Rainbow ? ColorHelper.GetHue(Scene, renderPos) : tint;
+                    mtexture.DrawCentered(renderPos, color * ((num < 0) ? 0.5f : 1f));
                     num = -num;
                     num2 += 1.04719758f;
                     num5 += 8;
@@ -280,22 +404,18 @@ namespace FrostHelper
                 }
                 num3 += 8;
             }
-            int num6 = 0;
-            while (num6 < Width / 8f)
+            #endregion
+            
+            if (Rainbow)
             {
-                int num7 = 0;
-                while (num7 < Height / 8f)
+                for (int i = 0; i < BorderImages.Images.Length; i++)
                 {
-                    int num8 = (num6 == 0) ? 0 : ((num6 == Width / 8f - 1f) ? 2 : 1);
-                    int num9 = (num7 == 0) ? 0 : ((num7 == Height / 8f - 1f) ? 2 : 1);
-                    if (num8 != 1 || num9 != 1)
-                    {
-                        edges[num8, num9].Draw(new Vector2(X + (num6 * 8), Y + (num7 * 8)), new Vector2(0, 0), tint);
-                    }
-                    num7++;
+                    BorderImages.Images[i].Color = ColorHelper.GetHue(Scene, BorderImages.Images[i].RenderPosition + Position);
                 }
-                num6++;
+                streetlight.Color = ColorHelper.GetHue(Scene, streetlight.RenderPosition);
+                
             }
+
             base.Render();
             Position = position;
         }
@@ -438,10 +558,10 @@ namespace FrostHelper
                         Draw.Line(value3 + offset, value3 + vector * 2f + offset, (colorOverride != null) ? colorOverride.Value : CustomZipMover.ropeLightColor);
                         Draw.Line(value4 + offset, value4 - vector * 2f + offset, (colorOverride != null) ? colorOverride.Value : CustomZipMover.ropeLightColor);
                     }
-                    //this.cog.DrawCentered(this.from + offset, (colorOverride != null) ? colorOverride.Value : Color.White, 1f, rotation); // White
-                    //this.cog.DrawCentered(this.to + offset, (colorOverride != null) ? colorOverride.Value : Color.White, 1f, rotation);
-                    cog.DrawCentered(from + offset, (colorOverride != null) ? colorOverride.Value : tint, 1f, rotation); // White
-                    cog.DrawCentered(to + offset, (colorOverride != null) ? colorOverride.Value : tint, 1f, rotation);
+                    Color cogColor = CustomZipMover.Rainbow ? ColorHelper.GetHue(Scene, from + offset) : tint;
+                    cog.DrawCentered(from + offset, (colorOverride != null) ? colorOverride.Value : cogColor, 1f, rotation);
+                    cogColor = CustomZipMover.Rainbow ? ColorHelper.GetHue(Scene, from + offset) : tint;
+                    cog.DrawCentered(to + offset, (colorOverride != null) ? colorOverride.Value : cogColor, 1f, rotation);
                 }
             }
 

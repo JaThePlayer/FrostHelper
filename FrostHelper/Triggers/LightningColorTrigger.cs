@@ -22,7 +22,7 @@ namespace FrostHelper
         {
             On.Celeste.LightningRenderer.Awake += LightningRenderer_Awake;
             On.Celeste.LightningRenderer.Reset += LightningRenderer_Reset;
-            IL.Celeste.LightningRenderer.OnBeforeRender += LightningRenderer_OnRenderBloom;
+            IL.Celeste.LightningRenderer.OnBeforeRender += LightningRenderer_OnBeforeRender;
         }
 
         [OnUnload]
@@ -30,7 +30,7 @@ namespace FrostHelper
         {
             On.Celeste.LightningRenderer.Awake -= LightningRenderer_Awake;
             On.Celeste.LightningRenderer.Reset -= LightningRenderer_Reset;
-            IL.Celeste.LightningRenderer.OnBeforeRender -= LightningRenderer_OnRenderBloom;
+            IL.Celeste.LightningRenderer.OnBeforeRender -= LightningRenderer_OnBeforeRender;
         }
 
         public static string OrDefault(string value, string def)
@@ -40,14 +40,12 @@ namespace FrostHelper
             return value;
         }
 
-        public static Color OrDefault(Color value, Color def)
+        public static Color OrDefault(Color? value, Color def)
         {
-            if (value == default)
-                return def;
-            return value;
+            return value.GetValueOrDefault(def);
         }
 
-        private static void LightningRenderer_OnRenderBloom(ILContext il)
+        private static void LightningRenderer_OnBeforeRender(ILContext il)
         {
             ILCursor cursor = new ILCursor(il);
 
@@ -87,17 +85,24 @@ namespace FrostHelper
             }
         }
 
+        private static Color[] getColors()
+        {
+            return new Color[2]
+                {
+                    ColorHelper.GetColor(OrDefault(FrostModule.Session.LightningColorA, "fcf579")),
+                    ColorHelper.GetColor(OrDefault(FrostModule.Session.LightningColorB, "8cf7e2")),
+                };
+        }
+
         private static void LightningRenderer_Awake(On.Celeste.LightningRenderer.orig_Awake orig, LightningRenderer self, Scene scene)
         {
             orig(self, scene);
-            if (scene is Level)
+            //if (scene is Level)
             {
-                Color[] colors = new Color[2]
-                {
-                    OrDefault(FrostModule.Session.LightningColorA, Calc.HexToColor("fcf579")),
-                    OrDefault(FrostModule.Session.LightningColorB, Calc.HexToColor("8cf7e2")),
-                };
-                if (colors[0] != Color.White)
+                Console.WriteLine(FrostModule.Session.LightningColorA);
+                Console.WriteLine(FrostModule.Session.LightningColorB);
+                Color[] colors = getColors();
+                if (FrostModule.Session.LightningColorA != null)
                 {
                     ChangeLightningColor(self, colors);
                 }
@@ -108,12 +113,8 @@ namespace FrostHelper
         {
             if (self.Scene is Level)
             {
-                Color[] colors = new Color[2]
-                {
-                    OrDefault(FrostModule.Session.LightningColorA, Calc.HexToColor("fcf579")),
-                    OrDefault(FrostModule.Session.LightningColorB, Calc.HexToColor("8cf7e2")),
-                };
-                if (colors[0] != Color.White)
+                Color[] colors = getColors();
+                if (FrostModule.Session.LightningColorA != null)
                 {
                     ChangeLightningColor(self, colors);
                 }
@@ -159,8 +160,8 @@ namespace FrostHelper
                 //SessionHelper.WriteColorToSession(session, "fh.lightningColorA", electricityColors[0]);
                 //SessionHelper.WriteColorToSession(session, "fh.lightningColorB", electricityColors[1]);
                 //SessionHelper.WriteColorToSession(session, "fh.lightningBloomColor", BloomColor);
-                FrostModule.Session.LightningColorA = electricityColors[0];
-                FrostModule.Session.LightningColorB = electricityColors[1];
+                FrostModule.Session.LightningColorA = ColorHelper.ColorToHex(electricityColors[0]);
+                FrostModule.Session.LightningColorB = ColorHelper.ColorToHex(electricityColors[1]);
                 FrostModule.Session.LightningFillColor = FillColor;
                 FrostModule.Session.LightningFillColorMultiplier = FillColorMultiplier;
             }
