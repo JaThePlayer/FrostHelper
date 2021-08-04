@@ -99,7 +99,7 @@ namespace FrostHelper
 
         public CustomSpring(EntityData data, Vector2 offset) : this(data, offset, EntityDataNameToOrientation[data.Name]) { }
 
-        public CustomSpring(EntityData data, Vector2 offset, CustomOrientations orientation) : base(data.Position + offset, Orientations.Floor, data.Bool("playerCanUse", true))
+        public CustomSpring(EntityData data, Vector2 offset, CustomOrientations orientation) : base(data.Position + offset, CustomToRegularOrientation[orientation], data.Bool("playerCanUse", true))
         {
             bool playerCanUse = data.Bool("playerCanUse", true);
             dir = data.Attr("directory", "objects/spring/");
