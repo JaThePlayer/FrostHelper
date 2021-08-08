@@ -9,10 +9,13 @@ namespace FrostHelper
 
         public override void Render()
         {
-            base.Render();
-            foreach (var item in Entity.Components.OfType<Image>())
+            ColorHelper.SetGetHueScene(Scene);
+            for (int i = 0; i < Entity.Components.Count; i++)
             {
-                item.Color = ColorHelper.GetHue(Scene, item.RenderPosition);
+                if (Entity.Components[i] is Image img)
+                {
+                    img.Color = ColorHelper.GetHue(img.RenderPosition);
+                }
             }
         }
     }

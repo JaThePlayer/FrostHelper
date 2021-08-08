@@ -243,11 +243,12 @@ namespace FrostHelper
 
         public void UpdateHue()
         {
+            ColorHelper.SetGetHueScene(Scene);
             foreach (Component component in Components)
             {
                 if (component is Image image)
                 {
-                    image.Color = ColorHelper.GetHue(Scene, Position + image.Position);
+                    image.Color = ColorHelper.GetHue(Position + image.Position);
                 }
             }
             if (filler != null)
@@ -256,7 +257,7 @@ namespace FrostHelper
                 {
                     if (component2 is Image image2)
                     {
-                        image2.Color = ColorHelper.GetHue(Scene, Position + image2.Position);
+                        image2.Color = ColorHelper.GetHue(Position + image2.Position);
                     }
                 }
             }

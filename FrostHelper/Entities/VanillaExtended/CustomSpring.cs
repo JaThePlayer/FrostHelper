@@ -203,11 +203,12 @@ namespace FrostHelper
                         if (player.Speed.Y <= 0f)
                         {
                             BounceAnimate();
-                            player.SuperBounce(Bottom);
+                            player.SuperBounce(Bottom + player.Height);
                             player.Speed.Y *= -speedMult.Y;
                             Player_varJumpSpeed.SetValue(player, player.Speed.Y);
-
                             TryBreak();
+
+                            TimeBasedClimbBlocker.NoClimbTimer = 4f / 60f;
                         }
                         break;
                     case CustomOrientations.WallLeft:

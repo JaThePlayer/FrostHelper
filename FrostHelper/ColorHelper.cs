@@ -98,6 +98,25 @@ namespace FrostHelper
 
         // Used to maintain compatibility with Max's Helping Hand RainbowSpinnerColorController
         private static CrystalStaticSpinner crystalSpinner;
+
+        public static void SetGetHueScene(Scene scene)
+        {
+            if (crystalSpinner == null)
+                crystalSpinner = new CrystalStaticSpinner(Vector2.Zero, false, CrystalColor.Rainbow);
+
+            _setGetHueScene(scene);
+        }
+
+        /// <summary>
+        /// Make sure to call SetGetHueScene beforehand!
+        /// </summary>
+        /// <param name="position"></param>
+        /// <returns></returns>
+        public static Color GetHue(Vector2 position)
+        {
+            return _getHueNoSetScene(position);
+        }
+
         public static Color GetHue(Scene scene, Vector2 position)
         {
             if (crystalSpinner == null)
@@ -107,6 +126,8 @@ namespace FrostHelper
         }
 
         private static Func<Scene, Vector2, Color> _getHue = GetHueIL();
+        private static Func<Vector2, Color> _getHueNoSetScene = GetHueNoSetSceneIL();
+        private static Action<Scene> _setGetHueScene = GetSetGetHueSceneIL();
 
         #region Hooks
 
@@ -132,6 +153,45 @@ namespace FrostHelper
             gen.Emit(OpCodes.Ret);
 
             return (Func<Scene, Vector2, Color>)method.Generate().CreateDelegate(typeof(Func<Scene, Vector2, Color>));
+        }
+
+        private static Func<Vector2, Color> GetHueNoSetSceneIL()
+        {
+            string methodName = "ColorHelper._getHueNoSetScene";
+
+            DynamicMethodDefinition method = new DynamicMethodDefinition(methodName, typeof(Color), new[] { typeof(Vector2) });
+
+            var gen = method.GetILGenerator();
+
+            FieldInfo crystalSpinner = typeof(ColorHelper).GetField(nameof(ColorHelper.crystalSpinner), BindingFlags.NonPublic | BindingFlags.Static);
+
+            // return ColorHelper.crystalSpinner.GetHue(position);
+            gen.Emit(OpCodes.Ldsfld, crystalSpinner);
+            gen.Emit(OpCodes.Ldarg_0);
+            gen.Emit(OpCodes.Call, typeof(CrystalStaticSpinner).GetMethod("GetHue", BindingFlags.NonPublic | BindingFlags.Instance));
+            gen.Emit(OpCodes.Ret);
+
+            return (Func<Vector2, Color>)method.Generate().CreateDelegate(typeof(Func<Vector2, Color>));
+        }
+
+        private static Action<Scene> GetSetGetHueSceneIL()
+        {
+            string methodName = "ColorHelper._setGetHueScene";
+
+            DynamicMethodDefinition method = new DynamicMethodDefinition(methodName, null, new[] { typeof(Scene) });
+
+            var gen = method.GetILGenerator();
+
+            FieldInfo crystalSpinner = typeof(ColorHelper).GetField(nameof(ColorHelper.crystalSpinner), BindingFlags.NonPublic | BindingFlags.Static);
+
+            // ColorHelper.crystalSpinner.Scene = scene;
+            gen.Emit(OpCodes.Ldsfld, crystalSpinner);
+            gen.Emit(OpCodes.Ldarg_0);
+            gen.Emit(OpCodes.Call, typeof(Entity).GetProperty("Scene").GetSetMethod(true));
+
+            gen.Emit(OpCodes.Ret);
+
+            return (Action<Scene>)method.Generate().CreateDelegate(typeof(Action<Scene>));
         }
 
         #endregion
