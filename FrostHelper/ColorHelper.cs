@@ -1,11 +1,11 @@
 ﻿using Celeste;
 using Microsoft.Xna.Framework;
+using Mono.Cecil.Cil;
 using Monocle;
 using MonoMod.Utils;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Reflection.Emit;
 
 namespace FrostHelper
 {
@@ -94,7 +94,7 @@ namespace FrostHelper
             return $"{color.R:X2}{color.G:X2}{color.B:X2}";
         }
 
-        // From Communal Helper:
+        // Based on Communal Helper:
 
         // Used to maintain compatibility with Max's Helping Hand RainbowSpinnerColorController
         private static CrystalStaticSpinner crystalSpinner;
@@ -129,15 +129,14 @@ namespace FrostHelper
         private static Func<Vector2, Color> _getHueNoSetScene = GetHueNoSetSceneIL();
         private static Action<Scene> _setGetHueScene = GetSetGetHueSceneIL();
 
-        #region Hooks
+        #region ILGeneration
 
         private static Func<Scene, Vector2, Color> GetHueIL()
         {
             string methodName = "ColorHelper._getHue";
 
             DynamicMethodDefinition method = new DynamicMethodDefinition(methodName, typeof(Color), new[] { typeof(Scene), typeof(Vector2) });
-
-            var gen = method.GetILGenerator();
+            var gen = method.GetILProcessor();
 
             FieldInfo crystalSpinner = typeof(ColorHelper).GetField(nameof(ColorHelper.crystalSpinner), BindingFlags.NonPublic | BindingFlags.Static);
 
@@ -161,7 +160,7 @@ namespace FrostHelper
 
             DynamicMethodDefinition method = new DynamicMethodDefinition(methodName, typeof(Color), new[] { typeof(Vector2) });
 
-            var gen = method.GetILGenerator();
+            var gen = method.GetILProcessor();
 
             FieldInfo crystalSpinner = typeof(ColorHelper).GetField(nameof(ColorHelper.crystalSpinner), BindingFlags.NonPublic | BindingFlags.Static);
 
@@ -180,7 +179,7 @@ namespace FrostHelper
 
             DynamicMethodDefinition method = new DynamicMethodDefinition(methodName, null, new[] { typeof(Scene) });
 
-            var gen = method.GetILGenerator();
+            var gen = method.GetILProcessor();
 
             FieldInfo crystalSpinner = typeof(ColorHelper).GetField(nameof(ColorHelper.crystalSpinner), BindingFlags.NonPublic | BindingFlags.Static);
 

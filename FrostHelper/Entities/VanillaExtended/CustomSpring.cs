@@ -292,7 +292,7 @@ namespace FrostHelper
                     {
                         glider.Speed.Y *= speedMult.Y;
                     }
-                    if (Orientation == CustomOrientations.Ceiling)
+                    else if(Orientation == CustomOrientations.Ceiling)
                     {
                         glider.Speed.Y *= -speedMult.Y;
                     }
@@ -307,8 +307,8 @@ namespace FrostHelper
                     if (Orientation == CustomOrientations.Floor)
                     {
                         theo.Speed.Y *= speedMult.Y;
-                    }
-                    if (Orientation == CustomOrientations.Ceiling)
+                    } 
+                    else if (Orientation == CustomOrientations.Ceiling)
                     {
                         theo.Speed.Y *= -speedMult.Y;
                     }
