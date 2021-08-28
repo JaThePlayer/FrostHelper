@@ -65,6 +65,10 @@ namespace FrostHelper.Entities.Boosters
         public Color ParticleColor;
         public bool Red;
         public float RespawnTime;
+        /// <summary>
+        /// Set to -1 to refill dashes to dash cap (default)
+        /// </summary>
+        public int DashRecovery;
 
         public GenericCustomBooster(EntityData data, Vector2 offset) : base(data.Position + offset)
         {
@@ -108,6 +112,7 @@ namespace FrostHelper.Entities.Boosters
             enterSfx = data.Attr("enterSfx", "event:/game/04_cliffside/greenbooster_enter");
             boostSfx = data.Attr("boostSfx", "event:/game/04_cliffside/greenbooster_dash");
             endSfx = data.Attr("releaseSfx", "event:/game/04_cliffside/greenbooster_end");
+            DashRecovery = data.Int("dashes", -1);
         }
 
         public override void Added(Scene scene)
@@ -330,6 +335,18 @@ namespace FrostHelper.Entities.Boosters
             sprite.Position = position;
         }
 
+        public virtual void HandleDashRefill(Player player)
+        {
+            if (DashRecovery == -1)
+            {
+                player.RefillDash();
+            }
+            else
+            {
+                player.Dashes = DashRecovery;
+            }
+        }
+
         public virtual void HandleBoostBegin(Player player)
         {
             Level level = player.SceneAs<Level>();
@@ -339,7 +356,9 @@ namespace FrostHelper.Entities.Boosters
                 MapMetaModeProperties meta = level.Session.MapData.GetMeta();
                 doNotDropTheo = (meta != null) && meta.TheoInBubble.GetValueOrDefault();
             }
-            player.RefillDash();
+
+            HandleDashRefill(player);
+
             player.RefillStamina();
             if (doNotDropTheo)
             {
@@ -553,6 +572,7 @@ namespace FrostHelper.Entities.Boosters
             int result;
             if (pressed)
             {
+                player.SetValue("demoDashed", Input.CrouchDashPressed);
                 Input.Dash.ConsumePress();
                 Input.CrouchDash.ConsumePress();
                 result = RedDash ? CustomRedBoostState : Player.StDash;

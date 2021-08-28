@@ -264,7 +264,21 @@ namespace FrostHelper
                 flag = meta?.TheoInBubble;
             }
             bool? flag2 = flag;
-            player.RefillDash();
+            //GenericCustomBooster.GetBoosterThatIsBoostingPlayer(e).
+            YellowBooster GetBoosterThatIsBoostingPlayer()
+            {
+                return new DynData<Player>(e as Player).Get<YellowBooster>("fh.customyellowBooster");
+            }
+            YellowBooster booster = GetBoosterThatIsBoostingPlayer();
+            if (booster.DashRecovery == -1)
+            {
+                player.RefillDash();
+            }
+            else
+            {
+                player.Dashes = booster.DashRecovery;
+            }
+
             player.RefillStamina();
             if (flag2.GetValueOrDefault())
             {
@@ -286,6 +300,7 @@ namespace FrostHelper
             int result;
             if (pressed)
             {
+                player.SetValue("demoDashed", Input.CrouchDashPressed);
                 Input.Dash.ConsumePress();
                 Input.CrouchDash.ConsumePress();
                 result = Player.StDash;
@@ -360,6 +375,8 @@ namespace FrostHelper
             registeredHooks = new List<ILHook>();
 
             AttributeHelper.InvokeAllWithAttribute(typeof(OnUnload));
+
+            OutlineHelper.Dispose();
         }
 
         // Optional, initialize anything after Celeste has initialized itself properly.

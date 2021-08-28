@@ -18,6 +18,27 @@ namespace FrostHelper
         {
             On.Celeste.TheoCrystal.HitSpring += TheoCrystal_HitSpring;
             On.Celeste.Glider.HitSpring += Glider_HitSpring;
+            On.Celeste.Puffer.HitSpring += Puffer_HitSpring;
+        }
+
+        private static bool Puffer_HitSpring(On.Celeste.Puffer.orig_HitSpring orig, Puffer self, Spring spring)
+        {
+            if (spring is CustomSpring customSpring && customSpring.Orientation == CustomOrientations.Ceiling)
+            {
+                if (self.GetValue<Vector2>("hitSpeed").Y <= 0f)
+                {
+                    self.Invoke("GotoHitSpeed", 224f * Vector2.UnitY);
+                    self.MoveTowardsX(spring.CenterX, 4f, null);
+                    self.GetValue<Wiggler>("bounceWiggler").Start();
+                    self.Invoke("Alert", true, false);
+                    return true;
+                }
+                return false;
+            }
+            else
+            {
+                return orig(self, spring);
+            }
         }
 
         private static bool Glider_HitSpring(On.Celeste.Glider.orig_HitSpring orig, Glider self, Spring spring)
@@ -26,7 +47,7 @@ namespace FrostHelper
             {
                 if (!self.Hold.IsHeld && self.Speed.Y <= 0f)
                 {
-                    self.Speed.X = self.Speed.X * 0.5f;
+                    self.Speed.X *= 0.5f;
                     self.Speed.Y = -160f;
                     self.SetValue("noGravityTimer", 0.15f);
                     self.GetValue<Wiggler>("wiggler").Start();
@@ -46,7 +67,7 @@ namespace FrostHelper
             {
                 if (!self.Hold.IsHeld && self.Speed.Y <= 0f)
                 {
-                    self.Speed.X = self.Speed.X * 0.5f;
+                    self.Speed.X *= 0.5f;
                     self.Speed.Y = -160f;
                     self.SetValue("noGravityTimer", 0.15f);
                     return true;
@@ -63,6 +84,7 @@ namespace FrostHelper
         {
             On.Celeste.TheoCrystal.HitSpring -= TheoCrystal_HitSpring;
             On.Celeste.Glider.HitSpring -= Glider_HitSpring;
+            On.Celeste.Puffer.HitSpring -= Puffer_HitSpring;
         }
 
 

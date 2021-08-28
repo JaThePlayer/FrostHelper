@@ -2,6 +2,7 @@
 using Celeste.Mod.Entities;
 using Microsoft.Xna.Framework;
 using Monocle;
+using MonoMod.Utils;
 using System;
 using System.Collections;
 
@@ -21,6 +22,12 @@ namespace FrostHelper
         public string endSfx;
         public float BoostTime;
         public Color FlashTint;
+
+        /// <summary>
+        /// Set to -1 to refill dashes to dash cap (default)
+        /// </summary>
+        public int DashRecovery;
+
         public YellowBooster(EntityData data, Vector2 offset) : base(data.Position + offset)
         {
             Depth = -8500;
@@ -58,6 +65,7 @@ namespace FrostHelper
             enterSfx = data.Attr("enterSfx", "event:/game/04_cliffside/greenbooster_enter");
             boostSfx = data.Attr("boostSfx", "event:/game/04_cliffside/greenbooster_dash");
             endSfx = data.Attr("releaseSfx", "event:/game/04_cliffside/greenbooster_end");
+            DashRecovery = data.Int("dashes", -1);
         }
 
         public override void Added(Scene scene)
@@ -111,6 +119,7 @@ namespace FrostHelper
         public bool StartedBoosting;
         public static void Boost(Player player, YellowBooster booster)
         {
+            new DynData<Player>(player).Set("fh.customyellowBooster", booster);
             player.StateMachine.State = FrostModule.YellowBoostState;
             player.Speed = Vector2.Zero;
             //player.boostTarget = booster.Center;

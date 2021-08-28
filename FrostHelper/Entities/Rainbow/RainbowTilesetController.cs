@@ -144,29 +144,6 @@ namespace FrostHelper
             var all = data.Attr("tilesets") == "*";
             var autotiler = BG ? GFX.BGAutotiler : GFX.FGAutotiler;
             Tag = Tags.Persistent;
-            /*
-            if (!all)
-            {
-                TilesetIDs = FrostModule.GetCharArrayFromCommaSeparatedList(data.Attr("tilesets"));
-
-                TilesetTexturePaths = new string[TilesetIDs.Length];
-                for (int i = 0; i < TilesetTexturePaths.Length; i++)
-                {
-                    TilesetTexturePaths[i] = autotiler.GenerateMap(new VirtualMap<char>(new char[,] { { TilesetIDs[i] } }), true).TileGrid.Tiles[0, 0].Parent.AtlasPath;
-                }
-            } else
-            {
-                // Autotiler.lookup is Dictionary<char, Autotiler.TerrainType>
-                // Autotiler.TerrainType is private, let's do some trickery
-                var autotilerLookupKeys = (Autotiler_lookup.GetValue(autotiler) as IDictionary).Keys;
-                TilesetTexturePaths = new string[autotilerLookupKeys.Count];
-                var enumerator = autotilerLookupKeys.GetEnumerator();
-                for (int i = 0; i < TilesetTexturePaths.Length; i++)
-                {
-                    enumerator.MoveNext();
-                    TilesetTexturePaths[i] = autotiler.GenerateMap(new VirtualMap<char>(new char[,] { { (char)enumerator.Current } }), true).TileGrid.Tiles[0, 0].Parent.AtlasPath;
-                }
-            }*/
 
             if (!all)
             {

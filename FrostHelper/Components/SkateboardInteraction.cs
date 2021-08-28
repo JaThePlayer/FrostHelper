@@ -8,8 +8,8 @@ namespace FrostHelper
     {
         public SkateboardInteractionCallback Callback;
         public SkateboardInteraction(SkateboardInteractionCallback callback) : base(false, false) 
-        { 
-        
+        {
+            Callback = callback;
         }
 
         public void DoInteraction(Entity other, Skateboard skateboard)

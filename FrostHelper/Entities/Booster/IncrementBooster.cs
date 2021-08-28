@@ -15,21 +15,21 @@ namespace FrostHelper.Entities.Boosters
         public IncrementBooster(EntityData data, Vector2 offset) : base(data, offset) 
         {
             dashCap = data.Int("dashCap", -1);
+
+            // reparse the argument, with a different default value
+            DashRecovery = data.Int("dashes", Red ? 2 : 1);
         }
 
-        public override void Boost(Player player)
+        public override void HandleDashRefill(Player player)
         {
-            base.Boost(player);
             if (dashCap == -1)
             {
-                player.Dashes += GetDashIncrementAmt();
+                player.Dashes += DashRecovery;
             }
             else
             {
-                player.Dashes = Math.Min(player.Dashes + GetDashIncrementAmt(), dashCap);
+                player.Dashes = Math.Min(player.Dashes + DashRecovery, dashCap);
             }
         }
-
-        private int GetDashIncrementAmt() => Red ? 2 : 1;
     }
 }

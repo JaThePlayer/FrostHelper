@@ -20,7 +20,6 @@ namespace FrostHelper
         {
             On.Celeste.Mod.Entities.CrystalShatterTrigger.OnEnter += CrystalShatterTrigger_OnEnter;
             On.Celeste.Player.SummitLaunchUpdate += Player_SummitLaunchUpdate;
-
         }
 
         private static int Player_SummitLaunchUpdate(On.Celeste.Player.orig_SummitLaunchUpdate orig, Player self)
@@ -85,6 +84,7 @@ namespace FrostHelper
 
         private bool registeredToRenderers = false;
         private PlayerCollider playerCollider;
+        private bool singleFGImage;
 
         private void OnChangeMode(Session.CoreModes coreMode)
         {
@@ -395,29 +395,29 @@ namespace FrostHelper
                 List<MTexture> atlasSubtextures = GFX.Game.GetAtlasSubtextures(fgDirectory);
                 MTexture mtexture = Calc.Random.Choose(atlasSubtextures);
                 int imgCount = 0;
-                bool c1,c2,c3,c4 = false;
-                c1 = false;
-                c2 = false;
-                c3 = false;
+                bool topLeft,topRight,bottomLeft,bottomRight = false;
+                topLeft = false;
+                topRight = false;
+                bottomLeft = false;
 
                 if (!SolidCheck(new Vector2(X - 4f, Y - 4f)))
                 {
-                    c1 = true;
+                    topLeft = true;
                     imgCount++;
                 }
                 if (!SolidCheck(new Vector2(X + 4f, Y - 4f)))
                 {
-                    c2 = true;
+                    topRight = true;
                     imgCount++;
                 }
                 if (!SolidCheck(new Vector2(X + 4f, Y + 4f)))
                 {
-                    c3 = true;
+                    bottomLeft = true;
                     imgCount++;
                 }
                 if (!SolidCheck(new Vector2(X - 4f, Y + 4f)))
                 {
-                    c4 = true;
+                    bottomRight = true;
                     imgCount++;
                 }
                 // technically this solution is twice as fast! Unfortunately it has side-effects that make this not usable
@@ -439,36 +439,12 @@ namespace FrostHelper
                     image = new Image(mtexture).CenterOrigin();
                     image.Color = Tint;
                     Add(image);
-                    //image.Visible = false;
                     image.Active = false;
-                    //Scene.Add(border = new Border(image, filler, this));
+                    singleFGImage = true;
                 } else
                 {
                     // only spawn quarter images if it's needed to avoid edge cases
-                    if (c1)
-                    {
-                        image = new Image(mtexture.GetSubtexture(0, 0, 14, 14, null)).SetOrigin(12f, 12f);
-                        image.Color = Tint;
-                        Add(image);
-                    }
-                    if (c2)
-                    {
-                        image = new Image(mtexture.GetSubtexture(10, 0, 14, 14, null)).SetOrigin(2f, 12f);
-                        image.Color = Tint;
-                        Add(image);
-                    }
-                    if (c3)
-                    {
-                        image = new Image(mtexture.GetSubtexture(10, 10, 14, 14, null)).SetOrigin(2f, 2f);
-                        image.Color = Tint;
-                        Add(image);
-                    }
-                    if (c4)
-                    {
-                        image = new Image(mtexture.GetSubtexture(0, 10, 14, 14, null)).SetOrigin(12f, 2f);
-                        image.Color = Tint;
-                        Add(image);
-                    }
+                    AddCornerImages(mtexture, topLeft, topRight, bottomLeft, bottomRight);
                     //Scene.Add(border = new Border(null, filler, this));
                 }
                 if (HasDeco)
@@ -491,6 +467,61 @@ namespace FrostHelper
                 expanded = true;
                 Calc.PopRandom();
             }
+        }
+
+        private void AddCornerImages(MTexture mtexture, bool topLeft, bool topRight, bool bottomLeft, bool bottomRight)
+        {
+
+            Image image;
+
+            if (topLeft && topRight)
+            {
+                image = new Image(mtexture.GetSubtexture(0, 0, 28, 14, null)).SetOrigin(12f, 12f);
+                image.Color = Tint;
+                Add(image);
+                image.Active = false;
+            } else
+            {
+                if (topLeft)
+                {
+                    image = new Image(mtexture.GetSubtexture(0, 0, 14, 14, null)).SetOrigin(12f, 12f);
+                    image.Color = Tint;
+                    Add(image);
+                    image.Active = false;
+                }
+                if (topRight)
+                {
+                    image = new Image(mtexture.GetSubtexture(10, 0, 14, 14, null)).SetOrigin(2f, 12f);
+                    image.Color = Tint;
+                    Add(image);
+                    image.Active = false;
+                }
+            }
+
+            if (bottomLeft && bottomRight)
+            {
+                image = new Image(mtexture.GetSubtexture(0, 10, 28, 14, null)).SetOrigin(12f, 2f);
+                image.Color = Tint;
+                Add(image);
+                image.Active = false;
+            } else
+            {
+                if (bottomLeft)
+                {
+                    image = new Image(mtexture.GetSubtexture(10, 10, 14, 14, null)).SetOrigin(2f, 2f);
+                    image.Color = Tint;
+                    Add(image);
+                    image.Active = false;
+                }
+                if (bottomRight)
+                {
+                    image = new Image(mtexture.GetSubtexture(0, 10, 14, 14, null)).SetOrigin(12f, 2f);
+                    image.Color = Tint;
+                    Add(image);
+                    image.Active = false;
+                }
+            }
+            
         }
 
         public SpinnerConnectorRenderer GetConnectorRenderer()
@@ -774,12 +805,22 @@ namespace FrostHelper
                     for (int i = 0; i < spinnerComponents.Count; i++)
                     {
                         if (spinnerComponents[i] is Image img)
-                            DrawBorder(img, color);
+                        {
+                            if (item.singleFGImage)
+                            {
+                                OutlineHelper.RenderOutline(img, color, true);
+                            } else
+                            {
+                                // todo: figure out the offsets properly so that OutlineHelper can be used in this case too
+                                DrawBorder(img, color);
+                            }
+                        }
+                            
                     }
                     if (item.filler != null)
                     {
                         var fillerComponents = item.filler.Components;
-
+                        /*
                         Image image = fillerComponents[0] as Image;
                         Texture2D texture = image.Texture.Texture.Texture_Safe;
                         Rectangle? clipRect = new Rectangle?(image.Texture.ClipRect);
@@ -787,9 +828,6 @@ namespace FrostHelper
                         Vector2 origin = (image.Origin - image.Texture.DrawOffset) / scaleFix;
                         for (int i = 0; i < fillerComponents.Count; i++)
                         {
-                            //if (fillerComponents[i] is Image img)
-                            //    DrawBorder(fillerComponents[i] as Image, color);
-                            
                             var img = fillerComponents[i] as Image;
                             Vector2 drawPos = img.RenderPosition;
                             float rotation = img.Rotation;
@@ -797,15 +835,25 @@ namespace FrostHelper
                             Draw.SpriteBatch.Draw(texture, drawPos + Vector2.UnitY, clipRect, color, rotation, origin, scaleFix, SpriteEffects.None, 0f);
                             Draw.SpriteBatch.Draw(texture, drawPos - Vector2.UnitX, clipRect, color, rotation, origin, scaleFix, SpriteEffects.None, 0f);
                             Draw.SpriteBatch.Draw(texture, drawPos + Vector2.UnitX, clipRect, color, rotation, origin, scaleFix, SpriteEffects.None, 0f);
+                        }*/
+
+                        Image image = fillerComponents[0] as Image;
+                        Texture2D outline = OutlineHelper.Get(image);
+                        float scaleFix = image.Texture.ScaleFix;
+                        Vector2 origin = (image.Origin - image.Texture.DrawOffset) / scaleFix;
+                        for (int i = 0; i < fillerComponents.Count; i++)
+                        {
+                            Image img = fillerComponents[i] as Image;
+                            Vector2 drawPos = img.RenderPosition - img.Texture.DrawOffset - new Vector2(1f, 1f).Rotate(img.Rotation);
+                            Draw.SpriteBatch.Draw(outline, drawPos, null, color, img.Rotation, origin, scaleFix, SpriteEffects.None, 0f);
                         }
-                    } 
+                    }
                 }
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static void DrawBorder(Image image, Color color)
             {
-                
                 Texture2D texture = image.Texture.Texture.Texture_Safe;
                 Rectangle? clipRect = new Rectangle?(image.Texture.ClipRect);
                 float scaleFix = image.Texture.ScaleFix;
