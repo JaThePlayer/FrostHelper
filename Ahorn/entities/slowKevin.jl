@@ -2,7 +2,7 @@ module SlowKevin
 
 using ..Ahorn, Maple
 
-@mapdef Entity "FrostHelper/SlowCrushBlock" SlowCrushBlock(x::Integer, y::Integer)
+@mapdef Entity "FrostHelper/SlowCrushBlock" SlowCrushBlock(x::Integer, y::Integer, directory::String = "objects/FrostHelper/slowcrushblock/", chillout::Bool = false, crushSpeed::Number = 120.0, returnSpeed::Number = 60.0, returnAcceleration::Number = 160.0, crushAcceleration::Number = 250.0)
 
 const placements = Ahorn.PlacementDict(
     "Slow Kevin (Both, Frost Helper)" => Ahorn.EntityPlacement(

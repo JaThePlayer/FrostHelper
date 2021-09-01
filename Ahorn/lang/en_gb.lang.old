@@ -1,0 +1,64 @@
+# -- Entity and Trigger Tooltips -- 
+#    placements.entities.entityName.tooltips.attr=Tooltip
+#    placements.triggers.triggerName.tooltips.attr=Tooltip
+
+# -- Entities -- 
+
+placements.entities.FrostHelper/StaticBumper.tooltips.sprite=Name of the sprite's entry in your Sprites.xml file. A {sprite}_evil entry is required as well for when the core mode is set to Hot
+placements.entities.FrostHelper/StaticBumper.tooltips.respawnTime=Time it takes the bumper to respawn after boosting you
+placements.entities.FrostHelper/StaticBumper.tooltips.notCoreMode=If set, the bumper will always be blue regardless of core mode
+placements.entities.FrostHelper/StaticBumper.tooltips.wobble=Whether the bumper should wobble like vanilla ones. Please don't use this
+
+placements.entities.FrostHelper/IceSpinner.tooltips.dashThrough=If this is set, the player won't die from the spinner if they're dashing
+placements.entities.FrostHelper/IceSpinner.tooltips.destroyColor=The color (in hex) of particles emmited from the spinner when it's destroyed (via the Badeline boss for example)
+placements.entities.FrostHelper/IceSpinner.tooltips.tint=The tint (in hex) applied to the sprite
+placements.entities.FrostHelper/IceSpinner.tooltips.directory=The directory from which the sprites are taken, relative to Atlases/Gameplay/. Refer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Custom-Spinners
+placements.entities.FrostHelper/IceSpinner.tooltips.spritePathSuffix=The suffix to add to the path of all sprite images. Refer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Custom-Spinners
+placements.entities.FrostHelper/IceSpinner.tooltips.moveWithWind=Whether this spinner should move with wind. Cursed
+placements.entities.FrostHelper/IceSpinner.tooltips.dashThrough=Whether it's possible to dash through this spinner without dying.
+placements.entities.FrostHelper/IceSpinner.tooltips.bloomAlpha=If not zero, determines the alpha value for the bloom point of this spinner
+placements.entities.FrostHelper/IceSpinner.tooltips.bloomRadius=The radius of the bloom point of this spinner.
+
+placements.entities.FrostHelper/ToggleSwapBlock.tooltips.directory=The directory from which the sprites are taken, relative to Atlases/Gameplay/
+
+placements.entities.FrostHelper/CustomZipMover.tooltips.directory=The directory from which the sprites are taken, relative to Atlases/Gameplay/
+placements.entities.FrostHelper/CustomZipMover.tooltips.percentage=The % of vanilla zip mover's speed that this zipper should use
+
+placements.entities.FrostHelper/Skateboard.tooltips.sprite=The path to the sprite, relative to Atlases/Gameplay/
+
+placements.entities.FrostHelper/PlusOneRefill.tooltips.dashCount=Amount of dashes to add when collecting this refill
+placements.entities.FrostHelper/PlusOneRefill.tooltips.directory=Path to the directory where the sprites for this refill are
+placements.entities.FrostHelper/PlusOneRefill.tooltips.respawnTime=Time it takes the refill to respawn after being used
+placements.entities.FrostHelper/PlusOneRefill.tooltips.oneUse=Whether the refill should respawn after being used
+placements.entities.FrostHelper/PlusOneRefill.tooltips.particleColor=The color of particles emitted by this refill
+
+placements.entities.FrostHelper/CustomDreamBlock.tooltips.old=Reverts the physics to how they used to be in older versions of Frost Helper. Exists for backwards compatibility reasons, not recommended.
+placements.entities.FrostHelper/CustomDreamBlock.tooltips.moveSpeedMult=The multiplier to use for the speed the block moves at. Fast Moving blocks use 3.0
+placements.entities.FrostHelper/CustomDreamBlock.tooltips.moveEase=The Easing type to use for the movement of the block.
+placements.entities.FrostHelper/CustomDreamBlock.tooltips.speed=The speed the player moves with inside of the block.
+placements.entities.FrostHelper/CustomDreamBlock.tooltips.fastMoving=Triples the speed the block moves with. For backwards compatibility reasons.
+placements.entities.FrostHelper/CustomDreamBlock.tooltips.allowRedirects=Whether the player should be able to change the movement direction inside of the block if they have an extra dash.
+placements.entities.FrostHelper/CustomDreamBlock.tooltips.allowSameDirectionDash=If allowRedirects is true, whether the player can dash in the same direction they're already moving in to increase their speed.
+placements.entities.FrostHelper/CustomDreamBlock.tooltips.sameDirectionSpeedMultiplier=If allowRedirects and allowSameDirectionDash is true, the multiplier to apply to the player's speed if they dash in the same direction as they're moving in
+placements.entities.FrostHelper/CustomDreamBlock.tooltips.conserveSpeed=Whether this dream block should conserve the player's speed when entered. If this is true and speed = -1, this block reverses the player's speed.
+placements.entities.FrostHelper/CustomDreamBlock.tooltips.below=Whether the dream block should render in the background or foreground.
+placements.entities.FrostHelper/CustomDreamBlock.tooltips.oneUse=Whether the dream block should disappear after one use.
+placements.entities.FrostHelper/CustomDreamBlock.tooltips.disabledLineColor=Line color to use when the player doesn't have the dream blocks enabled.
+placements.entities.FrostHelper/CustomDreamBlock.tooltips.disabledBackColor=Background color to use when the player doesn't have the dream blocks enabled.
+placements.entities.FrostHelper/CustomDreamBlock.tooltips.activeLineColor=Line color to use
+placements.entities.FrostHelper/CustomDreamBlock.tooltips.activeBackColor=Background color to use
+
+placements.entities.FrostHelper/EntityMover.tooltips.mustCollide=Whether the mover should only move entities that are inside of it. If this is false, then all entities in the room which match the whitelist/blacklist will get moved.
+placements.entities.FrostHelper/EntityMover.tooltips.blacklist=Whether the "types" list is a blacklist or whitelist.
+placements.entities.FrostHelper/EntityMover.tooltips.types=Comma-seperated list of types that should/shouldn't get moved (depending on the "blacklist" setting). Refer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Entity-Movers
+
+placements.entities.FrostHelper/SpeedRingChallenge.tooltips.timeLimit=The time limit, in seconds. If the player beats this time, a berry will spawn. WARNING: Make sure the last node of this entity is inside of a berry!
+placements.entities.FrostHelper/SpeedRingChallenge.tooltips.name=Internal name of the challenge. This also works as a dialog key, so make sure to definite it in English.txt.
+
+placements.triggers.FrostHelper/SpeedChallengeJournal.tooltips.challengeNames=Comma-seperated list of challenge names to show the stats for. If "autoAddSid" is false, you'll need to prepend the names with "{mapSID}>", where mapSID is the SID of the map the challenge is from. INFO: if this starts with "readFromDialog:", then this list will be read from the dialog key specified after the ':'. This is useful if you have several journals displaying info for the same challenges.
+placements.triggers.FrostHelper/SpeedChallengeJournal.tooltips.autoAddSid=Whether to automatically add the map's SID to challenge names. Useful if the journal is in the same map as all the challenges you want to display in this journal.
+
+placements.entities.FrostHelper/CustomFlutterBird.tooltips.colors=Comma-seperated list of hex colors that can be used for the bird. One of these colors get randomly chosen.
+
+placements.entities.FrostHelper/RainbowTilesetController.tooltips.tilesets=Comma-seperated list of tileset ids to make rainbow
+placements.entities.FrostHelper/RainbowTilesetController.tooltips.bg=Whether bg tiles should be made rainbow instead of fg tiles

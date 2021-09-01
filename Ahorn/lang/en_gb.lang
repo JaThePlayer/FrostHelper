@@ -161,6 +161,7 @@ placements.entities.FrostHelper/GrayBooster.tooltips.enterSfx=SFX to play when t
 placements.entities.FrostHelper/GrayBooster.tooltips.reappearSfx=SFX to play when the booster respawns
 placements.entities.FrostHelper/GrayBooster.tooltips.boostSfx=SFX to play when the booster starts boosting the player
 placements.entities.FrostHelper/GrayBooster.tooltips.red=Whether this booster should act like a red one, that has an unlimited range.
+placements.entities.FrostHelper/GrayBooster.tooltips.dashes=How many dashes the player will have after leaving the booster. Set to -1 to simply refill dashes according to the current maximum dash count.
 
 placements.entities.FrostHelper/BlueBooster.tooltips.directory=The directory from which the sprites are taken, relative to Atlases/Gameplay/
 placements.entities.FrostHelper/BlueBooster.tooltips.respawnTime=Time (in seconds) it takes the booster to respawn after being used
@@ -181,6 +182,7 @@ placements.entities.FrostHelper/YellowBooster.tooltips.enterSfx=SFX to play when
 placements.entities.FrostHelper/YellowBooster.tooltips.reappearSfx=SFX to play when the booster respawns
 placements.entities.FrostHelper/YellowBooster.tooltips.boostSfx=SFX to play when the booster starts boosting the player
 placements.entities.FrostHelper/YellowBooster.tooltips.flashTint=The hex color to use when the booster flashes due to time running out
+placements.entities.FrostHelper/YellowBooster.tooltips.dashes=How many dashes the player will have after leaving the booster. Set to -1 to simply refill dashes according to the current maximum dash count.
 
 placements.entities.FrostHelper/IncrementBooster.tooltips.directory=The directory from which the sprites are taken, relative to Atlases/Gameplay/
 placements.entities.FrostHelper/IncrementBooster.tooltips.respawnTime=Time (in seconds) it takes the booster to respawn after being used
@@ -192,6 +194,7 @@ placements.entities.FrostHelper/IncrementBooster.tooltips.reappearSfx=SFX to pla
 placements.entities.FrostHelper/IncrementBooster.tooltips.boostSfx=SFX to play when the booster starts boosting the player
 placements.entities.FrostHelper/IncrementBooster.tooltips.red=Whether this booster should act like a red one, that has an unlimited range.
 placements.entities.FrostHelper/IncrementBooster.tooltips.dashCap=Maximum amount of dashes the player can have after leaving this booster. Leave at -1 for no cap.
+placements.entities.FrostHelper/IncrementBooster.tooltips.dashes=How many additional dashes the player will get after leaving the booster.
 
 # Ice Key
 
