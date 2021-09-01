@@ -1,0 +1,13 @@
+- Name: FrostHelper
+  Version: 1.30.4
+  DLL: Code/FrostHelper/bin/FrostTempleHelper.dll
+  Dependencies:
+    - Name: Everest
+      Version: 1.1833.0
+    - Name: Celeste
+      Version: 1.4.0
+  OptionalDependencies:
+    - Name: OutbackHelper
+      Version: 1.4.0
+    - Name: CelesteTAS
+      Version: 3.4.5

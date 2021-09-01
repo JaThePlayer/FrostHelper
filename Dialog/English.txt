@@ -1,0 +1,6 @@
+
+
+FrostHelper_RestartSpeedBerry=Restart Speed Berry
+
+FH_PB=PB
+FH_Goal=Goal
