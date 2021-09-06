@@ -92,7 +92,8 @@ namespace FrostHelper
             On.Celeste.Player.ctor += Player_ctor;
 
             // For custom Boosters
-            On.Celeste.Player.CallDashEvents += Player_CallDashEvents;
+            //On.Celeste.Player.CallDashEvents += Player_CallDashEvents;
+            RegisterILHook(new ILHook(typeof(Player).GetMethod("CallDashEvents", BindingFlags.NonPublic | BindingFlags.Instance), modCallDashEvents));
             RegisterILHook(new ILHook(typeof(Player).GetMethod("orig_WindMove", BindingFlags.NonPublic | BindingFlags.Instance), modBoosterState));
 
             // Custom dream blocks and feathers
@@ -174,6 +175,60 @@ namespace FrostHelper
             return (Engine.Scene as Level).Tracker.GetEntity<Player>();
         }
 
+        private void modCallDashEvents(ILContext il)
+        {
+            var cursor = new ILCursor(il); 
+            
+            if (cursor.TryGotoNext(MoveType.After, instr => instr.MatchStfld<Player>("calledDashEvents")))
+            {
+                cursor.Emit(OpCodes.Ldarg_0);
+                cursor.EmitDelegate<Func<Player, bool>>((Player self) =>
+                {
+                    if (GenericCustomBooster.GetBoosterThatIsBoostingPlayer(self) != null)
+                    {
+                        player_calledDashEvents.SetValue(self, false);
+                        return false;
+                    }
+                        
+
+                    foreach (YellowBooster b in self.Scene.Tracker.GetEntities<YellowBooster>())
+                    {
+                        b.sprite.SetColor(Color.White);
+                        if (b.StartedBoosting)
+                        {
+                            b.PlayerBoosted(self, self.DashDir);
+                            player_calledDashEvents.SetValue(self, false);
+                            return false;
+                        }
+                        if (b.BoostingPlayer)
+                        {
+                            player_calledDashEvents.SetValue(self, false);
+                            return false;
+                        }
+                    }
+                    foreach (GenericCustomBooster b in self.Scene.Tracker.GetEntities<GenericCustomBooster>())
+                    {
+                        if (b.StartedBoosting && b.CollideCheck(self))
+                        {
+                            b.PlayerBoosted(self, self.DashDir);
+                            return false;
+                        }
+                        if (b.BoostingPlayer && GenericCustomBooster.GetBoosterThatIsBoostingPlayer(self) == b)
+                        {
+                            return false;
+                        }
+                    }
+
+                    return true;
+                });
+
+                // if delegateOut == false: return
+                cursor.Emit(OpCodes.Brtrue, cursor.Instrs[cursor.Index]);
+                cursor.Emit(OpCodes.Ret);
+            }
+        }
+
+        /*
         private void Player_CallDashEvents(On.Celeste.Player.orig_CallDashEvents orig, Player self)
         {
             // sometimes crashes? Can't reproduce this myself and I have no clue why it happens, just gonna try catch this :/
@@ -219,7 +274,7 @@ namespace FrostHelper
                 player_calledDashEvents.SetValue(self, true);
             }
             
-        }
+        }*/
 
         private void Player_ctor(On.Celeste.Player.orig_ctor orig, Player self, Vector2 position, PlayerSpriteMode spriteMode)
         {
@@ -360,7 +415,7 @@ namespace FrostHelper
             On.Celeste.Player.ctor -= Player_ctor;
 
             // For custom Boosters
-            On.Celeste.Player.CallDashEvents -= Player_CallDashEvents;
+            //On.Celeste.Player.CallDashEvents -= Player_CallDashEvents;
 
             // Custom dream blocks and feathers
             On.Celeste.Player.UpdateSprite -= Player_UpdateSprite;
