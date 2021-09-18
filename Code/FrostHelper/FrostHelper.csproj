@@ -73,11 +73,14 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="API\API.cs" />
     <Compile Include="Colliders\ShapeHitbox.cs" />
     <Compile Include="ColorHelper.cs" />
     <Compile Include="Components\MultiImage.cs" />
     <Compile Include="Components\Rainbowifier.cs" />
     <Compile Include="Components\SkateboardInteraction.cs" />
+    <Compile Include="CustomStates\CustomBoost.cs" />
+    <Compile Include="CustomStates\StateIDs.cs" />
     <Compile Include="DecalRegistry\Rainbow.cs" />
     <Compile Include="EaseHelper.cs" />
     <Compile Include="EasierILHook.cs" />
@@ -89,6 +92,7 @@
     <Compile Include="Entities\Booster\GrayBooster.cs" />
     <Compile Include="Entities\Bubbler.cs" />
     <Compile Include="Entities\EntityMover.cs" />
+    <Compile Include="Entities\HeldRefill.cs" />
     <Compile Include="Entities\Rainbow\EntityRainbowifyController.cs" />
     <Compile Include="Entities\Noperture\DeadlyLazer.cs" />
     <Compile Include="Entities\Noperture\PortalGun.cs" />

@@ -10,12 +10,17 @@ using MonoMod.Cil;
 using MonoMod.RuntimeDetour;
 using MonoMod.Utils;
 
+#if PLAYERSTATEHELPER
+using Celeste.Mod.PlayerStateHelper.API;
+using FrostHelper.CustomStates;
+#endif
+
 namespace FrostHelper.Entities.Boosters
 {
     [Tracked(true)]
     public class GenericCustomBooster : Entity
     {
-        #region Hooks
+#region Hooks
         [OnLoad]
         public static void Load()
         {
@@ -54,7 +59,7 @@ namespace FrostHelper.Entities.Boosters
                 cursor.EmitDelegate<Func<Player, int>>(FrostModule.GetRedDashState);
             }
         }
-        #endregion
+#endregion
 
         public bool BoostingPlayer { get; private set; }
         public string reappearSfx;
@@ -167,8 +172,8 @@ namespace FrostHelper.Entities.Boosters
         public bool StartedBoosting;
         public virtual void Boost(Player player)
         {
-            new DynData<Player>(player).Set("fh.customBooster", this);
-            player.StateMachine.State = CustomBoostState;
+            API.API.SetCustomBoostState(player, this);
+
             RedDash = Red;
             player.Speed = Vector2.Zero;
             //player.boostTarget = booster.Center;
@@ -224,7 +229,7 @@ namespace FrostHelper.Entities.Boosters
             }
             PlayerReleased();
 
-            if (player.StateMachine.State == CustomBoostState)
+            if (API.API.IsInCustomBoostState(player))
             {
                 sprite.Visible = false;
             }
@@ -403,7 +408,7 @@ namespace FrostHelper.Entities.Boosters
 
         public SoundSource loopingSfx;
 
-        #region RedBoostState
+#region RedBoostState
         public static MethodInfo Player_CallDashEvents = typeof(Player).GetMethod("CallDashEvents", BindingFlags.NonPublic | BindingFlags.Instance);
         public static MethodInfo Player_DashAssistInit = typeof(Player).GetMethod("DashAssistInit", BindingFlags.NonPublic | BindingFlags.Instance);
         public static MethodInfo Player_CorrectDashPrecision = typeof(Player).GetMethod("CorrectDashPrecision", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -546,9 +551,9 @@ namespace FrostHelper.Entities.Boosters
             Player_CallDashEvents.Invoke(player, null);
             yield break;
         }
-        #endregion
+#endregion
 
-        #region BoostState
+#region BoostState
 
         public static int CustomBoostState;
         public static bool RedDash;
@@ -567,21 +572,16 @@ namespace FrostHelper.Entities.Boosters
             Vector2 vector = Calc.Approach(player.ExactPosition, boostTarget - player.Collider.Center + value, 80f * Engine.DeltaTime);
             player.MoveToX(vector.X, null);
             player.MoveToY(vector.Y, null);
-            bool pressed = (Input.Dash.Pressed || Input.CrouchDashPressed) && GetBoosterThatIsBoostingPlayer(player).CanFastbubble();
-            // the state we should be in afterwards
-            int result;
-            if (pressed)
+
+            if ((Input.Dash.Pressed || Input.CrouchDashPressed) && GetBoosterThatIsBoostingPlayer(player).CanFastbubble())
             {
                 player.SetValue("demoDashed", Input.CrouchDashPressed);
                 Input.Dash.ConsumePress();
                 Input.CrouchDash.ConsumePress();
-                result = RedDash ? CustomRedBoostState : Player.StDash;
+                return RedDash ? CustomRedBoostState : Player.StDash;
             }
-            else
-            {
-                result = CustomBoostState;
-            }
-            return result;
+
+            return CustomBoostState;
         }
 
         public static void BoostEnd(Entity e)
@@ -618,6 +618,6 @@ namespace FrostHelper.Entities.Boosters
             return new DynData<Player>(e as Player).Get<GenericCustomBooster>("fh.customBooster");
         }
 
-        #endregion
+#endregion
     }
 }

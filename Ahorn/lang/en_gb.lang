@@ -195,6 +195,7 @@ placements.entities.FrostHelper/IncrementBooster.tooltips.boostSfx=SFX to play w
 placements.entities.FrostHelper/IncrementBooster.tooltips.red=Whether this booster should act like a red one, that has an unlimited range.
 placements.entities.FrostHelper/IncrementBooster.tooltips.dashCap=Maximum amount of dashes the player can have after leaving this booster. Leave at -1 for no cap.
 placements.entities.FrostHelper/IncrementBooster.tooltips.dashes=How many additional dashes the player will get after leaving the booster.
+placements.entities.FrostHelper/IncrementBooster.tooltips.refillBeforeIncrementing=Refills the player's dashes before incrementing the dash amount.
 
 # Ice Key
 

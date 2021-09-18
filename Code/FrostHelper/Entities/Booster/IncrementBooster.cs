@@ -10,11 +10,14 @@ namespace FrostHelper.Entities.Boosters
     [Tracked]
     public class IncrementBooster : GenericCustomBooster
     {
-        public int dashCap;
+        public int DashCap;
+        public bool RefillBeforeIncrementing;
 
         public IncrementBooster(EntityData data, Vector2 offset) : base(data, offset) 
         {
-            dashCap = data.Int("dashCap", -1);
+            DashCap = data.Int("dashCap", -1);
+            // mainly for backwards compatibility
+            RefillBeforeIncrementing = data.Bool("refillBeforeIncrementing", false);
 
             // reparse the argument, with a different default value
             DashRecovery = data.Int("dashes", Red ? 2 : 1);
@@ -22,13 +25,18 @@ namespace FrostHelper.Entities.Boosters
 
         public override void HandleDashRefill(Player player)
         {
-            if (dashCap == -1)
+            if (RefillBeforeIncrementing)
+            {
+                player.RefillDash();
+            }
+
+            if (DashCap == -1)
             {
                 player.Dashes += DashRecovery;
             }
             else
             {
-                player.Dashes = Math.Min(player.Dashes + DashRecovery, dashCap);
+                player.Dashes = Math.Min(player.Dashes + DashRecovery, DashCap);
             }
         }
     }

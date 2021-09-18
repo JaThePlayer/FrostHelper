@@ -820,7 +820,7 @@ namespace FrostHelper
                     if (item.filler != null)
                     {
                         var fillerComponents = item.filler.Components;
-                        /*
+                        
                         Image image = fillerComponents[0] as Image;
                         Texture2D texture = image.Texture.Texture.Texture_Safe;
                         Rectangle? clipRect = new Rectangle?(image.Texture.ClipRect);
@@ -835,8 +835,8 @@ namespace FrostHelper
                             Draw.SpriteBatch.Draw(texture, drawPos + Vector2.UnitY, clipRect, color, rotation, origin, scaleFix, SpriteEffects.None, 0f);
                             Draw.SpriteBatch.Draw(texture, drawPos - Vector2.UnitX, clipRect, color, rotation, origin, scaleFix, SpriteEffects.None, 0f);
                             Draw.SpriteBatch.Draw(texture, drawPos + Vector2.UnitX, clipRect, color, rotation, origin, scaleFix, SpriteEffects.None, 0f);
-                        }*/
-
+                        }
+                        /*
                         Image image = fillerComponents[0] as Image;
                         Texture2D texture = image.Texture.Texture.Texture_Safe;
                         Rectangle? clipRect = new Rectangle?(image.Texture.ClipRect);
@@ -848,12 +848,8 @@ namespace FrostHelper
                             Image img = fillerComponents[i] as Image;
                             float rotation = img.Rotation;
                             Vector2 drawPos = img.RenderPosition - img.Texture.DrawOffset - new Vector2(1f, 1f).Rotate(img.Rotation);
-                            //Draw.SpriteBatch.Draw(outline, drawPos, null, color, img.Rotation, origin, scaleFix, SpriteEffects.None, 0f);
-                            Draw.SpriteBatch.Draw(texture, drawPos - Vector2.UnitY, clipRect, color, rotation, origin, scaleFix, SpriteEffects.None, 0f);
-                            Draw.SpriteBatch.Draw(texture, drawPos + Vector2.UnitY, clipRect, color, rotation, origin, scaleFix, SpriteEffects.None, 0f);
-                            Draw.SpriteBatch.Draw(texture, drawPos - Vector2.UnitX, clipRect, color, rotation, origin, scaleFix, SpriteEffects.None, 0f);
-                            Draw.SpriteBatch.Draw(texture, drawPos + Vector2.UnitX, clipRect, color, rotation, origin, scaleFix, SpriteEffects.None, 0f);
-                        }
+                            Draw.SpriteBatch.Draw(outline, drawPos, null, color, img.Rotation, origin, scaleFix, SpriteEffects.None, 0f);
+                        }*/
                     }
                 }
             }

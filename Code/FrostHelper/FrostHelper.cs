@@ -133,7 +133,7 @@ namespace FrostHelper
         public static int GetBoosterState(Player player)
         {
             int state = player.StateMachine.State;
-            if (state == GenericCustomBooster.CustomBoostState) return GenericCustomBooster.CustomBoostState;
+            if (API.API.IsInCustomBoostState(player)) return GenericCustomBooster.CustomBoostState;
             if (state == YellowBoostState) return YellowBoostState;
             return Player.StBoost;
         }
@@ -289,12 +289,14 @@ namespace FrostHelper
             CustomDreamDashState = self.StateMachine.AddState(CustomDreamBlock.DreamDashUpdate, null, CustomDreamBlock.DreamDashBegin, CustomDreamBlock.DreamDashEnd);
 #pragma warning restore CS0618 // Type or member is obsolete
             CustomFeather.CustomFeatherState = self.StateMachine.AddState(CustomFeather.StarFlyUpdate, CustomFeather.CustomFeatherCoroutine, CustomFeather.CustomFeatherBegin, CustomFeather.CustomFeatherEnd);
+            HeldRefill.HeldDashState = self.StateMachine.AddState(HeldRefill.HeldDashUpdate, HeldRefill.HeldDashRoutine, HeldRefill.HeldDashBegin, HeldRefill.HeldDashEnd);
 
             ModIntegration.CelesteTASIntegration.RegisterState(YellowBoostState, "Yellow Boost");
             ModIntegration.CelesteTASIntegration.RegisterState(GenericCustomBooster.CustomBoostState, "Custom Boost");
             ModIntegration.CelesteTASIntegration.RegisterState(GenericCustomBooster.CustomRedBoostState, "Custom Red Boost");
             ModIntegration.CelesteTASIntegration.RegisterState(CustomDreamDashState, "Custom Dream Dash (Obsolete)");
             ModIntegration.CelesteTASIntegration.RegisterState(CustomFeather.CustomFeatherState, "Custom Feather");
+            ModIntegration.CelesteTASIntegration.RegisterState(HeldRefill.HeldDashState, "Held Dash");
         }
 
         public static FieldInfo player_boostTarget = typeof(Player).GetField("boostTarget", BindingFlags.Instance | BindingFlags.NonPublic);
