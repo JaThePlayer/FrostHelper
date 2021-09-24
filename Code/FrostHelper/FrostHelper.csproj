@@ -92,6 +92,7 @@
     <Compile Include="Entities\Booster\GrayBooster.cs" />
     <Compile Include="Entities\Bubbler.cs" />
     <Compile Include="Entities\EntityMover.cs" />
+    <Compile Include="Entities\FrozenWaterfall\Icicle.cs" />
     <Compile Include="Entities\HeldRefill.cs" />
     <Compile Include="Entities\Rainbow\EntityRainbowifyController.cs" />
     <Compile Include="Entities\Noperture\DeadlyLazer.cs" />
@@ -121,6 +122,8 @@
     <Compile Include="Entities\WallBouncePresentation\WallbouncePresentation.cs" />
     <Compile Include="Entities\WallBouncePresentation\WallbouncePresentationPage.cs" />
     <Compile Include="Entities\WallBouncePresentation\WallbounceTutorialMachine.cs" />
+    <Compile Include="Entities\WireLamps.cs" />
+    <Compile Include="Extensions.cs" />
     <Compile Include="FrostHelperSaveData.cs" />
     <Compile Include="FrostHelperSession.cs" />
     <Compile Include="FrostMapDataProcessor.cs" />

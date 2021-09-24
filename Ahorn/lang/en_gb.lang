@@ -245,6 +245,19 @@ placements.entities.FrostHelper/SpeedRingChallenge.tooltips.name=The name of thi
 placements.entities.FrostHelper/RainbowTilesetController.tooltips.bg=Whether this controller should affect BG tiles instead of FG tiles
 placements.entities.FrostHelper/RainbowTilesetController.tooltips.tilesets=A comma seperated list of tileset id's to turn rainbow. You can get these id's from your ForegroundTiles.xml or BackgroundTiles.xml. You can use * to make all tilesets rainbow.
 
+placements.entities.FrostHelper/EntityRainbowifyController.tooltips.types=List of entity types to make rainbow. Refer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Entity-Rainbowifier
+
+placements.entities.FrostHelper/Icicle.tooltips.directory=The directory containing an idle00.png file to use for the icicle. Additional animation frames can be added by creating idle01.png, idle02.png and so on. Must end with a /
+placements.entities.FrostHelper/Icicle.tooltips.breakSfx=SFX to play when the icicle breaks
+placements.entities.FrostHelper/Icicle.tooltips.speed=The speed at which the icicle falls
+
+placements.entities.FrostHelper/WireLamps.tooltips.above=Whether the wire should be rendered above many other entities.
+placements.entities.FrostHelper/WireLamps.tooltips.colors=A comma seperated list of colors that can be used for lamp colors. Each lamp will get a random color from this list.
+placements.entities.FrostHelper/WireLamps.tooltips.wireColor=The color of the wire.
+placements.entities.FrostHelper/WireLamps.tooltips.lightCount=How many lights should be created.
+placements.entities.FrostHelper/WireLamps.tooltips.lightAlpha=The Alpha value for the lights.
+placements.entities.FrostHelper/WireLamps.tooltips.lightStartFade=the Start Fade value for the lights.
+placements.entities.FrostHelper/WireLamps.tooltips.lightEndFade=the End Fade value for the lights.
 
 # -- Mod Names --
 # mods.modName.*

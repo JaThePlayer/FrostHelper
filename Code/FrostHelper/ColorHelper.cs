@@ -12,6 +12,7 @@ namespace FrostHelper
     public static class ColorHelper
     {
         static Dictionary<string, Color> cache = new Dictionary<string, Color>();
+        static Dictionary<string, Color[]> colorArrayCache = new Dictionary<string, Color[]>();
         static ColorHelper()
         {
             foreach (var prop in typeof(Color).GetProperties())
@@ -21,18 +22,24 @@ namespace FrostHelper
                     cache[prop.Name] = color;
             }
             cache[""] = Color.White;
+            colorArrayCache[""] = null;
         }
         /// <summary>
         /// Returns a list of colors from a comma-separated string of hex colors OR xna color names
         /// </summary>
         public static Color[] GetColors(string colors)
         {
+            if (colorArrayCache.TryGetValue(colors, out Color[] val))
+                return val;
+
             string[] split = colors.Trim().Split(',');
             Color[] parsed = new Color[split.Length];
             for (int i = 0; i < split.Length; i++)
             {
                 parsed[i] = GetColor(split[i]);
             }
+
+            colorArrayCache[colors] = parsed;
             return parsed;
         }
 
@@ -47,7 +54,7 @@ namespace FrostHelper
                 cache[color] = val;
                 return val;
             }
-            catch (Exception e)
+            catch
             {
                 cache[color] = Color.Transparent;
             }
