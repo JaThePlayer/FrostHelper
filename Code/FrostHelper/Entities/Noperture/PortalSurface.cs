@@ -4,11 +4,9 @@ using Microsoft.Xna.Framework;
 using Monocle;
 using System.Collections.Generic;
 
-namespace FrostTempleHelper.Entities.azcplo1k
-{
+namespace FrostTempleHelper.Entities.azcplo1k {
     [CustomEntity("noperture/portalSurface")]
-    class uadzca : Solid
-    {
+    class uadzca : Solid {
         public string ColorStr;
         public Color Color;
 
@@ -20,14 +18,12 @@ namespace FrostTempleHelper.Entities.azcplo1k
             ["Green"] = new Color(0.3f, 1.0f, 0.3f, 1.0f),
         };
 
-        public uadzca(EntityData data, Vector2 offset) : base(data.Position + offset, data.Width, data.Height, true)
-        {
+        public uadzca(EntityData data, Vector2 offset) : base(data.Position + offset, data.Width, data.Height, true) {
             ColorStr = data.Attr("color", "Blue");
             Color = Colors[ColorStr];
         }
 
-        public override void Render()
-        {
+        public override void Render() {
             base.Render();
             Draw.Rect(Collider, Color);
         }

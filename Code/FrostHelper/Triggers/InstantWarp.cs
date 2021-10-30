@@ -1,25 +1,20 @@
-﻿using System;
-using Celeste;
+﻿using Celeste;
 using Microsoft.Xna.Framework;
 using Monocle;
+using System;
 
-namespace FrostHelper
-{
-    public class InstantWarp : Trigger
-    {
+namespace FrostHelper {
+    public class InstantWarp : Trigger {
         public string destLevel;
         public bool spawnThunder;
-        public InstantWarp(EntityData data, Vector2 offset) : base(data, offset)
-        {
+        public InstantWarp(EntityData data, Vector2 offset) : base(data, offset) {
             destLevel = data.Attr("destinationLevel", "a-0");
             spawnThunder = data.Bool("spawnThunder", false);
         }
 
-        public override void OnEnter(Player player)
-        {
+        public override void OnEnter(Player player) {
             Level level = Engine.Scene as Level;
-            level.OnEndOfFrame += delegate
-            {
+            level.OnEndOfFrame += delegate {
                 new Vector2(level.LevelOffset.X + level.Bounds.Width - player.X, player.Y - level.LevelOffset.Y);
                 Vector2 levelOffset = level.LevelOffset;
                 Vector2 value = player.Position - level.LevelOffset;
@@ -38,14 +33,12 @@ namespace FrostHelper
                 player.Position = level.LevelOffset + value;
                 player.Facing = facing;
                 player.Hair.MoveHairBy(level.LevelOffset - levelOffset);
-                if (level.Wipe != null)
-                {
+                if (level.Wipe != null) {
                     level.Wipe.Cancel();
                 }
                 level.Flash(Color.White);
                 level.Shake();
-                if (spawnThunder)
-                {
+                if (spawnThunder) {
                     level.Add(new LightningStrike(new Vector2(player.X + 60f, level.Bounds.Bottom - 180), 10, 200f));
                     level.Add(new LightningStrike(new Vector2(player.X + 220f, level.Bounds.Bottom - 180), 40, 200f, 0.25f));
                     Audio.Play("event:/new_content/game/10_farewell/lightning_strike");

@@ -4,23 +4,20 @@ using Microsoft.Xna.Framework.Graphics;
 using Monocle;
 using System.Collections.Generic;
 
-namespace FrostHelper
-{
-    static class OutlineHelper
-    {
+namespace FrostHelper {
+    static class OutlineHelper {
         static Dictionary<string, Texture2D> cache = new Dictionary<string, Texture2D>();
 
         /// <summary>
         /// ONLY CALL IN RENDER!
         /// Cursed for now
         /// </summary>
-        public static Texture2D Get(string path, bool inRender = true)
-        {
+        public static Texture2D Get(string path, bool inRender = true) {
             if (cache.ContainsKey(path))
                 return cache[path];
 
             MTexture mTexture = GFX.Game[path];
-            RenderTarget2D target = new RenderTarget2D(Engine.Graphics.GraphicsDevice, mTexture.Width + 2 + (int)mTexture.DrawOffset.X, mTexture.Height+2 + (int)mTexture.DrawOffset.Y, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.DiscardContents);
+            RenderTarget2D target = new RenderTarget2D(Engine.Graphics.GraphicsDevice, mTexture.Width + 2 + (int) mTexture.DrawOffset.X, mTexture.Height + 2 + (int) mTexture.DrawOffset.Y, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.DiscardContents);
             var prevTarget = Draw.SpriteBatch.GraphicsDevice.GetRenderTargets();
             if (inRender)
                 Draw.SpriteBatch.End();
@@ -39,8 +36,7 @@ namespace FrostHelper
             Draw.SpriteBatch.Draw(texture, drawPos + Vector2.UnitX, clipRect, Color.White, 0f, origin, scaleFix, SpriteEffects.None, 0f);
             Draw.SpriteBatch.End();
 
-            if (inRender)
-            {
+            if (inRender) {
                 GameplayRenderer.Begin();
             }
             Draw.SpriteBatch.GraphicsDevice.SetRenderTargets(prevTarget);
@@ -55,22 +51,18 @@ namespace FrostHelper
             return t2d;
         }
 
-        public static Texture2D Get(Image image, bool inRender = true)
-        {
+        public static Texture2D Get(Image image, bool inRender = true) {
             return Get(image.Texture.AtlasPath ?? image.Texture.Parent.AtlasPath, inRender);
         }
 
-        public static void Dispose()
-        {
-            foreach (var item in cache)
-            {
+        public static void Dispose() {
+            foreach (var item in cache) {
                 item.Value.Dispose();
             }
             cache = new Dictionary<string, Texture2D>();
         }
 
-        public static void RenderOutline(Image image, Color color, bool centeredOrigin)
-        {
+        public static void RenderOutline(Image image, Color color, bool centeredOrigin) {
             var outline = Get(image);
             float scaleFix = image.Texture.ScaleFix;
             Vector2 drawPos = image.RenderPosition;// - new Vector2(1f, 1f).Rotate(image.Rotation);

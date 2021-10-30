@@ -1,17 +1,13 @@
 ﻿using Celeste;
 using Celeste.Mod.Entities;
 using Microsoft.Xna.Framework;
-using Monocle;
 using System;
 using System.Collections.Generic;
 
-namespace FrostHelper.Triggers
-{
+namespace FrostHelper.Triggers {
     [CustomEntity("FrostHelper/FlagIfVariantTrigger")]
-    public class FlagIfVariantTrigger : Trigger
-    {
-        public enum Variants
-        {
+    public class FlagIfVariantTrigger : Trigger {
+        public enum Variants {
             DashAssist,
             GameSpeed,
             Hiccups,
@@ -28,8 +24,7 @@ namespace FrostHelper.Triggers
 
         private static Assists GetAssists() => SaveData.Instance.Assists;
 
-        private static bool ValueToBool(string value)
-        {
+        private static bool ValueToBool(string value) {
             return value.ToLower() == "true";
         }
 
@@ -54,16 +49,14 @@ namespace FrostHelper.Triggers
         public string Flag;
         public bool Inverted;
 
-        public FlagIfVariantTrigger(EntityData data, Vector2 offset) : base(data, offset)
-        {
+        public FlagIfVariantTrigger(EntityData data, Vector2 offset) : base(data, offset) {
             Variant = data.Enum("variant", Variants.Invincible);
             Value = data.Attr("variantValue", "true");
             Flag = data.Attr("flag");
             Inverted = data.Bool("inverted", false);
         }
 
-        public override void OnStay(Player player)
-        {
+        public override void OnStay(Player player) {
             base.OnStay(player);
             (Scene as Level).Session.SetFlag(Flag, Inverted != VariantCheckers[Variant](Value));
         }

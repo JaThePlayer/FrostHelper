@@ -10,30 +10,24 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-namespace FrostHelper
-{
-    public static class EasierILHook
-    {
-        public static void ReplaceStrings(ILCursor cursor, Dictionary<string, string> toReplace)
-        {
+namespace FrostHelper {
+    public static class EasierILHook {
+        public static void ReplaceStrings(ILCursor cursor, Dictionary<string, string> toReplace) {
             int lastIndex = cursor.Index;
             cursor.Index = 0;
-            while (cursor.TryGotoNext(MoveType.After, instr => MatchStringInDict(instr, toReplace.Keys.ToList())))
-            {
-                string old = (string)cursor.Prev.Operand;
+            while (cursor.TryGotoNext(MoveType.After, instr => MatchStringInDict(instr, toReplace.Keys.ToList()))) {
+                string old = (string) cursor.Prev.Operand;
                 cursor.Emit(OpCodes.Pop);
                 cursor.Emit(OpCodes.Ldstr, toReplace[old]);
             }
             cursor.Index = lastIndex;
         }
 
-        public static void ReplaceInts(ILCursor cursor, Dictionary<int, int> toReplace)
-        {
+        public static void ReplaceInts(ILCursor cursor, Dictionary<int, int> toReplace) {
             int lastIndex = cursor.Index;
             cursor.Index = 0;
             int replacement = -1;
-            while (cursor.TryGotoNext(MoveType.After, instr => MatchIntInDict(instr, toReplace, out replacement)))
-            {
+            while (cursor.TryGotoNext(MoveType.After, instr => MatchIntInDict(instr, toReplace, out replacement))) {
                 /*
                     int old = -1;
                     if (cursor.Prev.Operand.GetType() == typeof(int))
@@ -46,13 +40,11 @@ namespace FrostHelper
             cursor.Index = lastIndex;
         }
 
-        public static void ReplaceInts(ILCursor cursor, Dictionary<int, Func<int>> toReplace)
-        {
+        public static void ReplaceInts(ILCursor cursor, Dictionary<int, Func<int>> toReplace) {
             int lastIndex = cursor.Index;
             cursor.Index = 0;
             Func<int> replacement = null;
-            while (cursor.TryGotoNext(MoveType.After, instr => MatchIntInDict(instr, toReplace, out replacement)))
-            {
+            while (cursor.TryGotoNext(MoveType.After, instr => MatchIntInDict(instr, toReplace, out replacement))) {
                 /*
                     int old = -1;
                     if (cursor.Prev.Operand.GetType() == typeof(int))
@@ -66,61 +58,50 @@ namespace FrostHelper
             cursor.Index = lastIndex;
         }
 
-        public static void ReplaceFloats(ILCursor cursor, Dictionary<float, float> toReplace)
-        {
+        public static void ReplaceFloats(ILCursor cursor, Dictionary<float, float> toReplace) {
             int lastIndex = cursor.Index;
             cursor.Index = 0;
-            while (cursor.TryGotoNext(MoveType.After, instr => MatchFloatInDict(instr, toReplace.Keys.ToList())))
-            {
-                float old = (float)cursor.Prev.Operand;
+            while (cursor.TryGotoNext(MoveType.After, instr => MatchFloatInDict(instr, toReplace.Keys.ToList()))) {
+                float old = (float) cursor.Prev.Operand;
                 cursor.Emit(OpCodes.Pop);
                 cursor.Emit(OpCodes.Ldc_R4, toReplace[old]);
             }
             cursor.Index = lastIndex;
         }
 
-        public static void ReplaceFloats(ILCursor cursor, Dictionary<float, Func<float>> toReplace)
-        {
+        public static void ReplaceFloats(ILCursor cursor, Dictionary<float, Func<float>> toReplace) {
             int lastIndex = cursor.Index;
             cursor.Index = 0;
-            while (cursor.TryGotoNext(MoveType.After, instr => MatchFloatInDict(instr, toReplace.Keys.ToList())))
-            {
-                float old = (float)cursor.Prev.Operand;
+            while (cursor.TryGotoNext(MoveType.After, instr => MatchFloatInDict(instr, toReplace.Keys.ToList()))) {
+                float old = (float) cursor.Prev.Operand;
                 cursor.Emit(OpCodes.Pop);
                 cursor.EmitDelegate(toReplace[old]);
             }
             cursor.Index = lastIndex;
         }
 
-        public static void ReplaceStrings(ILCursor cursor, Dictionary<string, Func<string>> toReplace)
-        {
+        public static void ReplaceStrings(ILCursor cursor, Dictionary<string, Func<string>> toReplace) {
             int lastIndex = cursor.Index;
             cursor.Index = 0;
-            while (cursor.TryGotoNext(MoveType.After, instr => MatchStringInDict(instr, toReplace.Keys.ToList())))
-            {
-                string old = (string)cursor.Prev.Operand;
+            while (cursor.TryGotoNext(MoveType.After, instr => MatchStringInDict(instr, toReplace.Keys.ToList()))) {
+                string old = (string) cursor.Prev.Operand;
                 cursor.Emit(OpCodes.Pop);
                 cursor.EmitDelegate(toReplace[old]);
             }
             cursor.Index = lastIndex;
         }
 
-        static bool MatchStringInDict(Instruction instr, List<string> keys)
-        {
-            foreach (string val in keys)
-            {
+        static bool MatchStringInDict(Instruction instr, List<string> keys) {
+            foreach (string val in keys) {
                 if (instr.MatchLdstr(val))
                     return true;
             }
             return false;
         }
 
-        static bool MatchIntInDict(Instruction instr, Dictionary<int, int> keys, out int replacementInt)
-        {
-            foreach (int val in keys.Keys)
-            {
-                if (instr.MatchLdcI4(val))
-                {
+        static bool MatchIntInDict(Instruction instr, Dictionary<int, int> keys, out int replacementInt) {
+            foreach (int val in keys.Keys) {
+                if (instr.MatchLdcI4(val)) {
                     replacementInt = keys[val];
                     return true;
                 }
@@ -129,12 +110,9 @@ namespace FrostHelper
             return false;
         }
 
-        static bool MatchIntInDict(Instruction instr, Dictionary<int, Func<int>> keys, out Func<int> replacementInt)
-        {
-            foreach (int val in keys.Keys)
-            {
-                if (instr.MatchLdcI4(val))
-                {
+        static bool MatchIntInDict(Instruction instr, Dictionary<int, Func<int>> keys, out Func<int> replacementInt) {
+            foreach (int val in keys.Keys) {
+                if (instr.MatchLdcI4(val)) {
                     replacementInt = keys[val];
                     return true;
                 }
@@ -143,15 +121,59 @@ namespace FrostHelper
             return false;
         }
 
-        static bool MatchFloatInDict(Instruction instr, List<float> keys)
-        {
-            foreach (float val in keys)
-            {
+        static bool MatchFloatInDict(Instruction instr, List<float> keys) {
+            foreach (float val in keys) {
                 if (instr.MatchLdcR4(val))
                     return true;
             }
             return false;
         }
+
+        public static void Ret(this ILCursor cursor) => cursor.Emit(OpCodes.Ret);
+
+        public static void Ret(this ILProcessor p) => p.Emit(OpCodes.Ret);
+
+        public static void Ldarg0(this ILProcessor p) => p.Emit(OpCodes.Ldarg_0);
+
+        public static void LoadStaticField(this ILProcessor p, FieldInfo fieldInfo) => p.Emit(OpCodes.Ldsfld, fieldInfo);
+
+        public static void Call(this ILProcessor p, MethodInfo method) => p.Emit(OpCodes.Call, method);
+        public static void Call(this ILCursor p, MethodInfo method) => p.Emit(OpCodes.Call, method);
+
+        public static ILCursor LoadInt(this ILCursor cursor, int amt) {
+            var opc = GetLoadIntOpcode(amt);
+            if (opc.Code == Code.Ldc_I4) {
+                cursor.Emit(opc, amt);
+            } else {
+                cursor.Emit(opc);
+            }
+
+            return cursor;
+        }
+
+        public static ILProcessor LoadInt(this ILProcessor cursor, int amt) {
+            var opc = GetLoadIntOpcode(amt);
+            if (opc.Code == Code.Ldc_I4) {
+                cursor.Emit(opc, amt);
+            } else {
+                cursor.Emit(opc);
+            }
+
+            return cursor;
+        }
+
+        public static OpCode GetLoadIntOpcode(int amt) => amt switch {
+            0 => OpCodes.Ldc_I4_0,
+            1 => OpCodes.Ldc_I4_1,
+            2 => OpCodes.Ldc_I4_2,
+            3 => OpCodes.Ldc_I4_3,
+            4 => OpCodes.Ldc_I4_4,
+            5 => OpCodes.Ldc_I4_5,
+            6 => OpCodes.Ldc_I4_6,
+            7 => OpCodes.Ldc_I4_7,
+            8 => OpCodes.Ldc_I4_8,
+            _ => OpCodes.Ldc_I4,
+        };
 
         /// <summary>
         /// 
@@ -162,25 +184,24 @@ namespace FrostHelper
         /// </summary>
         /// <param name="manipulator">Method taking care of the patching</param>
         /// <returns>The IL hook if the actual code was found, null otherwise</returns>
-        public static ILHook HookCoroutine(string typeName, string methodName, ILContext.Manipulator manipulator)
-        {
+        public static ILHook HookCoroutine(string typeName, string methodName, ILContext.Manipulator manipulator) {
             // get the Celeste.exe module definition Everest loaded for us
             ModuleDefinition celeste = Everest.Relinker.SharedRelinkModuleMap["Celeste.Mod.mm"];
 
             // get the type
             TypeDefinition type = celeste.GetType(typeName);
-            if (type == null) return null;
+            if (type == null)
+                return null;
 
             // the "coroutine" method is actually a nested type tracking the coroutine's state
             // (to make it restart from where it stopped when MoveNext() is called).
             // what we see in ILSpy and what we want to hook is actually the MoveNext() method in this nested type.
-            foreach (TypeDefinition nest in type.NestedTypes)
-            {
-                if (nest.Name.StartsWith("<" + methodName + ">d__"))
-                {
+            foreach (TypeDefinition nest in type.NestedTypes) {
+                if (nest.Name.StartsWith("<" + methodName + ">d__")) {
                     // check that this nested type contains a MoveNext() method
                     MethodDefinition method = nest.FindMethod("System.Boolean MoveNext()");
-                    if (method == null) return null;
+                    if (method == null)
+                        return null;
 
                     // we found it! let's convert it into basic System.Reflection stuff and hook it.
                     //Logger.Log("ExtendedVariantMode/ExtendedVariantsModule", $"Building IL hook for method {method.FullName} in order to mod {typeName}.{methodName}()");
@@ -192,6 +213,18 @@ namespace FrostHelper
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// Keeps moving the <paramref name="cursor"/> until a Callvirt opcode is found that calls <paramref name="declaringType"/>.<paramref name="methodName"/> 
+        /// </summary>
+        /// <returns>True if the specified function call got found</returns>
+        public static bool SeekVirtFunctionCall(this ILCursor cursor, Type declaringType, string methodName) {
+            while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchCallvirt(declaringType, methodName))) {
+                return true;
+            }
+
+            return false;
         }
     }
 }

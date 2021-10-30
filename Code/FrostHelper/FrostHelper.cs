@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-using System.Reflection;
-using Celeste;
+﻿using Celeste;
 using Celeste.Mod;
 using Celeste.Mod.Meta;
 using FrostHelper.Entities.Boosters;
@@ -14,63 +9,65 @@ using Monocle;
 using MonoMod.Cil;
 using MonoMod.RuntimeDetour;
 using MonoMod.Utils;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
 
-namespace FrostHelper
-{
-    public class FrostModule : EverestModule
-    {
+namespace FrostHelper {
+    public class FrostModule : EverestModule {
         static bool outBackHelper = false;
         public static SpriteBank SpriteBank;
         // Only one alive module instance can exist at any given time.
         public static FrostModule Instance;
 
-        public FrostModule()
-        {
+        public FrostModule() {
             Instance = this;
         }
         // no save data needed
         public override Type SaveDataType => typeof(FrostHelperSaveData);
-        public static FrostHelperSaveData SaveData => (FrostHelperSaveData)Instance._SaveData;
+        public static FrostHelperSaveData SaveData => (FrostHelperSaveData) Instance._SaveData;
         public override Type SessionType => typeof(FrostHelperSession);
-        public static FrostHelperSession Session => (FrostHelperSession)Instance._Session;
+        public static FrostHelperSession Session => (FrostHelperSession) Instance._Session;
 
-        public override void PrepareMapDataProcessors(MapDataFixup context)
-        {
+        public override void PrepareMapDataProcessors(MapDataFixup context) {
             base.PrepareMapDataProcessors(context);
 
+#if SPEEDCHALLENGES
             context.Add<FrostMapDataProcessor>();
+#endif
         }
 
-        public override void LoadContent(bool firstLoad)
-        {
+        public override void LoadContent(bool firstLoad) {
             SpriteBank = new SpriteBank(GFX.Game, "Graphics/FrostHelper/CustomSprites.xml");
             BadelineChaserBlock.Load();
-            BadelineChaserBlockActivator.Load(); 
+            BadelineChaserBlockActivator.Load();
+
+#if PORTALGUN
             if (Everest.Loader.DependencyLoaded(new EverestModuleMetadata() { Name = "OutbackHelper" }))
             {
                 outBackHelper = true;
                 typeof(FrostModule).Assembly.GetType("FrostTempleHelper.Entities.azcplo1k.abcdhr").GetMethod("Load").Invoke(null, new object[0]);
             }
+#endif
 
             AttributeHelper.InvokeAllWithAttribute(typeof(OnLoadContent));
         }
 
         private static List<ILHook> registeredHooks = new List<ILHook>();
-        public static void RegisterILHook(ILHook hook)
-        {
+        public static void RegisterILHook(ILHook hook) {
             registeredHooks.Add(hook);
         }
 
         //[Command("createrainbow", "REMOVE THIS JA AAAAAA")]
-        public static void CmdCreateRainbowImg()
-        {
+        public static void CmdCreateRainbowImg() {
             int width = 1920;
             int height = 1080;
             Texture2D texture = new Texture2D(Engine.Graphics.GraphicsDevice, width, height);
             Color[] colors = new Color[width * height];
 
-            for (int i = 0; i < width * height; i++)
-            {
+            for (int i = 0; i < width * height; i++) {
                 colors[i] = ColorHelper.GetHue(Engine.Scene, new Vector2(i % width, i / width));
             }
 
@@ -83,8 +80,7 @@ namespace FrostHelper
 
         // Set up any hooks, event handlers and your mod in general here.
         // Load runs before Celeste itself has initialized properly.
-        public override void Load()
-        {
+        public override void Load() {
             // Legacy entity creation (for back when we didn't have the CustomEntity attribute)
             Everest.Events.Level.OnLoadEntity += OnLoadEntity;
 
@@ -102,11 +98,9 @@ namespace FrostHelper
             AttributeHelper.InvokeAllWithAttribute(typeof(OnLoad));
         }
 
-        public static List<Entity> CollideAll(Entity entity)
-        {
+        public static List<Entity> CollideAll(Entity entity) {
             List<Entity> collided = new List<Entity>();
-            foreach (Entity e in entity.Scene.Entities)
-            {
+            foreach (Entity e in entity.Scene.Entities) {
                 if (entity.CollideCheck(e))
                     collided.Add(e);
             }
@@ -114,107 +108,86 @@ namespace FrostHelper
             return collided;
         }
 
-        void modBoosterState(ILContext il)
-        {
+        void modBoosterState(ILContext il) {
             ILCursor cursor = new ILCursor(il);
-            while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdcI4(Player.StBoost) && instr.Previous.MatchCallvirt<StateMachine>("get_State")))
-            {
+            while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdcI4(Player.StBoost) && instr.Previous.MatchCallvirt<StateMachine>("get_State"))) {
                 cursor.Emit(OpCodes.Pop);
                 cursor.Emit(OpCodes.Ldarg_0); // this
                 cursor.EmitDelegate<Func<Player, int>>(GetBoosterState);
             }
         }
 
-        public static int GetFeatherState(Player player)
-        {
-            return player.StateMachine.State == CustomFeather.CustomFeatherState ? CustomFeather.CustomFeatherState : 19;
+        public static int GetFeatherState(int old, Player player) {
+            return player.StateMachine.State == CustomFeather.CustomFeatherState ? CustomFeather.CustomFeatherState : old;
         }
 
-        public static int GetBoosterState(Player player)
-        {
+        public static int GetBoosterState(Player player) {
             int state = player.StateMachine.State;
-            if (API.API.IsInCustomBoostState(player)) return GenericCustomBooster.CustomBoostState;
-            if (state == YellowBoostState) return YellowBoostState;
+            if (API.API.IsInCustomBoostState(player))
+                return GenericCustomBooster.CustomBoostState;
+            if (state == YellowBoostState)
+                return YellowBoostState;
             return Player.StBoost;
         }
 
-        public static int GetRedDashState(Player player)
-        {
-            return player.StateMachine.State == GenericCustomBooster.CustomRedBoostState ? GenericCustomBooster.CustomRedBoostState : 5;
+        public static int GetRedDashState(int orig, Player player) {
+            return player.StateMachine.State == GenericCustomBooster.CustomRedBoostState ? GenericCustomBooster.CustomRedBoostState : orig;
         }
 
-        #region CustomDreamBlock
+#region CustomDreamBlock
 
         public static int CustomDreamDashState;
 
-        private static void Player_UpdateSprite(On.Celeste.Player.orig_UpdateSprite orig, Player self)
-        {
+        private static void Player_UpdateSprite(On.Celeste.Player.orig_UpdateSprite orig, Player self) {
 
-            if (self.StateMachine.State == CustomDreamDashState)
-            {
-                if (self.Sprite.CurrentAnimationID != "dreamDashIn" && self.Sprite.CurrentAnimationID != "dreamDashLoop")
-                {
+            if (self.StateMachine.State == CustomDreamDashState) {
+                if (self.Sprite.CurrentAnimationID != "dreamDashIn" && self.Sprite.CurrentAnimationID != "dreamDashLoop") {
                     self.Sprite.Play("dreamDashIn", false, false);
                 }
-            }
-            else if (self.StateMachine.State == CustomFeather.CustomFeatherState)
-            {
+            } else if (self.StateMachine.State == CustomFeather.CustomFeatherState) {
                 self.Sprite.Scale.X = Calc.Approach(self.Sprite.Scale.X, 1f, 1.75f * Engine.DeltaTime);
                 self.Sprite.Scale.Y = Calc.Approach(self.Sprite.Scale.Y, 1f, 1.75f * Engine.DeltaTime);
-            }
-            else
-            {
+            } else {
                 orig(self);
             }
         }
-        #endregion
+#endregion
 
-        public static Player StateGetPlayer()
-        {
+        public static Player StateGetPlayer() {
             // TODO: Make smarter
             return (Engine.Scene as Level).Tracker.GetEntity<Player>();
         }
 
-        private void modCallDashEvents(ILContext il)
-        {
-            var cursor = new ILCursor(il); 
-            
-            if (cursor.TryGotoNext(MoveType.After, instr => instr.MatchStfld<Player>("calledDashEvents")))
-            {
+        private void modCallDashEvents(ILContext il) {
+            var cursor = new ILCursor(il);
+
+            if (cursor.TryGotoNext(MoveType.After, instr => instr.MatchStfld<Player>("calledDashEvents"))) {
                 cursor.Emit(OpCodes.Ldarg_0);
-                cursor.EmitDelegate<Func<Player, bool>>((Player self) =>
-                {
-                    if (GenericCustomBooster.GetBoosterThatIsBoostingPlayer(self) != null)
-                    {
+                cursor.EmitDelegate<Func<Player, bool>>((Player self) => {
+                    if (GenericCustomBooster.GetBoosterThatIsBoostingPlayer(self) != null) {
                         player_calledDashEvents.SetValue(self, false);
                         return false;
                     }
-                        
 
-                    foreach (YellowBooster b in self.Scene.Tracker.GetEntities<YellowBooster>())
-                    {
+
+                    foreach (YellowBooster b in self.Scene.Tracker.GetEntities<YellowBooster>()) {
                         b.sprite.SetColor(Color.White);
-                        if (b.StartedBoosting)
-                        {
+                        if (b.StartedBoosting) {
                             b.PlayerBoosted(self, self.DashDir);
                             player_calledDashEvents.SetValue(self, false);
                             return false;
                         }
-                        if (b.BoostingPlayer)
-                        {
+                        if (b.BoostingPlayer) {
                             player_calledDashEvents.SetValue(self, false);
                             return false;
                         }
                     }
-                    foreach (GenericCustomBooster b in self.Scene.Tracker.GetEntities<GenericCustomBooster>())
-                    {
-                        if (b.StartedBoosting && b.CollideCheck(self))
-                        {
+                    foreach (GenericCustomBooster b in self.Scene.Tracker.GetEntities<GenericCustomBooster>()) {
+                        if (b.StartedBoosting && b.CollideCheck(self)) {
                             b.PlayerBoosted(self, self.DashDir);
                             return false;
                         }
-                        if (b.BoostingPlayer && GenericCustomBooster.GetBoosterThatIsBoostingPlayer(self) == b)
-                        {
+                        if (b.BoostingPlayer && GenericCustomBooster.GetBoosterThatIsBoostingPlayer(self) == b) {
                             return false;
                         }
                     }
@@ -228,56 +201,7 @@ namespace FrostHelper
             }
         }
 
-        /*
-        private void Player_CallDashEvents(On.Celeste.Player.orig_CallDashEvents orig, Player self)
-        {
-            // sometimes crashes? Can't reproduce this myself and I have no clue why it happens, just gonna try catch this :/
-            bool callOrig = true;
-            try
-            {
-                if (GenericCustomBooster.GetBoosterThatIsBoostingPlayer(self) != null)
-                    return;
-
-                foreach (YellowBooster b in self.Scene.Tracker.GetEntities<YellowBooster>())
-                {
-                    b.sprite.SetColor(Color.White);
-                    if (b.StartedBoosting)
-                    {
-                        b.PlayerBoosted(self, self.DashDir);
-                        return;
-                    }
-                    if (b.BoostingPlayer)
-                    {
-                        return;
-                    }
-                }
-                foreach (GenericCustomBooster b in self.Scene.Tracker.GetEntities<GenericCustomBooster>())
-                {
-                    if (b.StartedBoosting && b.CollideCheck(self))
-                    {
-                        callOrig = false;
-                        b.PlayerBoosted(self, self.DashDir);
-                    }
-                    if (b.BoostingPlayer && GenericCustomBooster.GetBoosterThatIsBoostingPlayer(self) == b)
-                    {
-                        callOrig = false;
-                    }
-                }
-            }
-            catch {}
-
-            if (callOrig)
-            {
-                orig(self);
-            } else
-            {
-                player_calledDashEvents.SetValue(self, true);
-            }
-            
-        }*/
-
-        private void Player_ctor(On.Celeste.Player.orig_ctor orig, Player self, Vector2 position, PlayerSpriteMode spriteMode)
-        {
+        private void Player_ctor(On.Celeste.Player.orig_ctor orig, Player self, Vector2 position, PlayerSpriteMode spriteMode) {
             orig(self, position, spriteMode);
             new DynData<Player>(self).Set("lastDreamSpeed", 0f);
             // Let's define new states
@@ -290,6 +214,7 @@ namespace FrostHelper
 #pragma warning restore CS0618 // Type or member is obsolete
             CustomFeather.CustomFeatherState = self.StateMachine.AddState(CustomFeather.StarFlyUpdate, CustomFeather.CustomFeatherCoroutine, CustomFeather.CustomFeatherBegin, CustomFeather.CustomFeatherEnd);
             HeldRefill.HeldDashState = self.StateMachine.AddState(HeldRefill.HeldDashUpdate, HeldRefill.HeldDashRoutine, HeldRefill.HeldDashBegin, HeldRefill.HeldDashEnd);
+            WASDMovementState.ID = self.StateMachine.AddState(WASDMovementState.Update, null, WASDMovementState.Begin, WASDMovementState.End);
 
             ModIntegration.CelesteTASIntegration.RegisterState(YellowBoostState, "Yellow Boost");
             ModIntegration.CelesteTASIntegration.RegisterState(GenericCustomBooster.CustomBoostState, "Custom Boost");
@@ -297,57 +222,48 @@ namespace FrostHelper
             ModIntegration.CelesteTASIntegration.RegisterState(CustomDreamDashState, "Custom Dream Dash (Obsolete)");
             ModIntegration.CelesteTASIntegration.RegisterState(CustomFeather.CustomFeatherState, "Custom Feather");
             ModIntegration.CelesteTASIntegration.RegisterState(HeldRefill.HeldDashState, "Held Dash");
+            ModIntegration.CelesteTASIntegration.RegisterState(WASDMovementState.ID, WASDMovementState.GetTasToolsDisplayName());
         }
 
         public static FieldInfo player_boostTarget = typeof(Player).GetField("boostTarget", BindingFlags.Instance | BindingFlags.NonPublic);
         public static FieldInfo player_calledDashEvents = typeof(Player).GetField("calledDashEvents", BindingFlags.Instance | BindingFlags.NonPublic);
-        #region YellowBoost
+#region YellowBoost
 
         public static int YellowBoostState;
-        
-        private void YellowBoostBegin(Entity e)
-        {
+
+        private void YellowBoostBegin(Entity e) {
             Player player = e as Player;
             player.CurrentBooster = null;
             Level level = player.SceneAs<Level>();
             bool? flag;
-            if (level == null)
-            {
+            if (level == null) {
                 flag = null;
-            }
-            else
-            {
+            } else {
                 MapMetaModeProperties meta = level.Session.MapData.GetMeta();
                 flag = meta?.TheoInBubble;
             }
             bool? flag2 = flag;
             //GenericCustomBooster.GetBoosterThatIsBoostingPlayer(e).
-            YellowBooster GetBoosterThatIsBoostingPlayer()
-            {
+            YellowBooster GetBoosterThatIsBoostingPlayer() {
                 return new DynData<Player>(e as Player).Get<YellowBooster>("fh.customyellowBooster");
             }
             YellowBooster booster = GetBoosterThatIsBoostingPlayer();
-            if (booster.DashRecovery == -1)
-            {
+            if (booster.DashRecovery == -1) {
                 player.RefillDash();
-            }
-            else
-            {
+            } else {
                 player.Dashes = booster.DashRecovery;
             }
 
             player.RefillStamina();
-            if (flag2.GetValueOrDefault())
-            {
+            if (flag2.GetValueOrDefault()) {
                 return;
             }
             player.Drop();
         }
 
-        private int YellowBoostUpdate(Entity e)
-        {
+        private int YellowBoostUpdate(Entity e) {
             Player player = e as Player;
-            Vector2 boostTarget = (Vector2)player_boostTarget.GetValue(player);
+            Vector2 boostTarget = (Vector2) player_boostTarget.GetValue(player);
             Vector2 value = Input.Aim.Value * 3f;
             Vector2 vector = Calc.Approach(player.ExactPosition, boostTarget - player.Collider.Center + value, 80f * Engine.DeltaTime);
             player.MoveToX(vector.X, null);
@@ -355,37 +271,30 @@ namespace FrostHelper
             bool pressed = Input.Dash.Pressed || Input.CrouchDashPressed;
             // the state we should be in afterwards
             int result;
-            if (pressed)
-            {
+            if (pressed) {
                 player.SetValue("demoDashed", Input.CrouchDashPressed);
                 Input.Dash.ConsumePress();
                 Input.CrouchDash.ConsumePress();
                 result = Player.StDash;
-            }
-            else
-            {
+            } else {
                 result = YellowBoostState;
             }
             return result;
         }
 
-        private void YellowBoostEnd(Entity e)
-        {
+        private void YellowBoostEnd(Entity e) {
             Player player = e as Player;
-            Vector2 boostTarget = (Vector2)player_boostTarget.GetValue(player);
+            Vector2 boostTarget = (Vector2) player_boostTarget.GetValue(player);
             Vector2 vector = (boostTarget - player.Collider.Center).Floor();
             player.MoveToX(vector.X, null);
             player.MoveToY(vector.Y, null);
         }
 
-        private IEnumerator YellowBoostCoroutine(Entity e)
-        {
+        private IEnumerator YellowBoostCoroutine(Entity e) {
             Player player = e as Player;
             YellowBooster booster = null;
-            foreach (YellowBooster b in player.Scene.Tracker.GetEntities<YellowBooster>())
-            {
-                if (b.StartedBoosting)
-                {
+            foreach (YellowBooster b in player.Scene.Tracker.GetEntities<YellowBooster>()) {
+                if (b.StartedBoosting) {
                     booster = b;
                     break;
                 }
@@ -405,11 +314,10 @@ namespace FrostHelper
             yield break;
         }
 
-        #endregion
+#endregion
 
         // Unload the entirety of your mod's content, remove any event listeners and undo all hooks.
-        public override void Unload()
-        {
+        public override void Unload() {
             // Legacy entity creation (for back when we didn't have the CustomEntity attribute)
             Everest.Events.Level.OnLoadEntity -= OnLoadEntity;
 
@@ -425,8 +333,7 @@ namespace FrostHelper
             if (outBackHelper)
                 typeof(FrostModule).Assembly.GetType("FrostTempleHelper.Entities.azcplo1k.abcdhr").GetMethod("Unload").Invoke(null, new object[0]);
 
-            foreach (var hook in registeredHooks)
-            {
+            foreach (var hook in registeredHooks) {
                 hook.Dispose();
             }
             registeredHooks = new List<ILHook>();
@@ -437,33 +344,25 @@ namespace FrostHelper
         }
 
         // Optional, initialize anything after Celeste has initialized itself properly.
-        public override void Initialize()
-        {
-            foreach (EverestModule mod in Everest.Modules)
-            {
-                if (mod.Metadata.Name == "FrostHelperExtension")
-                {
+        public override void Initialize() {
+            foreach (EverestModule mod in Everest.Modules) {
+                if (mod.Metadata.Name == "FrostHelperExtension") {
                     throw new Exception("MOD CONFLICT: Please uninstall the FrostHelperExtension mod");
                 }
             }
         }
 
-        private static bool OnLoadEntity(Level level, LevelData levelData, Vector2 offset, EntityData entityData)
-        {
-            switch (entityData.Name)
-            {
+        private static bool OnLoadEntity(Level level, LevelData levelData, Vector2 offset, EntityData entityData) {
+            switch (entityData.Name) {
                 case "FrostHelper/KeyIce":
                     level.Add(new KeyIce(entityData, offset, new EntityID(levelData.Name, entityData.ID), entityData.NodesOffset(offset)));
                     return true;
                 case "FrostHelper/CustomDreamBlock":
-                    if (entityData.Bool("old", false))
-                    {
+                    if (entityData.Bool("old", false)) {
 #pragma warning disable CS0618 // Type or member is obsolete
                         level.Add(new CustomDreamBlock(entityData, offset));
 #pragma warning restore CS0618 // Type or member is obsolete
-                    }
-                    else
-                    {
+                    } else {
                         level.Add(new CustomDreamBlockV2(entityData, offset));
                     }
                     return true;
@@ -472,11 +371,9 @@ namespace FrostHelper
             }
         }
 
-        public static Vector2 StringToVec2(string str)
-        {
+        public static Vector2 StringToVec2(string str) {
             string[] strSplit = str.Split(',');
-            if (strSplit.Length < 2)
-            {
+            if (strSplit.Length < 2) {
                 return new Vector2(float.Parse(strSplit[0]), float.Parse(strSplit[0]));
             }
             return new Vector2(float.Parse(strSplit[0]), float.Parse(strSplit[1]));
@@ -485,27 +382,34 @@ namespace FrostHelper
         /// <summary>
         /// Returns a list of colors from a comma-separated string of types
         /// </summary>
-        public static Type[] GetTypes(string typeString)
-        {
+        public static Type[] GetTypes(string typeString) {
             string[] split = typeString.Trim().Split(',');
             Type[] parsed = new Type[split.Length];
-            for (int i = 0; i < split.Length; i++)
-            {
-                //parsed[i] = split[i].Trim() == "" ? null : Assembly.GetEntryAssembly().GetType(split[i].Trim(), true, true);
+            for (int i = 0; i < split.Length; i++) {
                 parsed[i] = TypeHelper.EntityNameToType(split[i].Trim());
             }
             return parsed;
         }
 
-        public static char[] GetCharArrayFromCommaSeparatedList(string list)
-        {
+        public static char[] GetCharArrayFromCommaSeparatedList(string list) {
             string[] split = list.Trim().Split(',');
             char[] ret = new char[split.Length];
-            for (int i = 0; i < split.Length; i++)
-            {
+            for (int i = 0; i < split.Length; i++) {
                 ret[i] = split[i][0];
             }
             return ret;
+        }
+
+        public static Level GetCurrentLevel() {
+            if (Engine.Scene is Level lvl) {
+                return lvl;
+            }
+
+            if (Engine.Scene is AssetReloadHelper) {
+                return AssetReloadHelper.ReturnToScene as Level;
+            }
+
+            return null;
         }
     }
 }

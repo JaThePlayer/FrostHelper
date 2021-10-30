@@ -1,21 +1,18 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using Celeste;
+﻿using Celeste;
 using Celeste.Mod.Entities;
 using FrostHelper.Components;
 using Microsoft.Xna.Framework;
 using Monocle;
+using System;
+using System.Collections;
+using System.Collections.Generic;
 
 
-namespace FrostHelper
-{
+namespace FrostHelper {
     [CustomEntity("FrostHelper/CustomZipMover")]
     [Tracked(false)]
-    public class CustomZipMover : Solid
-    {
-        public enum LineColor
-        {
+    public class CustomZipMover : Solid {
+        public enum LineColor {
             Red,
             Blue,
             Black,
@@ -40,33 +37,26 @@ namespace FrostHelper
         bool drawLine;
         Color tint = Color.White;
 
-        private void OnChangeMode(Session.CoreModes coreMode)
-        {
+        private void OnChangeMode(Session.CoreModes coreMode) {
             iceModeNext = coreMode == Session.CoreModes.Cold;
         }
 
-        private void CheckModeChange()
-        {
-            if (iceModeNext != iceMode)
-            {
+        private void CheckModeChange() {
+            if (iceModeNext != iceMode) {
                 iceMode = iceModeNext;
                 ToggleSprite();
             }
         }
 
-        private void ToggleSprite()
-        {
-            if (iceMode)
-            {
+        private void ToggleSprite() {
+            if (iceMode) {
                 hexcolor = coldhexcolor;
                 hexlightcolor = coldhexlightcolor;
                 innercogstr = directory + "/cold/innercog";
                 cogstr = directory + "/cold/cog";
                 blockstr = directory + "/cold/block";
                 percentage /= 4;
-            }
-            else
-            {
+            } else {
                 hexcolor = hothexcolor;
                 hexlightcolor = hothexlightcolor;
                 innercogstr = directory + "/innercog";
@@ -83,8 +73,7 @@ namespace FrostHelper
 
         public bool Rainbow;
 
-        public CustomZipMover(EntityData data, Vector2 offset) : base(data.Position + offset, data.Width, data.Height, false) 
-        {
+        public CustomZipMover(EntityData data, Vector2 offset) : base(data.Position + offset, data.Width, data.Height, false) {
             tint = ColorHelper.GetColor(data.Attr("tint", "ffffff"));
             Rainbow = data.Bool("rainbow", false);
             drawLine = data.Bool("showLine", true);
@@ -149,7 +138,8 @@ namespace FrostHelper
                     hothexlightcolor = data.Attr("lineLightColor", "ff5c33");
                     directory = data.Attr("directory", "objects/zipmover");
                     // legacy support - bluecog was moved to redcog/cold to make core mode work correctly with them without hardcoding. We need this to make maps using the old directory still work. Ahorn doesn't have this however, so that new users won't accidentaly use this.
-                    if (directory == "objects/FrostHelper/customZipMover/bluecog") directory = "objects/FrostHelper/customZipMover/redcog/cold";
+                    if (directory == "objects/FrostHelper/customZipMover/bluecog")
+                        directory = "objects/FrostHelper/customZipMover/redcog/cold";
                     innercogstr = directory + "/innercog";
                     cogstr = directory + "/cog";
                     blockstr = directory + "/block";
@@ -159,8 +149,7 @@ namespace FrostHelper
                 default:
                     throw new ArgumentOutOfRangeException("color", data.Enum("color", LineColor.Normal), null);
             }
-            if (isCore)
-            {
+            if (isCore) {
                 Add(new CoreModeListener(new Action<Session.CoreModes>(OnChangeMode)));
             }
             ropeColor = ColorHelper.GetColor(hexcolor);
@@ -175,10 +164,8 @@ namespace FrostHelper
             Add(new Coroutine(Sequence(), true));
             Add(new LightOcclude(1f));
 
-            for (int i = 0; i < 3; i++)
-            {
-                for (int j = 0; j < 3; j++)
-                {
+            for (int i = 0; i < 3; i++) {
+                for (int j = 0; j < 3; j++) {
                     edges[i, j] = GFX.Game[blockstr].GetSubtexture(i * 8, j * 8, 8, 8, null);
                 }
             }
@@ -186,8 +173,7 @@ namespace FrostHelper
             CreateSprites();
 
             float bloomAlpha = data.Float("bloomAlpha", 1f);
-            if (bloomAlpha != 0.0f)
-            {
+            if (bloomAlpha != 0.0f) {
                 Add(bloom = new BloomPoint(bloomAlpha, data.Float("bloomRadius", 6f)));
                 bloom.Position = new Vector2(Width / 2f, 4f);
             }
@@ -200,26 +186,22 @@ namespace FrostHelper
             FillMiddle = data.Bool("fillMiddle", true);
         }
 
-        public override void Added(Scene scene)
-        {
+        public override void Added(Scene scene) {
             base.Added(scene);
-            if (isCore)
-            {
+            if (isCore) {
                 iceModeNext = iceMode = SceneAs<Level>().CoreMode == Session.CoreModes.Cold;
                 ToggleSprite();
             }
             scene.Add(pathRenderer = new ZipMoverPathRenderer(this));
         }
 
-        public override void Removed(Scene scene)
-        {
+        public override void Removed(Scene scene) {
             scene.Remove(pathRenderer);
             pathRenderer = null;
             base.Removed(scene);
         }
 
-        public override void Update()
-        {
+        public override void Update() {
             base.Update();
             CheckModeChange();
             if (bloom != null)
@@ -228,99 +210,30 @@ namespace FrostHelper
 
 
         public MultiImage BorderImages;
-        public void CreateSprites()
-        {
-            foreach (var item in Components)
-            {
-                if (item is Image || item is MultiImage || item is Sprite)
-                {
+        public void CreateSprites() {
+            foreach (var item in Components) {
+                if (item is Image || item is MultiImage || item is Sprite) {
                     Remove(item);
                 }
             }
 
-            #region Cogs
-            if (false)
-            {
-                // too lazy
-                List<Image> cogImages = new List<Image>();
-
-                int num = 1;
-                float num2 = 0f;
-                int cogTextureCount = innerCogs.Count;
-                int i = 4;
-                while (i <= Height - 4f)
-                {
-                    int num4 = num;
-                    int j = 4;
-                    while (j <= Width - 4f)
-                    {
-                        int index = (int)(mod((num2 + num * percent * 3.14159274f * 4f) / 1.57079637f, 1f) * cogTextureCount);
-                        MTexture mtexture = innerCogs[index];
-                        Rectangle rectangle = new Rectangle(0, 0, mtexture.Width, mtexture.Height);
-                        Vector2 zero = Vector2.Zero;
-                        if (j <= 4)
-                        {
-                            zero.X = 2f;
-                            rectangle.X = 2;
-                            rectangle.Width -= 2;
-                        }
-                        else if (j >= Width - 4f)
-                        {
-                            zero.X = -2f;
-                            rectangle.Width -= 2;
-                        }
-                        if (i <= 4)
-                        {
-                            zero.Y = 2f;
-                            rectangle.Y = 2;
-                            rectangle.Height -= 2;
-                        }
-                        else if (i >= Height - 4f)
-                        {
-                            zero.Y = -2f;
-                            rectangle.Height -= 2;
-                        }
-                        mtexture = mtexture.GetSubtexture(rectangle.X, rectangle.Y, rectangle.Width, rectangle.Height, temp);
-                        cogImages.Add(new Image(mtexture) 
-                        { 
-                            Color = tint * ((num < 0) ? 0.5f : 1f),
-                            Position = new Vector2(j, i) + zero,
-                        }.CenterOrigin());
-                        //mtexture.DrawCentered(Position + new Vector2(j, i) + zero, tint * ((num < 0) ? 0.5f : 1f));
-                        num = -num;
-                        num2 += 1.04719758f;
-                        j += 8;
-                    }
-                    if (num4 == num)
-                    {
-                        num = -num;
-                    }
-                    i += 8;
-                }
-                Add(new MultiImage(cogImages));
-            }
-            #endregion
             #region Border
             {
                 float widthBy8 = Width / 8f;
                 float heightBy8 = Height / 8f;
-                int edgeCount = (int)((widthBy8 * 2) + (heightBy8 * 2) - 4);
+                int edgeCount = (int) ((widthBy8 * 2) + (heightBy8 * 2) - 4);
                 Image[] edgeImages = new Image[edgeCount];
                 int imageIndex = 0;
 
                 int i = 0;
-                while (i < widthBy8)
-                {
+                while (i < widthBy8) {
                     int j = 0;
-                    while (j < heightBy8)
-                    {
+                    while (j < heightBy8) {
                         int num8 = (i == 0) ? 0 : ((i == Width / 8f - 1f) ? 2 : 1);
                         int num9 = (j == 0) ? 0 : ((j == Height / 8f - 1f) ? 2 : 1);
-                        if (num8 != 1 || num9 != 1)
-                        {
+                        if (num8 != 1 || num9 != 1) {
                             //edges[num8, num9].Draw(new Vector2(X + (i * 8), Y + (j * 8)), new Vector2(0, 0), tint);
-                            edgeImages[imageIndex++] = new Image(edges[num8, num9])
-                            {
+                            edgeImages[imageIndex++] = new Image(edges[num8, num9]) {
                                 Color = tint,
                                 Origin = Vector2.Zero,
                                 Position = new Vector2(i * 8, j * 8),
@@ -346,8 +259,7 @@ namespace FrostHelper
 
 
         bool FillMiddle;
-        public override void Render()
-        {
+        public override void Render() {
             Vector2 position = Position;
             Position += Shake;
             if (FillMiddle)
@@ -358,35 +270,27 @@ namespace FrostHelper
             float num2 = 0f;
             int count = innerCogs.Count;
             int num3 = 4;
-            while (num3 <= Height - 4f)
-            {
+            while (num3 <= Height - 4f) {
                 int num4 = num;
                 int num5 = 4;
-                while (num5 <= Width - 4f)
-                {
-                    int index = (int)(mod((num2 + num * percent * 3.14159274f * 4f) / 1.57079637f, 1f) * count);
+                while (num5 <= Width - 4f) {
+                    int index = (int) (mod((num2 + num * percent * 3.14159274f * 4f) / 1.57079637f, 1f) * count);
                     MTexture mtexture = innerCogs[index];
                     Rectangle rectangle = new Rectangle(0, 0, mtexture.Width, mtexture.Height);
                     Vector2 zero = Vector2.Zero;
-                    if (num5 <= 4)
-                    {
+                    if (num5 <= 4) {
                         zero.X = 2f;
                         rectangle.X = 2;
                         rectangle.Width -= 2;
-                    }
-                    else if (num5 >= Width - 4f)
-                    {
+                    } else if (num5 >= Width - 4f) {
                         zero.X = -2f;
                         rectangle.Width -= 2;
                     }
-                    if (num3 <= 4)
-                    {
+                    if (num3 <= 4) {
                         zero.Y = 2f;
                         rectangle.Y = 2;
                         rectangle.Height -= 2;
-                    }
-                    else if (num3 >= Height - 4f)
-                    {
+                    } else if (num3 >= Height - 4f) {
                         zero.Y = -2f;
                         rectangle.Height -= 2;
                     }
@@ -398,35 +302,29 @@ namespace FrostHelper
                     num2 += 1.04719758f;
                     num5 += 8;
                 }
-                if (num4 == num)
-                {
+                if (num4 == num) {
                     num = -num;
                 }
                 num3 += 8;
             }
             #endregion
-            
-            if (Rainbow)
-            {
-                for (int i = 0; i < BorderImages.Images.Length; i++)
-                {
+
+            if (Rainbow) {
+                for (int i = 0; i < BorderImages.Images.Length; i++) {
                     BorderImages.Images[i].Color = ColorHelper.GetHue(Scene, BorderImages.Images[i].RenderPosition + Position);
                 }
                 streetlight.Color = ColorHelper.GetHue(Scene, streetlight.RenderPosition);
-                
+
             }
 
             base.Render();
             Position = position;
         }
 
-        private IEnumerator Sequence()
-        {
+        private IEnumerator Sequence() {
             Vector2 start = Position;
-            while (true)
-            {
-                if (HasPlayerRider())
-                {
+            while (true) {
+                if (HasPlayerRider()) {
                     sfx.Play("event:/game/01_forsaken_city/zip_mover", null, 0f);
                     Input.Rumble(RumbleStrength.Medium, RumbleLength.Short);
                     StartShaking(0.1f);
@@ -434,15 +332,13 @@ namespace FrostHelper
                     streetlight.SetAnimationFrame(3);
                     StopPlayerRunIntoAnimation = false;
                     float at = 0f;
-                    while (at < 1f)
-                    {
+                    while (at < 1f) {
                         yield return null;
                         at = Calc.Approach(at, 1f, 2f * Engine.DeltaTime * (percentage / 100f));
                         percent = Ease.SineIn(at);
                         Vector2 vector = Vector2.Lerp(start, target, percent);
                         //this.ScrapeParticlesCheck(vector);
-                        if (Scene.OnInterval(0.1f))
-                        {
+                        if (Scene.OnInterval(0.1f)) {
                             pathRenderer.CreateSparks();
                         }
                         MoveTo(vector);
@@ -455,8 +351,7 @@ namespace FrostHelper
                     StopPlayerRunIntoAnimation = false;
                     streetlight.SetAnimationFrame(2);
                     at = 0f;
-                    while (at < 1f)
-                    {
+                    while (at < 1f) {
                         yield return null;
                         at = Calc.Approach(at, 1f, 0.5f * Engine.DeltaTime);
                         percent = 1f - Ease.SineIn(at);
@@ -467,16 +362,13 @@ namespace FrostHelper
                     StartShaking(0.2f);
                     streetlight.SetAnimationFrame(1);
                     yield return 0.5f;
-                }
-                else
-                {
+                } else {
                     yield return null;
                 }
             }
         }
 
-        private float mod(float x, float m)
-        {
+        private float mod(float x, float m) {
             return (x % m + m) % m;
         }
 
@@ -496,11 +388,9 @@ namespace FrostHelper
         Color ropeLightColor;
         private SoundSource sfx;
 
-        private class ZipMoverPathRenderer : Entity
-        {
+        private class ZipMoverPathRenderer : Entity {
             Color tint = Color.White;
-            public ZipMoverPathRenderer(CustomZipMover CustomZipMover)
-            {
+            public ZipMoverPathRenderer(CustomZipMover CustomZipMover) {
                 //this.cog = GFX.Game[CustomZipMover.cogstr];
                 //if (CustomZipMover.iceMode & CustomZipMover.isCore)
                 //{
@@ -520,16 +410,14 @@ namespace FrostHelper
                 sparkDirToB = num + 3.14159274f + 0.3926991f;
             }
 
-            public void CreateSparks()
-            {
+            public void CreateSparks() {
                 SceneAs<Level>().ParticlesBG.Emit(ZipMover.P_Sparks, from + sparkAdd + Calc.Random.Range(-Vector2.One, Vector2.One), sparkDirFromA);
                 SceneAs<Level>().ParticlesBG.Emit(ZipMover.P_Sparks, from - sparkAdd + Calc.Random.Range(-Vector2.One, Vector2.One), sparkDirFromB);
                 SceneAs<Level>().ParticlesBG.Emit(ZipMover.P_Sparks, to + sparkAdd + Calc.Random.Range(-Vector2.One, Vector2.One), sparkDirToA);
                 SceneAs<Level>().ParticlesBG.Emit(ZipMover.P_Sparks, to - sparkAdd + Calc.Random.Range(-Vector2.One, Vector2.One), sparkDirToB);
             }
 
-            public override void Render()
-            {
+            public override void Render() {
                 cog = GFX.Game[CustomZipMover.cogstr];
                 //if (CustomZipMover.iceMode & CustomZipMover.isCore)
                 //{
@@ -538,21 +426,18 @@ namespace FrostHelper
                 DrawCogs(Vector2.UnitY, new Color?(Color.Black));
                 DrawCogs(Vector2.Zero, null);
                 if (CustomZipMover.FillMiddle)
-                    Draw.Rect(new Rectangle((int)(CustomZipMover.X - 1f), (int)(CustomZipMover.Y - 1f), (int)CustomZipMover.Width + 2, (int)CustomZipMover.Height + 2), Color.Black);
+                    Draw.Rect(new Rectangle((int) (CustomZipMover.X - 1f), (int) (CustomZipMover.Y - 1f), (int) CustomZipMover.Width + 2, (int) CustomZipMover.Height + 2), Color.Black);
             }
 
-            private void DrawCogs(Vector2 offset, Color? colorOverride = null)
-            {
-                if (CustomZipMover.drawLine)
-                {
+            private void DrawCogs(Vector2 offset, Color? colorOverride = null) {
+                if (CustomZipMover.drawLine) {
                     Vector2 vector = (to - from).SafeNormalize();
                     Vector2 value = vector.Perpendicular() * 3f;
                     Vector2 value2 = -vector.Perpendicular() * 4f;
                     float rotation = CustomZipMover.percent * 3.14159274f * 2f;
                     Draw.Line(from + value + offset, to + value + offset, (colorOverride != null) ? colorOverride.Value : CustomZipMover.ropeColor);
                     Draw.Line(from + value2 + offset, to + value2 + offset, (colorOverride != null) ? colorOverride.Value : CustomZipMover.ropeColor);
-                    for (float num = 4f - CustomZipMover.percent * 3.14159274f * 8f % 4f; num < (to - from).Length(); num += 4f)
-                    {
+                    for (float num = 4f - CustomZipMover.percent * 3.14159274f * 8f % 4f; num < (to - from).Length(); num += 4f) {
                         Vector2 value3 = from + value + vector.Perpendicular() + vector * num;
                         Vector2 value4 = to + value2 - vector * num;
                         Draw.Line(value3 + offset, value3 + vector * 2f + offset, (colorOverride != null) ? colorOverride.Value : CustomZipMover.ropeLightColor);

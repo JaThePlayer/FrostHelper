@@ -8,25 +8,26 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 
-namespace FrostHelper
-{
+namespace FrostHelper {
     [CustomEntity("FrostHelper/SpringLeft", "FrostHelper/SpringRight", "FrostHelper/SpringFloor", "FrostHelper/SpringCeiling")]
-    public class CustomSpring : Spring
-    {
+    public class CustomSpring : Spring {
         [OnLoad]
-        public static void Load()
-        {
+        public static void Load() {
             On.Celeste.TheoCrystal.HitSpring += TheoCrystal_HitSpring;
             On.Celeste.Glider.HitSpring += Glider_HitSpring;
             On.Celeste.Puffer.HitSpring += Puffer_HitSpring;
         }
 
-        private static bool Puffer_HitSpring(On.Celeste.Puffer.orig_HitSpring orig, Puffer self, Spring spring)
-        {
-            if (spring is CustomSpring customSpring && customSpring.Orientation == CustomOrientations.Ceiling)
-            {
-                if (self.GetValue<Vector2>("hitSpeed").Y <= 0f)
-                {
+        [OnUnload]
+        public static void Unload() {
+            On.Celeste.TheoCrystal.HitSpring -= TheoCrystal_HitSpring;
+            On.Celeste.Glider.HitSpring -= Glider_HitSpring;
+            On.Celeste.Puffer.HitSpring -= Puffer_HitSpring;
+        }
+
+        private static bool Puffer_HitSpring(On.Celeste.Puffer.orig_HitSpring orig, Puffer self, Spring spring) {
+            if (spring is CustomSpring customSpring && customSpring.Orientation == CustomOrientations.Ceiling) {
+                if (self.GetValue<Vector2>("hitSpeed").Y <= 0f) {
                     self.Invoke("GotoHitSpeed", 224f * Vector2.UnitY);
                     self.MoveTowardsX(spring.CenterX, 4f, null);
                     self.GetValue<Wiggler>("bounceWiggler").Start();
@@ -34,19 +35,14 @@ namespace FrostHelper
                     return true;
                 }
                 return false;
-            }
-            else
-            {
+            } else {
                 return orig(self, spring);
             }
         }
 
-        private static bool Glider_HitSpring(On.Celeste.Glider.orig_HitSpring orig, Glider self, Spring spring)
-        {
-            if (spring is CustomSpring customSpring && customSpring.Orientation == CustomOrientations.Ceiling)
-            {
-                if (!self.Hold.IsHeld && self.Speed.Y <= 0f)
-                {
+        private static bool Glider_HitSpring(On.Celeste.Glider.orig_HitSpring orig, Glider self, Spring spring) {
+            if (spring is CustomSpring customSpring && customSpring.Orientation == CustomOrientations.Ceiling) {
+                if (!self.Hold.IsHeld && self.Speed.Y <= 0f) {
                     self.Speed.X *= 0.5f;
                     self.Speed.Y = -160f;
                     self.SetValue("noGravityTimer", 0.15f);
@@ -54,39 +50,24 @@ namespace FrostHelper
                     return true;
                 }
                 return false;
-            }
-            else
-            {
+            } else {
                 return orig(self, spring);
             }
         }
 
-        private static bool TheoCrystal_HitSpring(On.Celeste.TheoCrystal.orig_HitSpring orig, TheoCrystal self, Spring spring)
-        {
-            if (spring is CustomSpring customSpring && customSpring.Orientation == CustomOrientations.Ceiling)
-            {
-                if (!self.Hold.IsHeld && self.Speed.Y <= 0f)
-                {
+        private static bool TheoCrystal_HitSpring(On.Celeste.TheoCrystal.orig_HitSpring orig, TheoCrystal self, Spring spring) {
+            if (spring is CustomSpring customSpring && customSpring.Orientation == CustomOrientations.Ceiling) {
+                if (!self.Hold.IsHeld && self.Speed.Y <= 0f) {
                     self.Speed.X *= 0.5f;
                     self.Speed.Y = -160f;
                     self.SetValue("noGravityTimer", 0.15f);
                     return true;
                 }
                 return false;
-            } else
-            {
+            } else {
                 return orig(self, spring);
             }
         }
-
-        [OnUnload]
-        public static void Unload()
-        {
-            On.Celeste.TheoCrystal.HitSpring -= TheoCrystal_HitSpring;
-            On.Celeste.Glider.HitSpring -= Glider_HitSpring;
-            On.Celeste.Puffer.HitSpring -= Puffer_HitSpring;
-        }
-
 
         public enum CustomOrientations {
             Floor,
@@ -103,16 +84,17 @@ namespace FrostHelper
 
         Vector2 speedMult;
 
-        private static Dictionary<string, CustomOrientations> EntityDataNameToOrientation = new Dictionary<string, CustomOrientations>()
-        {
+
+
+
+        private static Dictionary<string, CustomOrientations> EntityDataNameToOrientation = new Dictionary<string, CustomOrientations>() {
             ["FrostHelper/SpringLeft"] = CustomOrientations.WallLeft,
             ["FrostHelper/SpringRight"] = CustomOrientations.WallRight,
             ["FrostHelper/SpringFloor"] = CustomOrientations.Floor,
             ["FrostHelper/SpringCeiling"] = CustomOrientations.Ceiling,
         };
 
-        private static Dictionary<CustomOrientations, Orientations> CustomToRegularOrientation = new Dictionary<CustomOrientations, Orientations>()
-        {
+        private static Dictionary<CustomOrientations, Orientations> CustomToRegularOrientation = new Dictionary<CustomOrientations, Orientations>() {
             [CustomOrientations.WallLeft] = Orientations.WallLeft,
             [CustomOrientations.WallRight] = Orientations.WallRight,
             [CustomOrientations.Floor] = Orientations.Floor,
@@ -121,12 +103,22 @@ namespace FrostHelper
 
         public CustomSpring(EntityData data, Vector2 offset) : this(data, offset, EntityDataNameToOrientation[data.Name]) { }
 
-        public CustomSpring(EntityData data, Vector2 offset, CustomOrientations orientation) : base(data.Position + offset, CustomToRegularOrientation[orientation], data.Bool("playerCanUse", true))
-        {
+        public CustomSpring(EntityData data, Vector2 offset, CustomOrientations orientation) : base(data.Position + offset, CustomToRegularOrientation[orientation], data.Bool("playerCanUse", true)) {
             bool playerCanUse = data.Bool("playerCanUse", true);
             dir = data.Attr("directory", "objects/spring/");
             RenderOutline = data.Bool("renderOutline", true);
-            speedMult = FrostModule.StringToVec2(data.Attr("speedMult", "1"));
+
+
+            //speedMult = FrostModule.StringToVec2(data.Attr("speedMult", "1"));
+            // LEGACY BEHAVIOUR TIME!
+            // there was a bug that made multiplying the Y speed of horizontal springs not work
+            // thankfully noone knew about the "supply a Vec2" behaviour either
+            // if only a float is supplied, the Y value will be set to 1
+            speedMult = orientation switch {
+                CustomOrientations.WallLeft or CustomOrientations.WallRight => data.GetVec2("speedMult", Vector2.One, true),
+                _ => new(data.Float("speedMult", 1f)), // other orientations only care about the Y component anyway
+            };
+
             Vector2 position = data.Position + offset;
             DisabledColor = Color.White;
             Orientation = orientation;
@@ -154,13 +146,11 @@ namespace FrostHelper
             Sprite.Origin.Y = Sprite.Height;
             Depth = -8501;
 
-            Add(Wiggler.Create(1f, 4f, delegate (float v)
-            {
+            Add(Wiggler.Create(1f, 4f, delegate (float v) {
                 Sprite.Scale.Y = 1f + v * 0.2f;
             }, false, false));
 
-            switch (orientation)
-            {
+            switch (orientation) {
                 case CustomOrientations.Floor:
                     Collider = new Hitbox(16f, 6f, -8f, -6f);
                     pufferCollider.Collider = new Hitbox(16f, 10f, -8f, -10f);
@@ -188,32 +178,24 @@ namespace FrostHelper
 
             dyndata.Set("sprite", Sprite);
             OneUse = data.Bool("oneUse", false);
-            if (OneUse)
-            {
+            if (OneUse) {
                 Add(new Coroutine(OneUseParticleRoutine()));
             }
         }
 
-        public override void Render()
-        {
-            if (Collidable && !RenderOutline)
-            {
+        public override void Render() {
+            if (Collidable && !RenderOutline) {
                 Sprite.Render();
-            } else
-            {
+            } else {
                 base.Render();
             }
         }
 
-        private void OnCollide(Player player)
-        {
-            if (!(player.StateMachine.State == Player.StDreamDash || !playerCanUse))
-            {
-                switch (Orientation)
-                {
+        private void OnCollide(Player player) {
+            if (!(player.StateMachine.State == Player.StDreamDash || !playerCanUse)) {
+                switch (Orientation) {
                     case CustomOrientations.Floor:
-                        if (player.Speed.Y >= 0f)
-                        {
+                        if (player.Speed.Y >= 0f) {
                             BounceAnimate();
                             player.SuperBounce(Top);
                             player.Speed.Y *= speedMult.Y;
@@ -222,8 +204,7 @@ namespace FrostHelper
                         }
                         break;
                     case CustomOrientations.Ceiling:
-                        if (player.Speed.Y <= 0f)
-                        {
+                        if (player.Speed.Y <= 0f) {
                             BounceAnimate();
                             player.SuperBounce(Bottom + player.Height);
                             player.Speed.Y *= -speedMult.Y;
@@ -234,20 +215,17 @@ namespace FrostHelper
                         }
                         break;
                     case CustomOrientations.WallLeft:
-                        if (player.SideBounce(1, Right, CenterY))
-                        {
+                        if (player.SideBounce(1, Right, CenterY)) {
                             BounceAnimate();
-                            player.Speed.X *= speedMult.X;
-                            player.Speed.Y *= speedMult.Y;
-
+                            player.Speed *= speedMult;
+                            Player_varJumpSpeed.SetValue(player, player.Speed.Y);
                             TryBreak();
                         }
                         break;
                     case CustomOrientations.WallRight:
-                        if (player.SideBounce(-1, Left, CenterY))
-                        {
-                            player.Speed.X *= speedMult.X;
-                            player.Speed.Y *= speedMult.Y;
+                        if (player.SideBounce(-1, Left, CenterY)) {
+                            player.Speed *= speedMult;
+                            Player_varJumpSpeed.SetValue(player, player.Speed.Y);
                             BounceAnimate();
 
                             TryBreak();
@@ -261,29 +239,23 @@ namespace FrostHelper
 
         private static FieldInfo Player_varJumpSpeed = typeof(Player).GetField("varJumpSpeed", BindingFlags.NonPublic | BindingFlags.Instance);
 
-        public void TryBreak()
-        {
-            if (OneUse)
-            {
+        public void TryBreak() {
+            if (OneUse) {
                 Add(new Coroutine(BreakRoutine()));
             }
         }
 
-        public IEnumerator BreakRoutine()
-        {
+        public IEnumerator BreakRoutine() {
             Collidable = false;
             Input.Rumble(RumbleStrength.Medium, RumbleLength.Medium);
             Audio.Play("event:/game/general/platform_disintegrate", Center);
-            foreach (Image image in Components.GetAll<Image>())
-            {
+            foreach (Image image in Components.GetAll<Image>()) {
                 SceneAs<Level>().Particles.Emit(CrumblePlatform.P_Crumble, 2, Position + image.Position, Vector2.One * 3f);
             }
 
             float t = 1f;
-            while (t > 0f)
-            {
-                foreach (Image image in Components.GetAll<Image>())
-                {
+            while (t > 0f) {
+                foreach (Image image in Components.GetAll<Image>()) {
                     image.Scale = Vector2.One * t;
                     image.Rotation += Engine.DeltaTime * 4;
                 }
@@ -295,58 +267,40 @@ namespace FrostHelper
             yield break;
         }
 
-        private void BounceAnimate()
-        {
+        private void BounceAnimate() {
             Spring_BounceAnimate.Invoke(this, null);
         }
         public static MethodInfo Spring_BounceAnimate = typeof(Spring).GetMethod("BounceAnimate", BindingFlags.NonPublic | BindingFlags.Instance);
 
-        private void OnHoldable(Holdable h)
-        {
-            if (h.HitSpring(this))
-            {
+        private void OnHoldable(Holdable h) {
+            if (h.HitSpring(this)) {
                 BounceAnimate();
                 TryBreak();
-                if (h.Entity is Glider)
-                {
+                if (h.Entity is Glider) {
                     Glider glider = h.Entity as Glider;
-                    if (Orientation == CustomOrientations.Floor)
-                    {
+                    if (Orientation == CustomOrientations.Floor) {
                         glider.Speed.Y *= speedMult.Y;
-                    }
-                    else if(Orientation == CustomOrientations.Ceiling)
-                    {
+                    } else if (Orientation == CustomOrientations.Ceiling) {
                         glider.Speed.Y *= -speedMult.Y;
-                    }
-                    else
-                    {
+                    } else {
                         glider.Speed *= speedMult;
                     }
-                }
-                else if (h.Entity is TheoCrystal)
-                {
+                } else if (h.Entity is TheoCrystal) {
                     TheoCrystal theo = h.Entity as TheoCrystal;
-                    if (Orientation == CustomOrientations.Floor)
-                    {
+                    if (Orientation == CustomOrientations.Floor) {
                         theo.Speed.Y *= speedMult.Y;
-                    } 
-                    else if (Orientation == CustomOrientations.Ceiling)
-                    {
+                    } else if (Orientation == CustomOrientations.Ceiling) {
                         theo.Speed.Y *= -speedMult.Y;
-                    }
-                    else
-                    {
+                    } else {
                         theo.Speed *= speedMult;
                     }
                 }
             }
         }
 
-        private void OnPuffer(Puffer p)
-        {
-            if (p.HitSpring(this))
-            {
-                Vector2 pufferSpeed = (Vector2)Puffer_hitSpeed.GetValue(p);
+        private void OnPuffer(Puffer p) {
+            if (p.HitSpring(this)) {
+                Vector2 pufferSpeed = (Vector2) Puffer_hitSpeed.GetValue(p);
                 Puffer_hitSpeed.SetValue(p, pufferSpeed * speedMult);
                 BounceAnimate();
                 TryBreak();
@@ -354,8 +308,7 @@ namespace FrostHelper
         }
         private FieldInfo Puffer_hitSpeed = typeof(Puffer).GetField("hitSpeed", BindingFlags.Instance | BindingFlags.NonPublic);
 
-        private static ParticleType P_Crumble_Up = new ParticleType
-        {
+        private static ParticleType P_Crumble_Up = new ParticleType {
             Color = Calc.HexToColor("847E87"),
             FadeMode = ParticleType.FadeModes.Late,
             Size = 1f,
@@ -367,8 +320,7 @@ namespace FrostHelper
             Acceleration = Vector2.UnitY * -20f
         };
 
-        private static ParticleType P_Crumble_Down = new ParticleType
-        {
+        private static ParticleType P_Crumble_Down = new ParticleType {
             Color = Calc.HexToColor("847E87"),
             FadeMode = ParticleType.FadeModes.Late,
             Size = 1f,
@@ -380,8 +332,7 @@ namespace FrostHelper
             Acceleration = Vector2.UnitY * 20f
         };
 
-        private static ParticleType P_Crumble_Left = new ParticleType
-        {
+        private static ParticleType P_Crumble_Left = new ParticleType {
             Color = Calc.HexToColor("847E87"),
             FadeMode = ParticleType.FadeModes.Late,
             Size = 1f,
@@ -393,8 +344,7 @@ namespace FrostHelper
             Acceleration = Vector2.UnitY * 20f
         };
 
-        private static ParticleType P_Crumble_Right = new ParticleType
-        {
+        private static ParticleType P_Crumble_Right = new ParticleType {
             Color = Calc.HexToColor("847E87"),
             FadeMode = ParticleType.FadeModes.Late,
             Size = 1f,
@@ -406,23 +356,20 @@ namespace FrostHelper
             Acceleration = Vector2.UnitY * -20f
         };
 
-        private IEnumerator OneUseParticleRoutine()
-        {
-            while (true)
-            {
-                switch (Orientation)
-                {
+        private IEnumerator OneUseParticleRoutine() {
+            while (true) {
+                switch (Orientation) {
                     case CustomOrientations.Floor:
-                        SceneAs<Level>().Particles.Emit(P_Crumble_Up, 2, Position, Vector2.One * 3f);
+                        SceneAs<Level>().Particles.Emit(P_Crumble_Up, 2, Position, new(3f));
                         break;
                     case CustomOrientations.WallRight:
-                        SceneAs<Level>().Particles.Emit(P_Crumble_Right, 2, Position, Vector2.One * 2f);
+                        SceneAs<Level>().Particles.Emit(P_Crumble_Right, 2, Position, new(2f));
                         break;
                     case CustomOrientations.WallLeft:
-                        SceneAs<Level>().Particles.Emit(P_Crumble_Left, 2, Position, Vector2.One * 2f);
+                        SceneAs<Level>().Particles.Emit(P_Crumble_Left, 2, Position, new(2f));
                         break;
                     case CustomOrientations.Ceiling:
-                        SceneAs<Level>().Particles.Emit(P_Crumble_Down, 2, Position, Vector2.One * 2f);
+                        SceneAs<Level>().Particles.Emit(P_Crumble_Down, 2, Position, new(2f));
                         break;
                 }
                 yield return 0.25f;

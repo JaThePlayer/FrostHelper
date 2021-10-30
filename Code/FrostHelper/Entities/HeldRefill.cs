@@ -6,11 +6,9 @@ using MonoMod.Utils;
 using System;
 using System.Collections;
 
-namespace FrostHelper
-{
+namespace FrostHelper {
     [CustomEntity("FrostHelper/HeldRefill")]
-    public class HeldRefill : Entity
-    {
+    public class HeldRefill : Entity {
         public Vector2[] Nodes;
         public float SpeedMult;
 
@@ -23,8 +21,7 @@ namespace FrostHelper
         public float TravelPercent;
         public Vector2 LastTravelDelta;
 
-        public HeldRefill(EntityData data, Vector2 offset) : base(data.Position + offset)
-        {
+        public HeldRefill(EntityData data, Vector2 offset) : base(data.Position + offset) {
             Nodes = data.NodesOffset(offset);
             SpeedMult = data.Float("speed", 6f);
 
@@ -53,27 +50,22 @@ namespace FrostHelper
             Add(new PlayerCollider(OnPlayer, null, null));
         }
 
-        public override void Update()
-        {
+        public override void Update() {
             base.Update();
-            if (Scene.OnInterval(0.1f))
-            {
+            if (Scene.OnInterval(0.1f)) {
                 (Scene as Level).ParticlesFG.Emit(p_glow, 1, Position, Vector2.One * 5f);
             }
             UpdateY();
             Light.Alpha = Calc.Approach(Light.Alpha, Sprite.Visible ? 1f : 0f, 4f * Engine.DeltaTime);
             Bloom.Alpha = Light.Alpha * 0.8f;
-            if (Scene.OnInterval(2f) && Sprite.Visible)
-            {
+            if (Scene.OnInterval(2f) && Sprite.Visible) {
                 Flash.Play("flash", true, false);
                 Flash.Visible = true;
             }
         }
 
-        public override void Render()
-        {
-            if (Sprite.Visible)
-            {
+        public override void Render() {
+            if (Sprite.Visible) {
                 Sprite.DrawOutline(1);
             }
 
@@ -82,23 +74,19 @@ namespace FrostHelper
             base.Render();
         }
 
-        private void RenderPath(bool bloom)
-        {
+        private void RenderPath(bool bloom) {
             int startIndex = PercentageToIndex(TravelPercent) - 1;
             // Draw the path
-            for (int i = startIndex; i < Nodes.Length - 1; i++)
-            {
+            for (int i = startIndex; i < Nodes.Length - 1; i++) {
                 //Color c = Color * Math.Min((i / 4f + 1f) / (TunnelNodes.Count / 8f), 1.25f);
-                if (i == startIndex && TravelPercent > 0f)
-                {
-                    float percent = TravelPercent - (float)Math.Floor(TravelPercent);
+                if (i == startIndex && TravelPercent > 0f) {
+                    float percent = TravelPercent - (float) Math.Floor(TravelPercent);
                     float angle = Calc.Angle(Nodes[i + 1], Nodes[i]);
                     float fullLength = Vector2.Distance(Nodes[i + 1], Nodes[i]);
-                    
+
                     //Draw.Line(Nodes[i], Nodes[i + 1], Color.Yellow);
-                    Draw.LineAngle(CenterLinePos(Nodes[i + 1]), angle, (float)Math.Floor(fullLength * (1f - percent)), Color.Yellow);
-                } else
-                {
+                    Draw.LineAngle(CenterLinePos(Nodes[i + 1]), angle, (float) Math.Floor(fullLength * (1f - percent)), Color.Yellow);
+                } else {
                     float angle = Calc.Angle(Nodes[i + 1], Nodes[i]);
                     float fullLength = Vector2.Distance(Nodes[i + 1], Nodes[i]);
                     Draw.Line(CenterLinePos(Nodes[i]), CenterLinePos(Nodes[i + 1]), bloom ? Color.White * 0.3f : Color.Yellow, bloom ? 3 : 1);
@@ -107,13 +95,11 @@ namespace FrostHelper
             }
         }
 
-        private Vector2 CenterLinePos(Vector2 pos)
-        {
+        private Vector2 CenterLinePos(Vector2 pos) {
             return pos;
         }
 
-        private IEnumerator RefillRoutine(Player player)
-        {
+        private IEnumerator RefillRoutine(Player player) {
             //Celeste.Celeste.Freeze(0.05f);
             yield return null;
             (Scene as Level).Shake(0.3f);
@@ -129,11 +115,9 @@ namespace FrostHelper
             RemoveSelf();
             yield break;
         }
-        public void OnPlayer(Player player)
-        {
+        public void OnPlayer(Player player) {
             // TODO
-            if (AnyDashPressed() && player.Holding is null)
-            {
+            if (AnyDashPressed() && player.Holding is null) {
                 Collidable = false;
                 SetHeldRefillUsedByPlayer(player, this);
                 player.StateMachine.State = HeldDashState;
@@ -142,14 +126,12 @@ namespace FrostHelper
             }
         }
 
-        public void UpdateY()
-        {
+        public void UpdateY() {
             Flash.Y = Sprite.Y = Bloom.Y = SpriteSineWave.Value * 2f;
         }
 
-        public int PercentageToIndex(float percent)
-        {
-            return ((int)Math.Floor(percent))/* % (Nodes.Length - 1)*/ + 1;
+        public int PercentageToIndex(float percent) {
+            return ((int) Math.Floor(percent))/* % (Nodes.Length - 1)*/ + 1;
         }
 
 
@@ -159,15 +141,13 @@ namespace FrostHelper
         #region State
         public static int HeldDashState;
 
-        public static void HeldDashBegin(Entity e)
-        {
+        public static void HeldDashBegin(Entity e) {
             Player player = e as Player;
             var refill = GetHeldRefillUsedByPlayer(player);
             player.Position = refill.Position;
             player.Speed = Vector2.Zero;
         }
-        public static int HeldDashUpdate(Entity e)
-        {
+        public static int HeldDashUpdate(Entity e) {
             Player player = e as Player;
             var refill = GetHeldRefillUsedByPlayer(player);
             //player.Speed = Vector2.Zero;
@@ -183,15 +163,13 @@ namespace FrostHelper
             // new:
             player.Speed = Calc.AngleToVector(Calc.Angle(start, end), Vector2.Distance(start, end) * travelPercentDelta / Engine.DeltaTime).Floor();
 
-            if (refill.TravelPercent > refill.Nodes.Length - 1)
-            {
+            if (refill.TravelPercent > refill.Nodes.Length - 1) {
                 refill.Visible = false;
                 return Player.StNormal;
             }
 
             // new if
-            if (refill.PercentageToIndex(refill.TravelPercent) != index)
-            {
+            if (refill.PercentageToIndex(refill.TravelPercent) != index) {
                 index = refill.PercentageToIndex(refill.TravelPercent);
                 start = refill.Nodes[index - 1];
                 end = refill.Nodes[index];
@@ -203,11 +181,9 @@ namespace FrostHelper
 
             refill.Position = player.Position + player.Speed * Engine.DeltaTime;
 
-            if (player.OnGround() && player.CanUnDuck)
-            {
-                
-                if (Input.Jump.Pressed && player.GetValue<float>("jumpGraceTimer") > 0f)
-                {
+            if (player.OnGround() && player.CanUnDuck) {
+
+                if (Input.Jump.Pressed && player.GetValue<float>("jumpGraceTimer") > 0f) {
                     //player.Invoke("SuperJump");
                     player.Jump(true, true);
                 }
@@ -215,17 +191,14 @@ namespace FrostHelper
                 return Player.StNormal;
             }
 
-            if (AnyDashHeld())
-            {
+            if (AnyDashHeld()) {
                 return HeldDashState;
-            } else
-            {
+            } else {
                 return Player.StNormal;
             }
         }
 
-        public static void HeldDashEnd(Entity e)
-        {
+        public static void HeldDashEnd(Entity e) {
             Player player = e as Player;
             var refill = GetHeldRefillUsedByPlayer(player);
             SetHeldRefillUsedByPlayer(player, null);
@@ -236,35 +209,28 @@ namespace FrostHelper
             refill.Add(new Coroutine(refill.RefillRoutine(player)));
         }
 
-        public static IEnumerator HeldDashRoutine(Entity e)
-        {
+        public static IEnumerator HeldDashRoutine(Entity e) {
             Player player = e as Player;
             Level level = player.Scene as Level;
-            while (true)
-            {
+            while (true) {
                 level.ParticlesFG.Emit(ZipMover.P_Sparks, 64, player.Position, new Vector2(4f));
                 yield return null;
             }
-            yield return null;
         }
 
-        public static HeldRefill GetHeldRefillUsedByPlayer(Player player)
-        {
+        public static HeldRefill GetHeldRefillUsedByPlayer(Player player) {
             return new DynData<Player>(player).Get<HeldRefill>("fh.heldRefill");
         }
 
-        public static void SetHeldRefillUsedByPlayer(Player player, HeldRefill refill)
-        {
+        public static void SetHeldRefillUsedByPlayer(Player player, HeldRefill refill) {
             new DynData<Player>(player).Set("fh.heldRefill", refill);
         }
 
-        public static bool AnyDashHeld()
-        {
+        public static bool AnyDashHeld() {
             return Input.Dash.Check || Input.CrouchDash.Check;
         }
 
-        public static bool AnyDashPressed()
-        {
+        public static bool AnyDashPressed() {
             return Input.Dash.Pressed || Input.CrouchDash.Pressed;
         }
         #endregion

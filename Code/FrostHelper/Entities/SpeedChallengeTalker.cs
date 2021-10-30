@@ -1,21 +1,19 @@
-﻿using Celeste;
+﻿#if SPEEDCHALLENGES
+using Celeste;
 using Celeste.Mod.Entities;
 using Microsoft.Xna.Framework;
 using Monocle;
 using System.Collections.Generic;
 
-namespace FrostHelper
-{
+namespace FrostHelper {
     [CustomEntity("FrostHelper/SpeedChallengeJournal")]
-    class SpeedChallengeTalker : Trigger
-    {
+    class SpeedChallengeTalker : Trigger {
         string[] challenges;
         bool autoAddSID;
 
 
-        public SpeedChallengeTalker(EntityData data, Vector2 offset) : base(data, offset)
-        {
-            Add(new TalkComponent(new Rectangle(0, 0, data.Width, data.Height), new Vector2(data.Width/2,0), OnTalk));
+        public SpeedChallengeTalker(EntityData data, Vector2 offset) : base(data, offset) {
+            Add(new TalkComponent(new Rectangle(0, 0, data.Width, data.Height), new Vector2(data.Width / 2, 0), OnTalk));
             challenges = data.Attr("challengeNames", "SpringCollab2020TimeTrial/1-Beginner>sc2020_beg_rainbowBerryRush").Split(',');
             autoAddSID = data.Bool("autoAddSid", false);
         }
@@ -24,24 +22,19 @@ namespace FrostHelper
         Player talkingPlayer;
         CustomJournal journal;
 
-        public override void Awake(Scene scene)
-        {
+        public override void Awake(Scene scene) {
             base.Awake(scene);
-            if (challenges[0].StartsWith("readFromDialog:"))
-            {
+            if (challenges[0].StartsWith("readFromDialog:")) {
                 challenges = Dialog.Clean(challenges[0].Split(':')[1]).Split(',');
             }
-            if (autoAddSID)
-            {
-                for (int i = 0; i < challenges.Length; i++)
-                {
+            if (autoAddSID) {
+                for (int i = 0; i < challenges.Length; i++) {
                     challenges[i] = SceneAs<Level>().Session.Area.SID + '>' + challenges[i];
                 }
             }
         }
 
-        public void OnTalk(Player player)
-        {
+        public void OnTalk(Player player) {
             journal = new CustomJournal();
             journal.Pages = new List<CustomJournalPage>() { new SpeedChallengePage(journal, challenges) };
             Scene.Add(journal);
@@ -52,12 +45,10 @@ namespace FrostHelper
             Input.MenuCancel.ConsumeBuffer();
         }
 
-        public override void Update()
-        {
+        public override void Update() {
             base.Update();
 
-            if (talkingPlayer != null && Input.MenuCancel.Pressed)
-            {
+            if (talkingPlayer != null && Input.MenuCancel.Pressed) {
                 journal.Add(new Coroutine(journal.Leave()));
                 Input.Dash.ConsumePress();
                 Input.Jump.ConsumePress();
@@ -67,3 +58,4 @@ namespace FrostHelper
         }
     }
 }
+#endif

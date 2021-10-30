@@ -1,19 +1,16 @@
-﻿using System;
-using System.Collections;
-using Celeste;
+﻿using Celeste;
 using Microsoft.Xna.Framework;
 using Monocle;
 using MonoMod.Utils;
+using System;
+using System.Collections;
 
-namespace FrostHelper
-{
+namespace FrostHelper {
     [Celeste.Mod.Entities.CustomEntity("FrostHelper/TemporaryKey")]
-    public class TemporaryKey : Key
-    {
+    public class TemporaryKey : Key {
         public new bool Turning { get; private set; }
 
-        public TemporaryKey(EntityData data, Vector2 offset, EntityID id) : base(data.Position + offset, id, data.NodesOffset(offset))
-        {
+        public TemporaryKey(EntityData data, Vector2 offset, EntityID id) : base(data.Position + offset, id, data.NodesOffset(offset)) {
             this.follower = Get<Follower>();
             // Create sprite
             DynData<Key> dyndata = new DynData<Key>(this);
@@ -27,41 +24,33 @@ namespace FrostHelper
             Add(sprite);
             dyndata.Set("sprite", sprite);
             Follower follower = this.follower;
-            follower.OnLoseLeader = (Action)Delegate.Combine(follower.OnLoseLeader, new Action(Dissolve));
+            follower.OnLoseLeader = (Action) Delegate.Combine(follower.OnLoseLeader, new Action(Dissolve));
             this.follower.PersistentFollow = false; // was false
-            Add(new TransitionListener
-            {
-                OnOut = delegate (float f)
-                {
+            Add(new TransitionListener {
+                OnOut = delegate (float f) {
                     StartedUsing = false;
-                    if (!IsUsed)
-                    {
+                    if (!IsUsed) {
                         Dissolve();
                     }
                 }
             });
         }
 
-        public override void Added(Scene scene)
-        {
+        public override void Added(Scene scene) {
             base.Added(scene);
-            if (scene is Level level)
-            {
+            if (scene is Level level) {
                 start = Position;
                 startLevel = level.Session.Level;
             }
         }
 
-        public override void Update()
-        {
+        public override void Update() {
             Level level = Scene as Level;
             Session session = level?.Session;
-            if (IsUsed && !wasUsed)
-            {
+            if (IsUsed && !wasUsed) {
                 wasUsed = true;
             }
-            if (!dissolved && !IsUsed && !base.Turning && session != null && session.Keys.Contains(ID))
-            {
+            if (!dissolved && !IsUsed && !base.Turning && session != null && session.Keys.Contains(ID)) {
                 session.DoNotLoad.Remove(ID);
                 session.Keys.Remove(ID);
                 session.UpdateLevelStartDashes();
@@ -69,15 +58,12 @@ namespace FrostHelper
             base.Update();
         }
 
-        public void Dissolve()
-        {
+        public void Dissolve() {
             bool flag = dissolved || IsUsed || base.Turning;
-            if (!flag)
-            {
+            if (!flag) {
                 dissolved = true;
                 bool flag2 = follower.Leader != null;
-                if (flag2)
-                {
+                if (flag2) {
                     Player player = follower.Leader.Entity as Player;
                     player.StrawberryCollectResetTimer = 2.5f;
                     follower.Leader.LoseFollower(follower);
@@ -86,12 +72,11 @@ namespace FrostHelper
             }
         }
 
-        private IEnumerator DissolveRoutine()
-        {
+        private IEnumerator DissolveRoutine() {
             Level level = Scene as Level;
             Session session = level.Session;
             if (session.DoNotLoad.Contains(ID))
-            session.DoNotLoad.Remove(ID);
+                session.DoNotLoad.Remove(ID);
             if (session.Keys.Contains(ID))
                 session.Keys.Remove(ID);
             session.UpdateLevelStartDashes();
@@ -101,8 +86,7 @@ namespace FrostHelper
             yield return 0.05f;
             Input.Rumble(RumbleStrength.Medium, RumbleLength.Medium);
             int num;
-            for (int i = 0; i < 6; i = num + 1)
-            {
+            for (int i = 0; i < 6; i = num + 1) {
                 float dir = Calc.Random.NextFloat(6.28318548f);
                 level.ParticlesFG.Emit(StrawberrySeed.P_Burst, 1, Position + Calc.AngleToVector(dir, 4f), Vector2.Zero, dir);
                 num = i;
@@ -110,8 +94,7 @@ namespace FrostHelper
             sprite.Scale = Vector2.Zero;
             Visible = false;
             bool flag = level.Session.Level != startLevel;
-            if (flag)
-            {
+            if (flag) {
                 RemoveSelf();
                 yield break;
             }
@@ -126,8 +109,7 @@ namespace FrostHelper
             yield break;
         }
 
-        public override void Removed(Scene scene)
-        {
+        public override void Removed(Scene scene) {
             base.Removed(scene);
             Session session = (scene as Level).Session;
             if (session.DoNotLoad.Contains(ID))

@@ -1,43 +1,35 @@
-﻿using System;
-using System.Collections;
-using Celeste;
+﻿using Celeste;
 using Celeste.Mod;
 using Celeste.Mod.Entities;
 using Microsoft.Xna.Framework;
 using Monocle;
 using MonoMod.Utils;
+using System;
+using System.Collections;
 
-namespace FrostTempleHelper
-{
+namespace FrostTempleHelper {
     [CustomEntity("FrostHelper/CoreBerry")]
     [RegisterStrawberry(true, false)]
-    public class CoreBerry : Strawberry, IStrawberry
-    {
+    public class CoreBerry : Strawberry, IStrawberry {
         public bool IsIce;
         Sprite indicator;
-        public CoreBerry(EntityData data, Vector2 position, EntityID gid) : base(data, position, gid)
-        {
+        public CoreBerry(EntityData data, Vector2 position, EntityID gid) : base(data, position, gid) {
             ID = gid;
             IsIce = data.Bool("isIce", false);
             Add(new CoreModeListener(new Action<Session.CoreModes>(OnChangeMode)));
         }
-        
-        private void OnChangeMode(Session.CoreModes mode)
-        {
-            if (!IsIce)
-            {
+
+        private void OnChangeMode(Session.CoreModes mode) {
+            if (!IsIce) {
                 // berry hot
-                if (mode == Session.CoreModes.Cold)
-                {
+                if (mode == Session.CoreModes.Cold) {
                     Dissolve();
                     sprite.Visible = false;
                     indicator.Visible = true;
                 }
-            } else
-            {
+            } else {
                 // berry cold
-                if (mode == Session.CoreModes.Hot || mode == Session.CoreModes.None)
-                {
+                if (mode == Session.CoreModes.Hot || mode == Session.CoreModes.None) {
                     Dissolve();
                     sprite.Visible = false;
                     indicator.Visible = true;
@@ -46,33 +38,24 @@ namespace FrostTempleHelper
         }
 
         Sprite sprite;
-        public override void Added(Scene scene)
-        {
+        public override void Added(Scene scene) {
             base.Added(scene);
             Remove(Get<BloomPoint>());
             string spr;
             string ind;
-            if (IsIce)
-            {
+            if (IsIce) {
                 ind = "collectables/FrostHelper/CoreBerry/Cold/CoreBerry_Cold_Indicator";
-                if (SaveData.Instance.CheckStrawberry(ID))
-                {
+                if (SaveData.Instance.CheckStrawberry(ID)) {
                     spr = "coldberryghost";
-                    
-                } else
-                {
+
+                } else {
                     spr = "coldberry";
                 }
-            }
-            else
-            {
+            } else {
                 ind = "collectables/FrostHelper/CoreBerry/Hot/CoreBerry_Hot_Indicator";
-                if (SaveData.Instance.CheckStrawberry(ID))
-                {
+                if (SaveData.Instance.CheckStrawberry(ID)) {
                     spr = "hotberryghost";
-                }
-                else
-                {
+                } else {
                     spr = "hotberry";
                 }
             }
@@ -91,21 +74,16 @@ namespace FrostTempleHelper
 
             Level level = scene as Level;
             Session.CoreModes mode = level.Session.CoreMode;
-            if (!IsIce)
-            {
+            if (!IsIce) {
                 // berry hot
-                if (mode == Session.CoreModes.Cold)
-                {
+                if (mode == Session.CoreModes.Cold) {
                     Dissolve(false);
                     sprite.Visible = false;
                     indicator.Visible = true;
                 }
-            }
-            else
-            {
+            } else {
                 // berry cold
-                if (mode == Session.CoreModes.Hot || mode == Session.CoreModes.None)
-                {
+                if (mode == Session.CoreModes.Hot || mode == Session.CoreModes.None) {
                     Dissolve(false);
                     sprite.Visible = false;
                     indicator.Visible = true;
@@ -113,10 +91,8 @@ namespace FrostTempleHelper
             }
         }
 
-        public void Dissolve(bool visible = true)
-        {
-            if (Follower.Leader != null)
-            {
+        public void Dissolve(bool visible = true) {
+            if (Follower.Leader != null) {
                 Player player = Follower.Leader.Entity as Player;
                 player.StrawberryCollectResetTimer = 2.5f;
                 Follower.Leader.LoseFollower(Follower);
@@ -124,8 +100,7 @@ namespace FrostTempleHelper
             Add(new Coroutine(DissolveRoutine(visible), true));
         }
 
-        private IEnumerator DissolveRoutine(bool visible = true)
-        {
+        private IEnumerator DissolveRoutine(bool visible = true) {
             Level level = Scene as Level;
             Session session = level.Session;
             session.DoNotLoad.Remove(ID);
@@ -134,15 +109,13 @@ namespace FrostTempleHelper
             sprite.Scale = Vector2.One * 0.5f;
             yield return 0.05f;
             Input.Rumble(RumbleStrength.Medium, RumbleLength.Medium);
-            if (visible)
-            {
-                for (int i = 0; i < 6; i++)
-                {
+            if (visible) {
+                for (int i = 0; i < 6; i++) {
                     float dir = Calc.Random.NextFloat(6.28318548f);
                     level.ParticlesFG.Emit(StrawberrySeed.P_Burst, 1, Position + Calc.AngleToVector(dir, 4f), Vector2.Zero, dir);
                 }
             }
-            
+
             sprite.Scale = Vector2.Zero;
             sprite.Visible = false;
             indicator.Visible = true;

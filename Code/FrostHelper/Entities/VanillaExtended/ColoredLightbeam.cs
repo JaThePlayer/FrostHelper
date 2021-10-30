@@ -3,15 +3,12 @@ using Celeste.Mod.Entities;
 using Microsoft.Xna.Framework;
 using System.Reflection;
 
-namespace FrostHelper
-{
+namespace FrostHelper {
     [CustomEntity("FrostHelper/ColoredLightbeam")]
-    public class ColoredLightbeam : LightBeam
-    {
+    public class ColoredLightbeam : LightBeam {
         // thanks for making this not static
         private static FieldInfo LightBeam_color = typeof(LightBeam).GetField("color", BindingFlags.NonPublic | BindingFlags.Instance);
-        public ColoredLightbeam(EntityData data, Vector2 offset) : base(data, offset)
-        {
+        public ColoredLightbeam(EntityData data, Vector2 offset) : base(data, offset) {
             LightBeam_color.SetValue(this, ColorHelper.GetColor(data.Attr("color", "ccffff")));
         }
     }

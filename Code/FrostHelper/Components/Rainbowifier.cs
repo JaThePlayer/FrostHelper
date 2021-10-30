@@ -1,19 +1,13 @@
 ﻿using Monocle;
-using System.Linq;
 
-namespace FrostHelper
-{
-    public class Rainbowifier : Component
-    {
+namespace FrostHelper {
+    public class Rainbowifier : Component {
         public Rainbowifier() : base(false, true) { }
 
-        public override void Render()
-        {
+        public override void Render() {
             ColorHelper.SetGetHueScene(Scene);
-            for (int i = 0; i < Entity.Components.Count; i++)
-            {
-                if (Entity.Components[i] is Image img)
-                {
+            foreach (var component in Entity.Components) {
+                if (component is Image img) {
                     img.Color = ColorHelper.GetHue(img.RenderPosition);
                 }
             }

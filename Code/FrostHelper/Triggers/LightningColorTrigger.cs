@@ -1,92 +1,74 @@
 ﻿using Celeste;
-using Monocle;
-using Microsoft.Xna.Framework;
-using System.Reflection;
 using Celeste.Mod.Entities;
+using Microsoft.Xna.Framework;
+using Mono.Cecil.Cil;
+using Monocle;
+using MonoMod.Cil;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Collections;
-using MonoMod.Cil;
-using Mono.Cecil.Cil;
-using System;
+using System.Reflection;
 
-namespace FrostHelper
-{
+namespace FrostHelper {
     [Tracked]
     [CustomEntity("FrostHelper/LightningColorTrigger")]
-    public class LightningColorTrigger : Trigger
-    {
+    public class LightningColorTrigger : Trigger {
         #region Hooks
         [OnLoad]
-        public static void Load()
-        {
+        public static void Load() {
             On.Celeste.LightningRenderer.Awake += LightningRenderer_Awake;
             On.Celeste.LightningRenderer.Reset += LightningRenderer_Reset;
             IL.Celeste.LightningRenderer.OnBeforeRender += LightningRenderer_OnBeforeRender;
         }
 
         [OnUnload]
-        public static void Unload()
-        {
+        public static void Unload() {
             On.Celeste.LightningRenderer.Awake -= LightningRenderer_Awake;
             On.Celeste.LightningRenderer.Reset -= LightningRenderer_Reset;
             IL.Celeste.LightningRenderer.OnBeforeRender -= LightningRenderer_OnBeforeRender;
         }
 
-        public static string OrDefault(string value, string def)
-        {
+        public static string OrDefault(string value, string def) {
             if (string.IsNullOrWhiteSpace(value))
                 return def;
             return value;
         }
 
-        public static Color OrDefault(Color? value, Color def)
-        {
+        public static Color OrDefault(Color? value, Color def) {
             return value.GetValueOrDefault(def);
         }
 
-        private static void LightningRenderer_OnBeforeRender(ILContext il)
-        {
+        private static void LightningRenderer_OnBeforeRender(ILContext il) {
             ILCursor cursor = new ILCursor(il);
 
             //while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchCall<Color>("get_White")))
-            while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdstr("f7b262")))
-            {
+            while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdstr("f7b262"))) {
                 cursor.Emit(OpCodes.Pop);
                 cursor.Emit(OpCodes.Ldarg_0); // this
-                cursor.EmitDelegate<Func<LightningRenderer, string>>((LightningRenderer self) =>
-                {
+                cursor.EmitDelegate<Func<LightningRenderer, string>>((LightningRenderer self) => {
                     LightningColorTrigger trigger;
-                    if ((trigger = self.Scene.Tracker.GetEntity<LightningColorTrigger>()) != null && trigger.PlayerIsInside)
-                    {
+                    if ((trigger = self.Scene.Tracker.GetEntity<LightningColorTrigger>()) != null && trigger.PlayerIsInside) {
                         return trigger.FillColor;
-                    } else
-                    {
+                    } else {
                         return OrDefault(FrostModule.Session.LightningFillColor, "f7b262");
                     }
                 });
             }
-            while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdcR4(0.1f)))
-            {
+            while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdcR4(0.1f))) {
                 cursor.Emit(OpCodes.Pop);
                 cursor.Emit(OpCodes.Ldarg_0); // this
-                cursor.EmitDelegate<Func<LightningRenderer, float>>((LightningRenderer self) =>
-                {
+                cursor.EmitDelegate<Func<LightningRenderer, float>>((LightningRenderer self) => {
                     LightningColorTrigger trigger;
-                    if ((trigger = self.Scene.Tracker.GetEntity<LightningColorTrigger>()) != null && trigger.PlayerIsInside)
-                    {
+                    if ((trigger = self.Scene.Tracker.GetEntity<LightningColorTrigger>()) != null && trigger.PlayerIsInside) {
                         return trigger.FillColorMultiplier;
-                    }
-                    else
-                    {
+                    } else {
                         return FrostModule.Session.LightningFillColorMultiplier;
                     }
                 });
             }
         }
 
-        private static Color[] getColors()
-        {
+        private static Color[] getColors() {
             return new Color[2]
                 {
                     ColorHelper.GetColor(OrDefault(FrostModule.Session.LightningColorA, "fcf579")),
@@ -94,28 +76,23 @@ namespace FrostHelper
                 };
         }
 
-        private static void LightningRenderer_Awake(On.Celeste.LightningRenderer.orig_Awake orig, LightningRenderer self, Scene scene)
-        {
+        private static void LightningRenderer_Awake(On.Celeste.LightningRenderer.orig_Awake orig, LightningRenderer self, Scene scene) {
             orig(self, scene);
             //if (scene is Level)
             {
                 Console.WriteLine(FrostModule.Session.LightningColorA);
                 Console.WriteLine(FrostModule.Session.LightningColorB);
                 Color[] colors = getColors();
-                if (FrostModule.Session.LightningColorA != null)
-                {
+                if (FrostModule.Session.LightningColorA != null) {
                     ChangeLightningColor(self, colors);
                 }
             }
         }
 
-        private static void LightningRenderer_Reset(On.Celeste.LightningRenderer.orig_Reset orig, LightningRenderer self)
-        {
-            if (self.Scene is Level)
-            {
+        private static void LightningRenderer_Reset(On.Celeste.LightningRenderer.orig_Reset orig, LightningRenderer self) {
+            if (self.Scene is Level) {
                 Color[] colors = getColors();
-                if (FrostModule.Session.LightningColorA != null)
-                {
+                if (FrostModule.Session.LightningColorA != null) {
                     ChangeLightningColor(self, colors);
                 }
             }
@@ -136,8 +113,7 @@ namespace FrostHelper
 
         bool persistent;
 
-        public LightningColorTrigger(EntityData data, Vector2 offset) : base(data, offset)
-        {
+        public LightningColorTrigger(EntityData data, Vector2 offset) : base(data, offset) {
             persistent = data.Bool("persistent", false);
             Color c1 = ColorHelper.GetColor(data.Attr("color1", "fcf579"));
             Color c2 = ColorHelper.GetColor(data.Attr("color2", "8cf7e2"));
@@ -148,14 +124,12 @@ namespace FrostHelper
                 c1, c2
             };
         }
-        
-        public override void OnEnter(Player player)
-        {
+
+        public override void OnEnter(Player player) {
             base.OnEnter(player);
             LightningRenderer r = player.Scene.Tracker.GetEntity<LightningRenderer>();
             ChangeLightningColor(r, electricityColors);
-            if (persistent)
-            {
+            if (persistent) {
                 var session = SceneAs<Level>().Session;
                 //SessionHelper.WriteColorToSession(session, "fh.lightningColorA", electricityColors[0]);
                 //SessionHelper.WriteColorToSession(session, "fh.lightningColorB", electricityColors[1]);
@@ -167,16 +141,13 @@ namespace FrostHelper
             }
         }
 
-        public static void ChangeLightningColor(LightningRenderer renderer, Color[] colors)
-        {
+        public static void ChangeLightningColor(LightningRenderer renderer, Color[] colors) {
             LightningRenderer_electricityColors.SetValue(renderer, colors);
             var bolts = LightningRenderer_bolts.GetValue(renderer);
-            List<object> objs = ((IEnumerable<object>)bolts).ToList();
-            for (int i = 0; i < objs.Count; i++)
-            {
+            List<object> objs = ((IEnumerable<object>) bolts).ToList();
+            for (int i = 0; i < objs.Count; i++) {
                 object obj = objs[i];
-                if (Bolt_color == null)
-                {
+                if (Bolt_color == null) {
                     Bolt_color = obj.GetType().GetField("color", BindingFlags.Instance | BindingFlags.NonPublic);
                 }
                 Bolt_color.SetValue(obj, colors[i % 2]);

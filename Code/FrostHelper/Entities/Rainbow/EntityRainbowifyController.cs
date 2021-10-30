@@ -8,20 +8,16 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace FrostHelper
-{
+namespace FrostHelper {
     [CustomEntity("FrostHelper/EntityRainbowifyController")]
     [Tracked]
-    public class EntityRainbowifyController : Entity
-    {
+    public class EntityRainbowifyController : Entity {
         #region Hooks
         private static ILContext.Manipulator levelRenderManipulator;
 
         [OnLoad]
-        public static void Load()
-        {
-            levelRenderManipulator = AllowColorChange((object self) =>
-            {
+        public static void Load() {
+            levelRenderManipulator = AllowColorChange((object self) => {
                 var controller = (self as Level).Tracker?.GetEntity<EntityRainbowifyController>();
                 return controller != null && controller.all;
             }, (object self) => {
@@ -33,31 +29,23 @@ namespace FrostHelper
         }
 
         [OnUnload]
-        public static void Unload()
-        {
+        public static void Unload() {
             IL.Celeste.Level.Render -= levelRenderManipulator;
             levelRenderManipulator = null;
             //IL.Celeste.Player.Render -= AllowColorChangeForEntity;
         }
 
-        private static ILContext.Manipulator AllowColorChange(Func<object,bool> condition, Func<object, Vector2> positionGetter)
-        {
-            return (ILContext il) =>
-            {
+        private static ILContext.Manipulator AllowColorChange(Func<object, bool> condition, Func<object, Vector2> positionGetter) {
+            return (ILContext il) => {
                 ILCursor cursor = new ILCursor(il);
 
-                while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchCall<Color>("get_White")))
-                {
+                while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchCall<Color>("get_White"))) {
                     cursor.Emit(OpCodes.Pop);
                     cursor.Emit(OpCodes.Ldarg_0); // this
-                    cursor.EmitDelegate<Func<object, Color>>((object self) =>
-                    {
-                        if (condition(self))
-                        {
+                    cursor.EmitDelegate<Func<object, Color>>((object self) => {
+                        if (condition(self)) {
                             return ColorHelper.GetHue(Engine.Scene, positionGetter(self));
-                        }
-                        else
-                        {
+                        } else {
                             return Color.White;
                         }
 
@@ -67,22 +55,16 @@ namespace FrostHelper
             };
         }
 
-        private static void AllowColorChangeForEntity(ILContext il)
-        {
+        private static void AllowColorChangeForEntity(ILContext il) {
             ILCursor cursor = new ILCursor(il);
 
-            while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchCall<Color>("get_White")))
-            {
+            while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchCall<Color>("get_White"))) {
                 cursor.Emit(OpCodes.Pop);
                 cursor.Emit(OpCodes.Ldarg_0); // this
-                cursor.EmitDelegate<Func<object, Color>>((object self) =>
-                {
-                    if ((self as Entity).Get<Rainbowifier>() != null)
-                    {
+                cursor.EmitDelegate<Func<object, Color>>((object self) => {
+                    if ((self as Entity).Get<Rainbowifier>() != null) {
                         return ColorHelper.GetHue(Engine.Scene, (self as Entity).Position);
-                    }
-                    else
-                    {
+                    } else {
                         return Color.White;
                     }
 
@@ -98,48 +80,40 @@ namespace FrostHelper
 
         private List<Backdrop> affectedBackdrops;
 
-        public EntityRainbowifyController(EntityData data, Vector2 offset) : base(data.Position + offset) 
-        {
+        public EntityRainbowifyController(EntityData data, Vector2 offset) : base(data.Position + offset) {
             string types = data.Attr("types");
-            if (types == "all")
-            {
+            if (types == "all") {
                 all = true;
-            } else
-            {
+            } else {
                 Types = FrostModule.GetTypes(types);
             }
-            
+
         }
 
-        public override void Awake(Scene scene)
-        {
+        public override void Awake(Scene scene) {
             base.Awake(scene);
             if (Types is null)
                 return;
 
-            foreach (var entity in scene.Entities)
-            {
+            foreach (var entity in scene.Entities) {
                 if (Types.Contains(entity.GetType()))
                     entity.Add(new Rainbowifier());
             }
 
             affectedBackdrops = new List<Backdrop>();
-            foreach (var backdrop in (scene as Level).Background.Backdrops)
-            {
+            foreach (var backdrop in (scene as Level).Background.Backdrops) {
                 if (Types.Contains(backdrop.GetType()))
                     affectedBackdrops.Add(backdrop);
             }
             //RemoveSelf();
         }
 
-        public override void Render()
-        {
+        public override void Render() {
             base.Render();
             if (affectedBackdrops is null)
                 return;
 
-            foreach (var backdrop in affectedBackdrops)
-            {
+            foreach (var backdrop in affectedBackdrops) {
                 backdrop.Color = ColorHelper.GetHue(Scene, backdrop.Position);
             }
         }

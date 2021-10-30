@@ -1,24 +1,21 @@
-﻿using Celeste;
+﻿#if SPEEDCHALLENGES
+using Celeste;
 using Celeste.Mod;
 using System;
 using System.Collections.Generic;
 
-namespace FrostHelper
-{
-    class FrostMapDataProcessor : EverestMapDataProcessor
-    {
-        public struct SpeedChallengeInfo
-        {
+namespace FrostHelper {
+    class FrostMapDataProcessor : EverestMapDataProcessor {
+        public struct SpeedChallengeInfo {
             public EntityID ID;
             public float GoalTime;
         }
-        
+
 
         public static Dictionary<string, SpeedChallengeInfo> SpeedChallenges = new Dictionary<string, SpeedChallengeInfo>();
         private string levelName;
 
-        public override Dictionary<string, Action<BinaryPacker.Element>> Init()
-        {
+        public override Dictionary<string, Action<BinaryPacker.Element>> Init() {
             return new Dictionary<string, Action<BinaryPacker.Element>> {
                 {
                     "level", level => {
@@ -40,8 +37,7 @@ namespace FrostHelper
             };
         }
 
-        public override void Reset()
-        {
+        public override void Reset() {
             /*
             string SID = AreaKey.GetSID();
             if (SpeedChallenges.ContainsKey(AreaKey.GetLevelSet()))
@@ -50,9 +46,9 @@ namespace FrostHelper
             }*/
         }
 
-        public override void End()
-        {
+        public override void End() {
             // nothing to do here
         }
     }
 }
+#endif

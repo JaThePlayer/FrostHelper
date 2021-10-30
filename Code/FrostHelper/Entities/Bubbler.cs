@@ -1,24 +1,21 @@
-﻿using System;
-using System.Linq;
-using Monocle;
-using Celeste;
-using Microsoft.Xna.Framework;
-using System.Collections;
+﻿using Celeste;
 using Celeste.Mod.Entities;
+using Microsoft.Xna.Framework;
+using Monocle;
+using System;
+using System.Collections;
+using System.Linq;
 
-namespace FrostHelper
-{
+namespace FrostHelper {
     [CustomEntity("FrostHelper/Bubbler")]
-    public class Bubbler : Entity
-    {
+    public class Bubbler : Entity {
         private Vector2[] nodes;
         private readonly bool visible;
         private Sprite sprite;
         private Sprite previewSprite;
         private Color color;
 
-        public Bubbler(EntityData data, Vector2 offset) : base(data.Position + offset)
-        {
+        public Bubbler(EntityData data, Vector2 offset) : base(data.Position + offset) {
             visible = data.Bool("visible", false);
             Collider = new Hitbox(14f, 14f, 0f, 0f);
             Collider.CenterOrigin();
@@ -27,8 +24,7 @@ namespace FrostHelper
 
             nodes = data.NodesOffset(offset);
 
-            if (visible)
-            {
+            if (visible) {
                 Add(sprite = new Sprite(GFX.Game, "objects/FrostHelper/bubble"));
                 sprite.AddLoop("idle", "", 0.1f);
                 sprite.CenterOrigin();
@@ -43,25 +39,20 @@ namespace FrostHelper
             }
         }
 
-        private void OnPlayer(Player player)
-        {
+        private void OnPlayer(Player player) {
             Collidable = false;
-            if (nodes != null && nodes.Length >= 2)
-            {
-                if (visible)
-                {
+            if (nodes != null && nodes.Length >= 2) {
+                if (visible) {
                     sprite.RemoveSelf();
                 }
                 Add(new Coroutine(NodeRoutine(player), true));
             }
         }
 
-        private IEnumerator NodeRoutine(Player player)
-        {
+        private IEnumerator NodeRoutine(Player player) {
             //yield return 0.3f;
             bool flag = !player.Dead;
-            if (flag)
-            {
+            if (flag) {
                 Audio.Play("event:/game/general/cassette_bubblereturn", SceneAs<Level>().Camera.Position + new Vector2(160f, 90f));
                 player.Dashes = Math.Max(player.Dashes, player.MaxDashes);
                 player.StartCassetteFly(nodes[1], nodes[0]);
@@ -73,11 +64,9 @@ namespace FrostHelper
             yield break;
         }
 
-        private void Player_NormalBegin(On.Celeste.Player.orig_NormalBegin orig, Player self)
-        {
+        private void Player_NormalBegin(On.Celeste.Player.orig_NormalBegin orig, Player self) {
             orig(self);
-            if (visible)
-            {
+            if (visible) {
                 previewSprite.RemoveSelf();
             }
             On.Celeste.Player.NormalBegin -= Player_NormalBegin;

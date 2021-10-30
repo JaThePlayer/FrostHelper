@@ -1,6 +1,6 @@
 - Name: FrostHelper
-  Version: 1.30.7
-  DLL: Code/FrostHelper/bin/FrostTempleHelper.dll
+  Version: 1.31.0
+  DLL: Code/FrostHelper/bin/net452/FrostTempleHelper.dll
   Dependencies:
     - Name: Everest
       Version: 1.1833.0
@@ -11,3 +11,5 @@
       Version: 1.4.0
     - Name: CelesteTAS
       Version: 3.4.5
+    - Name: ShaderHelper
+      Version: 0.0.3

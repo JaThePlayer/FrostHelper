@@ -6,33 +6,26 @@ using Monocle;
 using System;
 using Triangulator;
 
-namespace FrostHelper.Entities
-{
+namespace FrostHelper.Entities {
     [CustomEntity("FrostHelper/ArbitraryShapeFireBarrier")]
-    public class ArbitraryShapeFireBarrier : Entity
-    {
+    public class ArbitraryShapeFireBarrier : Entity {
         public Vector3[] Vertices;
         public bool IsIce;
         //public ThunderRenderer.Edge[] Edges;
 
-        public ArbitraryShapeFireBarrier(EntityData data, Vector2 offset) : base(data.Position + offset)
-        {
+        public ArbitraryShapeFireBarrier(EntityData data, Vector2 offset) : base(data.Position + offset) {
             Depth = -8500;
             var nodes = data.NodesOffset(offset);
             Vector2[] input = new Vector2[nodes.Length + 1];
             input[0] = Position;
-            for (int i = 1; i < input.Length; i++)
-            {
+            for (int i = 1; i < input.Length; i++) {
                 input[i] = nodes[i - 1];
             }
-            Vector2[] verts = null;
-            int[] indices = null;
 
-            Triangulator.Triangulator.Triangulate(input, WindingOrder.CounterClockwise, out verts, out indices);
+            Triangulator.Triangulator.Triangulate(input, WindingOrder.CounterClockwise, out Vector2[] verts, out int[] indices);
 
             Vertices = new Vector3[indices.Length];
-            for (int i = 0; i < indices.Length; i++)
-            {
+            for (int i = 0; i < indices.Length; i++) {
                 Vertices[i] = new Vector3(verts[indices[i]], 0f);
             }
             LavaShape Lava = new LavaShape(input, Vertices, IsIce ? 2 : 4);
@@ -42,8 +35,7 @@ namespace FrostHelper.Entities
             Lava.SmallWaveAmplitude = 2f;
             Lava.BigWaveAmplitude = 1f;
             Lava.CurveAmplitude = 1f;
-            if (IsIce)
-            {
+            if (IsIce) {
                 Lava.UpdateMultiplier = 0f;
                 Lava.Spikey = 3f;
                 Lava.SmallWaveAmplitude = 1f;
@@ -62,8 +54,7 @@ namespace FrostHelper.Entities
             Add(new PlayerCollider(new Action<Player>(OnPlayer), Collider, null));
         }
 
-        public void OnPlayer(Player player)
-        {
+        public void OnPlayer(Player player) {
             if (!player.Dead)
                 player.Die(Vector2.Normalize(-player.Speed));
         }

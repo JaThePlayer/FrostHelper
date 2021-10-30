@@ -6,21 +6,17 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 
-namespace FrostHelper
-{
-    public static class TypeHelper
-    {
+namespace FrostHelper {
+    public static class TypeHelper {
         private static Dictionary<string, Type> entityNameToType = null;
 
-        public static Type EntityNameToType(string entityName)
-        {
+        public static Type EntityNameToType(string entityName) {
             // see if this is just a type name
             Type ret = FakeAssembly.GetFakeEntryAssembly().GetType(entityName, false, true);
             if (ret != null)
                 return ret;
 
-            if (entityNameToType is null)
-            {
+            if (entityNameToType is null) {
                 CreateCache();
             }
 
@@ -30,10 +26,8 @@ namespace FrostHelper
             throw new Exception($"Unknown entity name: {entityName}.");
         }
 
-        private static void CreateCache()
-        {
-            entityNameToType = new Dictionary<string, Type>()
-            {
+        private static void CreateCache() {
+            entityNameToType = new Dictionary<string, Type>() {
                 ["checkpoint"] = typeof(Checkpoint),
                 ["jumpThru"] = typeof(JumpthruPlatform),
                 ["refill"] = typeof(Refill),
@@ -226,37 +220,27 @@ namespace FrostHelper
                 ["detachFollowersTrigger"] = typeof(DetachStrawberryTrigger),
             };
 
-            foreach (var type in FakeAssembly.GetFakeEntryAssembly().GetTypesSafe())
-            {
+            foreach (var type in FakeAssembly.GetFakeEntryAssembly().GetTypesSafe()) {
                 checkType(type);
             }
 
-            void checkType(Type type)
-            {
-                foreach (CustomEntityAttribute customEntityAttribute in type.GetCustomAttributes<CustomEntityAttribute>())
-                {
-                    foreach (string idFull in customEntityAttribute.IDs)
-                    {
+            void checkType(Type type) {
+                foreach (CustomEntityAttribute customEntityAttribute in type.GetCustomAttributes<CustomEntityAttribute>()) {
+                    foreach (string idFull in customEntityAttribute.IDs) {
                         string id;
                         string[] split = idFull.Split('=');
 
-                        if (split.Length == 1 || split.Length == 2)
-                        {
+                        if (split.Length == 1 || split.Length == 2) {
                             id = split[0];
-                        }
-                        else
-                        {
+                        } else {
                             // invalid
                             continue;
                         }
 
                         string IDTrim = id.Trim();
-                        if (!entityNameToType.ContainsKey(IDTrim))
-                        {
+                        if (!entityNameToType.ContainsKey(IDTrim)) {
                             entityNameToType.Add(IDTrim, type);
-                        }
-                        else
-                        {
+                        } else {
                             Logger.Log(LogLevel.Error, "FrostHelper.TypeHelper", $"Found duplicate entity ID {IDTrim} - {type.FullName} vs {entityNameToType[IDTrim].FullName}");
                         }
                     }

@@ -6,12 +6,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace FrostHelper
-{
+namespace FrostHelper {
     [CustomEntity("FrostHelper/SpeedRingChallenge")]
     [Tracked]
-    public class SpeedRingChallenge : Entity
-    {
+    public class SpeedRingChallenge : Entity {
         SpeedRingTimerDisplay timer;
 
         public readonly EntityID ID;
@@ -39,8 +37,7 @@ namespace FrostHelper
 
         public Color RingColor;
 
-        public SpeedRingChallenge(EntityData data, Vector2 offset, EntityID id) : base(data.Position + offset)
-        {
+        public SpeedRingChallenge(EntityData data, Vector2 offset, EntityID id) : base(data.Position + offset) {
             ID = id;
             nodes = data.NodesOffset(offset);
             TimeLimit = TimeSpan.FromSeconds(data.Float("timeLimit", 1f)).Ticks;
@@ -51,32 +48,27 @@ namespace FrostHelper
 
         }
 
-        public override void Awake(Scene scene)
-        {
+        public override void Awake(Scene scene) {
             base.Awake(scene);
 
             RingColor = FrostModule.SaveData.IsChallengeBeaten(SceneAs<Level>().Session.Area.SID, ChallengeNameID, TimeLimit) ? Color.Blue : Color.Gold;
 
             var last = nodes.Last();
-            if (spawnBerry)
-            {
+            if (spawnBerry) {
                 Collider = new Hitbox(width, height, last.X - Position.X, last.Y - Position.Y);
                 BerryToSpawn = null;
-                foreach (var berry in Scene.Entities.OfType<Strawberry>())
-                {
-                    if (new Rectangle((int)last.X, (int)last.Y, (int)width, (int)height).Contains(new Point((int)berry.Position.X, (int)berry.Position.Y)))
-                    {
+                foreach (var berry in Scene.Entities.OfType<Strawberry>()) {
+                    if (new Rectangle((int) last.X, (int) last.Y, (int) width, (int) height).Contains(new Point((int) berry.Position.X, (int) berry.Position.Y))) {
                         BerryToSpawn = berry;
                         break;
                     }
                 }
-                if (BerryToSpawn == null)
-                {
+                if (BerryToSpawn == null) {
                     throw new Exception($"Didn't find a berry inside of the final node of the Speed Ring: {ChallengeNameID}, but there's {Scene.Entities.OfType<Strawberry>().Count()} berries");
                 }
                 BerryToSpawn.Active = BerryToSpawn.Visible = BerryToSpawn.Collidable = false;
             }
-            
+
             Collider.Position = Vector2.Zero;
         }
 
@@ -84,101 +76,84 @@ namespace FrostHelper
 
         List<SpeedRingChallenge> disabledChallenges;
 
-        public override void Update()
-        {
+        public override void Update() {
             base.Update();
             Active = Visible = !Finished;
-            if (!Finished && CollideCheck<Player>())
-            {
-                if (!started)
-                {
+            if (!Finished && CollideCheck<Player>()) {
+                if (!started) {
                     StartChapterTimer = SceneAs<Level>().Session.Time;
                     Scene.Add(timer = new SpeedRingTimerDisplay(this));
                     started = true;
                     initialRespawn = SceneAs<Level>().Session.RespawnPoint.GetValueOrDefault();
                     disabledChallenges = Scene.Tracker.GetEntities<SpeedRingChallenge>().Cast<SpeedRingChallenge>().ToList();
                     disabledChallenges.Remove(this);
-                    foreach (var item in disabledChallenges)
-                    {
+                    foreach (var item in disabledChallenges) {
                         item.Active = item.Collidable = item.Visible = false;
                     }
                 }
 
-                Vector2 particlePos = (currentNodeID == -1 ? Position : nodes[currentNodeID]) + Height / 2*Vector2.UnitY;
+                Vector2 particlePos = (currentNodeID == -1 ? Position : nodes[currentNodeID]) + Height / 2 * Vector2.UnitY;
                 Scene.Add(new SummitCheckpoint.ConfettiRenderer(particlePos));
                 Audio.Play("event:/game/07_summit/checkpoint_confetti", particlePos);
 
                 currentNodeID++;
 
-                if (currentNodeID+1 < nodes.Length)
-                {
+                if (currentNodeID + 1 < nodes.Length) {
                     Collider.Position = nodes[currentNodeID] - Position;
-                } else
-                {
+                } else {
                     // last node
-                    if (!Finished)
-                    {
+                    if (!Finished) {
                         FinalTimeSpent = TimeSpent;
                         Finished = true;
                         Visible = false;
 
                         FrostModule.SaveData.SetChallengeTime(SceneAs<Level>().Session.Area.SID, ChallengeNameID, FinalTimeSpent);
 
-                        if (TimeSpent < TimeLimit)
-                        {
+                        if (TimeSpent < TimeLimit) {
                             // Finished the time trial in time
-                            Scene.OnEndOfFrame += () =>
-                            {
+                            Scene.OnEndOfFrame += () => {
                                 BerryToSpawn.Active = BerryToSpawn.Collidable = true;
                                 BerryToSpawn.Seeds = new List<StrawberrySeed>
                                 {
                                     new StrawberrySeed(BerryToSpawn, Scene.Tracker.GetEntity<Player>().Position, 1, SaveData.Instance.CheckStrawberry(BerryToSpawn.ID))
                                 };
-                                foreach (var item in BerryToSpawn.Seeds)
-                                {
+                                foreach (var item in BerryToSpawn.Seeds) {
                                     Scene.Add(item);
                                 }
                                 SceneAs<Level>().Session.DoNotLoad.Add(ID);
                             };
                         }
                         timer.FadeOut();
-                        foreach (var item in disabledChallenges)
-                        {
+                        foreach (var item in disabledChallenges) {
                             item.Active = item.Collidable = item.Visible = true;
                         }
                     }
                 }
             }
-            if (started && !Finished)
-            {
+            if (started && !Finished) {
                 SceneAs<Level>().Session.RespawnPoint = initialRespawn;
             }
         }
 
 
-        public override void Render()
-        {
+        public override void Render() {
             base.Render();
-            if (!(Scene as Level).Paused)
-            {
+            if (!(Scene as Level).Paused) {
                 lerp += 3f * Engine.DeltaTime;
-                if (lerp >= 1f)
-                {
+                if (lerp >= 1f) {
                     lerp = 0f;
                 }
             }
-            
+
             DrawRing(Collider.Center + Position);//currentNodeID == -1 ? Collider.Center : nodes[currentNodeID]);
         }
         float lerp;
 
-        private void DrawRing(Vector2 position)
-        {
+        private void DrawRing(Vector2 position) {
             float maxRadiusY = MathHelper.Lerp(4f, Height / 2, lerp);
             float maxRadiusX = MathHelper.Lerp(4f, Width, lerp);
             Vector2 value = GetVectorAtAngle(0f);
-            for (int i = 1; i <= 8; i++)
-            {
+            for (int i = 1; i <= 8; i++) {
                 float radians = i * 0.3926991f;
                 Vector2 vectorAtAngle = GetVectorAtAngle(radians);
                 Draw.Line(position + value, position + vectorAtAngle, RingColor);
@@ -186,8 +161,7 @@ namespace FrostHelper
                 value = vectorAtAngle;
             }
 
-            Vector2 GetVectorAtAngle(float radians)
-            {
+            Vector2 GetVectorAtAngle(float radians) {
                 Vector2 vector = Calc.AngleToVector(radians, 1f);
                 Vector2 scaleFactor = new Vector2(MathHelper.Lerp(maxRadiusX, maxRadiusX * 0.5f, Math.Abs(Vector2.Dot(vector, Calc.AngleToVector(0f, 1f)))), MathHelper.Lerp(maxRadiusY, maxRadiusY * 0.5f, Math.Abs(Vector2.Dot(vector, Calc.AngleToVector(0f, 1f)))));
                 return vector * scaleFactor;
@@ -195,8 +169,7 @@ namespace FrostHelper
         }
     }
 
-    public class SpeedRingTimerDisplay : Entity
-    {
+    public class SpeedRingTimerDisplay : Entity {
         float fadeTime;
         bool fading;
 
@@ -206,8 +179,7 @@ namespace FrostHelper
         string Name;
         Vector2 NameMeasure;
 
-        public SpeedRingTimerDisplay(SpeedRingChallenge challenge)
-        {
+        public SpeedRingTimerDisplay(SpeedRingChallenge challenge) {
             Tag = Tags.HUD | Tags.PauseUpdate;
             CalculateBaseSizes();
             Add(Wiggler.Create(0.5f, 4f, null, false, false));
@@ -223,38 +195,32 @@ namespace FrostHelper
         }
 
 
-        private void CreateTween(float fadeTime, Action<Tween> onUpdate)
-        {
+        private void CreateTween(float fadeTime, Action<Tween> onUpdate) {
             Tween tween = Tween.Create(Tween.TweenMode.Oneshot, Ease.CubeInOut, fadeTime, true);
             tween.OnUpdate = onUpdate;
             Add(tween);
         }
 
-        public void FadeOut()
-        {
+        public void FadeOut() {
             fadeTime = 5f;
             fading = true;
         }
 
-        private void CalculateBaseSizes()
-        {
+        private void CalculateBaseSizes() {
             // compute the max size of a digit and separators in the English font, for the timer part.
             PixelFont font = Dialog.Languages["english"].Font;
             float fontFaceSize = Dialog.Languages["english"].FontFaceSize;
             PixelFontSize pixelFontSize = font.Get(fontFaceSize);
-            for (int i = 0; i < 10; i++)
-            {
+            for (int i = 0; i < 10; i++) {
                 float digitWidth = pixelFontSize.Measure(i.ToString()).X;
-                if (digitWidth > numberWidth)
-                {
+                if (digitWidth > numberWidth) {
                     numberWidth = digitWidth;
                 }
             }
             spacerWidth = pixelFontSize.Measure('.').X;
         }
 
-        private void DrawTime(Vector2 position, string timeString, Color color, float scale = 1f, float alpha = 1f)
-        {
+        private void DrawTime(Vector2 position, string timeString, Color color, float scale = 1f, float alpha = 1f) {
             PixelFont font = Dialog.Languages["english"].Font;
             float fontFaceSize = Dialog.Languages["english"].FontFaceSize;
             float currentScale = scale;
@@ -263,11 +229,9 @@ namespace FrostHelper
             color *= alpha;
             Color colorDoubleAlpha = color * alpha;
 
-            foreach (char c in timeString)
-            {
+            foreach (char c in timeString) {
                 bool flag2 = c == '.';
-                if (flag2)
-                {
+                if (flag2) {
                     currentScale = scale * 0.7f;
                     currentY -= 5f * scale;
                 }
@@ -279,16 +243,12 @@ namespace FrostHelper
         }
 
 
-        public override void Render()
-        {
+        public override void Render() {
             base.Render();
-            if (fading)
-            {
+            if (fading) {
                 fadeTime -= Engine.DeltaTime;
-                if (fadeTime < 0)
-                {
-                    CreateTween(0.6f, (t) =>
-                    {
+                if (fadeTime < 0) {
+                    CreateTween(0.6f, (t) => {
                         Position = Vector2.Lerp(OnscreenPos, OffscreenPos, t.Eased);
                     });
                     fading = false;
@@ -299,20 +259,17 @@ namespace FrostHelper
             {
                 ActiveFont.DrawOutline(Name, Position - (NameMeasure.X * Vector2.UnitX / 2 * 0.7f), new Vector2(0f, 1f), Vector2.One * 0.7f, Color.White, 2f, Color.Black);
                 string txt = TimeSpan.FromTicks(TimeSpent).ShortGameplayFormat();
-                DrawTime(Position - (GetTimeWidth(txt) * Vector2.UnitX/2) + NameMeasure.Y * Vector2.UnitY*1.2f*0.7f, txt, TimeSpent > TrackedChallenge.TimeLimit ? Color.Gray : Color.Gold);
+                DrawTime(Position - (GetTimeWidth(txt) * Vector2.UnitX / 2) + NameMeasure.Y * Vector2.UnitY * 1.2f * 0.7f, txt, TimeSpent > TrackedChallenge.TimeLimit ? Color.Gray : Color.Gold);
                 txt = TimeSpan.FromTicks(TrackedChallenge.TimeLimit).ShortGameplayFormat();
                 DrawTime(Position - (GetTimeWidth(txt) * Vector2.UnitX / 2 * 0.7f) + NameMeasure.Y * Vector2.UnitY * 1.8f * 0.7f, txt, Color.Gold, 0.7f);
             }
         }
 
-        private float GetTimeWidth(string timeString, float scale = 1f)
-        {
+        private float GetTimeWidth(string timeString, float scale = 1f) {
             float currentScale = scale;
             float currentWidth = 0f;
-            foreach (char c in timeString)
-            {
-                if (c == '.')
-                {
+            foreach (char c in timeString) {
+                if (c == '.') {
                     currentScale = scale * 0.7f;
                 }
                 currentWidth += (((c == ':' || c == '.') ? spacerWidth : numberWidth) + 4f) * currentScale;

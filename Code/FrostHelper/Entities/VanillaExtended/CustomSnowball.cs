@@ -3,10 +3,8 @@ using Microsoft.Xna.Framework;
 using Monocle;
 using System;
 
-namespace FrostHelper
-{
-    public class CustomSnowball : Entity
-    {
+namespace FrostHelper {
+    public class CustomSnowball : Entity {
         public float Speed;
         public float ResetTime;
         public bool DrawOutline;
@@ -14,8 +12,7 @@ namespace FrostHelper
 
         private bool leaving;
 
-        public CustomSnowball(string spritePath = "snowball", float speed = 200f, float resetTime = 0.8f, float sineWaveFrequency = 0.5f, bool drawOutline = true, AppearDirection dir = AppearDirection.Right)
-        {
+        public CustomSnowball(string spritePath = "snowball", float speed = 200f, float resetTime = 0.8f, float sineWaveFrequency = 0.5f, bool drawOutline = true, AppearDirection dir = AppearDirection.Right) {
             appearDirection = dir;
 
             Speed = speed;
@@ -39,29 +36,24 @@ namespace FrostHelper
             Add(spawnSfx = new SoundSource());
         }
 
-        public void StartLeaving()
-        {
+        public void StartLeaving() {
             leaving = true;
         }
 
-        public void CreateSprite(string path)
-        {
+        public void CreateSprite(string path) {
             Sprite?.RemoveSelf();
             Add(Sprite = GFX.SpriteBank.Create(path));
         }
-        
-        public override void Added(Scene scene)
-        {
+
+        public override void Added(Scene scene) {
             base.Added(scene);
             level = SceneAs<Level>();
             ResetPosition();
         }
-        
-        private void ResetPosition()
-        {
+
+        private void ResetPosition() {
             Player entity = level.Tracker.GetEntity<Player>();
-            if (entity != null && CheckIfPlayerOutOfBounds(entity))
-            {
+            if (entity != null && CheckIfPlayerOutOfBounds(entity)) {
                 spawnSfx.Play("event:/game/04_cliffside/snowball_spawn", null, 0f);
                 Collidable = Visible = true;
                 resetTimer = 0f;
@@ -74,96 +66,76 @@ namespace FrostHelper
             resetTimer = 0.05f;
         }
 
-        private bool CheckIfPlayerOutOfBounds(Player entity)
-        {
+        private bool CheckIfPlayerOutOfBounds(Player entity) {
             if (entity is null)
                 return false;
 
-            if (appearDirection == AppearDirection.Right)
-            {
+            if (appearDirection == AppearDirection.Right) {
                 return entity.Right < (level.Bounds.Right - 64);
-            } else if (appearDirection == AppearDirection.Left)
-            {
+            } else if (appearDirection == AppearDirection.Left) {
                 return entity.Left > (level.Bounds.Left + 64);
             }
 
             return false;
         }
 
-        private float GetResetXPosition()
-        {
-            if (appearDirection == AppearDirection.Right)
-            {
+        private float GetResetXPosition() {
+            if (appearDirection == AppearDirection.Right) {
                 return level.Camera.Right + 10f;
-            }
-            else if (appearDirection == AppearDirection.Left)
-            {
+            } else if (appearDirection == AppearDirection.Left) {
                 return level.Camera.Left - 10f;
             }
 
             return 0f;
         }
 
-        private bool IsOutOfBounds()
-        {
-            if (appearDirection == AppearDirection.Right)
-            {
+        private bool IsOutOfBounds() {
+            if (appearDirection == AppearDirection.Right) {
                 return X < level.Camera.Left - 60f;
-            }
-            else if (appearDirection == AppearDirection.Left)
-            {
+            } else if (appearDirection == AppearDirection.Left) {
                 return X > level.Camera.Right + 60f;
             }
 
             return false;
         }
-        
-        private void Destroy()
-        {
+
+        private void Destroy() {
             Collidable = false;
             Sprite.Play("break", false, false);
         }
-        
-        private void OnPlayer(Player player)
-        {
+
+        private void OnPlayer(Player player) {
             player.Die(new Vector2(-1f, 0f), false, true);
             Destroy();
             Audio.Play("event:/game/04_cliffside/snowball_impact", Position);
         }
-        
-        private void OnPlayerBounce(Player player)
-        {
-            if (!CollideCheck(player))
-            {
+
+        private void OnPlayerBounce(Player player) {
+            if (!CollideCheck(player)) {
                 Celeste.Celeste.Freeze(0.1f);
                 player.Bounce(Top - 2f);
                 Destroy();
                 Audio.Play("event:/game/general/thing_booped", Position);
             }
         }
-        
-        public override void Update()
-        {
+
+        public override void Update() {
             base.Update();
             X -= Speed * Engine.DeltaTime;
             Y = atY + 4f * Sine.Value;
-            if (IsOutOfBounds())
-            {
-                if (leaving)
-                {
+            if (IsOutOfBounds()) {
+                if (leaving) {
                     RemoveSelf();
                     return;
                 }
                 resetTimer += Engine.DeltaTime;
-                if (resetTimer >= ResetTime)
-                {
+                if (resetTimer >= ResetTime) {
                     ResetPosition();
                 }
             }
         }
-        
-        public override void Render()
-        {
+
+        public override void Render() {
             if (DrawOutline)
                 Sprite.DrawOutline(1);
             base.Render();
@@ -177,8 +149,7 @@ namespace FrostHelper
         private SoundSource spawnSfx;
         private Collider bounceCollider;
 
-        public enum AppearDirection
-        {
+        public enum AppearDirection {
             Right, // default
             Left
         }

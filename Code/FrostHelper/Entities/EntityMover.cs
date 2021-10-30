@@ -1,19 +1,17 @@
-﻿using Monocle;
-using System;
-using Microsoft.Xna.Framework;
-using Celeste;
+﻿using Celeste;
 using Celeste.Mod.Entities;
+using Microsoft.Xna.Framework;
+using Monocle;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace FrostHelper
-{
+namespace FrostHelper {
     [CustomEntity("FrostHelper/EntityMover")]
-    class EntityMover : Entity
-    {
+    class EntityMover : Entity {
         List<Type> Types;
         bool isBlacklist;
-        
+
         Vector2 endNode;
 
         // For Tween
@@ -34,8 +32,7 @@ namespace FrostHelper
         string onEndSFX;
 
 
-        public EntityMover(EntityData data, Vector2 offset) : base(data.Position + offset)
-        {
+        public EntityMover(EntityData data, Vector2 offset) : base(data.Position + offset) {
             Collider = new Hitbox(data.Width, data.Height);
 
             Types = FrostModule.GetTypes(data.Attr("types", "")).ToList();
@@ -45,8 +42,7 @@ namespace FrostHelper
             pauseTimer = data.Float("startPauseTimeLength", 0f);
             relativeMode = data.Bool("relativeMovementMode", false);
             onEndSFX = data.Attr("onEndSFX", "");
-            if (isBlacklist)
-            {
+            if (isBlacklist) {
                 // Some basic types we don't want to move D:
                 foreach (Type type in new List<Type>() { typeof(Player), typeof(SolidTiles), typeof(BackgroundTiles), typeof(SpeedrunTimerDisplay), typeof(StrawberriesCounter) })
                     Types.Add(type);
@@ -61,29 +57,23 @@ namespace FrostHelper
 
         bool moveBack;
 
-        public override void Awake(Scene scene)
-        {
+        public override void Awake(Scene scene) {
             base.Awake(scene);
-            foreach (Entity entity in scene.Entities)
-            {
-                if ((!mustCollide || Collider.Collide(entity.Position)) && (Types.Contains(entity.GetType()) != isBlacklist))
-                {
+            foreach (Entity entity in scene.Entities) {
+                if ((!mustCollide || Collider.Collide(entity.Position)) && (Types.Contains(entity.GetType()) != isBlacklist)) {
                     entities.Add(new Tuple<Entity, Vector2>(entity, entity.Position));
                 }
             }
             var t = Tween.Create(Tween.TweenMode.Looping, easer, duration, true);
-            t.OnUpdate = (Tween tw) =>
-            {
-                foreach (var item in entities)
-                {
+            t.OnUpdate = (Tween tw) => {
+                foreach (var item in entities) {
                     if (item == null) {
                         continue;
                     }
                     Vector2 start = item.Item2;
                     Vector2 end = relativeMode ? item.Item2 + distance : endNode;
                     if (moveBack) {
-                        if (item.Item1 is Solid solid)
-                        {   
+                        if (item.Item1 is Solid solid) {
                             try {
                                 solid.MoveTo(Vector2.Lerp(end, start, tw.Eased));
                             } catch { }
@@ -91,23 +81,19 @@ namespace FrostHelper
                             item.Item1.Position = Vector2.Lerp(end, start, tw.Eased);
                         }
                     } else {
-                        if (item.Item1 is Solid solid)
-                        {
-                            try
-                            {
+                        if (item.Item1 is Solid solid) {
+                            try {
                                 solid.MoveTo(Vector2.Lerp(start, end, tw.Eased));
-                            }
-                            catch { }
+                            } catch { }
                         } else {
                             item.Item1.Position = Vector2.Lerp(start, end, tw.Eased);
                         }
                     }
-                    
+
                 }
             };
-            
-            t.OnComplete = delegate (Tween tw)
-            {
+
+            t.OnComplete = delegate (Tween tw) {
                 moveBack = !moveBack;
                 pauseTimer = pauseTime;
                 if (onEndSFX != "") {
@@ -117,8 +103,7 @@ namespace FrostHelper
             Add(tween = t);
         }
 
-        public override void Update()
-        {
+        public override void Update() {
             if (pauseTimer > 0f) {
                 pauseTimer -= Engine.DeltaTime;
             } else {

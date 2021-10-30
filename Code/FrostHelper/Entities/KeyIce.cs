@@ -1,23 +1,17 @@
-﻿using System;
-using System.Collections;
-using Celeste;
+﻿using Celeste;
 using Microsoft.Xna.Framework;
 using Monocle;
+using System;
+using System.Collections;
 
 
-namespace FrostHelper
-{
-    public class KeyIce : Key
-    {
-        private bool IsFirstIceKey
-        {
-            get
-            {
-                for (int i = follower.FollowIndex - 1; i > -1; i--)
-                {
+namespace FrostHelper {
+    public class KeyIce : Key {
+        private bool IsFirstIceKey {
+            get {
+                for (int i = follower.FollowIndex - 1; i > -1; i--) {
                     bool flag = follower.Leader.Followers[i].Entity is KeyIce;
-                    if (flag)
-                    {
+                    if (flag) {
                         return false;
                     }
                 }
@@ -29,32 +23,25 @@ namespace FrostHelper
         private Tween tween;
         public new bool Turning { get; private set; }
 
-        public KeyIce(EntityData data, Vector2 offset, EntityID id, Vector2[] nodes) : base(data.Position + offset, id, nodes)
-        {
+        public KeyIce(EntityData data, Vector2 offset, EntityID id, Vector2[] nodes) : base(data.Position + offset, id, nodes) {
             sprite = Get<Monocle.Sprite>();
             this.follower = Get<Follower>();
             FrostModule.SpriteBank.CreateOn(sprite, "keyice");
             Follower follower = this.follower;
-            follower.OnLoseLeader = (Action)Delegate.Combine(follower.OnLoseLeader, new Action(Dissolve));
+            follower.OnLoseLeader = (Action) Delegate.Combine(follower.OnLoseLeader, new Action(Dissolve));
             this.follower.PersistentFollow = true; // was false
-            Add(new DashListener
-            {
+            Add(new DashListener {
                 OnDash = new Action<Vector2>(OnDash)
             });
-            Add(new TransitionListener
-            {
-                OnOut = delegate (float f)
-                {
+            Add(new TransitionListener {
+                OnOut = delegate (float f) {
                     StartedUsing = false;
-                    if (!IsUsed)
-                    {
-                        if (tween != null)
-                        {
+                    if (!IsUsed) {
+                        if (tween != null) {
                             tween.RemoveSelf();
                             tween = null;
                         }
-                        if (alarm != null)
-                        {
+                        if (alarm != null) {
                             alarm.RemoveSelf();
                             alarm = null;
                         }
@@ -71,44 +58,36 @@ namespace FrostHelper
             });
         }
 
-        private void OnDash(Vector2 dir)
-        {
+        private void OnDash(Vector2 dir) {
             bool flag1 = follower.Leader != null;
-            if (flag1)
-            {
+            if (flag1) {
                 Dissolve();
             }
 
         }
 
-        public override void Added(Monocle.Scene scene)
-        {
+        public override void Added(Monocle.Scene scene) {
             base.Added(scene);
             Level level = scene as Level;
             bool flag = level == null;
-            if (!flag)
-            {
+            if (!flag) {
                 start = Position;
                 startLevel = level.Session.Level;
             }
         }
 
-        public override void Update()
-        {
+        public override void Update() {
             Level level = Scene as Level;
             Session session = (level != null) ? level.Session : null;
             bool flag = IsUsed && !wasUsed;
-            if (flag)
-            {
+            if (flag) {
                 session.DoNotLoad.Add(ID);
                 wasUsed = true;
             }
             bool flag2 = !dissolved && !IsUsed && !base.Turning;
-            if (flag2)
-            {
+            if (flag2) {
                 bool flag3 = session != null && session.Keys.Contains(ID);
-                if (flag3)
-                {
+                if (flag3) {
                     session.DoNotLoad.Remove(ID);
                     session.Keys.Remove(ID);
                     session.UpdateLevelStartDashes();
@@ -119,15 +98,12 @@ namespace FrostHelper
             base.Update();
         }
 
-        public void Dissolve()
-        {
+        public void Dissolve() {
             bool flag = dissolved || IsUsed || base.Turning;
-            if (!flag)
-            {
+            if (!flag) {
                 dissolved = true;
                 bool flag2 = follower.Leader != null;
-                if (flag2)
-                {
+                if (flag2) {
                     Player player = follower.Leader.Entity as Player;
                     player.StrawberryCollectResetTimer = 2.5f;
                     follower.Leader.LoseFollower(follower);
@@ -136,8 +112,7 @@ namespace FrostHelper
             }
         }
 
-        private IEnumerator DissolveRoutine()
-        {
+        private IEnumerator DissolveRoutine() {
             Level level = Scene as Level;
             Session session = level.Session;
             session.DoNotLoad.Remove(ID);
@@ -149,8 +124,7 @@ namespace FrostHelper
             yield return 0.05f;
             Input.Rumble(RumbleStrength.Medium, RumbleLength.Medium);
             int num;
-            for (int i = 0; i < 6; i = num + 1)
-            {
+            for (int i = 0; i < 6; i = num + 1) {
                 float dir = Calc.Random.NextFloat(6.28318548f);
                 level.ParticlesFG.Emit(StrawberrySeed.P_Burst, 1, Position + Calc.AngleToVector(dir, 4f), Vector2.Zero, dir);
                 num = i;
@@ -158,8 +132,7 @@ namespace FrostHelper
             sprite.Scale = Vector2.Zero;
             Visible = false;
             bool flag = level.Session.Level != startLevel;
-            if (flag)
-            {
+            if (flag) {
                 RemoveSelf();
                 yield break;
             }

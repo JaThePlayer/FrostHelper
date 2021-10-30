@@ -1,38 +1,33 @@
 ﻿using Celeste;
-using System;
-using System.Collections;
+using Celeste.Mod.Entities;
 using FMOD.Studio;
 using Microsoft.Xna.Framework;
 using Monocle;
+using System;
+using System.Collections;
 using System.Reflection;
-using Celeste.Mod.Entities;
 
-namespace FrostHelper.Entities.WallBouncePresentation
-{
+namespace FrostHelper.Entities.WallBouncePresentation {
     [CustomEntity("FrostHelper/WallbounceTutorial")]
-    public class WallbounceTutorialMachine : WaveDashTutorialMachine
-    {
+    public class WallbounceTutorialMachine : WaveDashTutorialMachine {
         public string DialogKeyPrefix;
         public string GraphicsKeyPrefix;
         public string PlaybackKeyPrefix;
 
-        public WallbounceTutorialMachine(EntityData data, Vector2 offset) : base(data, offset) 
-        {
+        public WallbounceTutorialMachine(EntityData data, Vector2 offset) : base(data, offset) {
             DialogKeyPrefix = data.Attr("dialogKeyPrefix", "WAVEDASH");
             GraphicsKeyPrefix = data.Attr("graphicsKeyPrefix", "");
             PlaybackKeyPrefix = data.Attr("playbackKeyPrefix", "");
         }
 
         [OnLoad]
-        public static void Load()
-        {
+        public static void Load() {
             On.Celeste.WaveDashTutorialMachine.OnInteract += WaveDashTutorialMachine_OnInteract;
             On.Celeste.WaveDashTutorialMachine.SkipInteraction += WaveDashTutorialMachine_SkipInteraction;
         }
 
         [OnUnload]
-        public static void Unload()
-        {
+        public static void Unload() {
             On.Celeste.WaveDashTutorialMachine.OnInteract -= WaveDashTutorialMachine_OnInteract;
             On.Celeste.WaveDashTutorialMachine.SkipInteraction -= WaveDashTutorialMachine_SkipInteraction;
         }
@@ -42,25 +37,20 @@ namespace FrostHelper.Entities.WallBouncePresentation
         private FieldInfo _interactStartZoom = typeof(WaveDashTutorialMachine).GetField("interactStartZoom", BindingFlags.NonPublic | BindingFlags.Instance);
         private FieldInfo _routine = typeof(WaveDashTutorialMachine).GetField("routine", BindingFlags.NonPublic | BindingFlags.Instance);
         private MethodInfo _SkipInteraction = typeof(WaveDashTutorialMachine).GetMethod("SkipInteraction", BindingFlags.NonPublic | BindingFlags.Instance);
-        private bool inCutscene { get => (bool)_inCutscene.GetValue(this); set => _inCutscene.SetValue(this, value); }
-        private EventInstance usingSfx { get => (EventInstance)_usingSfx.GetValue(this); set => _usingSfx.SetValue(this, value); }
-        private float interactStartZoom { get => (float)_interactStartZoom.GetValue(this); set => _interactStartZoom.SetValue(this, value); }
-        private Coroutine routine { get => (Coroutine)_routine.GetValue(this); set => _routine.SetValue(this, value); }
+        private bool inCutscene { get => (bool) _inCutscene.GetValue(this); set => _inCutscene.SetValue(this, value); }
+        private EventInstance usingSfx { get => (EventInstance) _usingSfx.GetValue(this); set => _usingSfx.SetValue(this, value); }
+        private float interactStartZoom { get => (float) _interactStartZoom.GetValue(this); set => _interactStartZoom.SetValue(this, value); }
+        private Coroutine routine { get => (Coroutine) _routine.GetValue(this); set => _routine.SetValue(this, value); }
 
-        private void SkipInteraction(Level level)
-        {
+        private void SkipInteraction(Level level) {
             _SkipInteraction.Invoke(this, new object[] { level });
         }
 
-        private static void WaveDashTutorialMachine_OnInteract(On.Celeste.WaveDashTutorialMachine.orig_OnInteract orig, WaveDashTutorialMachine self, Player player)
-        {
-            if (self is WallbounceTutorialMachine wbMachine)
-            {
-                if (!wbMachine.inCutscene)
-                {
+        private static void WaveDashTutorialMachine_OnInteract(On.Celeste.WaveDashTutorialMachine.orig_OnInteract orig, WaveDashTutorialMachine self, Player player) {
+            if (self is WallbounceTutorialMachine wbMachine) {
+                if (!wbMachine.inCutscene) {
                     Level level = self.Scene as Level;
-                    if (wbMachine.usingSfx != null)
-                    {
+                    if (wbMachine.usingSfx != null) {
                         Audio.SetParameter(wbMachine.usingSfx, "end", 1f);
                         Audio.Stop(wbMachine.usingSfx, true);
                     }
@@ -69,29 +59,24 @@ namespace FrostHelper.Entities.WallBouncePresentation
                     level.StartCutscene(new Action<Level>(wbMachine.SkipInteraction), true, false, false);
                     self.Add(wbMachine.routine = new Coroutine(wbMachine.InteractRoutine(player), true));
                 }
-            } else
-            {
+            } else {
                 orig(self, player);
             }
         }
 
-        private static void WaveDashTutorialMachine_SkipInteraction(On.Celeste.WaveDashTutorialMachine.orig_SkipInteraction orig, WaveDashTutorialMachine self, Level level)
-        {
-            if (self is WallbounceTutorialMachine wbMachine)
-            {
+        private static void WaveDashTutorialMachine_SkipInteraction(On.Celeste.WaveDashTutorialMachine.orig_SkipInteraction orig, WaveDashTutorialMachine self, Level level) {
+            if (self is WallbounceTutorialMachine wbMachine) {
                 wbMachine.presentation?.RemoveSelf();
                 wbMachine.presentation = null;
                 orig(self, level);
-            } else
-            {
+            } else {
                 orig(self, level);
             }
         }
 
         private WallbouncePresentation presentation;
 
-        private IEnumerator InteractRoutine(Player player)
-        {
+        private IEnumerator InteractRoutine(Player player) {
             Level level = Scene as Level;
             player.StateMachine.State = 11;
             player.StateMachine.Locked = true;
@@ -103,8 +88,7 @@ namespace FrostHelper.Entities.WallBouncePresentation
             Console.WriteLine("WallbouncePresentation");
             presentation = new WallbouncePresentation(usingSfx, DialogKeyPrefix, GraphicsKeyPrefix, PlaybackKeyPrefix);
             Scene.Add(presentation);
-            while (presentation.Viewing)
-            {
+            while (presentation.Viewing) {
                 yield return null;
             }
             yield return level.ZoomTo(new Vector2(160f, 90f), interactStartZoom, 1f);

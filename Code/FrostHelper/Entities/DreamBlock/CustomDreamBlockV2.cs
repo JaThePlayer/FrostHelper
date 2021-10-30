@@ -8,16 +8,14 @@ using System;
 using System.Reflection;
 
 
-namespace FrostHelper
-{
+namespace FrostHelper {
     /// <summary>
     /// Custom dream blocks except they extend DreamBlock
     /// </summary>
     //[CustomEntity("FrostHelper/CustomDreamBlock")]
     [TrackedAs(typeof(DreamBlock))]
     [Tracked]
-    public class CustomDreamBlockV2 : DreamBlock
-    {
+    public class CustomDreamBlockV2 : DreamBlock {
         // new attributes
         public float DashSpeed;
         public bool AllowRedirects;
@@ -41,9 +39,8 @@ namespace FrostHelper
         Ease.Easer easer;
         // legacy
         bool fastMoving;
-        
-        public CustomDreamBlockV2(EntityData data, Vector2 offset) : base(data, offset)
-        {
+
+        public CustomDreamBlockV2(EntityData data, Vector2 offset) : base(data, offset) {
             ActiveBackColor = ColorHelper.GetColor(data.Attr("activeBackColor", "Black"));
             DisabledBackColor = ColorHelper.GetColor(data.Attr("disabledBackColor", "1f2e2d"));
             ActiveLineColor = ColorHelper.GetColor(data.Attr("activeLineColor", "White"));
@@ -60,25 +57,20 @@ namespace FrostHelper
             fastMoving = data.Bool("fastMoving", false);
         }
 
-        public override void Added(Scene scene)
-        {
+        public override void Added(Scene scene) {
             base.Added(scene);
             playerHasDreamDash = SceneAs<Level>().Session.Inventory.DreamDash;
-            if (playerHasDreamDash && node != null)
-            {
+            if (playerHasDreamDash && node != null) {
                 Remove(Get<Tween>());
                 Vector2 start = Position;
                 Vector2 end = node.Value;
                 float num = Vector2.Distance(start, end) / (12f * moveSpeedMult);
-                if (fastMoving)
-                {
+                if (fastMoving) {
                     num /= 3f;
                 }
                 Tween tween = Tween.Create(Tween.TweenMode.YoyoLooping, easer, num, true);
-                tween.OnUpdate = delegate (Tween t)
-                {
-                    if (Collidable)
-                    {
+                tween.OnUpdate = delegate (Tween t) {
+                    if (Collidable) {
                         MoveTo(Vector2.Lerp(start, end, t.Eased));
                         return;
                     }
@@ -89,10 +81,8 @@ namespace FrostHelper
             }
         }
 
-        public override void Render()
-        {
-            if (playerHasDreamDash)
-            {
+        public override void Render() {
+            if (playerHasDreamDash) {
                 // change the colors
                 DreamBlock_activeBackColor.SetValue(null, ActiveBackColor);
                 DreamBlock_activeLineColor.SetValue(null, ActiveLineColor);
@@ -100,8 +90,7 @@ namespace FrostHelper
                 // revert changes
                 DreamBlock_activeBackColor.SetValue(null, baseActiveBackColor);
                 DreamBlock_activeLineColor.SetValue(null, baseActiveLineColor);
-            } else
-            {
+            } else {
                 // change the colors
                 DreamBlock_disabledBackColor.SetValue(null, DisabledBackColor);
                 DreamBlock_disabledLineColor.SetValue(null, DisabledLineColor);
@@ -111,7 +100,7 @@ namespace FrostHelper
                 DreamBlock_disabledLineColor.SetValue(null, baseDisabledLineColor);
             }
         }
-        
+
         private static readonly FieldInfo DreamBlock_activeBackColor = typeof(DreamBlock).GetField("activeBackColor", BindingFlags.NonPublic | BindingFlags.Static);
         private static readonly FieldInfo DreamBlock_disabledBackColor = typeof(DreamBlock).GetField("disabledBackColor", BindingFlags.NonPublic | BindingFlags.Static);
         private static readonly FieldInfo DreamBlock_activeLineColor = typeof(DreamBlock).GetField("activeLineColor", BindingFlags.NonPublic | BindingFlags.Static);
@@ -124,8 +113,7 @@ namespace FrostHelper
         #region Hooks
         // Hook initialization
         [OnLoad]
-        public static void Load()
-        {
+        public static void Load() {
             On.Celeste.Player.DreamDashUpdate += Player_DreamDashUpdate;
             On.Celeste.Player.DreamDashEnd += Player_DreamDashEnd;
 
@@ -133,27 +121,22 @@ namespace FrostHelper
         }
 
         [OnUnload]
-        public static void Unload()
-        {
+        public static void Unload() {
             On.Celeste.Player.DreamDashUpdate -= Player_DreamDashUpdate;
             On.Celeste.Player.DreamDashEnd -= Player_DreamDashEnd;
 
             IL.Celeste.Player.DreamDashBegin -= Player_DreamDashBegin;
         }
 
-        private static void Player_DreamDashBegin(ILContext il)
-        {
+        private static void Player_DreamDashBegin(ILContext il) {
             ILCursor cursor = new ILCursor(il);
 
-            while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchStfld<Player>("Speed")))
-            {
+            while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchStfld<Player>("Speed"))) {
                 cursor.Index--;
                 cursor.Emit(OpCodes.Ldarg_0);
-                cursor.EmitDelegate<Func<Vector2, Player, Vector2>>((origSpeed, player) => 
-                {
+                cursor.EmitDelegate<Func<Vector2, Player, Vector2>>((origSpeed, player) => {
                     CustomDreamBlockV2 currentDreamBlock = player.CollideFirst<CustomDreamBlockV2>(player.Position + Vector2.UnitX * Math.Sign(player.Speed.X)) ?? player.CollideFirst<CustomDreamBlockV2>(player.Position + Vector2.UnitY * Math.Sign(player.Speed.Y));
-                    if (currentDreamBlock != null && currentDreamBlock.ConserveSpeed)
-                    {
+                    if (currentDreamBlock != null && currentDreamBlock.ConserveSpeed) {
                         var newSpeed = player.Speed * Math.Sign(currentDreamBlock.DashSpeed);
                         //player.DashDir = newSpeed.SafeNormalize();
                         return newSpeed;
@@ -165,48 +148,40 @@ namespace FrostHelper
             }
         }
 
-        private static void Player_DreamDashEnd(On.Celeste.Player.orig_DreamDashEnd orig, Player self)
-        {
+        private static void Player_DreamDashEnd(On.Celeste.Player.orig_DreamDashEnd orig, Player self) {
             orig(self);
             new DynData<Player>(self).Set("lastDreamSpeed", 0f);
         }
 
-        private static int Player_DreamDashUpdate(On.Celeste.Player.orig_DreamDashUpdate orig, Player self)
-        {
+        private static int Player_DreamDashUpdate(On.Celeste.Player.orig_DreamDashUpdate orig, Player self) {
             CustomDreamBlockV2 currentDreamBlock = self.CollideFirst<CustomDreamBlockV2>();
-            if (currentDreamBlock != null)
-            {
+            if (currentDreamBlock != null) {
                 var dyn = new DynData<Player>(self);
-                
-                if (!currentDreamBlock.ConserveSpeed)
-                {
+
+                if (!currentDreamBlock.ConserveSpeed) {
                     float lastDreamSpeed = dyn.Get<float>("lastDreamSpeed");
-                    if (lastDreamSpeed != currentDreamBlock.DashSpeed)
-                    {
+                    if (lastDreamSpeed != currentDreamBlock.DashSpeed) {
                         self.Speed = self.DashDir * currentDreamBlock.DashSpeed;
                         dyn.Set("lastDreamSpeed", currentDreamBlock.DashSpeed * 1f);
                     }
                 }
-                
+
                 // Redirects
-                if (currentDreamBlock.AllowRedirects && self.CanDash)
-                {
+                if (currentDreamBlock.AllowRedirects && self.CanDash) {
                     Vector2 aimVector = Input.GetAimVector(self.Facing);
                     bool sameDir = aimVector == self.DashDir;
-                    if (!sameDir || currentDreamBlock.AllowRedirectsInSameDir)
-                    {
+                    if (!sameDir || currentDreamBlock.AllowRedirectsInSameDir) {
                         self.DashDir = aimVector;
                         self.Speed = self.DashDir * self.Speed.Length();
                         self.Dashes = Math.Max(0, self.Dashes - 1);
                         Audio.Play("event:/char/madeline/dreamblock_enter");
-                        if (sameDir)
-                        {
+                        if (sameDir) {
                             self.Speed *= currentDreamBlock.SameDirectionSpeedMultiplier;
                             self.DashDir *= Math.Sign(currentDreamBlock.SameDirectionSpeedMultiplier);
                         }
 
                         if (self.Speed.X != 0.0f)
-                            self.Facing = (Facings)Math.Sign(self.Speed.X);
+                            self.Facing = (Facings) Math.Sign(self.Speed.X);
 
                         Input.Dash.ConsumeBuffer();
                         Input.Dash.ConsumePress();

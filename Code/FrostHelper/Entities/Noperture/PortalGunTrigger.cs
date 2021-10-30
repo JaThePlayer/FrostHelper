@@ -1,4 +1,6 @@
-﻿using Celeste;
+﻿#if PORTALGUN
+
+using Celeste;
 using Celeste.Mod.Entities;
 using Celeste.Mod.OutbackHelper;
 using Microsoft.Xna.Framework;
@@ -23,3 +25,4 @@ namespace FrostTempleHelper.Entities.azcplo1k
         }
     }
 }
+#endif
