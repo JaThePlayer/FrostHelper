@@ -3,8 +3,8 @@ module FrostHelperCustomSpring
 using ..Ahorn, Maple
 
 @mapdef Entity "FrostHelper/SpringFloor" CustomSpring(x::Integer, y::Integer, playerCanUse::Bool=true, directory::String="objects/spring/", speedMult::Number=1.0, oneUse::Bool=false, renderOutline::Bool=true)
-@mapdef Entity "FrostHelper/SpringRight" CustomSpringRight(x::Integer, y::Integer, playerCanUse::Bool=true, directory::String="objects/spring/", speedMult::Number=1.0, oneUse::Bool=false, renderOutline::Bool=true)
-@mapdef Entity "FrostHelper/SpringLeft" CustomSpringLeft(x::Integer, y::Integer, playerCanUse::Bool=true, directory::String="objects/spring/", speedMult::Number=1.0, oneUse::Bool=false, renderOutline::Bool=true)
+@mapdef Entity "FrostHelper/SpringRight" CustomSpringRight(x::Integer, y::Integer, playerCanUse::Bool=true, directory::String="objects/spring/", speedMult::String="1.0,1.0", oneUse::Bool=false, renderOutline::Bool=true)
+@mapdef Entity "FrostHelper/SpringLeft" CustomSpringLeft(x::Integer, y::Integer, playerCanUse::Bool=true, directory::String="objects/spring/", speedMult::String="1.0,1.0", oneUse::Bool=false, renderOutline::Bool=true)
 @mapdef Entity "FrostHelper/SpringCeiling" CustomSpringCeiling(x::Integer, y::Integer, playerCanUse::Bool=true, directory::String="objects/spring/", speedMult::Number=1.0, oneUse::Bool=false, renderOutline::Bool=true)
 
 const placements = Ahorn.PlacementDict(
@@ -54,7 +54,7 @@ Ahorn.render(ctx::Ahorn.Cairo.CairoContext, entity::CustomSpringRight, room::Map
 Ahorn.render(ctx::Ahorn.Cairo.CairoContext, entity::CustomSpringCeiling, room::Maple.Room) = Ahorn.drawSprite(ctx, sprite, 12, -2, rot=pi)
 
 function getAllAttributes(entity)
-    return entity.x, entity.y, Bool(get(entity.data, "playerCanUse", true)), get(entity.data, "directory", "objects/spring/"), parse(Float32, string(get(entity.data, "speedMult", 1.0))), Bool(get(entity.data, "oneUse", false)), Bool(get(entity.data, "renderOutline", true))
+    return entity.x, entity.y, Bool(get(entity.data, "playerCanUse", true)), get(entity.data, "directory", "objects/spring/"), string(get(entity.data, "speedMult", 1.0)), Bool(get(entity.data, "oneUse", false)), Bool(get(entity.data, "renderOutline", true))
 end
 
 function turnIntoRight(entity)
@@ -69,12 +69,12 @@ end
 
 function turnIntoUp(entity)
     x, y, playerCanUse, directory, speedMult, oneUse, renderOutline = getAllAttributes(entity) 
-    return CustomSpring(x, y, playerCanUse, directory, speedMult, oneUse, renderOutline)
+    return CustomSpring(x, y, playerCanUse, directory, parse(Float32, speedMult), oneUse, renderOutline)
 end
 
 function turnIntoDown(entity)
     x, y, playerCanUse, directory, speedMult, oneUse, renderOutline = getAllAttributes(entity) 
-    return CustomSpringCeiling(x, y, playerCanUse, directory, speedMult, oneUse, renderOutline)
+    return CustomSpringCeiling(x, y, playerCanUse, directory, parse(Float32, speedMult), oneUse, renderOutline)
 end
 
 function Ahorn.flipped(entity::CustomSpringLeft, horizontal::Bool)
