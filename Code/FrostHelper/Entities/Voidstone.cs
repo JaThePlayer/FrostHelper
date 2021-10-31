@@ -38,7 +38,7 @@ namespace FrostHelper {
         }
 
         public override void Render() {
-            return;
+            //return;
 
             Camera c = SceneAs<Level>().Camera;
             Draw.Rect(Collider, Color.Black);

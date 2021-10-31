@@ -125,10 +125,10 @@ namespace FrostHelper {
             var gen = method.GetILProcessor();
 
             // ColorHelper.crystalSpinner.Scene = scene;
-            EmitSetScene(gen);
+            EmitSetScene(gen, 0);
 
             // return ColorHelper.crystalSpinner.GetHue(position);
-            EmitCallGetHueAndReturn(gen);
+            EmitCallGetHueAndReturn(gen, 1);
 
             return (Func<Scene, Vector2, Color>) method.Generate().CreateDelegate(typeof(Func<Scene, Vector2, Color>));
         }
@@ -141,7 +141,7 @@ namespace FrostHelper {
             var gen = method.GetILProcessor();
 
             // return ColorHelper.crystalSpinner.GetHue(position);
-            EmitCallGetHueAndReturn(gen);
+            EmitCallGetHueAndReturn(gen, 0);
 
             return method.Generate().CreateDelegate<Func<Vector2, Color>>();
         }
@@ -154,25 +154,25 @@ namespace FrostHelper {
             var gen = method.GetILProcessor();
 
             // ColorHelper.crystalSpinner.Scene = scene;
-            EmitSetScene(gen);
+            EmitSetScene(gen, 0);
 
             gen.Emit(OpCodes.Ret);
 
             return (Action<Scene>) method.Generate().CreateDelegate(typeof(Action<Scene>));
         }
 
-        private static void EmitCallGetHueAndReturn(ILProcessor gen) {
+        private static void EmitCallGetHueAndReturn(ILProcessor gen, int argNum) {
             FieldInfo crystalSpinner = typeof(ColorHelper).GetField(nameof(ColorHelper.crystalSpinner), BindingFlags.NonPublic | BindingFlags.Static);
             gen.LoadStaticField(crystalSpinner);
-            gen.Ldarg0();
+            gen.LoadArg(argNum);
             gen.Call(typeof(CrystalStaticSpinner).GetMethod("GetHue", BindingFlags.NonPublic | BindingFlags.Instance));
             gen.Ret();
         }
 
-        private static void EmitSetScene(ILProcessor gen) {
+        private static void EmitSetScene(ILProcessor gen, int argNum) {
             FieldInfo crystalSpinner = typeof(ColorHelper).GetField(nameof(ColorHelper.crystalSpinner), BindingFlags.NonPublic | BindingFlags.Static);
             gen.LoadStaticField(crystalSpinner);
-            gen.Ldarg0();
+            gen.LoadArg(argNum);
             gen.Call(typeof(Entity).GetProperty("Scene").GetSetMethod(true));
         }
 

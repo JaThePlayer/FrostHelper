@@ -140,6 +140,15 @@ namespace FrostHelper {
         public static void Call(this ILProcessor p, MethodInfo method) => p.Emit(OpCodes.Call, method);
         public static void Call(this ILCursor p, MethodInfo method) => p.Emit(OpCodes.Call, method);
 
+        public static void LoadArg(this ILProcessor p, int argNum) {
+            var opc = GetLoadArgOpcode(argNum);
+            if (opc.Code == Code.Ldarg) {
+                p.Emit(opc, argNum);
+            } else {
+                p.Emit(opc);
+            }
+        }
+
         public static ILCursor LoadInt(this ILCursor cursor, int amt) {
             var opc = GetLoadIntOpcode(amt);
             if (opc.Code == Code.Ldc_I4) {
@@ -173,6 +182,14 @@ namespace FrostHelper {
             7 => OpCodes.Ldc_I4_7,
             8 => OpCodes.Ldc_I4_8,
             _ => OpCodes.Ldc_I4,
+        };
+
+        public static OpCode GetLoadArgOpcode(int amt) => amt switch {
+            0 => OpCodes.Ldarg_0,
+            1 => OpCodes.Ldarg_1,
+            2 => OpCodes.Ldarg_2,
+            3 => OpCodes.Ldarg_3,
+            _ => OpCodes.Ldarg,
         };
 
         /// <summary>
