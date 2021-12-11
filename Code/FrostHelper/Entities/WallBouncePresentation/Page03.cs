@@ -1,9 +1,4 @@
-﻿using Celeste;
-using Microsoft.Xna.Framework;
-using Monocle;
-using System.Collections;
-
-namespace FrostHelper.Entities.WallBouncePresentation {
+﻿namespace FrostHelper.Entities.WallBouncePresentation {
     class Page03 : WallbouncePresentationPage {
         public Page03() {
             Transition = Transitions.Blocky;

@@ -1,6 +1,4 @@
-﻿using Microsoft.Xna.Framework;
-
-namespace Triangulator {
+﻿namespace Triangulator {
     struct LineSegment {
         public Vertex A;
         public Vertex B;

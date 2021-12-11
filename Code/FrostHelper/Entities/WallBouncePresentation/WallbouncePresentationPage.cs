@@ -1,8 +1,4 @@
-﻿using Celeste;
-using Microsoft.Xna.Framework;
-using System.Collections;
-
-namespace FrostHelper.Entities.WallBouncePresentation {
+﻿namespace FrostHelper.Entities.WallBouncePresentation {
     public abstract class WallbouncePresentationPage {
         public int Width => Presentation.ScreenWidth;
 

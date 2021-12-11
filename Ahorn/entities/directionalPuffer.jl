@@ -2,7 +2,7 @@ module FrostHelperDirectionalPuffer
 
 using ..Ahorn, Maple
 
-@mapdef Entity "FrostHelper/DirectionalPuffer" DirectionalPuffer(x::Integer, y::Integer, right::Bool=true, directory::String="objects/puffer/", explodeDirection::String="Right", dashRecovery::Integer=1)
+@mapdef Entity "FrostHelper/DirectionalPuffer" DirectionalPuffer(x::Integer, y::Integer, right::Bool=true, directory::String="objects/puffer/", explodeDirection::String="Right", dashRecovery::Integer=1, static::Bool=false, noRespawn::Bool=false, respawnTime::Number=2.5)
 
 const placements = Ahorn.PlacementDict(
     "Directional Puffer (FrostHelper, Right)" => Ahorn.EntityPlacement(

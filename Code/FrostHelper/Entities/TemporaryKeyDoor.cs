@@ -1,10 +1,4 @@
-﻿using Celeste;
-using Microsoft.Xna.Framework;
-using Monocle;
-using System;
-using System.Collections;
-
-namespace FrostHelper {
+﻿namespace FrostHelper {
     [Celeste.Mod.Entities.CustomEntity("FrostHelper/TemporaryKeyDoor")]
     public class LockBlock : Solid {
         public LockBlock(Vector2 position, EntityID id, bool stepMusicProgress, string spriteName, string unlock_sfx) : base(position, 32f, 32f, false) {

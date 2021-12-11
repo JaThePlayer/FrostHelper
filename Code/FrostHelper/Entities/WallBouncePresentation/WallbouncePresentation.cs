@@ -1,11 +1,4 @@
-﻿using Celeste;
-using FMOD.Studio;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using Monocle;
-using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using FMOD.Studio;
 using System.IO;
 using System.Threading;
 

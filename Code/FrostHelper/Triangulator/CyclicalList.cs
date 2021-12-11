@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace Triangulator {
+﻿namespace Triangulator {
     /// <summary>
     /// Implements a List structure as a cyclical list where indices are wrapped.
     /// </summary>

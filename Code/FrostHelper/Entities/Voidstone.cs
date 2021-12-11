@@ -1,9 +1,4 @@
-﻿using Celeste;
-using Celeste.Mod.Entities;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using Monocle;
-using System;
+﻿using Celeste.Mod.Entities;
 
 namespace FrostHelper {
     [CustomEntity("FrostHelper/Voidstone")]

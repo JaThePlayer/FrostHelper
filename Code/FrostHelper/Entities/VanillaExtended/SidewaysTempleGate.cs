@@ -1,9 +1,4 @@
-﻿using Celeste;
-using Celeste.Mod.Entities;
-using Microsoft.Xna.Framework;
-using Monocle;
-using System;
-using System.Collections;
+﻿using Celeste.Mod.Entities;
 
 namespace FrostHelper {
     [CustomEntity("FrostHelper/SidewaysTempleGate")]

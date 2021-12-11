@@ -1,9 +1,4 @@
-﻿using Celeste;
-using Microsoft.Xna.Framework;
-using Monocle;
-using System.Collections;
-
-namespace FrostHelper.Entities.WallBouncePresentation {
+﻿namespace FrostHelper.Entities.WallBouncePresentation {
     public class Page01 : WallbouncePresentationPage {
         public Page01() {
             Transition = Transitions.ScaleIn;

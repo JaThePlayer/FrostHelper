@@ -1,18 +1,15 @@
-﻿using Celeste;
-using Celeste.Mod.Entities;
-using Microsoft.Xna.Framework;
-using System;
+﻿using Celeste.Mod.Entities;
 
-namespace FrostHelper.Triggers {
-    [CustomEntity("FrostHelper/CapDashOnGroundTrigger")]
-    public class CapDashOnGroundTrigger : Trigger {
-        public CapDashOnGroundTrigger(EntityData data, Vector2 offset) : base(data, offset) { }
+namespace FrostHelper.Triggers;
 
-        public override void OnStay(Player player) {
-            base.OnStay(player);
-            if (player.OnGround()) {
-                player.Dashes = Math.Min(player.Dashes, player.MaxDashes);
-            }
+[CustomEntity("FrostHelper/CapDashOnGroundTrigger")]
+public class CapDashOnGroundTrigger : Trigger {
+    public CapDashOnGroundTrigger(EntityData data, Vector2 offset) : base(data, offset) { }
+
+    public override void OnStay(Player player) {
+        base.OnStay(player);
+        if (player.OnGround()) {
+            player.Dashes = Math.Min(player.Dashes, player.MaxDashes);
         }
     }
 }

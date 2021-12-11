@@ -1,9 +1,4 @@
-﻿using Celeste;
-using Microsoft.Xna.Framework;
-using Monocle;
-using System;
-
-namespace FrostHelper {
+﻿namespace FrostHelper {
     public class CustomSnowball : Entity {
         public float Speed;
         public float ResetTime;

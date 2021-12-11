@@ -1,9 +1,4 @@
-﻿using Celeste;
-using Microsoft.Xna.Framework;
-using Monocle;
-using System;
-using System.Collections;
-using System.Globalization;
+﻿using System.Globalization;
 
 namespace FrostHelper.Entities.WallBouncePresentation {
     class Page00 : WallbouncePresentationPage {

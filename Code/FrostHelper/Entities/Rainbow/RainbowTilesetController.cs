@@ -1,14 +1,5 @@
-﻿using Celeste;
-using Celeste.Mod.Entities;
+﻿using Celeste.Mod.Entities;
 using FrostHelper.ModIntegration;
-using Microsoft.Xna.Framework;
-using Mono.Cecil.Cil;
-using Monocle;
-using MonoMod.Cil;
-using System;
-using System.Collections;
-using System.Linq;
-using System.Reflection;
 
 namespace FrostHelper {
     [CustomEntity("FrostHelper/RainbowTilesetController")]
@@ -36,6 +27,10 @@ namespace FrostHelper {
         }
 
         private static void TileGrid_RenderAt1(On.Monocle.TileGrid.orig_RenderAt orig, TileGrid self, Vector2 position) {
+            if (self.Scene is null) {
+                return;
+            }
+
             var controller = self.Scene.Tracker.GetEntity<RainbowTilesetController>();
             if (controller is null || self.Alpha <= 0f) {
                 orig(self, position);

@@ -1,14 +1,4 @@
-﻿using Celeste;
-using Celeste.Mod.Meta;
-using Microsoft.Xna.Framework;
-using Mono.Cecil.Cil;
-using Monocle;
-using MonoMod.Cil;
-using MonoMod.RuntimeDetour;
-using MonoMod.Utils;
-using System;
-using System.Collections;
-using System.Reflection;
+﻿using Celeste.Mod.Meta;
 
 #if PLAYERSTATEHELPER
 using Celeste.Mod.PlayerStateHelper.API;
@@ -60,10 +50,16 @@ namespace FrostHelper.Entities.Boosters {
         public Color ParticleColor;
         public bool Red;
         public float RespawnTime;
+        public bool PreserveSpeed;
         /// <summary>
         /// Set to -1 to refill dashes to dash cap (default)
         /// </summary>
         public int DashRecovery;
+
+        /// <summary>
+        /// Speed at which the player entered the booster
+        /// </summary>
+        public Vector2 EnterSpeed;
 
         public GenericCustomBooster(EntityData data, Vector2 offset) : base(data.Position + offset) {
             Depth = -8500;
@@ -105,6 +101,7 @@ namespace FrostHelper.Entities.Boosters {
             boostSfx = data.Attr("boostSfx", "event:/game/04_cliffside/greenbooster_dash");
             endSfx = data.Attr("releaseSfx", "event:/game/04_cliffside/greenbooster_end");
             DashRecovery = data.Int("dashes", -1);
+            PreserveSpeed = data.Bool("preserveSpeed", false);
         }
 
         public override void Added(Scene scene) {
@@ -154,12 +151,15 @@ namespace FrostHelper.Entities.Boosters {
             API.API.SetCustomBoostState(player, this);
 
             RedDash = Red;
+
+            EnterSpeed = player.Speed;
             player.Speed = Vector2.Zero;
             player.SetValue("boostRed", Red);
             FrostModule.player_boostTarget.SetValue(player, Center);
             StartedBoosting = true;
-
         }
+
+        public virtual float GetBoostSpeed() => PreserveSpeed ? EnterSpeed.BiggestAbsComponent() : 240f;
 
 
         public virtual bool CanFastbubble() => true;
@@ -375,7 +375,8 @@ namespace FrostHelper.Entities.Boosters {
             Input.Rumble(RumbleStrength.Strong, RumbleLength.Medium);
             data["dashAttackTimer"] = 0.3f;
             data["gliderBoostTimer"] = 0.55f;
-            player.DashDir = player.Speed = Vector2.Zero;
+            player.DashDir = Vector2.Zero;
+            player.Speed = Vector2.Zero;
             if (!data.Get<bool>("onGround") && player.Ducking && player.CanUnDuck) {
                 player.Ducking = false;
             }
@@ -412,7 +413,6 @@ namespace FrostHelper.Entities.Boosters {
                     }
                 }
                 if (player.CanUnDuck && Input.Jump.Pressed && data.Get<float>("jumpGraceTimer") > 0f && !ch9hub) {
-                    //player.SuperJump();
                     Player_SuperJump.Invoke(player, null);
                     return 0;
                 }
@@ -456,7 +456,7 @@ namespace FrostHelper.Entities.Boosters {
             DynData<Player> data = new DynData<Player>(player);
 
             yield return null;
-            player.Speed = (Vector2) Player_CorrectDashPrecision.Invoke(player, new object[] { data.Get<Vector2>("lastAim") }) * 240f;
+            player.Speed = (Vector2) Player_CorrectDashPrecision.Invoke(player, new object[] { data.Get<Vector2>("lastAim") }) * ChangeDashSpeedOnce.GetDashSpeed(240f);
             data["gliderBoostDir"] = player.DashDir = data.Get<Vector2>("lastAim");
             player.SceneAs<Level>().DirectionalShake(player.DashDir, 0.2f);
             if (player.DashDir.X != 0f) {
@@ -472,6 +472,17 @@ namespace FrostHelper.Entities.Boosters {
         public static int CustomBoostState;
         public static bool RedDash;
 
+        public static int ExitBoostState(Player player, GenericCustomBooster booster) {
+            float boostSpeed = booster.GetBoostSpeed();
+            ChangeDashSpeedOnce.ChangeNextDashSpeed(boostSpeed);
+            if (RedDash) {
+                return CustomRedBoostState;
+            } else {
+                ChangeDashSpeedOnce.ChangeNextSuperJumpSpeed(boostSpeed + 20f);
+                return Player.StDash;
+            }
+        }
+
         public static void BoostBegin(Entity e) {
             Player player = e as Player;
             GetBoosterThatIsBoostingPlayer(player).HandleBoostBegin(player);
@@ -479,17 +490,19 @@ namespace FrostHelper.Entities.Boosters {
 
         public static int BoostUpdate(Entity e) {
             Player player = e as Player;
+            var booster = GetBoosterThatIsBoostingPlayer(player);
+
             Vector2 boostTarget = (Vector2) FrostModule.player_boostTarget.GetValue(player);
             Vector2 value = Input.Aim.Value * 3f;
             Vector2 vector = Calc.Approach(player.ExactPosition, boostTarget - player.Collider.Center + value, 80f * Engine.DeltaTime);
             player.MoveToX(vector.X, null);
             player.MoveToY(vector.Y, null);
 
-            if ((Input.Dash.Pressed || Input.CrouchDashPressed) && GetBoosterThatIsBoostingPlayer(player).CanFastbubble()) {
+            if ((Input.Dash.Pressed || Input.CrouchDashPressed) && booster.CanFastbubble()) {
                 player.SetValue("demoDashed", Input.CrouchDashPressed);
                 Input.Dash.ConsumePress();
                 Input.CrouchDash.ConsumePress();
-                return RedDash ? CustomRedBoostState : Player.StDash;
+                return ExitBoostState(player, booster);
             }
 
             return CustomBoostState;
@@ -516,7 +529,7 @@ namespace FrostHelper.Entities.Boosters {
                 yield return booster.BoostTime;
             }
 
-            player.StateMachine.State = RedDash ? CustomRedBoostState : Player.StDash;
+            player.StateMachine.State = ExitBoostState(player, booster);
             yield break;
         }
 

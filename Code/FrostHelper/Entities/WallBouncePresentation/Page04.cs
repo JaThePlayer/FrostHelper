@@ -1,10 +1,4 @@
-﻿using Celeste;
-using Microsoft.Xna.Framework;
-using Monocle;
-using System.Collections;
-using System.Collections.Generic;
-
-namespace FrostHelper.Entities.WallBouncePresentation {
+﻿namespace FrostHelper.Entities.WallBouncePresentation {
     class Page04 : WallbouncePresentationPage {
         public Page04() {
             Transition = Transitions.FadeIn;

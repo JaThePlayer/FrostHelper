@@ -1,11 +1,5 @@
-﻿using Celeste;
-using Celeste.Mod.Entities;
+﻿using Celeste.Mod.Entities;
 using FMOD.Studio;
-using Microsoft.Xna.Framework;
-using Monocle;
-using System;
-using System.Collections;
-using System.Reflection;
 
 namespace FrostHelper.Entities.WallBouncePresentation {
     [CustomEntity("FrostHelper/WallbounceTutorial")]

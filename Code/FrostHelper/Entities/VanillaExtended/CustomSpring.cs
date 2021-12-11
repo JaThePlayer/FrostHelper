@@ -1,12 +1,4 @@
-﻿using Celeste;
-using Celeste.Mod.Entities;
-using Microsoft.Xna.Framework;
-using Monocle;
-using MonoMod.Utils;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Reflection;
+﻿using Celeste.Mod.Entities;
 
 namespace FrostHelper {
     [CustomEntity("FrostHelper/SpringLeft", "FrostHelper/SpringRight", "FrostHelper/SpringFloor", "FrostHelper/SpringCeiling")]
@@ -85,7 +77,7 @@ namespace FrostHelper {
         Vector2 speedMult;
 
 
-
+        public bool MultiplyPlayerY;
 
         private static Dictionary<string, CustomOrientations> EntityDataNameToOrientation = new Dictionary<string, CustomOrientations>() {
             ["FrostHelper/SpringLeft"] = CustomOrientations.WallLeft,
@@ -114,9 +106,15 @@ namespace FrostHelper {
             // there was a bug that made multiplying the Y speed of horizontal springs not work
             // thankfully noone knew about the "supply a Vec2" behaviour either
             // if only a float is supplied, the Y value will be set to 1
+            /*
             speedMult = orientation switch {
                 CustomOrientations.WallLeft or CustomOrientations.WallRight => data.GetVec2("speedMult", Vector2.One, true),
                 _ => new(data.Float("speedMult", 1f)), // other orientations only care about the Y component anyway
+            };*/
+            speedMult = data.GetVec2("speedMult", Vector2.One, false);
+            MultiplyPlayerY = orientation switch {
+                CustomOrientations.WallLeft or CustomOrientations.WallRight => data.Attr("speedMult").IndexOf(',') != -1,
+                _ => true,
             };
 
             Vector2 position = data.Position + offset;
@@ -217,15 +215,17 @@ namespace FrostHelper {
                     case CustomOrientations.WallLeft:
                         if (player.SideBounce(1, Right, CenterY)) {
                             BounceAnimate();
-                            player.Speed *= speedMult;
-                            Player_varJumpSpeed.SetValue(player, player.Speed.Y);
+                            player.Speed *= speedMult; 
+                            if (MultiplyPlayerY)
+                                Player_varJumpSpeed.SetValue(player, player.Speed.Y);
                             TryBreak();
                         }
                         break;
                     case CustomOrientations.WallRight:
                         if (player.SideBounce(-1, Left, CenterY)) {
                             player.Speed *= speedMult;
-                            Player_varJumpSpeed.SetValue(player, player.Speed.Y);
+                            if (MultiplyPlayerY)
+                                Player_varJumpSpeed.SetValue(player, player.Speed.Y);
                             BounceAnimate();
 
                             TryBreak();

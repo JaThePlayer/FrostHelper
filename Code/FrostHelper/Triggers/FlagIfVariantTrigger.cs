@@ -1,35 +1,32 @@
-﻿using Celeste;
-using Celeste.Mod.Entities;
-using Microsoft.Xna.Framework;
-using System;
-using System.Collections.Generic;
+﻿using Celeste.Mod.Entities;
 
-namespace FrostHelper.Triggers {
-    [CustomEntity("FrostHelper/FlagIfVariantTrigger")]
-    public class FlagIfVariantTrigger : Trigger {
-        public enum Variants {
-            DashAssist,
-            GameSpeed,
-            Hiccups,
-            InfiniteStamina,
-            Invincible,
-            InvisibleMotion,
-            LowFriction,
-            MirrorMode,
-            NoGrabbing,
-            PlayAsBadeline,
-            SuperDashing,
-            ThreeSixtyDashing,
-        }
+namespace FrostHelper.Triggers;
 
-        private static Assists GetAssists() => SaveData.Instance.Assists;
+[CustomEntity("FrostHelper/FlagIfVariantTrigger")]
+public class FlagIfVariantTrigger : Trigger {
+    public enum Variants {
+        DashAssist,
+        GameSpeed,
+        Hiccups,
+        InfiniteStamina,
+        Invincible,
+        InvisibleMotion,
+        LowFriction,
+        MirrorMode,
+        NoGrabbing,
+        PlayAsBadeline,
+        SuperDashing,
+        ThreeSixtyDashing,
+    }
 
-        private static bool ValueToBool(string value) {
-            return value.ToLower() == "true";
-        }
+    private static Assists GetAssists() => SaveData.Instance.Assists;
 
-        public static Dictionary<Variants, Func<string, bool>> VariantCheckers = new Dictionary<Variants, Func<string, bool>>()
-        {
+    private static bool ValueToBool(string value) {
+        return value.ToLower() == "true";
+    }
+
+    public static Dictionary<Variants, Func<string, bool>> VariantCheckers = new Dictionary<Variants, Func<string, bool>>()
+    {
             { Variants.DashAssist, (string s) => { return GetAssists().DashAssist == ValueToBool(s); } },
             { Variants.Invincible, (string s) => { return GetAssists().Invincible == ValueToBool(s); } },
             { Variants.Hiccups, (string s) => { return GetAssists().Hiccups == ValueToBool(s); } },
@@ -44,21 +41,20 @@ namespace FrostHelper.Triggers {
             { Variants.GameSpeed, (string s) => { return GetAssists().GameSpeed == int.Parse(s, System.Globalization.NumberStyles.Integer); } },
         };
 
-        public Variants Variant;
-        public string Value;
-        public string Flag;
-        public bool Inverted;
+    public Variants Variant;
+    public string Value;
+    public string Flag;
+    public bool Inverted;
 
-        public FlagIfVariantTrigger(EntityData data, Vector2 offset) : base(data, offset) {
-            Variant = data.Enum("variant", Variants.Invincible);
-            Value = data.Attr("variantValue", "true");
-            Flag = data.Attr("flag");
-            Inverted = data.Bool("inverted", false);
-        }
+    public FlagIfVariantTrigger(EntityData data, Vector2 offset) : base(data, offset) {
+        Variant = data.Enum("variant", Variants.Invincible);
+        Value = data.Attr("variantValue", "true");
+        Flag = data.Attr("flag");
+        Inverted = data.Bool("inverted", false);
+    }
 
-        public override void OnStay(Player player) {
-            base.OnStay(player);
-            (Scene as Level).Session.SetFlag(Flag, Inverted != VariantCheckers[Variant](Value));
-        }
+    public override void OnStay(Player player) {
+        base.OnStay(player);
+        (Scene as Level).Session.SetFlag(Flag, Inverted != VariantCheckers[Variant](Value));
     }
 }

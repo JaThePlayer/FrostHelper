@@ -1,11 +1,4 @@
-﻿using Celeste;
-using Celeste.Mod.Entities;
-using Microsoft.Xna.Framework;
-using Mono.Cecil.Cil;
-using Monocle;
-using MonoMod.Cil;
-using System;
-using System.Reflection;
+﻿using Celeste.Mod.Entities;
 
 namespace FrostHelper {
     [CustomEntity("CCH/DirectionalPuffer",
@@ -18,6 +11,10 @@ namespace FrostHelper {
             IL.Celeste.Puffer.Render += IL_Render;
             On.Celeste.Puffer.ProximityExplodeCheck += ApplyDirectionalCheck;
             IL.Celeste.Puffer.Explode += Puffer_Explode;
+            IL.Celeste.Puffer.GotoGone += Puffer_GotoGone;
+
+            // for static puffers:
+            IL.Celeste.Puffer.ctor_Vector2_bool += IL_Puffer_Constructor;
         }
 
         public static void Unload() {
@@ -25,6 +22,10 @@ namespace FrostHelper {
             IL.Celeste.Puffer.Render -= IL_Render;
             On.Celeste.Puffer.ProximityExplodeCheck -= ApplyDirectionalCheck;
             IL.Celeste.Puffer.Explode -= Puffer_Explode;
+            IL.Celeste.Puffer.GotoGone -= Puffer_GotoGone;
+
+            // for static puffers:
+            IL.Celeste.Puffer.ctor_Vector2_bool -= IL_Puffer_Constructor;
         }
 
         public enum ExplodeDirection {
@@ -35,8 +36,10 @@ namespace FrostHelper {
         }
 
         private ExplodeDirection direction;
-
+        public bool Static;
         public int DashRecovery;
+        public float RespawnTime;
+        public bool NoRespawn;
 
         public DirectionalPuffer(EntityData data, Vector2 offset) : base(data, offset) {
             // replace the sprite with a custom one
@@ -45,10 +48,17 @@ namespace FrostHelper {
             Puffer_sprite.SetValue(this, sprite);
             Add(sprite);
             sprite.Play("idle", false, false);
+            sprite.SetColor(data.GetColor("color", "ffffff"));
 
             DashRecovery = data.Name == "CCH/PinkPuffer" ? 2 : data.Int("dashRecovery", 1);
 
             direction = data.Enum("explodeDirection", ExplodeDirection.Both);
+
+            Static = data.Bool("static", false);
+            NoRespawn = data.Bool("noRespawn", false);
+            RespawnTime = data.Float("respawnTime", 2.5f);
+
+            MakeStaticIfNeeded();
         }
 
         public static bool IsRightPuffer(Puffer p) {
@@ -105,6 +115,35 @@ namespace FrostHelper {
             }
         }
 
+        private static float getRespawnTime(Puffer puffer, float orig) {
+            if (puffer is DirectionalPuffer dirPuff) {
+                return dirPuff.RespawnTime;
+            } else {
+                return orig;
+            }
+        }
+
+        private static void removeSelfIfNoRespawn(Puffer puffer) {
+            if (puffer is DirectionalPuffer { NoRespawn: true }) {
+                puffer.RemoveSelf();
+            }
+        }
+
+        /// <summary>Implement the RespawnTime and NoRespawn properties</summary>
+        private static void Puffer_GotoGone(ILContext il) {
+            ILCursor cursor = new(il);
+
+            cursor.Emit(OpCodes.Ldarg_0);
+            cursor.EmitCall(removeSelfIfNoRespawn);
+
+
+            while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdcR4(2.5f) &&
+                                                               instr.Next.MatchStfld<Puffer>("goneTimer"))) {
+                cursor.EmitCall(getRespawnTime); // puffer is already on the stack
+                cursor.Emit(OpCodes.Ldarg_0); // restore the stack
+            }
+        }
+
         /// <summary>Make sure that you can't get boosted in the opposite direction by moving into the puffer</summary>
         internal static void IL_OnPlayer(ILContext il) {
             ILCursor cursor = new(il);
@@ -129,13 +168,13 @@ namespace FrostHelper {
             while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdcI4(0) &&
                                                                instr.Next.MatchStloc(6))) {
                 cursor.Emit(OpCodes.Ldarg_0); // this
-                cursor.EmitDelegate<Func<int, Puffer, int>>(getRenderStartIndex);
+                cursor.EmitDelegate(getRenderStartIndex);
             }
 
             // change max i
             while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdcI4(28))) {
                 cursor.Emit(OpCodes.Ldarg_0); // this
-                cursor.EmitDelegate<Func<int, Puffer, int>>(getRenderEndIndex);
+                cursor.EmitDelegate(getRenderEndIndex);
             }
         }
 
@@ -146,7 +185,7 @@ namespace FrostHelper {
 
                 cursor.Emit(OpCodes.Ldarg_0); // this
                 cursor.Emit(OpCodes.Ldloc_1); // player
-                cursor.EmitDelegate<Action<Puffer, Player>>(Restore2DashesIfPinkPuffer);
+                cursor.EmitDelegate(Restore2DashesIfPinkPuffer);
             }
         }
 
@@ -169,5 +208,43 @@ namespace FrostHelper {
         }
 
         private static FieldInfo Puffer_sprite = typeof(Puffer).GetField("sprite", BindingFlags.NonPublic | BindingFlags.Instance);
+
+
+        // based on Max's Helping Hand's Static Puffers
+        #region StaticPuffer
+        private static void IL_Puffer_Constructor(ILContext il) {
+            ILCursor cursor = new(il);
+
+            while (cursor.SeekVirtFunctionCall(typeof(SineWave), "Randomize")) {
+                cursor.Emit(OpCodes.Ldarg_0);
+                cursor.LoadField<Puffer>("idleSine");
+                cursor.EmitCall<DirectionalPuffer>(nameof(ResetSineIfStatic));
+            }
+        }
+
+        public static void ResetSineIfStatic(SineWave idleSine) {
+            if (idleSine.Entity is DirectionalPuffer { Static: true }) {
+                // unrandomize the initial pufferfish position.
+                idleSine.Reset();
+            }
+        }
+
+        public void MakeStaticIfNeeded() {
+            if (!Static) {
+                return;
+            }
+
+            // remove the sine wave component so that it isn't updated.
+            Get<SineWave>()?.RemoveSelf();
+
+            // give the puffer a different depth compared to the player to eliminate frame-precise inconsistencies.
+            Depth = -1;
+
+            // offset the horizontal position by a tiny bit.
+            // Vanilla puffers have a non-integer position (due to the randomized offset), making it impossible to be boosted downwards,
+            // so we want to do the same.
+            Position.X += 0.0001f;
+        }
+        #endregion
     }
 }

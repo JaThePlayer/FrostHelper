@@ -32,7 +32,7 @@ function Ahorn.render(ctx::Ahorn.Cairo.CairoContext, entity::IceSpinner, room::M
 
 	realTexture = "$texture/fg$(spritePathSuffix)03.png"
 
-	rawTint = Ahorn.argb32ToRGBATuple(parse(Int, get(entity.data, "tint", "ffffff"), base=16))[1:3] ./ 255
+	rawTint = Ahorn.argb32ToRGBATuple(parse(Int, lstrip(get(entity.data, "tint", "ffffff"), [ '#' ]), base=16))[1:3] ./ 255
 	realTint = (rawTint..., 1.0)
     Ahorn.drawSprite(ctx, realTexture, 0, 0, tint = realTint)
 end

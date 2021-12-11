@@ -1,9 +1,5 @@
-﻿using Celeste;
-using Celeste.Mod.Entities;
+﻿using Celeste.Mod.Entities;
 using FrostHelper.Colliders;
-using Microsoft.Xna.Framework;
-using Monocle;
-using System;
 using Triangulator;
 
 namespace FrostHelper.Entities {

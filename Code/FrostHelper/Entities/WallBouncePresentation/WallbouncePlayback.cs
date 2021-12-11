@@ -1,11 +1,4 @@
-﻿using Celeste;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using Monocle;
-using System;
-using System.Collections.Generic;
-
-namespace FrostHelper.Entities.WallBouncePresentation {
+﻿namespace FrostHelper.Entities.WallBouncePresentation {
     public class WallbouncePlayback {
         public PlayerPlayback Playback { get; private set; }
 

@@ -1,11 +1,4 @@
-﻿using Celeste;
-using Microsoft.Xna.Framework;
-using Monocle;
-using MonoMod.Utils;
-using System;
-using System.Collections;
-
-namespace FrostHelper {
+﻿namespace FrostHelper {
     [Celeste.Mod.Entities.CustomEntity("FrostHelper/TemporaryKey")]
     public class TemporaryKey : Key {
         public new bool Turning { get; private set; }

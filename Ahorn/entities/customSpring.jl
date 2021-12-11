@@ -51,11 +51,16 @@ sprite = "objects/spring/00.png"
 
 Ahorn.render(ctx::Ahorn.Cairo.CairoContext, entity::CustomSpring, room::Maple.Room) = Ahorn.drawSprite(ctx, sprite, 0, -8)
 function Ahorn.render(ctx::Ahorn.Cairo.CairoContext, entity::CustomSpringLeft, room::Maple.Room)
-    entity.data["speedMult"] = string(get(entity.data, "speedMult", "1.0"))
+    if get(entity.data, "speedMult", "1.0") isa Number
+        entity.data["speedMult"] = string(get(entity.data, "speedMult", "1.0"))
+    end
     Ahorn.drawSprite(ctx, sprite, 9, -11, rot=pi / 2)
 end
 function Ahorn.render(ctx::Ahorn.Cairo.CairoContext, entity::CustomSpringRight, room::Maple.Room)
-    entity.data["speedMult"] = string(get(entity.data, "speedMult", "1.0"))
+    if get(entity.data, "speedMult", "1.0") isa Number
+        entity.data["speedMult"] = string(get(entity.data, "speedMult", "1.0"))
+    end
+
     Ahorn.drawSprite(ctx, sprite, 3, 1, rot=-pi / 2)
 end
 Ahorn.render(ctx::Ahorn.Cairo.CairoContext, entity::CustomSpringCeiling, room::Maple.Room) = Ahorn.drawSprite(ctx, sprite, 12, -2, rot=pi)

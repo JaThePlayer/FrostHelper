@@ -1,11 +1,4 @@
-﻿using Celeste;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using Monocle;
-using System.Collections;
-using System.Collections.Generic;
-
-namespace FrostHelper.Entities.WallBouncePresentation {
+﻿namespace FrostHelper.Entities.WallBouncePresentation {
     class Page02 : WallbouncePresentationPage {
         public Page02() {
             title = new List<TitleText>();

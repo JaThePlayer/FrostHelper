@@ -1,7 +1,4 @@
-﻿using Celeste;
-using Celeste.Mod.Entities;
-using Microsoft.Xna.Framework;
-using Monocle;
+﻿using Celeste.Mod.Entities;
 
 namespace FrostHelper.Entities.Boosters {
     [CustomEntity("FrostHelper/BlueBooster")]

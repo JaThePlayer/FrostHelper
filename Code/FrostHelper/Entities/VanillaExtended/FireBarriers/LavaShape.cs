@@ -1,12 +1,4 @@
-﻿using Celeste;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using Monocle;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
-namespace FrostHelper.Entities {
+﻿namespace FrostHelper.Entities {
     public class LavaShape : Component {
         public int SurfaceStep { get; private set; }
 
@@ -99,7 +91,7 @@ namespace FrostHelper.Entities {
             float len = GetFullLength();
             int num = (int) (GetFullLength() / SurfaceStep * 2f + 4f);
             verts = new VertexPositionColor[num * 3 * 6 + 6 + Fill.Length];
-            bubbles = new Bubble[(int) (len * 0.005f)];
+            bubbles = new Bubble[(int) (len * /*0.005f*/ 0.01f)];
             surfaceBubbles = new SurfaceBubble[(int) Math.Max(4f, bubbles.Length * 0.25f)];
             for (int i = 0; i < bubbles.Length; i++) {
                 float x = 1f + Calc.Random.NextFloat(Width - 2f);

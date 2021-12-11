@@ -1,11 +1,4 @@
-﻿using Celeste;
-using Celeste.Mod.Entities;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using Monocle;
-using System;
-using System.Collections.Generic;
-using System.Reflection;
+﻿using Celeste.Mod.Entities;
 using System.Runtime.CompilerServices;
 
 namespace FrostHelper {
@@ -71,9 +64,9 @@ namespace FrostHelper {
         public bool RenderBorder;
         public bool HasDeco;
 
-        private bool registeredToRenderers = false;
-        private PlayerCollider playerCollider;
-        private bool singleFGImage;
+        public bool RegisteredToRenderers = false;
+        public PlayerCollider PlayerCollider;
+        public bool SingleFGImage;
 
         private void OnChangeMode(Session.CoreModes coreMode) {
             iceModeNext = coreMode == Session.CoreModes.Cold;
@@ -137,8 +130,8 @@ namespace FrostHelper {
                 new Circle(6f, 0f, 0f),
                 new Hitbox(16f, 4f, -8f, -3f)
                             });
-                playerCollider = new PlayerCollider(new Action<Player>(OnPlayer), null, null);
-                Add(playerCollider);
+                PlayerCollider = new PlayerCollider(new Action<Player>(OnPlayer), null, null);
+                Add(PlayerCollider);
                 Add(new HoldableCollider(new Action<Holdable>(OnHoldable), null));
                 Add(new LedgeBlocker(null));
             } else {
@@ -301,25 +294,25 @@ namespace FrostHelper {
 
 
         private void UnregisterFromRenderers() {
-            if (registeredToRenderers) {
+            if (RegisteredToRenderers) {
                 Scene.Tracker.GetEntity<SpinnerConnectorRenderer>()?.Spinners.Remove(this);
                 if (RenderBorder)
                     Scene.Tracker.GetEntity<SpinnerBorderRenderer>()?.Spinners.Remove(this);
                 if (HasDeco)
                     Scene.Tracker.GetEntity<SpinnerDecoRenderer>()?.Spinners.Remove(this);
-                registeredToRenderers = false;
+                RegisteredToRenderers = false;
             }
 
         }
 
         private void RegisterToRenderers() {
-            if (!registeredToRenderers) {
+            if (!RegisteredToRenderers) {
                 Scene.Tracker.GetEntity<SpinnerConnectorRenderer>()?.Spinners.Add(this);
                 if (RenderBorder)
                     Scene.Tracker.GetEntity<SpinnerBorderRenderer>()?.Spinners.Add(this);
                 if (HasDeco)
                     Scene.Tracker.GetEntity<SpinnerDecoRenderer>()?.Spinners.Add(this);
-                registeredToRenderers = true;
+                RegisteredToRenderers = true;
             }
         }
 
@@ -372,7 +365,7 @@ namespace FrostHelper {
                     image.Color = Tint;
                     Add(image);
                     image.Active = false;
-                    singleFGImage = true;
+                    SingleFGImage = true;
                 } else {
                     // only spawn quarter images if it's needed to avoid edge cases
                     AddCornerImages(mtexture, topLeft, topRight, bottomLeft, bottomRight);
@@ -608,8 +601,8 @@ namespace FrostHelper {
 
         public bool AttachToSolid;
 
-        private Entity filler;
-        private Entity deco;
+        public Entity filler;
+        public Entity deco;
 
         private Border border;
 
@@ -619,109 +612,6 @@ namespace FrostHelper {
 
         private int randomSeed;
 
-
-        [Tracked]
-        public class SpinnerConnectorRenderer : Entity {
-            public HashSet<CustomSpinner> Spinners = new HashSet<CustomSpinner>();
-
-            public SpinnerConnectorRenderer() : base() {
-                Active = false;
-                Depth = -8500 + 1;
-                Tag = Tags.Persistent;
-            }
-
-            public override void Render() {
-                foreach (var item in Spinners) {
-                    foreach (var img in item.Components) {
-                        img.Render();
-                    }
-                }
-                //Console.WriteLine(Spinners.Count);
-                foreach (var item in Spinners) {
-                    item.filler?.Render();
-                }
-            }
-        }
-
-        [Tracked]
-        public class SpinnerDecoRenderer : Entity {
-            public HashSet<CustomSpinner> Spinners = new HashSet<CustomSpinner>();
-
-            public SpinnerDecoRenderer() : base() {
-                Active = false;
-                //Depth = -8500 - 1;
-                Depth = -10000 - 1;
-                Tag = Tags.Persistent;
-            }
-
-            public override void Render() {
-                //Console.WriteLine(Spinners.Count);
-                foreach (var item in Spinners) {
-                    item.deco?.Render();
-                }
-            }
-        }
-
-        [Tracked]
-        public class SpinnerBorderRenderer : Entity {
-            public HashSet<CustomSpinner> Spinners = new HashSet<CustomSpinner>();
-
-            public SpinnerBorderRenderer() : base() {
-                Active = false;
-                Depth = -8500 + 2;
-                Tag = Tags.Persistent;
-            }
-
-            public override void Render() {
-                foreach (var item in Spinners) {
-                    var color = item.BorderColor;
-                    var spinnerComponents = item.Components;
-                    for (int i = 0; i < spinnerComponents.Count; i++) {
-                        if (spinnerComponents[i] is Image img) {
-                            if (item.singleFGImage) {
-                                OutlineHelper.RenderOutline(img, color, true);
-                            } else {
-                                // todo: figure out the offsets properly so that OutlineHelper can be used in this case too
-                                DrawBorder(img, color);
-                            }
-                        }
-
-                    }
-                    if (item.filler != null) {
-                        var fillerComponents = item.filler.Components;
-
-                        Image image = fillerComponents[0] as Image;
-                        Texture2D texture = image.Texture.Texture.Texture_Safe;
-                        Rectangle? clipRect = new Rectangle?(image.Texture.ClipRect);
-                        float scaleFix = image.Texture.ScaleFix;
-                        Vector2 origin = (image.Origin - image.Texture.DrawOffset) / scaleFix;
-                        for (int i = 0; i < fillerComponents.Count; i++) {
-                            var img = fillerComponents[i] as Image;
-                            Vector2 drawPos = img.RenderPosition;
-                            float rotation = img.Rotation;
-                            Draw.SpriteBatch.Draw(texture, drawPos - Vector2.UnitY, clipRect, color, rotation, origin, scaleFix, SpriteEffects.None, 0f);
-                            Draw.SpriteBatch.Draw(texture, drawPos + Vector2.UnitY, clipRect, color, rotation, origin, scaleFix, SpriteEffects.None, 0f);
-                            Draw.SpriteBatch.Draw(texture, drawPos - Vector2.UnitX, clipRect, color, rotation, origin, scaleFix, SpriteEffects.None, 0f);
-                            Draw.SpriteBatch.Draw(texture, drawPos + Vector2.UnitX, clipRect, color, rotation, origin, scaleFix, SpriteEffects.None, 0f);
-                        }
-                    }
-                }
-            }
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static void DrawBorder(Image image, Color color) {
-                Texture2D texture = image.Texture.Texture.Texture_Safe;
-                Rectangle? clipRect = new Rectangle?(image.Texture.ClipRect);
-                float scaleFix = image.Texture.ScaleFix;
-                Vector2 origin = (image.Origin - image.Texture.DrawOffset) / scaleFix;
-                Vector2 drawPos = image.RenderPosition;
-                float rotation = image.Rotation;
-                Draw.SpriteBatch.Draw(texture, drawPos - Vector2.UnitY, clipRect, color, rotation, origin, scaleFix, SpriteEffects.None, 0f);
-                Draw.SpriteBatch.Draw(texture, drawPos + Vector2.UnitY, clipRect, color, rotation, origin, scaleFix, SpriteEffects.None, 0f);
-                Draw.SpriteBatch.Draw(texture, drawPos - Vector2.UnitX, clipRect, color, rotation, origin, scaleFix, SpriteEffects.None, 0f);
-                Draw.SpriteBatch.Draw(texture, drawPos + Vector2.UnitX, clipRect, color, rotation, origin, scaleFix, SpriteEffects.None, 0f);
-            }
-        }
 
         private class Border : Entity {
             private Image fg;
@@ -778,4 +668,109 @@ namespace FrostHelper {
             }
         }
     }
+
+
+    [Tracked]
+    public class SpinnerConnectorRenderer : Entity {
+        public HashSet<CustomSpinner> Spinners = new HashSet<CustomSpinner>();
+
+        public SpinnerConnectorRenderer() : base() {
+            Active = false;
+            Depth = -8500 + 1;
+            Tag = Tags.Persistent;
+        }
+
+        public override void Render() {
+            foreach (var item in Spinners) {
+                foreach (var img in item.Components) {
+                    img.Render();
+                }
+            }
+            //Console.WriteLine(Spinners.Count);
+            foreach (var item in Spinners) {
+                item.filler?.Render();
+            }
+        }
+    }
+
+    [Tracked]
+    public class SpinnerDecoRenderer : Entity {
+        public HashSet<CustomSpinner> Spinners = new HashSet<CustomSpinner>();
+
+        public SpinnerDecoRenderer() : base() {
+            Active = false;
+            //Depth = -8500 - 1;
+            Depth = -10000 - 1;
+            Tag = Tags.Persistent;
+        }
+
+        public override void Render() {
+            //Console.WriteLine(Spinners.Count);
+            foreach (var item in Spinners) {
+                item.deco?.Render();
+            }
+        }
+    }
+
+    [Tracked]
+    public class SpinnerBorderRenderer : Entity {
+        public HashSet<CustomSpinner> Spinners = new HashSet<CustomSpinner>();
+
+        public SpinnerBorderRenderer() : base() {
+            Active = false;
+            Depth = -8500 + 2;
+            Tag = Tags.Persistent;
+        }
+
+        public override void Render() {
+            foreach (var item in Spinners) {
+                var color = item.BorderColor;
+                var spinnerComponents = item.Components;
+                for (int i = 0; i < spinnerComponents.Count; i++) {
+                    if (spinnerComponents[i] is Image img) {
+                        if (item.SingleFGImage) {
+                            OutlineHelper.RenderOutline(img, color, true);
+                        } else {
+                            // todo: figure out the offsets properly so that OutlineHelper can be used in this case too
+                            DrawBorder(img, color);
+                        }
+                    }
+
+                }
+                if (item.filler != null) {
+                    var fillerComponents = item.filler.Components;
+
+                    Image image = fillerComponents[0] as Image;
+                    Texture2D texture = image.Texture.Texture.Texture_Safe;
+                    Rectangle? clipRect = new Rectangle?(image.Texture.ClipRect);
+                    float scaleFix = image.Texture.ScaleFix;
+                    Vector2 origin = (image.Origin - image.Texture.DrawOffset) / scaleFix;
+                    for (int i = 0; i < fillerComponents.Count; i++) {
+                        var img = fillerComponents[i] as Image;
+                        Vector2 drawPos = img.RenderPosition;
+                        float rotation = img.Rotation;
+                        Draw.SpriteBatch.Draw(texture, drawPos - Vector2.UnitY, clipRect, color, rotation, origin, scaleFix, SpriteEffects.None, 0f);
+                        Draw.SpriteBatch.Draw(texture, drawPos + Vector2.UnitY, clipRect, color, rotation, origin, scaleFix, SpriteEffects.None, 0f);
+                        Draw.SpriteBatch.Draw(texture, drawPos - Vector2.UnitX, clipRect, color, rotation, origin, scaleFix, SpriteEffects.None, 0f);
+                        Draw.SpriteBatch.Draw(texture, drawPos + Vector2.UnitX, clipRect, color, rotation, origin, scaleFix, SpriteEffects.None, 0f);
+                    }
+                }
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void DrawBorder(Image image, Color color) {
+            Texture2D texture = image.Texture.Texture.Texture_Safe;
+            Rectangle? clipRect = new Rectangle?(image.Texture.ClipRect);
+            float scaleFix = image.Texture.ScaleFix;
+            Vector2 origin = (image.Origin - image.Texture.DrawOffset) / scaleFix;
+            Vector2 drawPos = image.RenderPosition;
+            float rotation = image.Rotation;
+            Draw.SpriteBatch.Draw(texture, drawPos - Vector2.UnitY, clipRect, color, rotation, origin, scaleFix, SpriteEffects.None, 0f);
+            Draw.SpriteBatch.Draw(texture, drawPos + Vector2.UnitY, clipRect, color, rotation, origin, scaleFix, SpriteEffects.None, 0f);
+            Draw.SpriteBatch.Draw(texture, drawPos - Vector2.UnitX, clipRect, color, rotation, origin, scaleFix, SpriteEffects.None, 0f);
+            Draw.SpriteBatch.Draw(texture, drawPos + Vector2.UnitX, clipRect, color, rotation, origin, scaleFix, SpriteEffects.None, 0f);
+        }
+    }
+
 }

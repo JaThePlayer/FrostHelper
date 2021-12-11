@@ -1,10 +1,4 @@
-﻿using Celeste;
-using Microsoft.Xna.Framework;
-using Monocle;
-using System;
-using System.Collections;
-
-namespace FrostHelper {
+﻿namespace FrostHelper {
     [Celeste.Mod.Entities.CustomEntity("FrostHelper/PlusOneRefill")]
     public class PlusOneRefill : Entity {
         string spritepath;

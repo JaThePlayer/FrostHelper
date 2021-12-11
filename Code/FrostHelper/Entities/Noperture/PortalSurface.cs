@@ -1,8 +1,4 @@
-﻿using Celeste;
-using Celeste.Mod.Entities;
-using Microsoft.Xna.Framework;
-using Monocle;
-using System.Collections.Generic;
+﻿using Celeste.Mod.Entities;
 
 namespace FrostTempleHelper.Entities.azcplo1k {
     [CustomEntity("noperture/portalSurface")]

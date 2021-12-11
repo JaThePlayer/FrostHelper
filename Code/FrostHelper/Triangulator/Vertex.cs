@@ -1,6 +1,4 @@
-﻿using Microsoft.Xna.Framework;
-
-namespace Triangulator {
+﻿namespace Triangulator {
     struct Vertex {
         public readonly Vector2 Position;
         public readonly int Index;

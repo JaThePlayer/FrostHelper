@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace Triangulator {
+﻿namespace Triangulator {
     // https://github.com/nickgravelyn/Triangulator/blob/master/Triangulator/Internal%20Classes/IndexableCyclicalLinkedList.cs
     /// <summary>
     /// Implements a LinkedList that is both indexable as well as cyclical. Thus
