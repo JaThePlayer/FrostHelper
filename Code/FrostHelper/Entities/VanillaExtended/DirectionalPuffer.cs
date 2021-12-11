@@ -115,11 +115,9 @@ namespace FrostHelper {
             }
         }
 
-        private static float getRespawnTime(float orig, Puffer puffer) {
+        private static void setRespawnTime(Puffer puffer) {
             if (puffer is DirectionalPuffer dirPuff) {
-                return dirPuff.RespawnTime;
-            } else {
-                return orig;
+                puffer.SetValue("goneTimer", dirPuff.RespawnTime);
             }
         }
 
@@ -139,8 +137,9 @@ namespace FrostHelper {
 
             while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdcR4(2.5f) &&
                                                                instr.Next.MatchStfld<Puffer>("goneTimer"))) {
+                cursor.Index++; // move 1 forward, ahead of the goneTimer set
                 cursor.Emit(OpCodes.Ldarg_0);
-                cursor.EmitCall(getRespawnTime); // puffer is already on the stack
+                cursor.EmitCall(setRespawnTime);
             }
         }
 
