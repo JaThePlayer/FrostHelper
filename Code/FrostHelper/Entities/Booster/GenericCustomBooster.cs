@@ -315,6 +315,22 @@ namespace FrostHelper.Entities.Boosters {
             player.Drop();
         }
 
+        public virtual IEnumerator HandleBoostCoroutine(Player player) {
+            if (BoostTime > 0.25f) {
+                yield return BoostTime - 0.25f;
+                Audio.Play(boostSfx, Position);
+                Flash();
+                yield return 0.25f;
+            } else {
+                yield return BoostTime;
+            }
+
+            player.StateMachine.State = ExitBoostState(player, this);
+            yield break;
+        }
+
+        public virtual void OnBoostEnd(Player player) { }
+
         public virtual void Flash() {
         }
 
@@ -514,23 +530,18 @@ namespace FrostHelper.Entities.Boosters {
             Vector2 vector = (boostTarget - player.Collider.Center).Floor();
             player.MoveToX(vector.X, null);
             player.MoveToY(vector.Y, null);
+
+            GetBoosterThatIsBoostingPlayer(player).OnBoostEnd(player);
             new DynData<Player>(player).Set<GenericCustomBooster>("fh.customBooster", null);
+
+
         }
 
         public static IEnumerator BoostCoroutine(Entity e) {
             Player player = e as Player;
             GenericCustomBooster booster = GetBoosterThatIsBoostingPlayer(player);
-            if (booster.BoostTime > 0.25f) {
-                yield return booster.BoostTime - 0.25f;
-                Audio.Play(booster.boostSfx, booster.Position);
-                booster.Flash();
-                yield return 0.25f;
-            } else {
-                yield return booster.BoostTime;
-            }
 
-            player.StateMachine.State = ExitBoostState(player, booster);
-            yield break;
+            return booster.HandleBoostCoroutine(player);
         }
 
         public static GenericCustomBooster GetBoosterThatIsBoostingPlayer(Entity e) {

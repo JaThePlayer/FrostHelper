@@ -2,7 +2,7 @@ module FrostHelperYellowBoosterModule
 
 using ..Ahorn, Maple
 
-@mapdef Entity "FrostHelper/YellowBooster" FrostHelperYellowBoosterPlacement(x::Integer, y::Integer, boostTime::Number=0.3, respawnTime::Number=1.0, particleColor::String="Yellow", flashTint::String="Red", directory="objects/FrostHelper/yellowBooster/", reappearSfx::String="event:/game/04_cliffside/greenbooster_reappear", enterSfx::String="event:/game/04_cliffside/greenbooster_enter", boostSfx::String="event:/game/04_cliffside/greenbooster_dash", releaseSfx::String="event:/game/04_cliffside/greenbooster_end", dashes::Integer=-1)
+@mapdef Entity "FrostHelper/YellowBooster" FrostHelperYellowBoosterPlacement(x::Integer, y::Integer, boostTime::Number=0.3, respawnTime::Number=1.0, particleColor::String="Yellow", flashTint::String="Red", directory="objects/FrostHelper/yellowBooster/", reappearSfx::String="event:/game/04_cliffside/greenbooster_reappear", enterSfx::String="event:/game/04_cliffside/greenbooster_enter", boostSfx::String="event:/game/04_cliffside/greenbooster_dash", releaseSfx::String="event:/game/04_cliffside/greenbooster_end", dashes::Integer=-1, preserveSpeed::Bool=false)
 
 const colors = sort(collect(keys(Ahorn.XNAColors.colors)))
 

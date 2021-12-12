@@ -59,7 +59,7 @@ public static class ColorHelper {
         }
 
         var packedValue = hex.ToUIntHex();
-        return hex.Length switch {
+        return hex.Trim().Length switch {
             6 => new Color((byte) (packedValue >> 16), (byte) (packedValue >> 8), (byte) packedValue), //rgb
             8 => new Color((byte) (packedValue >> 24), (byte) (packedValue >> 16), (byte) (packedValue >> 8), (byte) packedValue), // rgba
             _ => default,

@@ -135,9 +135,7 @@ namespace FrostHelper {
             cursor.EmitCall(removeSelfIfNoRespawn);
 
 
-            while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdcR4(2.5f) &&
-                                                               instr.Next.MatchStfld<Puffer>("goneTimer"))) {
-                cursor.Index++; // move 1 forward, ahead of the goneTimer set
+            while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchStfld<Puffer>("goneTimer"))) {
                 cursor.Emit(OpCodes.Ldarg_0);
                 cursor.EmitCall(setRespawnTime);
             }

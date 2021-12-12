@@ -166,7 +166,7 @@ public class FrostModule : EverestModule {
                 }
 
 
-                foreach (YellowBooster b in self.Scene.Tracker.GetEntities<YellowBooster>()) {
+                foreach (YellowBoosterOLD b in self.Scene.Tracker.GetEntities<YellowBoosterOLD>()) {
                     b.sprite.SetColor(Color.White);
                     if (b.StartedBoosting) {
                         b.PlayerBoosted(self, self.DashDir);
@@ -240,10 +240,10 @@ public class FrostModule : EverestModule {
         }
         bool? flag2 = flag;
         //GenericCustomBooster.GetBoosterThatIsBoostingPlayer(e).
-        YellowBooster GetBoosterThatIsBoostingPlayer() {
-            return new DynData<Player>(e as Player).Get<YellowBooster>("fh.customyellowBooster");
+        YellowBoosterOLD GetBoosterThatIsBoostingPlayer() {
+            return new DynData<Player>(e as Player).Get<YellowBoosterOLD>("fh.customyellowBooster");
         }
-        YellowBooster booster = GetBoosterThatIsBoostingPlayer();
+        YellowBoosterOLD booster = GetBoosterThatIsBoostingPlayer();
         if (booster.DashRecovery == -1) {
             player.RefillDash();
         } else {
@@ -288,8 +288,8 @@ public class FrostModule : EverestModule {
 
     private IEnumerator YellowBoostCoroutine(Entity e) {
         Player player = e as Player;
-        YellowBooster booster = null;
-        foreach (YellowBooster b in player.Scene.Tracker.GetEntities<YellowBooster>()) {
+        YellowBoosterOLD booster = null;
+        foreach (YellowBoosterOLD b in player.Scene.Tracker.GetEntities<YellowBoosterOLD>()) {
             if (b.StartedBoosting) {
                 booster = b;
                 break;

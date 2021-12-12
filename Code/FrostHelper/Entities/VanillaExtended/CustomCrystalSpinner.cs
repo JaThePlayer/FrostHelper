@@ -355,7 +355,7 @@ namespace FrostHelper {
                 Add(image); */
                 foreach (Entity entity in Scene.Tracker.GetEntities<CustomSpinner>()) {
                     CustomSpinner crystalStaticSpinner = (CustomSpinner) entity;
-                    if (crystalStaticSpinner.ID > ID && crystalStaticSpinner.AttachToSolid == AttachToSolid && (crystalStaticSpinner.Position - Position).LengthSquared() < 576f) {
+                    if (crystalStaticSpinner.ID > ID && crystalStaticSpinner.AttachToSolid == AttachToSolid && (crystalStaticSpinner.Position - Position).LengthSquared() < 24f * 24f) {
                         AddSprite((Position + crystalStaticSpinner.Position) / 2f - Position);
                         AddSprite((Position + crystalStaticSpinner.Position) / 2f - Position);
                     }
