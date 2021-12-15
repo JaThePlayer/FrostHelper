@@ -1,0 +1,391 @@
+# -- Entities --
+# entities.entityName.placements.*
+# entities.entityName.description.*
+
+# Badeline Chaser Block
+entities.FrostHelper/BadelineChaserBlock.placements.name.badeline_chaser_block=Badeline Chaser Block
+entities.FrostHelper/BadelineChaserBlock.placements.name.badeline_chaser_block_reversed=Badeline Chaser Block (Reversed)
+entities.FrostHelper/BadelineChaserBlock.attributes.description.reversed=Whether the state of this chaser block should be the inverse of the usual state.
+
+# Badeline Chaser Block Activator
+entities.FrostHelper/BadelineChaserBlockActivator.placements.name.badeline_chaser_block_activator=Badeline Chaser Block Activator
+entities.FrostHelper/BadelineChaserBlockActivator.placements.name.badeline_chaser_block_activator_reversed=Badeline Chaser Block Activator (Solid)
+entities.FrostHelper/BadelineChaserBlockActivator.attributes.description.solid=Whether this block should be solid
+
+# Bubbler
+entities.FrostHelper/Bubbler.placements.name.normal=Bubbler
+entities.FrostHelper/Bubbler.attributes.description.visible=Whether this bubbler is visible.
+entities.FrostHelper/Bubbler.attributes.description.color=The hex color used to tint the bubbler's sprite.
+
+# Core Berry
+entities.FrostHelper/CoreBerry.placements.name.normal=Core Berry
+entities.FrostHelper/CoreBerry.attributes.description.isIce=Whether this berry is active when the room is in ice core mode. If false, it's active in hot core mode.
+entities.FrostHelper/CoreBerry.attributes.description.checkpointID=Manually determine what checkpoint section strawberries are visually grouped up in, showing up on the start menu during gameplay and level select. Overrides Everest's automatic berry IDs. (Default= -1)
+entities.FrostHelper/CoreBerry.attributes.description.order=Manually determine what order strawberries are visually placed in on the start menu during gameplay and level select. Overrides Everest's automatic berry IDs. (Default= -1)
+
+# Custom Dream Block
+entities.FrostHelper/CustomDreamBlock.placements.name.custom_dream_block=Custom Dream Block
+entities.FrostHelper/CustomDreamBlock.attributes.description.old=Reverts the physics to how they used to be in older versions of Frost Helper. Exists for backwards compatibility reasons, not recommended.
+entities.FrostHelper/CustomDreamBlock.attributes.description.moveSpeedMult=The multiplier to use for the speed the block moves at. Fast Moving blocks use 3.0
+entities.FrostHelper/CustomDreamBlock.attributes.description.moveEase=The Easing type to use for the movement of the block.
+entities.FrostHelper/CustomDreamBlock.attributes.description.speed=The speed the player moves with inside of the block.
+entities.FrostHelper/CustomDreamBlock.attributes.description.fastMoving=Triples the speed the block moves with. For backwards compatibility reasons.
+entities.FrostHelper/CustomDreamBlock.attributes.description.allowRedirects=Whether the player should be able to change the movement direction inside of the block if they have an extra dash.
+entities.FrostHelper/CustomDreamBlock.attributes.description.allowSameDirectionDash=If allowRedirects is true, whether the player can dash in the same direction they're already moving in to increase their speed.
+entities.FrostHelper/CustomDreamBlock.attributes.description.sameDirectionSpeedMultiplier=If allowRedirects and allowSameDirectionDash is true, the multiplier to apply to the player's speed if they dash in the same direction as they're moving in
+entities.FrostHelper/CustomDreamBlock.attributes.description.conserveSpeed=Whether this dream block should conserve the player's speed when entered. If this is true and speed = -1, this block reverses the player's speed.
+entities.FrostHelper/CustomDreamBlock.attributes.description.below=Whether the dream block should render in the background or foreground.
+entities.FrostHelper/CustomDreamBlock.attributes.description.oneUse=Whether the dream block should disappear after one use.
+entities.FrostHelper/CustomDreamBlock.attributes.description.disabledLineColor=Line color to use when the player doesn't have the dream blocks enabled.
+entities.FrostHelper/CustomDreamBlock.attributes.description.disabledBackColor=Background color to use when the player doesn't have the dream blocks enabled.
+entities.FrostHelper/CustomDreamBlock.attributes.description.activeLineColor=Line color to use
+entities.FrostHelper/CustomDreamBlock.attributes.description.activeBackColor=Background color to use
+
+# Custom Fire Barrier
+entities.FrostHelper/CustomFireBarrier.placements.name.normal=Custom Fire Barrier
+entities.FrostHelper/CustomFireBarrier.placements.name.ice=Custom Ice Barrier
+entities.FrostHelper/CustomFireBarrier.attributes.description.isIce=Whether this block should act like an ice barrier.
+entities.FrostHelper/CustomFireBarrier.attributes.description.surfaceColor=Hex color used for the surface of this barrier.
+entities.FrostHelper/CustomFireBarrier.attributes.description.edgeColor=Hex color used for the edges of this barrier.
+entities.FrostHelper/CustomFireBarrier.attributes.description.centerColor=Hex color used for the center of this barrier.
+entities.FrostHelper/CustomFireBarrier.attributes.description.silent=Whether the barrier should never make sound.
+
+# Custom Rising Lava
+entities.FrostHelper/CustomRisingLava.placements.name.normal=Custom Rising Lava
+entities.FrostHelper/CustomRisingLava.attributes.description.intro=Determines whether the lava rises up from below the bottom of the screen or starts already present near the bottom.
+entities.FrostHelper/CustomRisingLava.attributes.description.speed=How fast the lava rises. Should be a negative value.
+entities.FrostHelper/CustomRisingLava.attributes.placements.name.coldColor1=Cold Surface Color
+entities.FrostHelper/CustomRisingLava.attributes.description.coldColor1=Hex color used for the surface of ice.
+entities.FrostHelper/CustomRisingLava.attributes.placements.name.coldColor2=Cold Edge Color
+entities.FrostHelper/CustomRisingLava.attributes.description.coldColor2=Hex color used for the edges of ice.
+entities.FrostHelper/CustomRisingLava.attributes.placements.name.coldColor3=Cold Center Color
+entities.FrostHelper/CustomRisingLava.attributes.description.coldColor3=Hex color used for the center of ice.
+entities.FrostHelper/CustomRisingLava.attributes.placements.name.hotColor1=Hot Surface Color
+entities.FrostHelper/CustomRisingLava.attributes.description.hotColor1=Hex color used for the surface of lava.
+entities.FrostHelper/CustomRisingLava.attributes.placements.name.hotColor2=Hot Edge Color
+entities.FrostHelper/CustomRisingLava.attributes.description.hotColor2=Hex color used for the edges of lava.
+entities.FrostHelper/CustomRisingLava.attributes.placements.name.hotColor3=Hot Center Color
+entities.FrostHelper/CustomRisingLava.attributes.description.hotColor3=Hex color used for the center of lava.
+entities.FrostHelper/CustomRisingLava.attributes.description.reverseCoreMode=Whether this rising lava should react to core mode in the reverse way it normally does.
+entities.FrostHelper/CustomRisingLava.attributes.description.doRubberbanding=Whether this rising lava should start rising faster when off-screen.
+
+# Custom Spinner
+entities.FrostHelper/IceSpinner.placements.name.custom_spinner=Custom Spinner
+entities.FrostHelper/IceSpinner.attributes.description.directory=Path relative to Atlases/Gameplay to the directory containing the sprites for the spinner. Refer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Custom-Spinners
+entities.FrostHelper/IceSpinner.attributes.description.tint=Hex color to use to tint the sprites.
+entities.FrostHelper/IceSpinner.attributes.description.borderColor=Hex color to use to render the borders.
+entities.FrostHelper/IceSpinner.attributes.description.destroyColor=Hex color to use for particles which appear when the spinner is destroyed.
+entities.FrostHelper/IceSpinner.attributes.description.attachToSolid=Whether this spinner should attach to solid entities.
+entities.FrostHelper/IceSpinner.attributes.description.moveWithWind=Whether this spinner should move with wind. Cursed
+entities.FrostHelper/IceSpinner.attributes.description.dashThrough=Whether it's possible to dash through this spinner without dying.
+entities.FrostHelper/IceSpinner.attributes.description.bloomAlpha=If not zero, determines the alpha value for the bloom point of this spinner
+entities.FrostHelper/IceSpinner.attributes.description.bloomRadius=The radius of the bloom point of this spinner.
+entities.FrostHelper/IceSpinner.attributes.description.spritePathSuffix=The suffix to add to the path of all sprite images. Refer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Custom-Spinners
+entities.FrostHelper/IceSpinner.attributes.description.rainbow=Whether this spinner is rainbow. Supports Max's Helping Hand's rainbow spinner controller.
+entities.FrostHelper/IceSpinner.attributes.description.collidable=Whether it's possible to collide with this spinner.
+entities.FrostHelper/IceSpinner.attributes.description.renderOutline=Whether this spinner should render its outline.
+
+# Custom Spring
+entities.FrostHelper/SpringLeft.placements.name.normal=Custom Spring (Right)
+entities.FrostHelper/SpringRight.placements.name.normal=Custom Spring (Left)
+entities.FrostHelper/SpringFloor.placements.name.normal=Custom Spring (Up)
+entities.FrostHelper/SpringCeiling.placements.name.normal=Custom Spring (Down)
+
+entities.FrostHelper/SpringLeft.attributes.description.playerCanUse=Whether the player can use this spring
+entities.FrostHelper/SpringLeft.attributes.description.directory=Path to the directory containing the sprites for the spring, relative to Atlases/Gameplay
+entities.FrostHelper/SpringLeft.attributes.description.speedMult=The speed multiplier applied after using this spring
+entities.FrostHelper/SpringLeft.attributes.description.oneUse=Whether the spring should disappear after being used once
+entities.FrostHelper/SpringLeft.attributes.description.renderOutline=Whether this spring should render its outline
+
+entities.FrostHelper/SpringRight.attributes.description.playerCanUse=Whether the player can use this spring
+entities.FrostHelper/SpringRight.attributes.description.directory=Path to the directory containing the sprites for the spring, relative to Atlases/Gameplay
+entities.FrostHelper/SpringRight.attributes.description.speedMult=The speed multiplier applied after using this spring
+entities.FrostHelper/SpringRight.attributes.description.oneUse=Whether the spring should disappear after being used once
+entities.FrostHelper/SpringRight.attributes.description.renderOutline=Whether this spring should render its outline
+
+entities.FrostHelper/SpringFloor.attributes.description.playerCanUse=Whether the player can use this spring
+entities.FrostHelper/SpringFloor.attributes.description.directory=Path to the directory containing the sprites for the spring, relative to Atlases/Gameplay
+entities.FrostHelper/SpringFloor.attributes.description.speedMult=The speed multiplier applied after using this spring
+entities.FrostHelper/SpringFloor.attributes.description.oneUse=Whether the spring should disappear after being used once
+entities.FrostHelper/SpringFloor.attributes.description.renderOutline=Whether this spring should render its outline
+
+entities.FrostHelper/SpringCeiling.attributes.description.playerCanUse=Whether the player can use this spring
+entities.FrostHelper/SpringCeiling.attributes.description.directory=Path to the directory containing the sprites for the spring, relative to Atlases/Gameplay
+entities.FrostHelper/SpringCeiling.attributes.description.speedMult=The speed multiplier applied after using this spring
+entities.FrostHelper/SpringCeiling.attributes.description.oneUse=Whether the spring should disappear after being used once
+entities.FrostHelper/SpringCeiling.attributes.description.renderOutline=Whether this spring should render its outline
+
+# Custom Flutterbird
+entities.FrostHelper/CustomFlutterBird.placements.name.normal=Custom Flutterbird
+entities.FrostHelper/CustomFlutterBird.attributes.description.colors=Comma-separated list of colors that can be used to tint the sprite for this bird
+
+# Custom Feather
+entities.FrostHelper/CustomFeather.placements.name.normal=Custom Feather
+entities.FrostHelper/CustomFeather.attributes.description.shielded=Whether this feather has a shield that needs to be dashed into
+entities.FrostHelper/CustomFeather.attributes.description.singleUse=Whether this feather should disapear after being used
+entities.FrostHelper/CustomFeather.attributes.description.respawnTime=The amount of time (in seconds) needed for this feather to respawn
+entities.FrostHelper/CustomFeather.attributes.description.flyColor=Hex color used for the player sprite when using the feather
+entities.FrostHelper/CustomFeather.attributes.description.spriteColor=Hex color used to tint the feather sprite
+entities.FrostHelper/CustomFeather.attributes.description.flyTime=The amount of time (in seconds) that this feather lasts for
+entities.FrostHelper/CustomFeather.attributes.description.maxSpeed=Max speed of this feather
+entities.FrostHelper/CustomFeather.attributes.description.lowSpeed=Minimum speed of this feather
+entities.FrostHelper/CustomFeather.attributes.description.neutralSpeed=Speed of this feather when the player is not holding any directional input
+entities.FrostHelper/CustomFeather.attributes.description.spritePath=Path to the directory containing the sprites for the feather, relative to Atlases/Gameplay
+
+# Custom Zip Mover
+entities.FrostHelper/CustomZipMover.placements.name.custom_zip_mover=Custom Zip Mover
+entities.FrostHelper/CustomZipMover.placements.name.slow=Custom Zip Mover (Slow)
+entities.FrostHelper/CustomZipMover.placements.name.fast=Custom Zip Mover (Fast)
+entities.FrostHelper/CustomZipMover.attributes.description.directory=The directory from which the sprites are taken, relative to Atlases/Gameplay/
+entities.FrostHelper/CustomZipMover.attributes.description.percentage=The % of vanilla zip mover's speed that this zipper should use
+entities.FrostHelper/CustomZipMover.attributes.description.lineColor=Hex color used for drawing the zipper's path
+entities.FrostHelper/CustomZipMover.attributes.description.lineLightColor=Hex color used for drawing the light parts of the zipper's path
+entities.FrostHelper/CustomZipMover.attributes.description.isCore=Whether this zipper reacts to core mode
+entities.FrostHelper/CustomZipMover.attributes.description.coldLineColor=Hex color used for drawing the zipper's path if isCore is true and the core mode is set to Cold
+entities.FrostHelper/CustomZipMover.attributes.description.coldLineLightColor=Hex color used for drawing the light parts of the zipper's path if isCore is true and the core mode is set to Cold
+entities.FrostHelper/CustomZipMover.attributes.description.tint=Hex color used to tint the images of this zipper
+entities.FrostHelper/CustomZipMover.attributes.description.showLine=Whether the zipper's path should be visible
+entities.FrostHelper/CustomZipMover.attributes.description.fillMiddle=Whether the middle of the zipper should be filled in with black
+entities.FrostHelper/CustomZipMover.attributes.description.bloomAlpha=If not zero, determines the alpha value for the bloom point of this zipper
+entities.FrostHelper/CustomZipMover.attributes.description.bloomRadius=The radius of the bloom point of this zipper.
+entities.FrostHelper/CustomZipMover.attributes.description.rainbow=Whether this zip mover should be rainbow. Supports Max's Helping Hand's rainbow spinner controller.
+
+# Entity Mover
+entities.FrostHelper/EntityMover.placements.name.normal=Entity Mover
+entities.FrostHelper/EntityMover.attributes.description.mustCollide=Whether the mover should only move entities that are inside of it. If this is false, then all entities in the room which match the whitelist/blacklist will get moved.
+entities.FrostHelper/EntityMover.attributes.description.blacklist=Whether the "types" list is a blacklist or whitelist.
+entities.FrostHelper/EntityMover.attributes.description.types=Comma-seperated list of types that should/shouldn't get moved (depending on the "blacklist" setting). Types should be code type names, including the namespace (use a decompiler to find these). In most cases, this can be left empty with the "blacklist" setting set to "false". 
+entities.FrostHelper/EntityMover.attributes.description.easing=Easing method used for entity movement
+entities.FrostHelper/EntityMover.attributes.description.moveDuration=How long (in seconds) it takes for this mover to move to its destination
+entities.FrostHelper/EntityMover.attributes.description.relativeMovementMode=If true, entities within the mover get moved the distance from the mover's start position and its destination, instead of moving directly to the destination
+entities.FrostHelper/EntityMover.attributes.description.pauseTimeLength=How long (in seconds) to wait after reaching the destination before moving again
+entities.FrostHelper/EntityMover.attributes.description.onEndSFX=SFX to play when the mover reaches its destination. Leave blank for no SFX.
+entities.FrostHelper/EntityMover.attributes.description.startPauseTimeLength=How long (in seconds) to wait before starting to move
+
+# No Dash Area
+entities.FrostHelper/NoDashArea.placements.name.no_dash_area=No Dash Area
+entities.FrostHelper/NoDashArea.attributes.description.fastMoving=Whether this No Dash Area should move faster if it has a node.
+
+# Temporary Key Door
+entities.FrostHelper/TemporaryKeyDoor.placements.name.wood=Temporary Key Door (Wood)
+entities.FrostHelper/TemporaryKeyDoor.placements.name.temple_a=Temporary Key Door (Temple A)
+entities.FrostHelper/TemporaryKeyDoor.placements.name.temple_b=Temporary Key Door (Temple B)
+entities.FrostHelper/TemporaryKeyDoor.placements.name.moon=Temporary Key Door (Moon)
+entities.FrostHelper/TemporaryKeyDoor.attributes.description.unlock_sfx=SFX to play when this door is unlocked. Leave blank for default
+entities.FrostHelper/TemporaryKeyDoor.attributes.description.sprite=Sprite to use for this key door
+entities.FrostHelper/TemporaryKeyDoor.attributes.description.stepMusicProgress=Whether the music progress should be incremented by 1 after unlocking this door
+
+# Toggle Swap Block
+entities.FrostHelper/ToggleSwapBlock.placements.name.normal=Toggle Swap Block
+entities.FrostHelper/ToggleSwapBlock.attributes.description.directory=The directory from which the sprites are taken, relative to Atlases/Gameplay/
+entities.FrostHelper/ToggleSwapBlock.attributes.description.speed=The speed at which this block moves at
+entities.FrostHelper/ToggleSwapBlock.attributes.description.renderBG=Whether the background should be rendered behind the path
+entities.FrostHelper/ToggleSwapBlock.attributes.description.moveSFX=SFX to play when the block starts moving
+entities.FrostHelper/ToggleSwapBlock.attributes.description.moveEndSFX=SFX to play when the block stops moving
+
+# Boosters
+entities.FrostHelper/GrayBooster.placements.name.normal=Gray Booster
+entities.FrostHelper/GrayBooster.placements.name.red=Gray Booster (Red)
+entities.FrostHelper/BlueBooster.placements.name.normal=Blue Booster
+entities.FrostHelper/YellowBooster.placements.name.normal=Yellow Booster
+entities.FrostHelper/IncrementBooster.placements.name.normal=Dash Increment Booster
+entities.FrostHelper/IncrementBooster.placements.name.red=Dash Increment Booster (Red)
+
+entities.FrostHelper/GrayBooster.attributes.description.directory=The directory from which the sprites are taken, relative to Atlases/Gameplay/
+entities.FrostHelper/GrayBooster.attributes.description.respawnTime=Time (in seconds) it takes the booster to respawn after being used
+entities.FrostHelper/GrayBooster.attributes.description.boostTime=Time (in seconds) it takes the booster to release the player after they enter it. Can be skipped by fastbubbling
+entities.FrostHelper/GrayBooster.attributes.description.particleColor=Hex color to use for this booster's particles
+entities.FrostHelper/GrayBooster.attributes.description.releaseSfx=SFX to play when the boosters releases the player
+entities.FrostHelper/GrayBooster.attributes.description.enterSfx=SFX to play when the player enters the bubble
+entities.FrostHelper/GrayBooster.attributes.description.reappearSfx=SFX to play when the booster respawns
+entities.FrostHelper/GrayBooster.attributes.description.boostSfx=SFX to play when the booster starts boosting the player
+entities.FrostHelper/GrayBooster.attributes.description.red=Whether this booster should act like a red one, that has an unlimited range.
+entities.FrostHelper/GrayBooster.dashes=How many dashes the player will have after leaving the booster. Set to -1 to simply refill dashes according to the current maximum dash count.
+
+entities.FrostHelper/BlueBooster.attributes.description.directory=The directory from which the sprites are taken, relative to Atlases/Gameplay/
+entities.FrostHelper/BlueBooster.attributes.description.respawnTime=Time (in seconds) it takes the booster to respawn after being used
+entities.FrostHelper/BlueBooster.attributes.description.boostTime=Time (in seconds) it takes the booster to release the player after they enter it. Can be skipped by fastbubbling
+entities.FrostHelper/BlueBooster.attributes.description.particleColor=Hex color to use for this booster's particles
+entities.FrostHelper/BlueBooster.attributes.description.releaseSfx=SFX to play when the boosters releases the player
+entities.FrostHelper/BlueBooster.attributes.description.enterSfx=SFX to play when the player enters the bubble
+entities.FrostHelper/BlueBooster.attributes.description.reappearSfx=SFX to play when the booster respawns
+entities.FrostHelper/BlueBooster.attributes.description.boostSfx=SFX to play when the booster starts boosting the player
+entities.FrostHelper/BlueBooster.attributes.description.red=Whether this booster should act like a red one, that has an unlimited range.
+
+entities.FrostHelper/YellowBooster.attributes.description.directory=The directory from which the sprites are taken, relative to Atlases/Gameplay/
+entities.FrostHelper/YellowBooster.attributes.description.respawnTime=Time (in seconds) it takes the booster to respawn after being used
+entities.FrostHelper/YellowBooster.attributes.description.boostTime=Time (in seconds) it takes the booster to release the player after they enter it. Can be skipped by fastbubbling
+entities.FrostHelper/YellowBooster.attributes.description.particleColor=Hex color to use for this booster's particles
+entities.FrostHelper/YellowBooster.attributes.description.releaseSfx=SFX to play when the boosters releases the player
+entities.FrostHelper/YellowBooster.attributes.description.enterSfx=SFX to play when the player enters the bubble
+entities.FrostHelper/YellowBooster.attributes.description.reappearSfx=SFX to play when the booster respawns
+entities.FrostHelper/YellowBooster.attributes.description.boostSfx=SFX to play when the booster starts boosting the player
+entities.FrostHelper/YellowBooster.attributes.description.flashTint=The hex color to use when the booster flashes due to time running out
+entities.FrostHelper/YellowBooster.dashes=How many dashes the player will have after leaving the booster. Set to -1 to simply refill dashes according to the current maximum dash count.
+
+entities.FrostHelper/IncrementBooster.attributes.description.directory=The directory from which the sprites are taken, relative to Atlases/Gameplay/
+entities.FrostHelper/IncrementBooster.attributes.description.respawnTime=Time (in seconds) it takes the booster to respawn after being used
+entities.FrostHelper/IncrementBooster.attributes.description.boostTime=Time (in seconds) it takes the booster to release the player after they enter it. Can be skipped by fastbubbling
+entities.FrostHelper/IncrementBooster.attributes.description.particleColor=Hex color to use for this booster's particles
+entities.FrostHelper/IncrementBooster.attributes.description.releaseSfx=SFX to play when the boosters releases the player
+entities.FrostHelper/IncrementBooster.attributes.description.enterSfx=SFX to play when the player enters the bubble
+entities.FrostHelper/IncrementBooster.attributes.description.reappearSfx=SFX to play when the booster respawns
+entities.FrostHelper/IncrementBooster.attributes.description.boostSfx=SFX to play when the booster starts boosting the player
+entities.FrostHelper/IncrementBooster.attributes.description.red=Whether this booster should act like a red one, that has an unlimited range.
+entities.FrostHelper/IncrementBooster.attributes.description.dashCap=Maximum amount of dashes the player can have after leaving this booster. Leave at -1 for no cap.
+entities.FrostHelper/IncrementBooster.attributes.description.dashes=How many additional dashes the player will get after leaving the booster.
+entities.FrostHelper/IncrementBooster.attributes.description.refillBeforeIncrementing=Refills the player's dashes before incrementing the dash amount.
+
+# Ice Key
+entities.FrostHelper/KeyIce.placements.name.normal=Ice Key
+
+# Temporary Key
+entities.FrostHelper/TemporaryKey.placements.name.normal=Temporary Key
+entities.FrostHelper/TemporaryKey.attributes.description.directory=The directory from which the sprites are taken, relative to Atlases/Gameplay/
+
+# Plus One Refill
+entities.FrostHelper/PlusOneRefill.placements.name.normal=Plus One Refill
+entities.FrostHelper/PlusOneRefill.attributes.description.dashCount=Amount of dashes to add when collecting this refill
+entities.FrostHelper/PlusOneRefill.attributes.description.directory=Path to the directory where the sprites for this refill are
+entities.FrostHelper/PlusOneRefill.attributes.description.respawnTime=Time it takes the refill to respawn after being used
+entities.FrostHelper/PlusOneRefill.attributes.description.oneUse=Whether the refill should respawn after being used
+entities.FrostHelper/PlusOneRefill.attributes.description.particleColor=The color of particles emitted by this refill
+entities.FrostHelper/PlusOneRefill.attributes.description.recoverStamina=Whether this refill should also recover stamina
+
+# Custom Kevin
+entities.FrostHelper/SlowCrushBlock.placements.name.both=Custom Kevin (Both)
+entities.FrostHelper/SlowCrushBlock.placements.name.horizontal=Custom Kevin (Horizontal)
+entities.FrostHelper/SlowCrushBlock.placements.name.vertical=Custom Kevin (Vertical)
+entities.FrostHelper/SlowCrushBlock.attributes.description.directory=The directory from which the sprites are taken, relative to Atlases/Gameplay/
+entities.FrostHelper/SlowCrushBlock.attributes.description.chillout=Whether the block should have the large face and get tired after being hit.
+entities.FrostHelper/SlowCrushBlock.attributes.description.crushSpeed=The block's crushing speed
+entities.FrostHelper/SlowCrushBlock.attributes.description.returnSpeed=The block's return speed
+entities.FrostHelper/SlowCrushBlock.attributes.description.returnAcceleration=The block's return acceleration
+entities.FrostHelper/SlowCrushBlock.attributes.description.crushAcceleration=The block's crushing acceleration
+entities.FrostHelper/SlowCrushBlock.attributes.description.axes=Which axes can be activated by dashing.
+
+# Custom Bumper
+entities.FrostHelper/StaticBumper.placements.name.normal=Static Bumper
+entities.FrostHelper/StaticBumper.attributes.description.sprite=Name of the sprite's entry in your Sprites.xml file. A {sprite}_evil entry is required as well for when the core mode is set to Hot
+entities.FrostHelper/StaticBumper.attributes.description.respawnTime=Time it takes the bumper to respawn after boosting you
+entities.FrostHelper/StaticBumper.attributes.description.notCoreMode=If set, the bumper will always be blue regardless of core mode
+entities.FrostHelper/StaticBumper.attributes.description.wobble=Whether the bumper should wobble like vanilla ones.
+entities.FrostHelper/StaticBumper.attributes.description.easing=Easing method used for movement
+entities.FrostHelper/StaticBumper.attributes.description.moveTime=How long (in seconds) it takes for this bumper to move to its destination
+
+# Skateboard
+entities.FrostHelper/Skateboard.placements.name.normal=Skateboard
+entities.FrostHelper/Skateboard.attributes.description.sprite=The path to the sprite, relative to Atlases/Gameplay/
+entities.FrostHelper/Skateboard.attributes.description.keepMoving=Whether this skateboard should keep moving after getting stepped on once, even if the player leaves the skateboard
+entities.FrostHelper/Skateboard.attributes.description.direction=The direction in which the skateboard moves
+entities.FrostHelper/Skateboard.attributes.description.speed=How fast the skateboard moves
+
+# Custom Lightbeam
+entities.FrostHelper/ColoredLightbeam.placements.name.normal=Custom Lightbeam
+entities.FrostHelper/ColoredLightbeam.attributes.description.color=Hex/XNA color to use for rendering this lightbeam
+entities.FrostHelper/ColoredLightbeam.attributes.description.rotation=The rotation of this lightbeam
+entities.FrostHelper/ColoredLightbeam.attributes.description.flag=Session flag that needs to be true for this lightbeam to appear
+
+# Speed Ring Challenge
+entities.FrostHelper/SpeedRingChallenge.placements.name.normal=Speed Ring Challenge
+entities.FrostHelper/SpeedRingChallenge.attributes.description.timeLimit=How much time (in seconds) the player has to complete the challenge
+entities.FrostHelper/SpeedRingChallenge.attributes.description.name=The name of this challenge. Used for saving times
+
+entities.FrostHelper/RainbowTilesetController.placements.name.normal=Rainbow Tileset Controller
+entities.FrostHelper/RainbowTilesetController.attributes.description.bg=Whether this controller should affect BG tiles instead of FG tiles
+entities.FrostHelper/RainbowTilesetController.attributes.description.tilesets=A comma seperated list of tileset id's to turn rainbow. You can get these id's from your ForegroundTiles.xml or BackgroundTiles.xml. You can use * to make all tilesets rainbow.
+
+entities.FrostHelper/EntityRainbowifyController.placements.name.normal=Entity Rainbowify Controller
+entities.FrostHelper/EntityRainbowifyController.attributes.description.types=List of entity types to make rainbow. Refer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Entity-Rainbowifier
+
+entities.FrostHelper/HeldRefill.placements.name.normal=Held Refill
+
+entities.FrostHelper/Icicle.placements.name.normal=Icicle
+entities.FrostHelper/Icicle.attributes.description.directory=The directory containing an idle00.png file to use for the icicle. Additional animation frames can be added by creating idle01.png, idle02.png and so on. Must end with a /
+entities.FrostHelper/Icicle.attributes.description.breakSfx=SFX to play when the icicle breaks
+entities.FrostHelper/Icicle.attributes.description.speed=The speed at which the icicle falls
+
+entities.FrostHelper/WireLamps.placements.name.normal=Wire Lamps
+entities.FrostHelper/WireLamps.attributes.description.above=Whether the wire should be rendered above many other entities.
+entities.FrostHelper/WireLamps.attributes.description.colors=A comma seperated list of colors that can be used for lamp colors. Each lamp will get a random color from this list.
+entities.FrostHelper/WireLamps.attributes.description.wireColor=The color of the wire.
+entities.FrostHelper/WireLamps.attributes.description.lightCount=How many lights should be created.
+entities.FrostHelper/WireLamps.attributes.description.lightAlpha=The Alpha value for the lights.
+entities.FrostHelper/WireLamps.attributes.description.lightStartFade=the Start Fade value for the lights.
+entities.FrostHelper/WireLamps.attributes.description.lightEndFade=the End Fade value for the lights.
+
+entities.FrostHelper/DirectionalPuffer.placements.name.none=Directional Puffer (None)
+entities.FrostHelper/DirectionalPuffer.placements.name.left=Directional Puffer (Left)
+entities.FrostHelper/DirectionalPuffer.placements.name.right=Directional Puffer (Right)
+entities.FrostHelper/DirectionalPuffer.attributes.description.right=Whether the puffer is facing right. DOESN'T impact explode direction.
+entities.FrostHelper/DirectionalPuffer.attributes.description.directory=The directory to get the sprites from.
+entities.FrostHelper/DirectionalPuffer.attributes.description.explodeDirection=The direction in which the puffer can explode in. Can be: None, Left, Right, Both
+entities.FrostHelper/DirectionalPuffer.attributes.description.dashRecovery=Amount of dashes to recover after the puffer explodes
+entities.FrostHelper/DirectionalPuffer.attributes.description.static=Whether the puffer is static and won't move around semi-randomly
+entities.FrostHelper/DirectionalPuffer.attributes.description.color=Color used to tint the sprites
+entities.FrostHelper/DirectionalPuffer.attributes.description.noRespawn=Whether this puffer respawns
+entities.FrostHelper/DirectionalPuffer.attributes.description.respawnTime=How long it takes for the puffer to respawn (in seconds). By default, this is 2.5 seconds
+
+entities.FrostHelper/PufferIndicator.placements.name.default=Puffer Indicator
+entities.FrostHelper/PufferIndicator.attributes.description.spritePath=The path to get the sprite from. This is NOT a directory path!
+entities.FrostHelper/PufferIndicator.attributes.description.color=The color used to tint the sprite
+entities.FrostHelper/PufferIndicator.attributes.description.outlineColor=The color used for the sprite outline.
+
+entities.FrostHelper/EntityBatcher.placements.name.normal=Entity Batcher
+entities.FrostHelper/EntityBatcher.attributes.description.flag=The flag that's required to be set for this batcher to be enabled. Leave blank to make it work all the time
+entities.FrostHelper/EntityBatcher.attributes.description.flagInverted=Whether the flag setting is inverted
+entities.FrostHelper/EntityBatcher.attributes.description.effect=The path to a Shader Helper shader to use with this batcher
+entities.FrostHelper/EntityBatcher.attributes.description.depth=The depth of this batcher. All entities drawn by this batcher will be rendered at this depth, regardless of their depth
+entities.FrostHelper/EntityBatcher.attributes.description.types=List of types of entities that will be affected by this batcher
+entities.FrostHelper/EntityBatcher.attributes.description.parameters=The parameters to pass to the shader. Each parameter is a key:value pair. Each pair is separated by | Example: cool:true|bad:false
+entities.FrostHelper/EntityBatcher.attributes.description.dynamicDepthBatchSplitField=Use only if you need to preserve depth, as this has huge performance implications. If set, the entities will be drawn several times, depending on their depth. Set this to a comma-seperated list of possible depths of the entities that will be drawn. 
+
+# -- Mod Names --
+# mods.modName.*
+mods.FrostHelper.name=Frost Helper
+
+# -- Triggers
+triggers.FrostHelper/AnxietyTrigger.placements.name.normal=Anxiety
+triggers.FrostHelper/AnxietyTrigger.attributes.placements.name.multiplyer=Multiplier
+triggers.FrostHelper/AnxietyTrigger.attributes.description.multiplyer=The multiplier used for the Anxiety effect
+
+triggers.FrostHelper/CapDashOnGroundTrigger.placements.name.normal=Cap Dash On Ground
+
+triggers.FrostHelper/CassetteTempoTrigger.placements.name.normal=Cassette Tempo
+triggers.FrostHelper/CassetteTempoTrigger.attributes.description.Tempo=The tempo value to set
+triggers.FrostHelper/CassetteTempoTrigger.attributes.description.ResetOnLeave=Whether the cassette tempo should be reset to what it was before the player entered the trigger when the player leaves it
+
+triggers.FrostHelper/ChronosTrigger.placements.name.normal=Chronos
+triggers.FrostHelper/ChronosTrigger.attributes.description.time=How much time (in seconds) the player has before time starts slowing down
+
+triggers.FrostHelper/ForcedFastfall.placements.name.normal=Forced Fastfall
+
+triggers.FrostHelper/LightningColorTrigger.placements.name.normal=Lightning Color
+triggers.FrostHelper/LightningColorTrigger.attributes.description.persistent=Whether the color change should persist between deaths/screen transitions etc.
+triggers.FrostHelper/LightningColorTrigger.attributes.description.color1=Hex color
+triggers.FrostHelper/LightningColorTrigger.attributes.description.color2=Hex color
+triggers.FrostHelper/LightningColorTrigger.attributes.description.fillColor=Color of the background. Keep in mind that this color gets manipulated
+triggers.FrostHelper/LightningColorTrigger.attributes.description.fillColorMultiplier=The multiplier applied to the Fill Color
+
+triggers.FrostHelper/SnowballTrigger.placements.name.normal=Custom Snowball
+triggers.FrostHelper/SnowballTrigger.attributes.description.speed=The speed of snowballs generated by this trigger
+triggers.FrostHelper/SnowballTrigger.attributes.description.drawOutline=Whether an outline of the snowball sprite should be drawn
+triggers.FrostHelper/SnowballTrigger.attributes.description.resetTime=How long (in seconds) it takes between a snowball disappearing and another one spawning
+triggers.FrostHelper/SnowballTrigger.attributes.description.ySineWaveFrequency=The frequency of the sine wave that changes the y position of the snowball
+triggers.FrostHelper/SnowballTrigger.attributes.description.spritePath=The path from Sprites.xml to get the snowball's sprites from
+triggers.FrostHelper/SnowballTrigger.attributes.description.direction=The direction the snowball should come from. Accepted values: Right, Left
+triggers.FrostHelper/SnowballTrigger.attributes.description.replaceExisting=Whether this trigger should replace an already existing custom snowball when entered.
+
+triggers.FrostHelper/StopCustomSnowballTrigger.placements.name.normal=Stop Custom Snowball
+
+triggers.FrostHelper/SpeedChallengeJournal.placements.name.normal=Speed Challenge Journal
+triggers.FrostHelper/SpeedChallengeJournal.attributes.description.challengeNames=Comma-seperated list of challenge names to display in this journal
+triggers.FrostHelper/SpeedChallengeJournal.attributes.description.autoAddSid=Whether the SID of the current map should be appended to all challenge names
+
+triggers.FrostHelper/FlagIfVariantTrigger.placements.name.normal=Flag If Variant
+triggers.FrostHelper/FlagIfVariantTrigger.attributes.description.variant=Which variant to check for
+triggers.FrostHelper/FlagIfVariantTrigger.attributes.description.variantValue=Value of the variant to check for. If the value of the trigger is equal to this, the flag gets set. For most variants, this can be false or true. For the Game Speed variant, this can be a number: 160,150,140,130,120,110,100,90,80,70,60,50
+triggers.FrostHelper/FlagIfVariantTrigger.attributes.description.flag=Flag to set
+triggers.FrostHelper/FlagIfVariantTrigger.attributes.description.inverted=Whether the value of the flag should be inverted compared to what it normally would be.
+
+triggers.FrostHelper/CustomRisingLavaStartHeightTrigger.placements.name.normal=Custom Rising Lava Start Height

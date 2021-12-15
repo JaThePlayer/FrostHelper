@@ -79,7 +79,7 @@ public static class TypeHelper {
             ["flingBird"] = typeof(FlingBird),
             ["flingBirdIntro"] = typeof(FlingBirdIntro),
             ["birdPath"] = typeof(BirdPath),
-            ["lightningBlock"] = typeof(Lightning),
+            ["lightningBlock"] = typeof(LightningBreakerBox),
             ["spikesUp"] = typeof(Spikes),
             ["spikesDown"] = typeof(Spikes),
             ["spikesLeft"] = typeof(Spikes),
