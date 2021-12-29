@@ -243,7 +243,8 @@ public static class TypeHelper {
                     if (!entityNameToType.ContainsKey(IDTrim)) {
                         entityNameToType.Add(IDTrim, type);
                     } else {
-                        entityNameToType2.Add(IDTrim, type);
+                        if (!entityNameToType2.ContainsKey(IDTrim))
+                            entityNameToType2.Add(IDTrim, type);
                         Logger.Log(LogLevel.Error, "FrostHelper.TypeHelper", $"Found duplicate entity ID {IDTrim} - {type.FullName} vs {entityNameToType[IDTrim].FullName}");
                     }
                 }

@@ -3,17 +3,24 @@
 namespace FrostHelper {
     [CustomEntity("FrostHelper/CustomFireBarrier")]
     public class CustomFireBarrier : Entity {
-        private bool isIce;
+        public bool IsIce;
+        public bool IgnoreCoreMode;
 
         public CustomFireBarrier(EntityData data, Vector2 offset) : base(data.Position + offset) {
             float width = data.Width;
             float height = data.Height;
-            isIce = data.Bool("isIce", false);
+            IsIce = data.Bool("isIce", false);
             Tag = Tags.TransitionUpdate;
             Collider = new Hitbox(width, height, 0f, 0f);
+            IgnoreCoreMode = data.Bool("ignoreCoreMode", false);
+
             Add(new PlayerCollider(new Action<Player>(OnPlayer), null, null));
-            Add(new CoreModeListener(new Action<Session.CoreModes>(OnChangeMode)));
-            Lava = new LavaRect(width, height, isIce ? 2 : 4);
+
+            if (!IgnoreCoreMode) {
+                Add(new CoreModeListener(new Action<Session.CoreModes>(OnChangeMode)));
+            }
+
+            Lava = new LavaRect(width, height, IsIce ? 2 : 4);
             Add(Lava);
             Lava.SurfaceColor = ColorHelper.GetColor(data.Attr("surfaceColor"));
             Lava.EdgeColor = ColorHelper.GetColor(data.Attr("edgeColor"));
@@ -21,7 +28,7 @@ namespace FrostHelper {
             Lava.SmallWaveAmplitude = 2f;
             Lava.BigWaveAmplitude = 1f;
             Lava.CurveAmplitude = 1f;
-            if (isIce) {
+            if (IsIce) {
                 Lava.UpdateMultiplier = 0f;
                 Lava.Spikey = 3f;
                 Lava.SmallWaveAmplitude = 1f;
@@ -29,36 +36,40 @@ namespace FrostHelper {
 
             lavaRect = new Rectangle((int) (data.Position + offset).X, (int) (data.Position + offset).Y, (int) width, (int) height);
             Depth = -8500;
-            if (!isIce && !data.Bool("silent", false)) {
+            if (!IsIce && !data.Bool("silent", false)) {
                 Add(idleSfx = new SoundSource());
                 idleSfx.Position = new Vector2(Width, Height) / 2f;
             }
 
         }
 
-        public override void Added(Scene scene) {
-            base.Added(scene);
-            scene.Add(solid = new Solid(Position + new Vector2(2f, 3f), Width - 4f, Height - 5f, false));
-            if (!isIce) {
+        public void SetCollidable() {
+            if (IgnoreCoreMode) {
+                Collidable = true;
+                return;
+            }
+
+            if (!IsIce) {
                 Collidable = solid.Collidable = SceneAs<Level>().CoreMode == Session.CoreModes.Hot;
             } else {
                 Collidable = solid.Collidable = SceneAs<Level>().CoreMode == Session.CoreModes.Cold;
             }
+        }
 
-            bool collidable = Collidable;
-            if (collidable) {
+        public override void Added(Scene scene) {
+            base.Added(scene);
+            scene.Add(solid = new Solid(Position + new Vector2(2f, 3f), Width - 4f, Height - 5f, false));
+            SetCollidable();
+
+            if (Collidable) {
                 idleSfx?.Play("event:/env/local/09_core/lavagate_idle", null, 0f);
             }
         }
 
         private void OnChangeMode(Session.CoreModes mode) {
-            if (!isIce) {
-                Collidable = solid.Collidable = SceneAs<Level>().CoreMode == Session.CoreModes.Hot;
-            } else {
-                Collidable = solid.Collidable = SceneAs<Level>().CoreMode == Session.CoreModes.Cold;
-            }
-            bool flag = !Collidable;
-            if (flag) {
+            SetCollidable();
+
+            if (!Collidable) {
                 Level level = SceneAs<Level>();
                 Vector2 center = Center;
                 int num = 0;

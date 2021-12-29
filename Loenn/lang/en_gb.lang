@@ -71,6 +71,7 @@ entities.FrostHelper/CustomRisingLava.attributes.description.doRubberbanding=Whe
 
 # Custom Spinner
 entities.FrostHelper/IceSpinner.placements.name.custom_spinner=Custom Spinner
+entities.FrostHelper/IceSpinner.placements.name.rainbowTexture=Custom Spinner (Rainbow Spinner Texture)
 entities.FrostHelper/IceSpinner.attributes.description.directory=Path relative to Atlases/Gameplay to the directory containing the sprites for the spinner. Refer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Custom-Spinners
 entities.FrostHelper/IceSpinner.attributes.description.tint=Hex color to use to tint the sprites.
 entities.FrostHelper/IceSpinner.attributes.description.borderColor=Hex color to use to render the borders.
@@ -84,6 +85,8 @@ entities.FrostHelper/IceSpinner.attributes.description.spritePathSuffix=The suff
 entities.FrostHelper/IceSpinner.attributes.description.rainbow=Whether this spinner is rainbow. Supports Max's Helping Hand's rainbow spinner controller.
 entities.FrostHelper/IceSpinner.attributes.description.collidable=Whether it's possible to collide with this spinner.
 entities.FrostHelper/IceSpinner.attributes.description.renderOutline=Whether this spinner should render its outline.
+entities.FrostHelper/IceSpinner.attributes.description.attachGroup=The group that this entity is in. All entities with the same attach group will be attached to the same solid.
+entities.FrostHelper/IceSpinner.attributes.description.debrisCount=The amount of debris created when this spinner is destroyed\nHigh values can cause huge lag!
 
 # Custom Spring
 entities.FrostHelper/SpringLeft.placements.name.normal=Custom Spring (Right)
@@ -332,6 +335,7 @@ entities.FrostHelper/PufferIndicator.attributes.description.color=The color used
 entities.FrostHelper/PufferIndicator.attributes.description.outlineColor=The color used for the sprite outline.
 
 entities.FrostHelper/EntityBatcher.placements.name.normal=Entity Batcher
+entities.FrostHelper/EntityBatcher.placements.description.normal=Allows for batching up entity rendering, and to apply a HLSL shader from Shader Helper to said entities. Very technical, requires coding knowledge.
 entities.FrostHelper/EntityBatcher.attributes.description.flag=The flag that's required to be set for this batcher to be enabled. Leave blank to make it work all the time
 entities.FrostHelper/EntityBatcher.attributes.description.flagInverted=Whether the flag setting is inverted
 entities.FrostHelper/EntityBatcher.attributes.description.effect=The path to a Shader Helper shader to use with this batcher
@@ -339,6 +343,29 @@ entities.FrostHelper/EntityBatcher.attributes.description.depth=The depth of thi
 entities.FrostHelper/EntityBatcher.attributes.description.types=List of types of entities that will be affected by this batcher
 entities.FrostHelper/EntityBatcher.attributes.description.parameters=The parameters to pass to the shader. Each parameter is a key:value pair. Each pair is separated by | Example: cool:true|bad:false
 entities.FrostHelper/EntityBatcher.attributes.description.dynamicDepthBatchSplitField=Use only if you need to preserve depth, as this has huge performance implications. If set, the entities will be drawn several times, depending on their depth. Set this to a comma-seperated list of possible depths of the entities that will be drawn. 
+
+entities.FrostHelper/FallingBlockIgnoreSolids.placements.name.default=Falling Block (Ignore Solids)
+entities.FrostHelper/FallingBlockIgnoreSolids.attributes.description.tiletype=The tiletype used by this block
+entities.FrostHelper/FallingBlockIgnoreSolids.attributes.description.climbFall=Whether this block falls upon the player climbing on it
+entities.FrostHelper/FallingBlockIgnoreSolids.attributes.description.behind=Whether this block should render behind many other entities
+
+entities.FrostHelper/AttachedLightning.placements.name.default=Attached Lightning
+entities.FrostHelper/AttachedLightning.attributes.description.attachGroup=The group that this entity is in. All entities with the same attach group will be attached to the same solid.
+
+entities.FrostHelper/GroupedMoverAttacher.placements.name.default=Grouped Mover Attacher
+entities.FrostHelper/GroupedMoverAttacher.attributes.description.attachGroup=The group that the entities affected by this attacher will be in. All entities with the same attach group will be attached to the same solid.
+entities.FrostHelper/GroupedMoverAttacher.attributes.description.isBlacklist=Whether the "types" list is a blacklist. Otherwise, it is a whitelist
+entities.FrostHelper/GroupedMoverAttacher.attributes.description.types=List of types of entities that will be affected by this attacher
+entities.FrostHelper/GroupedMoverAttacher.attributes.description.specialHandling=Whether some entity types should receive special handling.\nFor example, solids will correctly move the player with them\nRecommended
+
+entities.FrostHelper/JumpStar.placements.name.default=Jump Star
+entities.FrostHelper/JumpStar.placements.name.dash=Dash Star
+entities.FrostHelper/JumpStar.attributes.description.directory=The directory to grab sprites from. They will be retrieved like this: "$Directory/$Mode/$(Strength)star"
+entities.FrostHelper/JumpStar.attributes.description.strength=The strength of this star. For the Dash Mode, this is the amount of dashes the player will have. For Jump Mode, the player will get +1 jumps compared to this value.
+entities.FrostHelper/JumpStar.attributes.description.mode=The mode of this Star. Possible modes: Dash, Jump
+
+entities.FrostHelper/LineIndicator.placements.name.default=Line Indicator
+entities.FrostHelper/LineIndicator.attributes.description.color=The color of this line.
 
 # -- Mod Names --
 # mods.modName.*
@@ -388,4 +415,13 @@ triggers.FrostHelper/FlagIfVariantTrigger.attributes.description.variantValue=Va
 triggers.FrostHelper/FlagIfVariantTrigger.attributes.description.flag=Flag to set
 triggers.FrostHelper/FlagIfVariantTrigger.attributes.description.inverted=Whether the value of the flag should be inverted compared to what it normally would be.
 
+triggers.FrostHelper/WASDMovementTrigger.placements.name.default=WASD Movement Trigger
+triggers.FrostHelper/WASDMovementTrigger.attributes.description.hitboxWidth=The width (in pixels) of the hitbox of the player in this state
+triggers.FrostHelper/WASDMovementTrigger.attributes.description.speed=The speed of the player in this state
+triggers.FrostHelper/WASDMovementTrigger.attributes.description.texture=Path to the texture used for the player in this state
+
 triggers.FrostHelper/CustomRisingLavaStartHeightTrigger.placements.name.normal=Custom Rising Lava Start Height
+
+# other
+ui.fh.attachGroup.tooltip=Assigns this entity a new group that's not yet used in this room
+ui.fh.attachGroup.name=Auto

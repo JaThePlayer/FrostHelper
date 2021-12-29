@@ -18,6 +18,7 @@ jautils.createPlacementsPreserveOrder(customFireBarrier, "normal", {
     { "edgeColor", "f25e29", "color" },
     { "centerColor", "d01c01", "color" },
     { "silent", false },
+    { "ignoreCoreMode", false },
 })
 
 jautils.addPlacement(customFireBarrier, "ice", {

@@ -1,13 +1,12 @@
-﻿using Celeste.Mod.Entities;
-using Platform = Celeste.Platform;
-
-namespace FrostHelper;
+﻿namespace FrostHelper;
 
 [CustomEntity("FrostHelper/FallingBlockIgnoreSolids")]
 public class FallingBlockIgnoreSolids : FallingBlock {
     public FallingBlockIgnoreSolids(EntityData data, Vector2 offset) : base(data, offset) {
         Get<Coroutine>().RemoveSelf();
         Add(new Coroutine(Sequence()));
+
+        AllowStaticMovers = data.Bool("allowStaticMovers", true);
     }
 
     public bool PlayerFallCheckShim() => this.Invoke<bool>("PlayerFallCheck");
@@ -55,12 +54,17 @@ public class FallingBlockIgnoreSolids : FallingBlock {
 
                 speed = Calc.Approach(speed, maxSpeed, 500f * Engine.DeltaTime);
 
-                //if (MoveVCollideSolids(speed * Engine.DeltaTime, true, null)) {
-                //    break;
-                //}
                 MoveV(speed * Engine.DeltaTime);
 
-                if (Top > (level.Bounds.Bottom + 16) || (Top > (level.Bounds.Bottom - 1) && CollideCheck<Solid>(Position + Vector2.UnitY))) {
+                float top = Top;
+                foreach (var mover in staticMovers) {
+                    float entityTop = mover.Entity.Top;
+                    if (entityTop < top) {
+                        top = entityTop;
+                    }
+                }
+
+                if (top > (level.Bounds.Bottom + 16) || (top > (level.Bounds.Bottom - 1) && CollideCheck<Solid>(Position + Vector2.UnitY))) {
                     Collidable = Visible = false;
                     yield return 0.2f;
                     if (level.Session.MapData.CanTransitionTo(level, new Vector2(Center.X, Bottom + 12f))) {
@@ -73,21 +77,6 @@ public class FallingBlockIgnoreSolids : FallingBlock {
                     yield break;
                 }
                 yield return null;
-            }
-
-            ImpactSfxShim();
-            Input.Rumble(RumbleStrength.Strong, RumbleLength.Medium);
-            SceneAs<Level>().DirectionalShake(Vector2.UnitY, 0.3f);
-            StartShaking(0f);
-            LandParticlesShim();
-            yield return 0.2f;
-            StopShaking();
-            if (CollideCheck<SolidTiles>(Position + Vector2.UnitY)) {
-                Safe = true;
-                yield break;
-            }
-            while (CollideCheck<Platform>(Position + Vector2.UnitY)) {
-                yield return 0.1f;
             }
         }
     }

@@ -2,7 +2,7 @@ module CustomFireBarrierFrostHelper
 
 using ..Ahorn, Maple
 
-@mapdef Entity "FrostHelper/CustomFireBarrier" CustomFireBarrier(x::Integer, y::Integer, width::Integer=Maple.defaultBlockWidth, height::Integer=Maple.defaultBlockHeight, isIce::Bool=false, surfaceColor::String="ff8933", edgeColor::String="f25e29", centerColor::String="d01c01", silent::Bool=false)
+@mapdef Entity "FrostHelper/CustomFireBarrier" CustomFireBarrier(x::Integer, y::Integer, width::Integer=Maple.defaultBlockWidth, height::Integer=Maple.defaultBlockHeight, isIce::Bool=false, surfaceColor::String="ff8933", edgeColor::String="f25e29", centerColor::String="d01c01", silent::Bool=false, ignoreCoreMode::Bool=false)
 
 const placements = Ahorn.PlacementDict(
     "Custom Fire Barrier (Frost Helper)" => Ahorn.EntityPlacement(

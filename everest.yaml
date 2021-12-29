@@ -13,3 +13,5 @@
       Version: 3.4.5
     - Name: ShaderHelper
       Version: 0.0.3
+    - Name: ExtendedVariantMode
+      Version: 0.19.8

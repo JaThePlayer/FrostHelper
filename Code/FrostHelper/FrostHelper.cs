@@ -1,6 +1,6 @@
 ﻿using Celeste.Mod.Meta;
 using FrostHelper.Entities.Boosters;
-using System.IO;
+using MonoMod.ModInterop;
 
 namespace FrostHelper;
 
@@ -21,11 +21,8 @@ public class FrostModule : EverestModule {
 #if SPEEDCHALLENGES
     public override void PrepareMapDataProcessors(MapDataFixup context) {
         base.PrepareMapDataProcessors(context);
-
-
-            context.Add<FrostMapDataProcessor>();
-
-}
+        context.Add<FrostMapDataProcessor>();
+    }
 #endif
     public override void LoadContent(bool firstLoad) {
         SpriteBank = new SpriteBank(GFX.Game, "Graphics/FrostHelper/CustomSprites.xml");
@@ -48,27 +45,10 @@ public class FrostModule : EverestModule {
         registeredHooks.Add(hook);
     }
 
-    //[Command("createrainbow", "REMOVE THIS JA AAAAAA")]
-    public static void CmdCreateRainbowImg() {
-        int width = 1920;
-        int height = 1080;
-        Texture2D texture = new Texture2D(Engine.Graphics.GraphicsDevice, width, height);
-        Color[] colors = new Color[width * height];
-
-        for (int i = 0; i < width * height; i++) {
-            colors[i] = ColorHelper.GetHue(Engine.Scene, new Vector2(i % width, i / width));
-        }
-
-
-        texture.SetData(colors);
-        using (FileStream stream = File.Create(@"C:\Users\Jasio\Desktop\rainbow4.png"))
-            texture.SaveAsPng(stream, width, height);
-        texture.Dispose();
-    }
-
     // Set up any hooks, event handlers and your mod in general here.
     // Load runs before Celeste itself has initialized properly.
     public override void Load() {
+        typeof(API.API).ModInterop();
         // Legacy entity creation (for back when we didn't have the CustomEntity attribute)
         Everest.Events.Level.OnLoadEntity += OnLoadEntity;
 
@@ -378,9 +358,13 @@ public class FrostModule : EverestModule {
     }
 
     /// <summary>
-    /// Returns a list of colors from a comma-separated string of types
+    /// Returns a list of types from a comma-separated string of types
     /// </summary>
     public static Type[] GetTypes(string typeString) {
+        if (typeString == string.Empty) {
+            return new Type[0];
+        }
+
         string[] split = typeString.Trim().Split(',');
         Type[] parsed = new Type[split.Length];
         for (int i = 0; i < split.Length; i++) {

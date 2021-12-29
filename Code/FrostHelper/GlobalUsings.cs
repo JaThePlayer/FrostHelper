@@ -12,3 +12,6 @@ global using MonoMod.RuntimeDetour;
 global using MonoMod.Utils;
 global using System.Collections;
 global using Mono.Cecil.Cil;
+global using Celeste.Mod.Entities;
+
+global using Platform = Celeste.Platform;

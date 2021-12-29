@@ -34,14 +34,14 @@ namespace FrostHelper {
 
         static void modFeatherState(ILContext il) {
             ILCursor cursor = new ILCursor(il);
-            while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdcI4(19) && instr.Previous.MatchCallvirt<StateMachine>("get_State"))) {
+            while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdcI4(Player.StStarFly) && instr.Previous.MatchCallvirt<StateMachine>("get_State"))) {
                 cursor.Emit(OpCodes.Ldarg_0); // this
-                cursor.EmitDelegate<Func<int, Player, int>>(FrostModule.GetFeatherState);
+                cursor.EmitDelegate(FrostModule.GetFeatherState);
             }
             cursor.Index = 0;
-            while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdcI4(5) && instr.Previous.MatchCallvirt<StateMachine>("get_State"))) {
+            while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdcI4(Player.StRedDash) && instr.Previous.MatchCallvirt<StateMachine>("get_State"))) {
                 cursor.Emit(OpCodes.Ldarg_0); // this
-                cursor.EmitDelegate<Func<int, Player, int>>(FrostModule.GetRedDashState);
+                cursor.EmitDelegate(FrostModule.GetRedDashState);
             }
         }
         #endregion
@@ -96,8 +96,8 @@ namespace FrostHelper {
             ((BloomPoint) data["starFlyBloom"]).Visible = false;
             player.Sprite.HairCount = (int) data["startHairCount"];
             player_StarFlyReturnToNormalHitbox.Invoke(player, null);
-            bool flag = player.StateMachine.State != 2;
-            if (flag) {
+
+            if (player.StateMachine.State != 2) {
                 player.SceneAs<Level>().Particles.Emit(feather.P_Boost, 12, player.Center, Vector2.One * 4f, (-player.Speed).Angle());
             }
         }
@@ -120,11 +120,12 @@ namespace FrostHelper {
             data["starFlyTimer"] = feather.FlyTime;
             player.RefillDash();
             player.RefillStamina();
+
             Vector2 dir = Input.Aim.Value;
-            bool flag = dir == Vector2.Zero;
-            if (flag) {
+            if (dir == Vector2.Zero) {
                 dir = Vector2.UnitX * (float) player.Facing;
             }
+
             player.Speed = dir * 250f;
             data["starFlyLastDir"] = dir;
             player.SceneAs<Level>().Particles.Emit(feather.P_Boost, 12, player.Center, Vector2.One * 4f, feather.FlyColor, (-dir).Angle());
@@ -143,24 +144,24 @@ namespace FrostHelper {
             DynData<Player> data = new DynData<Player>(player);
             BloomPoint bloomPoint = (BloomPoint) data["starFlyBloom"];
             CustomFeather feather = (CustomFeather) data["fh.customFeather"];
-            // 2f -> StarFlyTime
+
             float StarFlyTime = feather.FlyTime;
             bloomPoint.Alpha = Calc.Approach(bloomPoint.Alpha, 0.7f, Engine.DeltaTime * StarFlyTime);
             data["starFlyBloom"] = bloomPoint;
             Input.Rumble(RumbleStrength.Climb, RumbleLength.Short);
+
             if ((bool) data["starFlyTransforming"]) {
                 player.Speed = Calc.Approach(player.Speed, Vector2.Zero, 1000f * Engine.DeltaTime);
             } else {
                 Vector2 aimValue = Input.Aim.Value;
                 bool notAiming = false;
-                bool flag3 = aimValue == Vector2.Zero;
-                if (flag3) {
+                if (aimValue == Vector2.Zero) {
                     notAiming = true;
                     aimValue = (Vector2) data["starFlyLastDir"];
                 }
                 Vector2 lastSpeed = player.Speed.SafeNormalize(Vector2.Zero);
-                bool flag4 = lastSpeed == Vector2.Zero;
-                if (flag4) {
+
+                if (lastSpeed == Vector2.Zero) {
                     lastSpeed = aimValue;
                 } else {
                     lastSpeed = lastSpeed.RotateTowards(aimValue.Angle(), 5.58505344f * Engine.DeltaTime);
@@ -171,8 +172,7 @@ namespace FrostHelper {
                     data["starFlySpeedLerp"] = 0f;
                     target = feather.NeutralSpeed; // was 91f
                 } else {
-                    bool flag6 = lastSpeed != Vector2.Zero && Vector2.Dot(lastSpeed, aimValue) >= 0.45f;
-                    if (flag6) {
+                    if (lastSpeed != Vector2.Zero && Vector2.Dot(lastSpeed, aimValue) >= 0.45f) {
                         data["starFlySpeedLerp"] = Calc.Approach((float) data["starFlySpeedLerp"], 1f, Engine.DeltaTime / 1f);
                         target = MathHelper.Lerp(feather.LowSpeed, feather.MaxSpeed, (float) data["starFlySpeedLerp"]);
                     } else {
@@ -184,92 +184,88 @@ namespace FrostHelper {
                 ss.Param("feather_speed", notAiming ? 0 : 1);
                 data["starFlyLoopSfx"] = ss;
 
-                float num = player.Speed.Length();
-                num = Calc.Approach(num, target, 1000f * Engine.DeltaTime);
-                player.Speed = lastSpeed * num;
-                bool flag7 = level.OnInterval(0.02f);
-                if (flag7) {
+                float speed = player.Speed.Length();
+                speed = Calc.Approach(speed, target, 1000f * Engine.DeltaTime);
+                player.Speed = lastSpeed * speed;
+
+                if (level.OnInterval(0.02f)) {
                     level.Particles.Emit(feather.P_Flying, 1, player.Center, Vector2.One * 2f, feather.FlyColor, (-player.Speed).Angle());
                 }
-                bool pressed = Input.Jump.Pressed;
-                if (pressed) {
-                    bool flag8 = player.OnGround(3);
-                    if (flag8) {
+
+                if (Input.Jump.Pressed) {
+                    if (player.OnGround(3)) {
                         player.Jump(true, true);
-                        return 0;
+                        return Player.StNormal;
                     }
-                    bool flag9 = (bool) player_WallJumpCheck.Invoke(player, new object[] { -1 });
-                    if (flag9) {
+                    if ((bool) player_WallJumpCheck.Invoke(player, new object[] { -1 })) {
                         player_WallJump.Invoke(player, new object[] { 1 });
-                        return 0;
+                        return Player.StNormal;
                     }
-                    bool flag10 = (bool) player_WallJumpCheck.Invoke(player, new object[] { 1 });
-                    if (flag10) {
+
+                    if ((bool) player_WallJumpCheck.Invoke(player, new object[] { 1 })) {
                         player_WallJump.Invoke(player, new object[] { -1 });
-                        return 0;
+                        return Player.StNormal;
                     }
                 }
-                bool check = Input.Grab.Check;
-                if (check) {
-                    bool flag11 = false;
+
+                if (Input.Grab.Check) {
+                    bool startClimb = false;
                     int dir = 0;
-                    bool flag12 = Input.MoveX.Value != -1 && player.ClimbCheck(1, 0);
-                    if (flag12) {
+                    if (Input.MoveX.Value != -1 && player.ClimbCheck(1, 0)) {
                         player.Facing = Facings.Right;
                         dir = 1;
-                        flag11 = true;
+                        startClimb = true;
                     } else {
-                        bool flag13 = Input.MoveX.Value != 1 && player.ClimbCheck(-1, 0);
-                        if (flag13) {
+                        if (Input.MoveX.Value != 1 && player.ClimbCheck(-1, 0)) {
                             player.Facing = Facings.Left;
                             dir = -1;
-                            flag11 = true;
+                            startClimb = true;
                         }
                     }
-                    bool flag14 = flag11;
-                    if (flag14) {
-                        bool noGrabbing = Celeste.SaveData.Instance.Assists.NoGrabbing;
-                        if (noGrabbing) {
+
+                    if (startClimb) {
+                        if (SaveData.Instance.Assists.NoGrabbing) {
                             player.Speed = Vector2.Zero;
                             player.ClimbTrigger(dir);
                             return 0;
                         }
-                        return 1;
+                        return Player.StClimb;
                     }
                 }
-                bool canDash = player.CanDash;
-                if (canDash) {
+
+                if (player.CanDash) {
                     return player.StartDash();
                 }
+
                 float starFlyTimer = (float) data["starFlyTimer"];
                 starFlyTimer -= Engine.DeltaTime;
                 data["starFlyTimer"] = starFlyTimer;
-                bool flag15 = starFlyTimer <= 0f;
-                if (flag15) {
-                    bool flag16 = Input.MoveY.Value == -1;
-                    if (flag16) {
+
+                if (starFlyTimer <= 0f) {
+                    if (Input.MoveY.Value == -1) {
                         player.Speed.Y = -100f;
                     }
-                    bool flag17 = Input.MoveY.Value < 1;
-                    if (flag17) {
+
+                    if (Input.MoveY.Value < 1) {
                         data["varJumpSpeed"] = player.Speed.Y;
                         player.AutoJump = true;
                         player.AutoJumpTimer = 0f;
                         data["varJumpTimer"] = 0.2f;
                     }
-                    bool flag18 = player.Speed.Y > 0f;
-                    if (flag18) {
+
+                    if (player.Speed.Y > 0f) {
                         player.Speed.Y = 0f;
                     }
-                    bool flag19 = Math.Abs(player.Speed.X) > 140f;
-                    if (flag19) {
+
+                    if (Math.Abs(player.Speed.X) > 140f) {
                         player.Speed.X = 140f * Math.Sign(player.Speed.X);
                     }
+
                     Input.Rumble(RumbleStrength.Medium, RumbleLength.Medium);
-                    return 0;
+                    return Player.StNormal;
                 }
-                bool flag20 = starFlyTimer < 0.5f && player.Scene.OnInterval(0.05f);
-                if (flag20) {
+
+                if (starFlyTimer < 0.5f && player.Scene.OnInterval(0.05f)) {
                     Color starFlyColor = feather.FlyColor;
                     if (player.Sprite.Color == starFlyColor) {
                         player.Sprite.Color = Player.NormalHairColor;
@@ -363,11 +359,12 @@ namespace FrostHelper {
 
             if (respawnTimer > 0f) {
                 respawnTimer -= Engine.DeltaTime;
-                bool flag2 = respawnTimer <= 0f;
-                if (flag2) {
+
+                if (respawnTimer <= 0f) {
                     Respawn();
                 }
             }
+
             UpdateY();
             light.Alpha = Calc.Approach(light.Alpha, sprite.Visible ? 1f : 0f, 4f * Engine.DeltaTime);
             bloom.Alpha = light.Alpha * 0.8f;
@@ -400,8 +397,8 @@ namespace FrostHelper {
 
         private void OnPlayer(Player player) {
             Vector2 speed = player.Speed;
-            bool flag = shielded && !player.DashAttacking;
-            if (flag) {
+
+            if (shielded && !player.DashAttacking) {
                 player.PointBounce(Center);
                 moveWiggle.Start();
                 shieldRadiusWiggle.Start();
@@ -417,8 +414,7 @@ namespace FrostHelper {
                     }
                     Collidable = false;
                     Add(new Coroutine(CollectRoutine(player, speed), true));
-                    bool flag5 = !singleUse;
-                    if (flag5) {
+                    if (!singleUse) {
                         outline.Visible = true;
                         respawnTimer = RespawnTime;
                     }

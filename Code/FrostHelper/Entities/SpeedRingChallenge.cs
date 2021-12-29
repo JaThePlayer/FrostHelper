@@ -5,31 +5,23 @@ namespace FrostHelper {
     [Tracked]
     public class SpeedRingChallenge : Entity {
         SpeedRingTimerDisplay timer;
-
         public readonly EntityID ID;
-
         public readonly string ChallengeNameID;
-
         Vector2[] nodes;
         public int currentNodeID = -1;
-
         public readonly long TimeLimit;
-
         public long StartChapterTimer = 0;
-        public long TimeSpent => Finished ? FinalTimeSpent : Scene == null ? 0 : SceneAs<Level>().Session.Time - StartChapterTimer;
-
         public long FinalTimeSpent = -1;
-
         bool started;
-
         public bool Finished;
-
         public Strawberry BerryToSpawn;
-
+        float lerp;
         float width, height;
         bool spawnBerry;
-
         public Color RingColor;
+        readonly List<MTexture> ArrowTextures;
+
+        public long TimeSpent => Finished ? FinalTimeSpent : Scene == null ? 0 : SceneAs<Level>().Session.Time - StartChapterTimer;
 
         public SpeedRingChallenge(EntityData data, Vector2 offset, EntityID id) : base(data.Position + offset) {
             ID = id;
@@ -39,7 +31,9 @@ namespace FrostHelper {
             width = data.Width;
             height = data.Height;
             spawnBerry = data.Bool("spawnBerry", true);
+            ArrowTextures = GFX.Game.GetAtlasSubtextures("util/dasharrow/dasharrow");
 
+            Depth = Depths.Top;
         }
 
         public override void Awake(Scene scene) {
@@ -140,8 +134,37 @@ namespace FrostHelper {
             }
 
             DrawRing(Collider.Center + Position);//currentNodeID == -1 ? Collider.Center : nodes[currentNodeID]);
+
+            if (!started)
+                return;
+
+            #region Arrow
+
+            Player player = Scene.Tracker.GetEntity<Player>();
+            if (player == null) {
+                return;
+            }
+
+            float direction = Calc.Angle(player.Center, Center);
+            float scale = 1f;
+            MTexture mtexture = null;
+            float rotation = float.MaxValue;
+            for (int i = 0; i < 8; i++) {
+                float angleDifference = Calc.AngleDiff(6.28318548f * (i / 8f), direction);
+                if (Math.Abs(angleDifference) < Math.Abs(rotation)) {
+                    rotation = angleDifference;
+                    mtexture = ArrowTextures[i];
+                }
+            }
+            if (mtexture != null) {
+                if (Math.Abs(rotation) < 0.05f) {
+                    rotation = 0f;
+                }
+                mtexture.DrawOutlineCentered((player.Center + Calc.AngleToVector(direction, 40f)).Round(), Color.White, Ease.BounceOut(scale), rotation);
+            }
+            #endregion
         }
-        float lerp;
+
 
         private void DrawRing(Vector2 position) {
             float maxRadiusY = MathHelper.Lerp(4f, Height / 2, lerp);
@@ -168,7 +191,6 @@ namespace FrostHelper {
         bool fading;
 
         readonly SpeedRingChallenge TrackedChallenge;
-
 
         string Name;
         Vector2 NameMeasure;

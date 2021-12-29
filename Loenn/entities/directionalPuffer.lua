@@ -11,7 +11,7 @@ local directionalPuffer = {
 jautils.createPlacementsPreserveOrder(directionalPuffer, "none", {
     { "explodeDirection", "None" },
     { "directory", "objects/puffer/" },
-    { "color", "ffffff" },
+    { "color", "ffffff", "color" },
     { "dashRecovery", 1, "integer" },
     { "static", false },
     { "right", false },
@@ -30,7 +30,7 @@ jautils.addPlacement(directionalPuffer, "left", {
 })
 
 function directionalPuffer.sprite(room, entity)
-    local sprites = jautils.getOutlinedSpriteFromPath(entity, (entity.directory or "objects/puffer/") .. "idle00", entity.color)
+    local sprites = jautils.getOutlinedSpriteFromPath(entity, (entity.directory or "objects/puffer/") .. "idle00", entity.color, nil, entity.right and 1 or -1)
 
     local explodeDir = entity.explodeDirection
     if explodeDir and explodeDir ~= "None" then

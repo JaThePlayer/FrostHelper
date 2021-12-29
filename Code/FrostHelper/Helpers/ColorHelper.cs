@@ -1,8 +1,8 @@
 ﻿namespace FrostHelper;
 
 public static class ColorHelper {
-    static Dictionary<string, Color> cache = new Dictionary<string, Color>();
-    static Dictionary<string, Color[]> colorArrayCache = new Dictionary<string, Color[]>();
+    static Dictionary<string, Color> cache = new Dictionary<string, Color>(StringComparer.OrdinalIgnoreCase);
+    static Dictionary<string, Color[]> colorArrayCache = new Dictionary<string, Color[]>(StringComparer.OrdinalIgnoreCase);
     static ColorHelper() {
         foreach (var prop in typeof(Color).GetProperties()) {
             object value = prop.GetValue(default(Color), null);
@@ -60,7 +60,8 @@ public static class ColorHelper {
 
         var packedValue = hex.ToUIntHex();
         return hex.Trim().Length switch {
-            6 => new Color((byte) (packedValue >> 16), (byte) (packedValue >> 8), (byte) packedValue), //rgb
+            // allow 7-length as RGB because of Temple of Zoom from SC having 00bc000 as spinner tint... why
+            6 or 7 => new Color((byte) (packedValue >> 16), (byte) (packedValue >> 8), (byte) packedValue), //rgb
             8 => new Color((byte) (packedValue >> 24), (byte) (packedValue >> 16), (byte) (packedValue >> 8), (byte) packedValue), // rgba
             _ => default,
         };

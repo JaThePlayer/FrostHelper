@@ -14,10 +14,19 @@ local jautils = {}
     UTILS
 ]]
 
-function jautils.addAll(addTo, toAddTable)
-    for _, value in ipairs(toAddTable) do
-        table.insert(addTo, value)
+function jautils.addAll(addTo, toAddTable, insertLoc)
+    if insertLoc then
+        for _, value in ipairs(toAddTable) do
+            table.insert(addTo, insertLoc, value)
+        end
+    else
+        for _, value in ipairs(toAddTable) do
+            table.insert(addTo, value)
+        end
     end
+
+
+    return addTo
 end
 
 --[[
@@ -92,9 +101,10 @@ jautils.colorWhite = utils.getColor("ffffff")
 jautils.colorBlack = {0, 0, 0, 1}
 jautils.radian = math.pi / 180
 
-function jautils.getOutlinedSpriteFromPath(data, spritePath, color, outlineColor)
+function jautils.getOutlinedSpriteFromPath(data, spritePath, color, outlineColor, scaleX)
     local sprite = drawableSpriteStruct.fromTexture(spritePath, data)
     sprite:setColor(color or jautils.colorWhite)
+    sprite.scaleX = scaleX or 1
 
     local sprites = jautils.getBorder(sprite, outlineColor or jautils.colorBlack)
 
@@ -123,12 +133,15 @@ function jautils.getBorder(sprite, color)
 end
 
 function jautils.getBordersForAll(sprites, color)
+    -- manually iterate since we're changing the table
+    local newSprites = {}
+
     local spriteLen = #sprites
     for i = 1, spriteLen, 1 do
-        jautils.addAll(sprites, jautils.getBorder(sprites[i], color))
+        jautils.addAll(newSprites, jautils.getBorder(sprites[i], color))
     end
 
-    return sprites
+    return jautils.addAll(newSprites, sprites)
 end
 
 function jautils.copyTexture(baseTexture, x, y, relative)

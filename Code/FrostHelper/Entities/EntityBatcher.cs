@@ -11,6 +11,8 @@ namespace FrostHelper {
 
         public Dictionary<string, object> ShaderParameters;
 
+        public bool MakeEntitiesInvisible;
+
         public int[] DynamicDepthPossibleDepths = null;
 
         public string Flag;
@@ -27,6 +29,7 @@ namespace FrostHelper {
             Shader = data.Attr("effect");
             Depth = data.Int("depth", Depths.Top);
             Types = FrostModule.GetTypes(data.Attr("types"));
+            MakeEntitiesInvisible = data.Bool("makeEntitiesInvisible", true);
             Visible = true;
 
             string[] propertySplit = data.Attr("parameters", string.Empty).Split(new char[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
@@ -83,7 +86,10 @@ namespace FrostHelper {
                 foreach (var item in scene.Entities) {
                     if (Types.Contains(item.GetType())) {
                         AffectedEntities.Add(item);
-                        item.Visible = false;
+                        if (MakeEntitiesInvisible) {
+                            item.Visible = false;
+                        }
+                        
                     }
                 }
             }
@@ -98,13 +104,12 @@ namespace FrostHelper {
                 }
             }
 
-            bool lastVisible = Visible;
             Visible = IsEnabled();
-            //if (lastVisible != Visible) {
+            if (MakeEntitiesInvisible) {
                 foreach (var entity in AffectedEntities) {
                     entity.Visible = !Visible;
                 }
-            //}
+            } 
         }
 
         public static GaussianBlur.Samples GetSamples(Dictionary<string, object> ShaderParameters) {
@@ -131,8 +136,10 @@ namespace FrostHelper {
             }
         }
 
+        private static RenderTarget2D maskTarget => GameplayBuffers.TempB;
+
         public static void RenderVanillaBlur(Dictionary<string, object> ShaderParameters) {
-            GaussianBlur.Blur(GameplayBuffers.TempB, temp, GameplayBuffers.Gameplay, GetFloatParam("fade", ShaderParameters), false, GetSamples(ShaderParameters), GetFloatParam("alpha", ShaderParameters));
+            GaussianBlur.Blur(maskTarget, temp, GameplayBuffers.Gameplay, GetFloatParam("fade", ShaderParameters), false, GetSamples(ShaderParameters), GetFloatParam("alpha", ShaderParameters));
             GameplayRenderer.Begin();
         }
 
@@ -149,24 +156,21 @@ namespace FrostHelper {
             Draw.SpriteBatch.End();
 
             if (ShaderParameters.ContainsKey("renderEntitiesToGameplay")) {
-                RedrawEntities(null, ShaderParameters, true);
+                RedrawEntities(ShaderParameters, true);
             }
 
             Engine.Graphics.GraphicsDevice.SetRenderTarget(null);
         }
 
-        private static void RedrawEntities(IEnumerable<Entity> AffectedEntities, Dictionary<string, object> ShaderParameters, bool force = false) {
+        private static void RedrawEntities(Dictionary<string, object> ShaderParameters, bool force = false) {
             if (force || ShaderParameters.ContainsKey("rerenderEntities")) {
-                //foreach (var item in AffectedEntities) {
-                //    item?.Render();
-                //}
                 Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.Default, RasterizerState.CullNone, null);
-                Draw.SpriteBatch.Draw(GameplayBuffers.TempB, Vector2.Zero, Color.White);
+                Draw.SpriteBatch.Draw(maskTarget, Vector2.Zero, Color.White);
                 Draw.SpriteBatch.End();
             }
         }
 
-        public static void RenderMask(IEnumerable<Entity> AffectedEntities, Dictionary<string, object> ShaderParameters) {
+        public static void RenderMask(Dictionary<string, object> ShaderParameters) {
             DrawMask(ShaderParameters);
 
             // step 2: render blur
@@ -174,16 +178,16 @@ namespace FrostHelper {
             var shader = ShaderHelperIntegration.GetEffect(ShaderParameters["maskShader"] as string);
 
             // step 3: shader
-            Engine.Instance.GraphicsDevice.Textures[1] = GameplayBuffers.TempB; // t1 -> mask
+            Engine.Instance.GraphicsDevice.Textures[1] = maskTarget; // t1 -> mask
             BetterShaderTrigger.SimpleApply(temp2, GameplayBuffers.Gameplay, shader);
 
             // step 4: redraw the entities that were used for the mask
 
-            RedrawEntities(AffectedEntities, ShaderParameters);
+            RedrawEntities(ShaderParameters);
             GameplayRenderer.Begin();
         }
 
-        public static void RenderBlurMask(IEnumerable<Entity> AffectedEntities, Dictionary<string, object> ShaderParameters) {
+        public static void RenderBlurMask(Dictionary<string, object> ShaderParameters) {
             DrawMask(ShaderParameters);
 
             // step 2: render blur
@@ -191,16 +195,16 @@ namespace FrostHelper {
             var shader = ShaderHelperIntegration.GetEffect(ShaderParameters["maskShader"] as string);
 
             // step 3: shader
-            Engine.Instance.GraphicsDevice.Textures[1] = GameplayBuffers.TempB; // t1 -> mask
+            Engine.Instance.GraphicsDevice.Textures[1] = maskTarget; // t1 -> mask
             BetterShaderTrigger.SimpleApply(GameplayBuffers.TempA, GameplayBuffers.Gameplay, shader);
 
             // step 4: redraw the entities that were used for the mask
 
-            RedrawEntities(AffectedEntities, ShaderParameters);
+            RedrawEntities(ShaderParameters);
             GameplayRenderer.Begin();
         }
 
-        public static void Apply(IEnumerable<Entity> AffectedEntities, string Shader, Dictionary<string, object> ShaderParameters) {
+        public static void Apply(List<Entity> AffectedEntities, string Shader, Dictionary<string, object> ShaderParameters, int? requiredDepth) {
             Draw.SpriteBatch.End();
 
             if (temp is null || temp.Width != GameplayBuffers.Gameplay.Width) {
@@ -209,15 +213,16 @@ namespace FrostHelper {
 
                 temp = VirtualContent.CreateRenderTarget("fh.entitybatcher.Temp", GameplayBuffers.Gameplay.Width, GameplayBuffers.Gameplay.Height, false, false);
                 temp2 = VirtualContent.CreateRenderTarget("fh.entitybatcher.Temp2", GameplayBuffers.Gameplay.Width, GameplayBuffers.Gameplay.Height, false, false);
+                //maskTarget = VirtualContent.CreateRenderTarget("fh.entitybatcher.maskTarget", GameplayBuffers.Gameplay.Width, GameplayBuffers.Gameplay.Height, false, false);
             }
 
-            Engine.Graphics.GraphicsDevice.SetRenderTarget(GameplayBuffers.TempB);
+            Engine.Graphics.GraphicsDevice.SetRenderTarget(maskTarget);
             Engine.Graphics.GraphicsDevice.Clear(Color.Transparent);
 
             GameplayRenderer.Begin();
 
             foreach (var item in AffectedEntities) {
-                if (item is not null && item.Scene is not null) {
+                if (item is not null && item.Scene is not null && (requiredDepth is null || item.Depth == requiredDepth)) {
                     item.Render();
                 }
 
@@ -227,10 +232,10 @@ namespace FrostHelper {
 
             switch (Shader) {
                 case "mask":
-                    RenderMask(AffectedEntities, ShaderParameters);
+                    RenderMask(ShaderParameters);
                     return;
                 case "blurMask":
-                    RenderBlurMask(AffectedEntities, ShaderParameters);
+                    RenderBlurMask(ShaderParameters);
                     return;
                 case "vanilla.gaussianBlur":
                     RenderVanillaBlur(ShaderParameters);
@@ -251,9 +256,9 @@ namespace FrostHelper {
             }
 
             if (DynamicDepthPossibleDepths is not null) {
-                Apply(AffectedEntities.Where(e => e.Depth == Depth), Shader, ShaderParameters);
+                Apply(AffectedEntities, Shader, ShaderParameters, Depth);
             } else {
-                Apply(AffectedEntities, Shader, ShaderParameters);
+                Apply(AffectedEntities, Shader, ShaderParameters, null);
             }
             
         }

@@ -22,6 +22,13 @@ jautils.createPlacementsPreserveOrder(spinner, "custom_spinner", {
     { "drawOutline", true },
     { "bloomAlpha", 0.0 },
     { "bloomRadius", 0.0 },
+    { "debrisCount", 8, "integer" },
+    { "attachGroup", -1, "FrostHelper.attachGroup" }
+})
+
+jautils.addPlacement(spinner, "rainbowTexture", {
+    {"directory", "danger/crystal" },
+	{"spritePathSuffix", "_white" },
 })
 
 local function createConnectorsForSpinner(room, entity, baseBGSprite)
@@ -32,7 +39,7 @@ local function createConnectorsForSpinner(room, entity, baseBGSprite)
 
         if e2 == entity then break end
 
-        if e2._name == entity._name and e2.attachToSolid == entity.attachToSolid and jautils.distanceSquared(entity.x, entity.y, e2.x, e2.y) < 576 then
+        if e2._name == entity._name and e2.attachGroup == entity.attachGroup and e2.attachToSolid == entity.attachToSolid and jautils.distanceSquared(entity.x, entity.y, e2.x, e2.y) < 576 then
             local connector = jautils.copyTexture(baseBGSprite, (entity.x + e2.x) / 2, (entity.y + e2.y) / 2, false)
             connector.depth = 1---8499
             table.insert(sprites, connector)
@@ -55,7 +62,7 @@ function spinner.sprite(room, entity)
 
     local drawBorder = entity.drawOutline == nil and true or entity.drawOutline
     if drawBorder then
-        jautils.getBordersForAll(sprites, entity.borderColor)
+        sprites = jautils.getBordersForAll(sprites, entity.borderColor)
     end
 
     return sprites

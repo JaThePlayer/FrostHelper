@@ -11,16 +11,25 @@
     <Platforms>AnyCPU</Platforms>
     <OutputPath>bin\</OutputPath>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net452|AnyCPU'">
+    <DefineConstants>$(DefineConstants)TRACE;SPEEDCHALLENGES</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net452|AnyCPU'">
+    <DefineConstants>$(DefineConstants)TRACE;SPEEDCHALLENGES</DefineConstants>
+  </PropertyGroup>
 
   <!-- Packages -->
   <ItemGroup>
     <PackageReference Include="Mono.Cecil" PrivateAssets="all" Version="0.11.4">
       <IncludeAssets>compile</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="MonoMod.RuntimeDetour" PrivateAssets="all" Version="21.8.19.1">
+    <PackageReference Include="MonoMod" PrivateAssets="all" Version="21.12.13.1">
+		<IncludeAssets>compile</IncludeAssets>
+	</PackageReference>
+    <PackageReference Include="MonoMod.RuntimeDetour" PrivateAssets="all" Version="21.12.13.1">
       <IncludeAssets>compile</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="MonoMod.Utils" PrivateAssets="all" Version="21.8.19.1">
+    <PackageReference Include="MonoMod.Utils" PrivateAssets="all" Version="21.12.13.1">
       <IncludeAssets>compile</IncludeAssets>
     </PackageReference>
     <PackageReference Include="YamlDotNet" PrivateAssets="all" Version="11.2.1">

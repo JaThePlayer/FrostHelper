@@ -200,6 +200,21 @@ public static class EasierILHook {
         return new ILHook(typeof(T).GetMethod(methodName, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static), manipulator);
     }
 
+    public static T CreateDynamicMethod<T>(string methodName, Action<ILProcessor> generator) where T : Delegate {
+        var TType = typeof(T);
+        var genTypes = TType.GenericTypeArguments;
+        var isFunc = TType.Name.Contains("Func");
+
+        var method = new DynamicMethodDefinition(methodName,
+            isFunc ? genTypes.Last() : null,
+            isFunc ? genTypes.Take(genTypes.Length - 1).ToArray() : genTypes
+            );
+
+        generator(method.GetILProcessor());
+
+        return method.Generate().CreateDelegate<T>();
+    }
+
     /// <summary>
     /// 
     /// The following method is written by max480. Thanks max!

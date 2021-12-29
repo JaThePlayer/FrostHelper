@@ -14,6 +14,7 @@ jautils.createPlacementsPreserveOrder(coloredLightbeam, "normal", {
     { "rotation", 0 },
     { "color", "ccffff", "color" },
     { "flag", "" },
+    { "parallaxAmount", 0.0 }
 })
 
 return coloredLightbeam

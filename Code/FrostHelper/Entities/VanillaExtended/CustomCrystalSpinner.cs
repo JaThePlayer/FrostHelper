@@ -1,5 +1,4 @@
-﻿using Celeste.Mod.Entities;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 
 namespace FrostHelper {
     [CustomEntity("FrostHelper/IceSpinner", "FrostHelperExt/CustomBloomSpinner")]
@@ -63,10 +62,12 @@ namespace FrostHelper {
         public bool HasCollider;
         public bool RenderBorder;
         public bool HasDeco;
+        public int DestroyDebrisCount;
 
         public bool RegisteredToRenderers = false;
         public PlayerCollider PlayerCollider;
         public bool SingleFGImage;
+        public int AttachGroup;
 
         private void OnChangeMode(Session.CoreModes coreMode) {
             iceModeNext = coreMode == Session.CoreModes.Cold;
@@ -95,7 +96,7 @@ namespace FrostHelper {
         public CustomSpinner(EntityData data, Vector2 position, bool attachToSolid, string directory, string destroyColor, bool isCore, string tint) : base(data.Position + position) {
             Rainbow = data.Bool("rainbow", false);
             RenderBorder = data.Bool("drawOutline", true);
-
+            DestroyDebrisCount = data.Int("debrisCount", 8);
             ID = data.ID;
             DashThrough = data.Bool("dashThrough", false);
             this.tint = tint;
@@ -140,12 +141,18 @@ namespace FrostHelper {
             Visible = false;
             Depth = -8500;
             AttachToSolid = attachToSolid;
+            AttachGroup = data.Int("attachGroup", -1);
             if (AttachToSolid) {
-                Add(new StaticMover {
-                    OnShake = new Action<Vector2>(OnShake),
-                    SolidChecker = new Func<Solid, bool>(IsRiding),
-                    OnDestroy = new Action(RemoveSelf)
-                });
+                var mover = AttachGroup switch {
+                    -1 => new StaticMover(),
+                    _ => new GroupedStaticMover(AttachGroup)
+                };
+
+                mover.OnShake = OnShake;
+                mover.SolidChecker = IsRiding;
+                mover.OnDestroy = RemoveSelf;
+
+                Add(mover);
             }
 
             randomSeed = Calc.Random.Next();
@@ -355,9 +362,9 @@ namespace FrostHelper {
                 Add(image); */
                 foreach (Entity entity in Scene.Tracker.GetEntities<CustomSpinner>()) {
                     CustomSpinner crystalStaticSpinner = (CustomSpinner) entity;
-                    if (crystalStaticSpinner.ID > ID && crystalStaticSpinner.AttachToSolid == AttachToSolid && (crystalStaticSpinner.Position - Position).LengthSquared() < 24f * 24f) {
+                    if (crystalStaticSpinner.ID > ID && crystalStaticSpinner.AttachGroup == AttachGroup && crystalStaticSpinner.AttachToSolid == AttachToSolid && (crystalStaticSpinner.Position - Position).LengthSquared() < 24f * 24f) {
                         AddSprite((Position + crystalStaticSpinner.Position) / 2f - Position);
-                        AddSprite((Position + crystalStaticSpinner.Position) / 2f - Position);
+                        //crystalStaticSpinner.AddSprite((Position + crystalStaticSpinner.Position) / 2f - crystalStaticSpinner.Position);
                     }
                 }
                 if (imgCount == 4) {
@@ -502,11 +509,9 @@ namespace FrostHelper {
             if (AttachToSolid || moveWithWind) {
                 return false;
             }
-            using (List<Solid>.Enumerator enumerator = Scene.CollideAll<Solid>(position).GetEnumerator()) {
-                while (enumerator.MoveNext()) {
-                    if (enumerator.Current is SolidTiles) {
-                        return true;
-                    }
+            foreach (var a in Scene.CollideAll<Solid>(position)) {
+                if (a is SolidTiles) {
+                    return true;
                 }
             }
             return false;
@@ -586,7 +591,7 @@ namespace FrostHelper {
                 Audio.Play("event:/game/06_reflection/fall_spike_smash", Position);
                 Color color = Rainbow ? ColorHelper.GetHue(Scene, Position) : Calc.HexToColor(destroyColor);
 
-                CrystalDebris.Burst(Position, color, boss, 8);
+                FastCrystalDebris.Burst(Position, color, boss, DestroyDebrisCount);
             }
             RemoveSelf();
         }
@@ -682,12 +687,6 @@ namespace FrostHelper {
 
         public override void Render() {
             foreach (var item in Spinners) {
-                foreach (var img in item.Components) {
-                    img.Render();
-                }
-            }
-            //Console.WriteLine(Spinners.Count);
-            foreach (var item in Spinners) {
                 item.filler?.Render();
             }
         }
@@ -726,18 +725,25 @@ namespace FrostHelper {
             foreach (var item in Spinners) {
                 var color = item.BorderColor;
                 var spinnerComponents = item.Components;
-                for (int i = 0; i < spinnerComponents.Count; i++) {
-                    if (spinnerComponents[i] is Image img) {
-                        if (item.SingleFGImage) {
+                if (item.SingleFGImage) {
+                    foreach (var component in spinnerComponents) {
+                        if (component is Image img) {
                             OutlineHelper.RenderOutline(img, color, true);
-                        } else {
+                            break;
+                        }
+                    }
+                } else {
+                    foreach (var component in spinnerComponents) {
+                        if (component is Image img) {
                             // todo: figure out the offsets properly so that OutlineHelper can be used in this case too
                             DrawBorder(img, color);
                         }
                     }
-
                 }
+
+
                 if (item.filler != null) {
+                    item.filler.Position = item.Position;
                     var fillerComponents = item.filler.Components;
 
                     Image image = fillerComponents[0] as Image;
@@ -745,14 +751,15 @@ namespace FrostHelper {
                     Rectangle? clipRect = new Rectangle?(image.Texture.ClipRect);
                     float scaleFix = image.Texture.ScaleFix;
                     Vector2 origin = (image.Origin - image.Texture.DrawOffset) / scaleFix;
-                    for (int i = 0; i < fillerComponents.Count; i++) {
-                        var img = fillerComponents[i] as Image;
+                    foreach (Image img in fillerComponents) {
+
                         Vector2 drawPos = img.RenderPosition;
                         float rotation = img.Rotation;
                         Draw.SpriteBatch.Draw(texture, drawPos - Vector2.UnitY, clipRect, color, rotation, origin, scaleFix, SpriteEffects.None, 0f);
                         Draw.SpriteBatch.Draw(texture, drawPos + Vector2.UnitY, clipRect, color, rotation, origin, scaleFix, SpriteEffects.None, 0f);
                         Draw.SpriteBatch.Draw(texture, drawPos - Vector2.UnitX, clipRect, color, rotation, origin, scaleFix, SpriteEffects.None, 0f);
                         Draw.SpriteBatch.Draw(texture, drawPos + Vector2.UnitX, clipRect, color, rotation, origin, scaleFix, SpriteEffects.None, 0f);
+                        //img.DrawOutline(color);
                     }
                 }
             }

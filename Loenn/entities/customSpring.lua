@@ -17,6 +17,7 @@ end
 local function createSpringHandler(name, spriteRotation, speedAsVector)
     local handler = {
         name = name,
+        --[[
         placements = {
             name = "normal",
             data = {
@@ -25,8 +26,11 @@ local function createSpringHandler(name, spriteRotation, speedAsVector)
                 speedMult = speedAsVector and "1.0" or 1.0,
                 oneUse = false,
                 renderOutline = true,
+
             }
         },
+        ]]
+
         depth = springDepth,
         sprite = function (room, entity)
             local sprite = getSprite(entity)
@@ -36,7 +40,7 @@ local function createSpringHandler(name, spriteRotation, speedAsVector)
                 sprite.rotation = spriteRotation
                 local renderOutline = entity.renderOutline == nil and true or entity.renderOutline
                 if renderOutline then
-                    local sprites = jautils.getBorder(sprite)
+                    local sprites = jautils.getBorder(sprite, entity.outlineColor)
                     table.insert(sprites, sprite)
                     return sprites
                 end
@@ -53,6 +57,16 @@ local function createSpringHandler(name, spriteRotation, speedAsVector)
             return sprite:getRectangle()
         end,
     }
+
+    jautils.createPlacementsPreserveOrder(handler, "normal", {
+        { "color", "ffffff", "color" },
+        { "directory", "objects/spring/" },
+        { "speedMult", speedAsVector and "1.0" or 1.0 },
+        { "oneUse", false },
+        { "playerCanUse", true },
+        { "renderOutline", true },
+        { "attachGroup", -1, "FrostHelper.attachGroup" },
+    })
 
     return handler
 end
