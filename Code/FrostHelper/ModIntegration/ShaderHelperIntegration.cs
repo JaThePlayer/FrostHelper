@@ -10,38 +10,50 @@ public static class ShaderHelperIntegration {
         public override string Message => $"Shader not found: {id}";
     }
 
+    public class NotLoadedException : Exception {
+        public NotLoadedException() : base() {
+        }
+
+        public override string Message => "Shader Helper is not installed, but Frost Helper tried getting an effect!\nAdd ShaderHelper as a dependency in your everest.yaml!";
+    }
+
     [OnLoadContent]
     public static void Load() {
-        EverestModuleMetadata celesteTASMeta = new EverestModuleMetadata { Name = "ShaderHelper", VersionString = "0.0.3" };
-        if (IntegrationUtils.TryGetModule(celesteTASMeta, out EverestModule shaderHelperModule)) {
+        EverestModuleMetadata shaderHelperMeta = new EverestModuleMetadata { Name = "ShaderHelper", VersionString = "0.0.3" };
+        if (IntegrationUtils.TryGetModule(shaderHelperMeta, out EverestModule shaderHelperModule)) {
             module = shaderHelperModule;
             module_FX = shaderHelperModule.GetType().GetField("FX");
             Loaded = true;
         }
     }
 
-    public static bool Loaded;
+    private static bool _loaded;
+    public static bool Loaded {
+        set => _loaded = value;
+        get {
+            if (!_loaded)
+                Load();
+            return _loaded;
+        }
+    }
+
     private static FieldInfo module_FX;
     private static EverestModule module;
 
     public static Effect GetEffect(string id) {
         if (Loaded)
-            return (module_FX.GetValue(module) as Dictionary<string, Effect>)[id];
+            return (module_FX.GetValue(module) as Dictionary<string, Effect>)![id] ?? throw new MissingShaderException(id);
 
-        return null;
+        throw new NotLoadedException();
     }
 
     public static Effect BeginGameplayRenderWithEffect(string id, bool endBatch) {
         if (!Loaded)
-            return null;
+            throw new NotLoadedException();
 
         Effect effect = GetEffect(id);
-        if (effect is null)
-            throw new MissingShaderException(id);
 
-        if (effect.Parameters["Time"] != null) {
-            effect.Parameters["Time"].SetValue(Engine.Scene.TimeActive);
-        }
+        ApplyStandardParameters(effect);
 
         if (endBatch) {
             Draw.SpriteBatch.End();
@@ -93,27 +105,14 @@ public static class ShaderHelperIntegration {
     }
 
     public static void ApplyStandardParameters(Effect effect) {
-        EffectParameter deltaParam = effect.Parameters["DeltaTime"];
-        if (deltaParam != null)
-            deltaParam.SetValue(Engine.DeltaTime);
-        EffectParameter timeParam = effect.Parameters["Time"];
-        if (timeParam != null)
-            timeParam.SetValue(Engine.Scene.TimeActive);
+        var level = FrostModule.GetCurrentLevel() ?? throw new Exception("Not in a level when applying shader parameters! How did you...");
+        var viewport = Engine.Graphics.GraphicsDevice.Viewport;
 
-        EffectParameter dimensionsParam = effect.Parameters["Dimensions"];
-        if (dimensionsParam != null) {
-            Vector2 value = new Vector2(Engine.Graphics.GraphicsDevice.Viewport.Width, Engine.Graphics.GraphicsDevice.Viewport.Height);
-            dimensionsParam.SetValue(value);
-        }
-        EffectParameter camPosParam = effect.Parameters["CamPos"];
-        if (camPosParam != null) {
-            camPosParam.SetValue(FrostModule.GetCurrentLevel().Camera.Position);
-        }
-
-        EffectParameter coldCoreModeParam = effect.Parameters["ColdCoreMode"];
-        if (coldCoreModeParam != null) {
-            coldCoreModeParam.SetValue(FrostModule.GetCurrentLevel().CoreMode == Session.CoreModes.Cold);
-        }
+        effect.Parameters["DeltaTime"]?.SetValue(Engine.DeltaTime);
+        effect.Parameters["Time"]?.SetValue(Engine.Scene.TimeActive);
+        effect.Parameters["Dimensions"]?.SetValue(new Vector2(viewport.Width, viewport.Height));
+        effect.Parameters["CamPos"]?.SetValue(level.Camera.Position);
+        effect.Parameters["ColdCoreMode"]?.SetValue(level.CoreMode == Session.CoreModes.Cold);
     }
 
     public static void ApplyParametersFrom(this Effect shader, Dictionary<string, string> parameters) {
@@ -130,7 +129,6 @@ public static class ShaderHelperIntegration {
                     break;
                 case EffectParameterType.Single:
                     prop.SetValue(item.Value.ToSingle());
-
                     break;
                 default:
                     throw new Exception($"Entity Batcher doesn't know how to set a parameter of type {prop.ParameterType} for property {item.Key}");

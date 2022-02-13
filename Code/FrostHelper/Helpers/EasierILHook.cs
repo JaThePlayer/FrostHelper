@@ -34,16 +34,9 @@ public static class EasierILHook {
     public static void ReplaceInts(ILCursor cursor, Dictionary<int, Func<int>> toReplace) {
         int lastIndex = cursor.Index;
         cursor.Index = 0;
-        Func<int> replacement = null;
+        Func<int> replacement = null!;
         while (cursor.TryGotoNext(MoveType.After, instr => MatchIntInDict(instr, toReplace, out replacement))) {
-            /*
-                int old = -1;
-                if (cursor.Prev.Operand.GetType() == typeof(int))
-                    old = (int)cursor.Prev.Operand;
-                else
-                    old = (int)(sbyte)cursor.Prev.Operand;*/
             cursor.Emit(OpCodes.Pop);
-            //cursor.Emit(OpCodes.Ldc_I4, replacement);
             cursor.EmitDelegate(replacement);
         }
         cursor.Index = lastIndex;
@@ -231,7 +224,7 @@ public static class EasierILHook {
         // get the type
         TypeDefinition type = celeste.GetType(typeName);
         if (type == null)
-            return null;
+            return null!;
 
         // the "coroutine" method is actually a nested type tracking the coroutine's state
         // (to make it restart from where it stopped when MoveNext() is called).
@@ -241,7 +234,7 @@ public static class EasierILHook {
                 // check that this nested type contains a MoveNext() method
                 MethodDefinition method = nest.FindMethod("System.Boolean MoveNext()");
                 if (method == null)
-                    return null;
+                    return null!;
 
                 // we found it! let's convert it into basic System.Reflection stuff and hook it.
                 //Logger.Log("ExtendedVariantMode/ExtendedVariantsModule", $"Building IL hook for method {method.FullName} in order to mod {typeName}.{methodName}()");
@@ -252,7 +245,7 @@ public static class EasierILHook {
             }
         }
 
-        return null;
+        return null!;
     }
 
     /// <summary>

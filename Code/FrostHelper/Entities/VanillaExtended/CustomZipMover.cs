@@ -191,7 +191,7 @@ namespace FrostHelper {
 
         public override void Removed(Scene scene) {
             scene.Remove(pathRenderer);
-            pathRenderer = null;
+            pathRenderer = null!;
             base.Removed(scene);
         }
 

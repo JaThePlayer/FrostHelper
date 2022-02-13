@@ -1,4 +1,5 @@
-﻿using FrostHelper.Entities.Boosters;
+﻿using FrostHelper.Colliders;
+using FrostHelper.Entities.Boosters;
 using MonoMod.ModInterop;
 
 #if PLAYERSTATEHELPER
@@ -64,7 +65,7 @@ public static class API {
     /// Supports Max's Helping Hand rainbow spinner controllers.
     /// </summary>
     public static Color GetRainbowColor(Vector2 position) {
-        return GetRainbowColor(position);
+        return GetRainbowColor(Engine.Scene, position);
     }
 
     /// <summary>
@@ -88,8 +89,9 @@ public static class API {
     /// <summary>
     /// Converts a StaticMover into a GroupedStaticMover, returning it
     /// </summary>
-    public static Component ToGroupedStaticMover(StaticMover staticMover, int attachGroup) {
-        return new GroupedStaticMover(attachGroup) {
+    public static Component ToGroupedStaticMover(StaticMover staticMover, int attachGroup) => ToGroupedStaticMover(staticMover, attachGroup, true);
+    public static Component ToGroupedStaticMover(StaticMover staticMover, int attachGroup, bool canBeLeader) {
+        return new GroupedStaticMover(attachGroup, canBeLeader) {
             JumpThruChecker = staticMover.JumpThruChecker,
             OnDestroy = staticMover.OnDestroy,
             OnDisable = staticMover.OnDisable,
@@ -112,5 +114,20 @@ public static class API {
                 sp.Destroy(boss);
                 break;
         };
+    }
+
+    public static Collider CreateShapeCollider(Vector2[] points) {
+         return new ShapeHitbox(points);
+    }
+
+    /// <summary>
+    /// Updates a specified point of a ShapeCollider. The argument is a Collider only to avoid needing a hard reference to Frost Helper, this function only accepts a ShapeCollider and will throw an <see cref="ArgumentException"/> otherwise.
+    /// </summary>
+    public static void UpdateShapeColliderPoint(Collider shapeCollider, int pointIndex, Vector2 point) {
+        if (shapeCollider is ShapeHitbox shape) {
+            shape.Points[pointIndex] = point;
+        } else {
+            throw new ArgumentException($"The first argument to {nameof(UpdateShapeColliderPoint)} must be a {nameof(ShapeHitbox)}!");
+        }
     }
 }

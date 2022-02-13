@@ -12,16 +12,12 @@ namespace FrostHelper.Entities.WallBouncePresentation {
 
         public Atlas Gfx { get; private set; }
 
-        public bool ShowInput {
-            get {
-                return waitingForPageTurn || (CurrPage != null && CurrPage.WaitingForInput);
-            }
-        }
+        public bool ShowInput => waitingForPageTurn || (CurrPage != null && CurrPage.WaitingForInput);
 
         private WallbouncePresentationPage PrevPage {
             get {
                 if (pageIndex <= 0) {
-                    return null;
+                    return null!;
                 }
                 return pages[pageIndex - 1];
             }
@@ -30,7 +26,7 @@ namespace FrostHelper.Entities.WallBouncePresentation {
         private WallbouncePresentationPage CurrPage {
             get {
                 if (pageIndex >= pages.Count) {
-                    return null;
+                    return null!;
                 }
                 return pages[pageIndex];
             }
@@ -48,7 +44,7 @@ namespace FrostHelper.Entities.WallBouncePresentation {
             return PlaybackKeyPrefix + key;
         }
 
-        public WallbouncePresentation(EventInstance usingSfx = null, string dialogKeyPrefix = "WAVEDASH", string graphicsKeyPrefix = "", string playbackKeyPrefix = "") {
+        public WallbouncePresentation(EventInstance? usingSfx = null, string dialogKeyPrefix = "WAVEDASH", string graphicsKeyPrefix = "", string playbackKeyPrefix = "") {
             GraphicsKeyPrefix = graphicsKeyPrefix;
             DialogKeyPrefix = dialogKeyPrefix;
             PlaybackKeyPrefix = playbackKeyPrefix;
@@ -177,7 +173,7 @@ namespace FrostHelper.Entities.WallBouncePresentation {
             Engine.Graphics.GraphicsDevice.SetRenderTarget(screenBuffer);
             Engine.Graphics.GraphicsDevice.Clear(Color.Black);
             if (pageTurning) {
-                if (CurrPage.Transition == WallbouncePresentationPage.Transitions.ScaleIn) {
+                if (CurrPage!.Transition == WallbouncePresentationPage.Transitions.ScaleIn) {
                     Draw.SpriteBatch.Begin();
                     Draw.SpriteBatch.Draw(prevPageBuffer, Vector2.Zero, Color.White);
                     Vector2 scale = Vector2.One * pageEase;
@@ -289,7 +285,7 @@ namespace FrostHelper.Entities.WallBouncePresentation {
                 if (ShowInput && waitingForInputTime > 0.2f) {
                     GFX.Gui["textboxbutton"].DrawCentered(new Vector2(1856f, 1016 + ((Scene.TimeActive % 1f < 0.25f) ? 6 : 0)), Color.Black);
                 }
-                if ((Scene as Level).Paused) {
+                if ((Scene as Level)!.Paused) {
                     Draw.Rect(rectangle, Color.Black * 0.7f);
                 }
             }
@@ -312,17 +308,17 @@ namespace FrostHelper.Entities.WallBouncePresentation {
             if (screenBuffer != null) {
                 screenBuffer.Dispose();
             }
-            screenBuffer = null;
+            screenBuffer = null!;
             if (prevPageBuffer != null) {
                 prevPageBuffer.Dispose();
             }
-            prevPageBuffer = null;
+            prevPageBuffer = null!;
             if (currPageBuffer != null) {
                 currPageBuffer.Dispose();
             }
-            currPageBuffer = null;
+            currPageBuffer = null!;
             Gfx.Dispose();
-            Gfx = null;
+            Gfx = null!;
         }
 
         private static uint PseudoRand(ref uint seed) {
@@ -370,6 +366,6 @@ namespace FrostHelper.Entities.WallBouncePresentation {
 
         private VertexPositionColorTexture[] verts;
 
-        private EventInstance usingSfx;
+        private EventInstance? usingSfx;
     }
 }

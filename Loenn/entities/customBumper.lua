@@ -9,7 +9,7 @@ jautils.createPlacementsPreserveOrder(staticBumper, "normal", {
     { "respawnTime", 0.6 },
     { "moveTime", 1.81818187 },
     { "sprite", "bumper" },
-    { "easing", "CubeInOut"},
+    { "easing", "CubeInOut", jautils.easings },
     { "wobble", false },
     { "notCoreMode", false },
 })

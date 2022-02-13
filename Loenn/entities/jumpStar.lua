@@ -14,7 +14,7 @@ local jumpStarModes = {
 
 jautils.createPlacementsPreserveOrder(jumpStar, "default", {
     { "directory", defaultDirectory },
-    { "mode", "Jump" },
+    { "mode", "Jump", jumpStarModes },
     { "strength", 1, "integer" },
 })
 

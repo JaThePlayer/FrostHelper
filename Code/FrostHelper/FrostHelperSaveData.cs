@@ -36,6 +36,6 @@ public class FrostHelperSaveData : EverestModuleSaveData {
             return false;
         }
 
-        return ChallengeTimes.ContainsKey(name) ? timeLimit > ChallengeTimes[name] : false;
+        return ChallengeTimes.ContainsKey(name) && timeLimit > ChallengeTimes[name];
     }
 }

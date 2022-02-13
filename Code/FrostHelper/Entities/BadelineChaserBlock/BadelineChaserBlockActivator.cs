@@ -55,28 +55,24 @@ namespace FrostHelper {
 
             if (!DoneCollisionChecks) {
                 bool state = false;
-                Entity activatorused = null;
-                foreach (var activator in Scene.Tracker.GetEntities<BadelineChaserBlockActivator>()) {
-                    (activator as BadelineChaserBlockActivator).DoneCollisionChecks = true;
+                foreach (BadelineChaserBlockActivator activator in Scene.Tracker.GetEntities<BadelineChaserBlockActivator>()) {
+                    activator.DoneCollisionChecks = true;
                     if (!state) {
-                        if ((activator as BadelineChaserBlockActivator).Solid && (activator as BadelineChaserBlockActivator).HasBaddyRider()) {
-                            activatorused = activator;
+                        if (activator.Solid && activator.HasBaddyRider()) {
                             state = true;
                             break;
                         }
 
                         foreach (var baddy in Scene.Tracker.GetEntities<BadelineOldsite>()) {
-                            if ((activator as BadelineChaserBlockActivator).Solid) {
+                            if (activator.Solid) {
                                 // on the side
                                 if (baddy.CollideCheck(activator, baddy.Position + (Vector2.UnitX * 2)) || baddy.CollideCheck(activator, baddy.Position + (Vector2.UnitX * -2))) {
                                     // now let's see if badeline is grabbing
                                     Player player = Scene.Tracker.GetEntity<Player>();
-                                    Player.ChaserState chaserState;
-                                    DynData<BadelineOldsite> data = new DynData<BadelineOldsite>(baddy as BadelineOldsite);
-                                    if (player != null && !player.Dead && (bool) data["following"] && player.GetChasePosition(Scene.TimeActive, (float) data["followBehindTime"] + (float) data["followBehindIndexDelay"], out chaserState)) {
+                                    var data = DynamicData.For(baddy as BadelineOldsite);
+                                    if (player != null && !player.Dead && data.Get<bool>("following") && player.GetChasePosition(Scene.TimeActive, data.Get<float>("followBehindTime") + data.Get<float>("followBehindIndexDelay"), out var chaserState)) {
                                         string anim = chaserState.Animation.ToLower();
                                         if (anim.Contains("climb") || anim == "dangling" || anim == "wallslide") {
-                                            activatorused = activator;
                                             state = true;
                                             break;
                                         }
@@ -85,7 +81,6 @@ namespace FrostHelper {
                             } else {
                                 activator.Collidable = true;
                                 if (baddy.CollideCheck(activator)) {
-                                    activatorused = activator;
                                     state = true;
                                     activator.Collidable = false;
                                     break;
@@ -96,11 +91,13 @@ namespace FrostHelper {
                     }
                 }
 
-                foreach (var block in Scene.Tracker.GetEntities<BadelineChaserBlock>())
-                    (block as BadelineChaserBlock).SetState(state);
+                foreach (BadelineChaserBlock block in Scene.Tracker.GetEntities<BadelineChaserBlock>()) {
+                    block.SetState(state);
+                }
+
                 if (lastState != state) {
                     var audio = Audio.Play(state ? ActivateSfx : DeactivateSfx);
-                    audio.getVolume(out float volume, out float finalvolume);
+                    audio.getVolume(out float volume, out _);
                     audio.setVolume(volume * 60f);
                 }
                 lastState = state;

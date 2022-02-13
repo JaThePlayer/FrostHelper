@@ -189,7 +189,7 @@ namespace FrostHelper.Entities.Boosters {
                     sprite.RenderPosition = player.Center + Booster.playerOffset;
                     loopingSfx.Position = sprite.Position;
                     if (Scene.OnInterval(0.02f)) {
-                        (Scene as Level).ParticlesBG.Emit(particleType, 2, player.Center - dir * 3f + new Vector2(0f, -2f), new Vector2(3f, 3f), ParticleColor, angle);
+                        (Scene as Level)!.ParticlesBG.Emit(particleType, 2, player.Center - dir * 3f + new Vector2(0f, -2f), new Vector2(3f, 3f), ParticleColor, angle);
                     }
                     yield return null;
                 }
@@ -266,7 +266,7 @@ namespace FrostHelper.Entities.Boosters {
                 sprite.Position = Calc.Approach(sprite.Position, target, 80f * Engine.DeltaTime);
             }
 
-            if (GetBoosterThatIsBoostingPlayer(player) == this && BoostTime > 0f) {
+            if (player != null && GetBoosterThatIsBoostingPlayer(player) == this && BoostTime > 0f) {
                 sprite.Position = player.Center + Booster.playerOffset - Position;
 
                 // if the player is far away, render the outline because clearly the bubble got moved
@@ -378,7 +378,7 @@ namespace FrostHelper.Entities.Boosters {
 
         public static int CustomRedBoostState;
         public static void RedDashBegin(Entity e) {
-            Player player = e as Player;
+            Player player = (e as Player)!;
             DynData<Player> data = new DynData<Player>(player);
             data["calledDashEvents"] = false;
             data["dashStartedOnGround"] = false;
@@ -387,7 +387,7 @@ namespace FrostHelper.Entities.Boosters {
             data["dashCooldownTimer"] = 0.2f;
             data["dashRefillCooldownTimer"] = 0.1f;
             data["StartedDashing"] = true;
-            (player.Scene as Level).Displacement.AddBurst(player.Center, 0.5f, 0f, 80f, 0.666f, Ease.QuadOut, Ease.QuadOut);
+            (player.Scene as Level)!.Displacement.AddBurst(player.Center, 0.5f, 0f, 80f, 0.666f, Ease.QuadOut, Ease.QuadOut);
             Input.Rumble(RumbleStrength.Strong, RumbleLength.Medium);
             data["dashAttackTimer"] = 0.3f;
             data["gliderBoostTimer"] = 0.55f;
@@ -404,21 +404,19 @@ namespace FrostHelper.Entities.Boosters {
         }
 
         public static int RedDashUpdate(Entity e) {
-            Player player = e as Player;
+            Player player = (e as Player)!;
             DynData<Player> data = new DynData<Player>(player);
 
             data["StartedDashing"] = false;
             bool ch9hub = false;//this.LastBooster != null && this.LastBooster.Ch9HubTransition;
             data["gliderBoostTimer"] = 0.05f;
             if (player.CanDash) {
-                GenericCustomBooster booster = null;
                 foreach (GenericCustomBooster b in player.Scene.Tracker.GetEntities<GenericCustomBooster>()) {
                     if (b.BoostingPlayer) {
-                        booster = b;
+                        b.BoostingPlayer = false;
                         break;
                     }
                 }
-                booster.BoostingPlayer = false;
                 return player.StartDash();
             }
             if (player.DashDir.Y == 0f) {
@@ -468,7 +466,7 @@ namespace FrostHelper.Entities.Boosters {
         }
 
         public static IEnumerator RedDashCoroutine(Entity e) {
-            Player player = e as Player;
+            Player player = (e as Player)!;
             DynData<Player> data = new DynData<Player>(player);
 
             yield return null;
@@ -500,12 +498,12 @@ namespace FrostHelper.Entities.Boosters {
         }
 
         public static void BoostBegin(Entity e) {
-            Player player = e as Player;
+            Player player = (e as Player)!;
             GetBoosterThatIsBoostingPlayer(player).HandleBoostBegin(player);
         }
 
         public static int BoostUpdate(Entity e) {
-            Player player = e as Player;
+            Player player = (e as Player)!;
             var booster = GetBoosterThatIsBoostingPlayer(player);
 
             Vector2 boostTarget = (Vector2) FrostModule.player_boostTarget.GetValue(player);
@@ -525,27 +523,27 @@ namespace FrostHelper.Entities.Boosters {
         }
 
         public static void BoostEnd(Entity e) {
-            Player player = e as Player;
+            Player player = (e as Player)!;
             Vector2 boostTarget = (Vector2) FrostModule.player_boostTarget.GetValue(player);
             Vector2 vector = (boostTarget - player.Collider.Center).Floor();
             player.MoveToX(vector.X, null);
             player.MoveToY(vector.Y, null);
 
             GetBoosterThatIsBoostingPlayer(player).OnBoostEnd(player);
-            new DynData<Player>(player).Set<GenericCustomBooster>("fh.customBooster", null);
+            new DynData<Player>(player).Set<GenericCustomBooster>("fh.customBooster", null!);
 
 
         }
 
         public static IEnumerator BoostCoroutine(Entity e) {
-            Player player = e as Player;
+            Player player = (e as Player)!;
             GenericCustomBooster booster = GetBoosterThatIsBoostingPlayer(player);
 
             return booster.HandleBoostCoroutine(player);
         }
 
-        public static GenericCustomBooster GetBoosterThatIsBoostingPlayer(Entity e) {
-            return new DynData<Player>(e as Player).Get<GenericCustomBooster>("fh.customBooster");
+        public static GenericCustomBooster GetBoosterThatIsBoostingPlayer(Player e) {
+            return new DynData<Player>(e).Get<GenericCustomBooster>("fh.customBooster");
         }
 
         #endregion

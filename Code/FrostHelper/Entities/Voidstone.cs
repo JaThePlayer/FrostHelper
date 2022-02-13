@@ -81,7 +81,7 @@ namespace FrostHelper {
 
         }
 
-        public Player PlayerThatWallbounced;
+        public Player? PlayerThatWallbounced;
 
         public Voidstone(EntityData data, Vector2 offset) : base(data.Position + offset, data.Width, data.Height, true) {
             Add(new DashListener(OnDash));

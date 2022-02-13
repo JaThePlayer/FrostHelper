@@ -135,9 +135,8 @@ namespace FrostHelper {
                 } else {
                     sprite.RenderPosition = player.Center + Booster.playerOffset;
                     loopingSfx.Position = sprite.Position;
-                    bool flag = Scene.OnInterval(0.02f);
-                    if (flag) {
-                        (Scene as Level).ParticlesBG.Emit(particleType, 2, player.Center - dir * 3f + new Vector2(0f, -2f), new Vector2(3f, 3f), ParticleColor, angle);
+                    if (Scene.OnInterval(0.02f)) {
+                        (Scene as Level)!.ParticlesBG.Emit(particleType, 2, player.Center - dir * 3f + new Vector2(0f, -2f), new Vector2(3f, 3f), ParticleColor, angle);
                     }
                     yield return null;
                 }
@@ -193,30 +192,29 @@ namespace FrostHelper {
 
         public override void Update() {
             base.Update();
-            bool flag = cannotUseTimer > 0f;
-            if (flag) {
+
+            if (cannotUseTimer > 0f) {
                 cannotUseTimer -= Engine.DeltaTime;
             }
-            bool flag2 = respawnTimer > 0f;
-            if (flag2) {
+
+            if (respawnTimer > 0f) {
                 respawnTimer -= Engine.DeltaTime;
-                bool flag3 = respawnTimer <= 0f;
-                if (flag3) {
+
+                if (respawnTimer <= 0f) {
                     Respawn();
                 }
             }
-            bool flag4 = !dashRoutine.Active && respawnTimer <= 0f;
-            if (flag4) {
+
+            if (!dashRoutine.Active && respawnTimer <= 0f) {
                 Vector2 target = Vector2.Zero;
-                Player entity = Scene.Tracker.GetEntity<Player>();
-                bool flag5 = entity != null && CollideCheck(entity);
-                if (flag5) {
-                    target = entity.Center + Booster.playerOffset - Position;
+                Player player = Scene.Tracker.GetEntity<Player>();
+                if (player != null && CollideCheck(player)) {
+                    target = player.Center + Booster.playerOffset - Position;
                 }
                 sprite.Position = Calc.Approach(sprite.Position, target, 80f * Engine.DeltaTime);
             }
-            bool flag6 = sprite.CurrentAnimationID == "inside" && !BoostingPlayer && !CollideCheck<Player>();
-            if (flag6) {
+
+            if (sprite.CurrentAnimationID == "inside" && !BoostingPlayer && !CollideCheck<Player>()) {
                 sprite.Play("loop", false, false);
             }
         }
@@ -239,13 +237,13 @@ namespace FrostHelper {
 
         private float RespawnTime;
 
-        public static ParticleType P_Burst { get { return Booster.P_Burst; } }
+        public static ParticleType P_Burst => Booster.P_Burst;
 
-        public static ParticleType P_BurstRed { get { return Booster.P_BurstRed; } }
+        public static ParticleType P_BurstRed => Booster.P_BurstRed;
 
-        public static ParticleType P_Appear { get { return Booster.P_Appear; } }
+        public static ParticleType P_Appear => Booster.P_Appear;
 
-        public static ParticleType P_RedAppear { get { return Booster.P_RedAppear; } }
+        public static ParticleType P_RedAppear => Booster.P_RedAppear;
 
         public static readonly Vector2 playerOffset;
 

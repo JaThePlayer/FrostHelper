@@ -15,7 +15,7 @@ namespace FrostHelper {
         }
 
 
-        Player talkingPlayer;
+        Player? talkingPlayer;
         CustomJournal journal;
 
         public override void Awake(Scene scene) {

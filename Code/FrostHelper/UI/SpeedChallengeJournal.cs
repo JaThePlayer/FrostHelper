@@ -21,7 +21,7 @@ namespace FrostHelper {
                 Logger.Log("", challenges[i]);
                 long time = FrostModule.SaveData.GetChallengeTime(challenges[i]);
                 long targetTime = TimeSpan.FromSeconds(FrostMapDataProcessor.SpeedChallenges[challenges[i]].GoalTime).Ticks;
-                Row row = table.AddRow().Add(new TextCell(Dialog.Clean(challenges[i].Remove(0, challenges[i].IndexOf('>') + 1)), new Vector2(1f, 0.5f), 0.6f, TextColor))
+                table.AddRow().Add(new TextCell(Dialog.Clean(challenges[i].Remove(0, challenges[i].IndexOf('>') + 1)), new Vector2(1f, 0.5f), 0.6f, TextColor))
                     .Add(new TextCell(time == -1 ? "-" : TimeSpan.FromTicks(time).ShortGameplayFormat(), new Vector2(0.5f, 0.5f), 0.6f, time < targetTime ? Calc.HexToColor("B07A00") : TextColor)) // PB
                     .Add(new TextCell(TimeSpan.FromSeconds(FrostMapDataProcessor.SpeedChallenges[challenges[i]].GoalTime).ShortGameplayFormat(), new Vector2(0.5f, 0.5f), 0.6f, TextColor)); // Goal Time
             }
@@ -69,13 +69,9 @@ namespace FrostHelper {
         public CustomJournal Journal;
 
         public class Table {
-            public int Rows {
-                get {
-                    return rows.Count;
-                }
-            }
+            public int Rows => rows.Count;
 
-            public CustomJournalPage.Row Header {
+            public Row? Header {
                 get {
                     if (rows.Count <= 0) {
                         return null;
@@ -84,7 +80,7 @@ namespace FrostHelper {
                 }
             }
 
-            public CustomJournalPage.Table AddColumn(CustomJournalPage.Cell label) {
+            public Table AddColumn(Cell label) {
                 if (rows.Count == 0) {
                     AddRow();
                 }
@@ -92,8 +88,8 @@ namespace FrostHelper {
                 return this;
             }
 
-            public CustomJournalPage.Row AddRow() {
-                CustomJournalPage.Row row = new CustomJournalPage.Row();
+            public Row AddRow() {
+                Row row = new Row();
                 rows.Add(row);
                 return row;
             }
@@ -162,23 +158,15 @@ namespace FrostHelper {
                 return this;
             }
 
-            public int Count {
-                get {
-                    return Entries.Count;
-                }
-            }
+            public int Count => Entries.Count;
 
-            public Cell this[int index] {
-                get {
-                    return Entries[index];
-                }
-            }
+            public Cell this[int index] => Entries[index];
 
             public Row() {
                 Entries = new List<Cell>();
             }
 
-            public List<CustomJournalPage.Cell> Entries;
+            public List<Cell> Entries;
         }
 
         public abstract class Cell {
@@ -303,28 +291,16 @@ namespace FrostHelper {
     }
 
     public class CustomJournal : Entity {
-        public CustomJournalPage Page {
-            get {
-                return Pages[PageIndex];
-            }
-        }
+        public CustomJournalPage Page => Pages[PageIndex];
 
-        public CustomJournalPage NextPage {
-            get {
-                return Pages[PageIndex + 1];
-            }
-        }
+        public CustomJournalPage NextPage => Pages[PageIndex + 1];
 
-        public CustomJournalPage PrevPage {
-            get {
-                return Pages[PageIndex - 1];
-            }
-        }
+        public CustomJournalPage PrevPage => Pages[PageIndex - 1];
 
         public IEnumerator Enter() {
             PageIndex = 0;
             Visible = true;
-            X = -1920f;
+            X = offScreenX;
             turningPage = false;
             turningScale = 1f;
             rotation = 0f;
@@ -348,7 +324,7 @@ namespace FrostHelper {
             //this.Overworld.Mountain.AllowUserRotation = false;
             for (float p = 0f; p < 1f; p += Engine.DeltaTime / 0.4f) {
                 rotation = -0.025f * Ease.BackOut(p);
-                X = -1920f + 1920f * Ease.CubeInOut(p);
+                X = offScreenX + 1920f * Ease.CubeInOut(p);
                 dotEase = p;
                 yield return null;
             }
@@ -411,7 +387,7 @@ namespace FrostHelper {
             float rotFrom = rotation;
             for (float p = 0f; p < 1f; p += Engine.DeltaTime / duration) {
                 rotation = rotFrom * (1f - Ease.BackOut(p));
-                X = 0f + -1920f * Ease.CubeInOut(p);
+                X = 0f + offScreenX * Ease.CubeInOut(p);
                 dotEase = 1f - p;
                 yield return null;
             }

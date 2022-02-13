@@ -106,8 +106,9 @@
             for (int j = 0; j < surfaceBubbles.Length; j++) {
                 surfaceBubbles[j].X = -1f;
             }
-            surfaceBubbleAnimations = new List<List<MTexture>>();
-            surfaceBubbleAnimations.Add(GFX.Game.GetAtlasSubtextures("danger/lava/bubble_a"));
+            surfaceBubbleAnimations = new List<List<MTexture>> {
+                GFX.Game.GetAtlasSubtextures("danger/lava/bubble_a")
+            };
         }
 
         public override void Update() {
@@ -321,7 +322,7 @@
                 Edge(ref vertCount, EdgeVertices[EdgeVertices.Length - 1], EdgeVertices[0], vector5.X, vector5.Y, true, false);
                 dirty = false;
             }
-            Camera camera = (Scene as Level).Camera;
+            Camera camera = (Scene as Level)!.Camera;
             GFX.DrawVertices(Matrix.CreateTranslation(new Vector3(Position, 0f)) * camera.Matrix, verts, vertCount, null, null);
             GameplayRenderer.Begin();
             Vector2 value = new Vector2(Entity.Position.X, MinY) + Position;

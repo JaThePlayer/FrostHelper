@@ -29,9 +29,18 @@ toggleSwapBlock.placements =
     }
 }
 
-function toggleSwapBlock.nodeLimits(room, entity)
-    return 1, 1
-end
+jautils.createPlacementsPreserveOrder(toggleSwapBlock, "normal", {
+    { "directory", "objects/swapblock" },
+    { "speed", 360 },
+    { "moveSFX", "event:/game/05_mirror_temple/swapblock_move" },
+    { "moveEndSFX", "event:/game/05_mirror_temple/swapblock_move_end" },
+    { "particleColor1", "fbf236", "color" },
+    { "particleColor2", "6abe30", "color" },
+    { "renderBG", false },
+    { "emitParticles", true }
+}, true)
+
+toggleSwapBlock.nodeLimits = {1, 1}
 
 function toggleSwapBlock.selection(room, entity)
     local main = utils.rectangle(entity.x, entity.y, entity.width, entity.height)

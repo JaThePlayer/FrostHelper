@@ -3,6 +3,12 @@ local drawableSpriteStruct = require("structs.drawable_sprite")
 
 local jautils = require("mods").requireFromPlugin("libraries.jautils")
 
+local axesEnum = {
+    "Both",
+    "Horizontal",
+    "Vertical"
+}
+
 local customKevin = {}
 
 local fillColor = jautils.getColor("62222b")
@@ -19,15 +25,15 @@ jautils.createPlacementsPreserveOrder(customKevin, "horizontal", {
     { "returnSpeed", 60.0 },
     { "returnAcceleration", 160.0 },
     { "crushAcceleration", 250.0 },
-    { "axes", "horizontal" }
+    { "axes", "Horizontal", axesEnum }
 })
 
 jautils.addPlacement(customKevin, "vertical", {
-    { "axes", "vertical"}
+    { "axes", "Vertical"}
 })
 
 jautils.addPlacement(customKevin, "both", {
-    { "axes", "both" }
+    { "axes", "Both" }
 })
 
 local axesToBlockIndex = {
@@ -39,7 +45,7 @@ local axesToBlockIndex = {
 
 function customKevin.sprite(room, entity)
     local sprites = { jautils.getFilledRectangleSprite({x=entity.x + 2, y=entity.y + 2, width = entity.width - 4, height = entity.height - 4}, fillColor) }
-    for _, value in ipairs(jautils.getCustomBlockSprites(entity, "directory", "block0" .. axesToBlockIndex[entity.axes or "none"], "objects/FrostHelper/slowcrushblock/block00")) do
+    for _, value in ipairs(jautils.getCustomBlockSprites(entity, "directory", "block0" .. axesToBlockIndex[string.lower(entity.axes or "none")], "objects/FrostHelper/slowcrushblock/block00")) do
         table.insert(sprites, value)
     end
 

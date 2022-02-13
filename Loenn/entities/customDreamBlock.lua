@@ -30,7 +30,7 @@ jautils.createPlacementsPreserveOrder(dreamBlock, "custom_dream_block", {
     { "allowSameDirectionDash", false },
     { "sameDirectionSpeedMultiplier", 2.0 },
     { "old", false },
-    { "moveEase", "SineInOut" },
+    { "moveEase", "SineInOut", jautils.easings },
     { "moveSpeedMult", 1.0 },
  })
 

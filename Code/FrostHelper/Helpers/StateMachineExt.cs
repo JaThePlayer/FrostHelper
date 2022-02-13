@@ -5,17 +5,20 @@ internal static class StateMachineExt {
     /// Adds a state to a StateMachine
     /// </summary>
     /// <returns>The index of the new state</returns>
-    public static int AddState(this StateMachine machine, Func<Entity, int> onUpdate, Func<Entity, IEnumerator> coroutine = null, Action<Entity> begin = null, Action<Entity> end = null) {
+    public static int AddState(this StateMachine machine, Func<Entity, int> onUpdate, Func<Entity, IEnumerator> coroutine = null!, Action<Entity> begin = null!, Action<Entity> end = null!) {
         int nextIndex = Expand(machine);
         // And now we add the new functions
         machine.SetCallbacks(nextIndex, () => onUpdate(machine.Entity), () => coroutine(machine.Entity), () => begin(machine.Entity), () => end(machine.Entity));
         return nextIndex;
     }
 
-    public static int AddState(this StateMachine machine, Func<Player, int> onUpdate, Func<Player, IEnumerator> coroutine = null, Action<Player> begin = null, Action<Player> end = null) {
+    public static int AddState(this StateMachine machine, Func<Player, int> onUpdate, Func<Player, IEnumerator> coroutine = null!, Action<Player> begin = null!, Action<Player> end = null!) {
         int nextIndex = Expand(machine);
         // And now we add the new functions
-        machine.SetCallbacks(nextIndex, () => onUpdate(machine.Entity as Player), coroutine is null ? null : () => coroutine(machine.Entity as Player), () => begin(machine.Entity as Player), () => end(machine.Entity as Player));
+        machine.SetCallbacks(nextIndex, () => onUpdate((machine.Entity as Player)!), 
+            coroutine is null ? null : () => coroutine((machine.Entity as Player)!), 
+            () => begin((machine.Entity as Player)!), 
+            () => end((machine.Entity as Player)!));
         return nextIndex;
     }
 

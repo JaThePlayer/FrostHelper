@@ -13,7 +13,7 @@ namespace FrostHelper {
 
         public bool MakeEntitiesInvisible;
 
-        public int[] DynamicDepthPossibleDepths = null;
+        public int[]? DynamicDepthPossibleDepths = null;
 
         public string Flag;
 
@@ -169,13 +169,18 @@ namespace FrostHelper {
                 Draw.SpriteBatch.End();
             }
         }
+        
+        private static Effect GetMaskShader(Dictionary<string, object> shaderParameters) {
+            return ShaderHelperIntegration.GetEffect(shaderParameters["maskShader"] as string ?? throw new Exception("Mask shaders need a 'maskShader' parameter!"));
+        }
 
-        public static void RenderMask(Dictionary<string, object> ShaderParameters) {
-            DrawMask(ShaderParameters);
+
+        public static void RenderMask(Dictionary<string, object> shaderParameters) {
+            DrawMask(shaderParameters);
 
             // step 2: render blur
             //GaussianBlur.Blur(temp2, temp, GameplayBuffers.TempA, GetFloatParam("fade", ShaderParameters), false, GetSamples(ShaderParameters), 1f, GaussianBlur.Direction.Both, GetFloatParam("alpha", ShaderParameters));
-            var shader = ShaderHelperIntegration.GetEffect(ShaderParameters["maskShader"] as string);
+            var shader = GetMaskShader(shaderParameters);
 
             // step 3: shader
             Engine.Instance.GraphicsDevice.Textures[1] = maskTarget; // t1 -> mask
@@ -183,16 +188,16 @@ namespace FrostHelper {
 
             // step 4: redraw the entities that were used for the mask
 
-            RedrawEntities(ShaderParameters);
+            RedrawEntities(shaderParameters);
             GameplayRenderer.Begin();
         }
 
-        public static void RenderBlurMask(Dictionary<string, object> ShaderParameters) {
-            DrawMask(ShaderParameters);
+        public static void RenderBlurMask(Dictionary<string, object> shaderParameters) {
+            DrawMask(shaderParameters);
 
             // step 2: render blur
-            GaussianBlur.Blur(temp2, temp, GameplayBuffers.TempA, GetFloatParam("fade", ShaderParameters), false, GetSamples(ShaderParameters), 1f, GaussianBlur.Direction.Both, GetFloatParam("alpha", ShaderParameters));
-            var shader = ShaderHelperIntegration.GetEffect(ShaderParameters["maskShader"] as string);
+            GaussianBlur.Blur(temp2, temp, GameplayBuffers.TempA, GetFloatParam("fade", shaderParameters), false, GetSamples(shaderParameters), 1f, GaussianBlur.Direction.Both, GetFloatParam("alpha", shaderParameters));
+            var shader = GetMaskShader(shaderParameters);
 
             // step 3: shader
             Engine.Instance.GraphicsDevice.Textures[1] = maskTarget; // t1 -> mask
@@ -200,7 +205,7 @@ namespace FrostHelper {
 
             // step 4: redraw the entities that were used for the mask
 
-            RedrawEntities(ShaderParameters);
+            RedrawEntities(shaderParameters);
             GameplayRenderer.Begin();
         }
 

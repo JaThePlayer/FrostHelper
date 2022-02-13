@@ -4,10 +4,14 @@ local fallbackSprite = "objects/FrostHelper/skateboard"
 
 local skateboard = {}
 
+local directionsEnum = {
+    "Left", "Right"
+}
+
 skateboard.name = "FrostHelper/Skateboard"
 
 jautils.createPlacementsPreserveOrder(skateboard, "normal", {
-    { "direction", "Right" },
+    { "direction", "Right", directionsEnum },
     { "sprite", fallbackSprite },
     { "speed", 90.0 },
     { "keepMoving", false }

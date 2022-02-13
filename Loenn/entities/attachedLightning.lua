@@ -1,3 +1,5 @@
+local jautils = require("mods").requireFromPlugin("libraries.jautils")
+
 local attachedLightning = {
     name = "FrostHelper/AttachedLightning",
     depth = -1000100,
@@ -5,16 +7,14 @@ local attachedLightning = {
     borderColor = {0.99, 0.96, 0.47, 1.0},
     nodeLineRenderType = "line",
     nodeLimits = {0, 1},
-    placements = {
-        name = "default",
-        data = {
-            width = 8,
-            height = 8,
-            perLevel = false,
-            moveTime = 5.0,
-            attachGroup = 0,
-        }
-    }
 }
+
+jautils.createPlacementsPreserveOrder(attachedLightning, "default", {
+    { "width", 8 },
+    { "height", 8 },
+    { "perLevel", false },
+    { "moveTime", 5.0 },
+    { "attachGroup", 0, "FrostHelper.attachGroup" },
+})
 
 return attachedLightning

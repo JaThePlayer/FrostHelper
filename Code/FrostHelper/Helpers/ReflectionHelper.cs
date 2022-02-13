@@ -28,7 +28,7 @@ public static class ReflectionHelper {
     private static Dictionary<string, MethodInfo> FillMethodCache(Type type) {
         var entry = new Dictionary<string, MethodInfo>();
 
-        foreach (var item in type.BaseType?.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static)) {
+        foreach (var item in type.BaseType?.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static)!) {
             entry[item.Name] = item;
         }
         foreach (var item in type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static)) {
@@ -42,7 +42,7 @@ public static class ReflectionHelper {
     private static Dictionary<string, FieldInfo> FillCache(Type type) {
         var entry = new Dictionary<string, FieldInfo>();
 
-        foreach (var item in type.BaseType?.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static)) {
+        foreach (var item in type.BaseType?.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static)!) {
             entry[item.Name] = item;
         }
         foreach (var item in type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static)) {

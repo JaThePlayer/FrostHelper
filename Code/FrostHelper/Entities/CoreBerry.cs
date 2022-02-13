@@ -65,7 +65,7 @@ namespace FrostTempleHelper {
             indicator.Visible = false;
             Add(indicator);
 
-            Level level = scene as Level;
+            Level level = (scene as Level)!;
             Session.CoreModes mode = level.Session.CoreMode;
             if (!IsIce) {
                 // berry hot
@@ -86,15 +86,14 @@ namespace FrostTempleHelper {
 
         public void Dissolve(bool visible = true) {
             if (Follower.Leader != null) {
-                Player player = Follower.Leader.Entity as Player;
-                player.StrawberryCollectResetTimer = 2.5f;
+                (Follower.Leader.Entity as Player)!.StrawberryCollectResetTimer = 2.5f;
                 Follower.Leader.LoseFollower(Follower);
             }
             Add(new Coroutine(DissolveRoutine(visible), true));
         }
 
         private IEnumerator DissolveRoutine(bool visible = true) {
-            Level level = Scene as Level;
+            Level level = (Scene as Level)!;
             Session session = level.Session;
             session.DoNotLoad.Remove(ID);
             Audio.Play("event:/game/general/seed_poof", Position);

@@ -3,13 +3,17 @@ local jautils = require("mods").requireFromPlugin("libraries.jautils")
 
 local explodeIndicatorStartAngle, explodeIndicatorEndAngle = -jautils.degreeToRadians(6), jautils.degreeToRadians(186)
 
+local explodeDirectionsEnum = {
+    "Left", "Right", "Both", "None"
+}
+
 local directionalPuffer = {
     name = "FrostHelper/DirectionalPuffer",
     depth = 0,
 }
 
 jautils.createPlacementsPreserveOrder(directionalPuffer, "none", {
-    { "explodeDirection", "None" },
+    { "explodeDirection", "None", explodeDirectionsEnum },
     { "directory", "objects/puffer/" },
     { "color", "ffffff", "color" },
     { "dashRecovery", 1, "integer" },

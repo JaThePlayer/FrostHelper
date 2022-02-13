@@ -86,32 +86,21 @@ namespace FrostHelper {
 
         public override void Update() {
             base.Update();
-            bool flag = crushDir == Vector2.Zero;
-            if (flag) {
+
+            if (crushDir == Vector2.Zero) {
                 face.Position = new Vector2(Width, Height) / 2f;
-                bool flag2 = CollideCheck<Player>(Position + new Vector2(-1f, 0f));
-                if (flag2) {
+
+                if (CollideCheck<Player>(Position + new Vector2(-1f, 0f))) {
                     face.X -= 1f;
-                } else {
-                    bool flag3 = CollideCheck<Player>(Position + new Vector2(1f, 0f));
-                    if (flag3) {
-                        face.X += 1f;
-                    } else {
-                        bool flag4 = CollideCheck<Player>(Position + new Vector2(0f, -1f));
-                        if (flag4) {
-                            face.Y -= 1f;
-                        }
-                    }
+                } else if (CollideCheck<Player>(Position + new Vector2(1f, 0f))) {
+                    face.X += 1f;
+                } else if (CollideCheck<Player>(Position + new Vector2(0f, -1f))) {
+                    face.Y -= 1f;
                 }
             }
-            bool flag5 = currentMoveLoopSfx != null;
-            if (flag5) {
-                currentMoveLoopSfx.Param("submerged", Submerged ? 1 : 0);
-            }
-            bool flag6 = returnLoopSfx != null;
-            if (flag6) {
-                returnLoopSfx.Param("submerged", Submerged ? 1 : 0);
-            }
+
+            currentMoveLoopSfx?.Param("submerged", Submerged ? 1 : 0);
+            returnLoopSfx?.Param("submerged", Submerged ? 1 : 0);
         }
 
         public override void Render() {
@@ -336,7 +325,7 @@ namespace FrostHelper {
             StopPlayerRunIntoAnimation = false;
             bool slowing = false;
             float speed = 0f;
-            Action som = null; // = null wasn't there
+            Action som = null!;
             while (true) {
                 if (!chillOut) {
                     speed = Calc.Approach(speed, CrushSpeed, CrushAccel * Engine.DeltaTime); // was speed, 240f, 500f
@@ -351,7 +340,7 @@ namespace FrostHelper {
                             if ((onComplete = som) == null) {
                                 onComplete = som = delegate () {
                                     face.Play("hurt", false, false);
-                                    currentMoveLoopSfx.Stop(true);
+                                    currentMoveLoopSfx!.Stop(true);
                                     TurnOffImages();
                                 };
                             }
@@ -477,12 +466,10 @@ namespace FrostHelper {
             Input.Rumble(RumbleStrength.Medium, RumbleLength.Medium);
             StartShaking(0.4f);
             StopPlayerRunIntoAnimation = true;
-            SoundSource sfx = currentMoveLoopSfx;
-            currentMoveLoopSfx.Param("end", 1f);
+            SoundSource sfx = currentMoveLoopSfx!;
+            currentMoveLoopSfx!.Param("end", 1f);
             currentMoveLoopSfx = null;
-            Alarm.Set(this, 0.5f, delegate {
-                sfx.RemoveSelf();
-            }, Alarm.AlarmMode.Oneshot);
+            Alarm.Set(this, 0.5f, () => sfx.RemoveSelf(), Alarm.AlarmMode.Oneshot);
             crushDir = Vector2.Zero;
             TurnOffImages();
             bool flag20 = !chillOut;
@@ -622,7 +609,7 @@ namespace FrostHelper {
         private List<Image> activeRightImages;
         private List<Image> activeLeftImages;
         private List<Image> activeBottomImages;
-        private SoundSource currentMoveLoopSfx;
+        private SoundSource? currentMoveLoopSfx;
         private SoundSource returnLoopSfx;
 
         public enum Axes {

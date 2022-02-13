@@ -22,11 +22,8 @@
                 title.Add(item);
                 yield return item.Stamp();
                 pos.X += item.Width + ActiveFont.Measure(' ').X * 1.5f;
-                item = null;
                 num = i;
             }
-            text = null;
-            pos = default;
             yield return PressButton();
             list = FancyText.Parse(Presentation.GetDialog("PAGE2_LIST"), Width, 32, 1f, new Color?(Color.Black * 0.7f), null);
             float delay = 0f;

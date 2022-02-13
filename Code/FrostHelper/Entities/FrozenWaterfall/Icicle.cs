@@ -45,7 +45,7 @@ namespace FrostHelper {
 
         // tbh I have no clue what's going on in here at this point
         private bool MoveVCheck(float amount) {
-            Level level = Scene as Level;
+            Level level = (Scene as Level)!;
             if (!(amount < 0f && Top <= level.Bounds.Top)) {
                 if (!(amount > 0f && Bottom >= level.Bounds.Bottom + 32)) {
                     for (int i = 1; i <= 4; i++) {

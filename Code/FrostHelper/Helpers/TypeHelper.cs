@@ -4,7 +4,7 @@ using Celeste.Mod.Helpers;
 namespace FrostHelper;
 
 public static class TypeHelper {
-    private static Dictionary<string, Type> entityNameToType = null;
+    private static Dictionary<string, Type> entityNameToType = null!;
     private static Dictionary<string, Type> entityNameToType2 = new();
     public static Type EntityNameToType(string entityName) {
         // see if this is just a type name
@@ -19,7 +19,7 @@ public static class TypeHelper {
         if (entityNameToType2.TryGetValue(entityName, out ret))
             return ret;
 
-        if (entityNameToType.TryGetValue(entityName, out ret))
+        if (entityNameToType!.TryGetValue(entityName, out ret))
             return ret;
 
         throw new Exception($"Unknown entity name: {entityName}.");
@@ -226,7 +226,7 @@ public static class TypeHelper {
             checkType(type);
         }
 
-        void checkType(Type type) {
+        static void checkType(Type type) {
             foreach (CustomEntityAttribute customEntityAttribute in type.GetCustomAttributes<CustomEntityAttribute>()) {
                 foreach (string idFull in customEntityAttribute.IDs) {
                     string id;

@@ -1,6 +1,4 @@
-﻿using Celeste.Mod.Entities;
-
-namespace FrostHelper {
+﻿namespace FrostHelper {
     [CustomEntity("FrostHelper/CustomRisingLava")]
     public class CustomRisingLava : Entity {
         #region Hooks
@@ -50,8 +48,8 @@ namespace FrostHelper {
             Depth = -1000000;
             Collider = new Hitbox(340f, 120f, 0f, 0f);
             Visible = false;
-            Add(new PlayerCollider(new Action<Player>(OnPlayer), null, null));
-            Add(new CoreModeListener(new Action<Session.CoreModes>(OnChangeMode)));
+            Add(new PlayerCollider(OnPlayer, null, null));
+            Add(new CoreModeListener(OnChangeMode));
             Add(loopSfx = new SoundSource());
             Add(bottomRect = new LavaRect(400f, 200f, 4));
             bottomRect.Position = new Vector2(-40f, 0f);
@@ -119,9 +117,7 @@ namespace FrostHelper {
                     float to = Y + 48f;
                     player.Speed.Y = -200f;
                     player.RefillDash();
-                    Tween.Set(this, Tween.TweenMode.Oneshot, 0.4f, Ease.CubeOut, delegate (Tween t) {
-                        Y = MathHelper.Lerp(from, to, t.Eased);
-                    }, null);
+                    Tween.Set(this, Tween.TweenMode.Oneshot, 0.4f, Ease.CubeOut, t => Y = MathHelper.Lerp(from, to, t.Eased), null);
                     delay = 0.5f;
                     loopSfx.Param("rising", 0f);
                     Audio.Play("event:/game/general/assist_screenbottom", player.Position);
@@ -139,31 +135,31 @@ namespace FrostHelper {
             Visible = true;
             if (waiting) {
                 loopSfx.Param("rising", 0f);
-                bool flag2 = !intro && entity != null && entity.JustRespawned;
-                if (flag2) {
+
+                if (!intro && entity != null && entity.JustRespawned) {
                     Y = Calc.Approach(Y, entity.Y + 32f, 32f * Engine.DeltaTime);
                 }
-                bool flag3 = (!iceMode || !intro) && (entity == null || !entity.JustRespawned);
-                if (flag3) {
+
+                if ((!iceMode || !intro) && (entity == null || !entity.JustRespawned)) {
                     waiting = false;
                 }
             } else {
-                float num2 = 1f;
+                float ySpeed = 1f;
                 if (DoRubberbanding) {
-                    float num = SceneAs<Level>().Camera.Bottom - 12f;
-                    if (Top > num + 96f) {
-                        Top = num + 96f;
+                    float yOffset = SceneAs<Level>().Camera.Bottom - 12f;
+                    if (Top > yOffset + 96f) {
+                        Top = yOffset + 96f;
                     }
-                    if (Top > num) {
-                        num2 = Calc.ClampedMap(Top - num, 0f, 96f, 1f, 2f);
+                    if (Top > yOffset) {
+                        ySpeed = Calc.ClampedMap(Top - yOffset, 0f, 96f, 1f, 2f);
                     } else {
-                        num2 = Calc.ClampedMap(num - Top, 0f, 32f, 1f, 0.5f);
+                        ySpeed = Calc.ClampedMap(yOffset - Top, 0f, 32f, 1f, 0.5f);
                     }
                 }
 
                 if (delay <= 0f) {
                     loopSfx.Param("rising", 1f);
-                    Y += Speed * num2 * Engine.DeltaTime;
+                    Y += Speed * ySpeed * Engine.DeltaTime;
                 }
             }
             lerp = Calc.Approach(lerp, iceMode ? 1 : 0, Engine.DeltaTime * 4f);

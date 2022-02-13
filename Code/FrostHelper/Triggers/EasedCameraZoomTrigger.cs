@@ -69,7 +69,7 @@ public class EasedCameraZoomTrigger : Trigger {
         }
     }
 
-    public Level Level => Scene as Level;
+    public Level Level => (Scene as Level)!;
 
     public ZoomManager ZoomManager => Scene.Tracker.GetEntity<ZoomManager>();
 }
@@ -170,7 +170,7 @@ public class ZoomManager : Entity {
         return DefaultZoomFocusPoint;
     }
 
-    public Level Level => Scene as Level;
+    public Level Level => (Scene as Level)!;
 
     public static Vector2 DefaultZoomFocusPoint = new Vector2(320f, 180f) / 2f;
 }

@@ -15,9 +15,7 @@ speedRingChallenge.placements =
 
 local ellipseColor = { 1, 1, 1, 1 }
 
-function speedRingChallenge.nodeLimits(room, entity)
-    return 1, 255
-end
+speedRingChallenge.nodeLimits = { 1, 255 }
 
 function speedRingChallenge.draw(room, entity)
     local pr, pg, pb, pa = love.graphics.getColor()

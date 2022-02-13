@@ -27,7 +27,7 @@
 
             CreateSprite(spritePath);
 
-            Sprite.Play("spin", false, false);
+            Sprite!.Play("spin", false, false);
             Add(spawnSfx = new SoundSource());
         }
 

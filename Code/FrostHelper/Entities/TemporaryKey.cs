@@ -38,8 +38,7 @@
         }
 
         public override void Update() {
-            Level level = Scene as Level;
-            Session session = level?.Session;
+            Session? session = (Scene as Level)?.Session;
             if (IsUsed && !wasUsed) {
                 wasUsed = true;
             }
@@ -52,12 +51,10 @@
         }
 
         public void Dissolve() {
-            bool flag = dissolved || IsUsed || base.Turning;
-            if (!flag) {
+            if (!(dissolved || IsUsed || base.Turning)) {
                 dissolved = true;
-                bool flag2 = follower.Leader != null;
-                if (flag2) {
-                    Player player = follower.Leader.Entity as Player;
+                if (follower.Leader != null) {
+                    Player player = (follower.Leader.Entity as Player)!;
                     player.StrawberryCollectResetTimer = 2.5f;
                     follower.Leader.LoseFollower(follower);
                 }
@@ -66,7 +63,7 @@
         }
 
         private IEnumerator DissolveRoutine() {
-            Level level = Scene as Level;
+            Level level = (Scene as Level)!;
             Session session = level.Session;
             if (session.DoNotLoad.Contains(ID))
                 session.DoNotLoad.Remove(ID);
@@ -104,7 +101,7 @@
 
         public override void Removed(Scene scene) {
             base.Removed(scene);
-            Session session = (scene as Level).Session;
+            var session = (scene as Level)!.Session;
             if (session.DoNotLoad.Contains(ID))
                 session.DoNotLoad.Remove(ID);
             if (session.Keys.Contains(ID))

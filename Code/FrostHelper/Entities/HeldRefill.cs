@@ -47,7 +47,7 @@ namespace FrostHelper {
         public override void Update() {
             base.Update();
             if (Scene.OnInterval(0.1f)) {
-                (Scene as Level).ParticlesFG.Emit(p_glow, 1, Position, Vector2.One * 5f);
+                (Scene as Level)!.ParticlesFG.Emit(p_glow, 1, Position, Vector2.One * 5f);
             }
             UpdateY();
             Light.Alpha = Calc.Approach(Light.Alpha, Sprite.Visible ? 1f : 0f, 4f * Engine.DeltaTime);
@@ -72,19 +72,14 @@ namespace FrostHelper {
             int startIndex = PercentageToIndex(TravelPercent) - 1;
             // Draw the path
             for (int i = startIndex; i < Nodes.Length - 1; i++) {
-                //Color c = Color * Math.Min((i / 4f + 1f) / (TunnelNodes.Count / 8f), 1.25f);
                 if (i == startIndex && TravelPercent > 0f) {
                     float percent = TravelPercent - (float) Math.Floor(TravelPercent);
                     float angle = Calc.Angle(Nodes[i + 1], Nodes[i]);
                     float fullLength = Vector2.Distance(Nodes[i + 1], Nodes[i]);
 
-                    //Draw.Line(Nodes[i], Nodes[i + 1], Color.Yellow);
                     Draw.LineAngle(CenterLinePos(Nodes[i + 1]), angle, (float) Math.Floor(fullLength * (1f - percent)), Color.Yellow);
                 } else {
-                    float angle = Calc.Angle(Nodes[i + 1], Nodes[i]);
-                    float fullLength = Vector2.Distance(Nodes[i + 1], Nodes[i]);
                     Draw.Line(CenterLinePos(Nodes[i]), CenterLinePos(Nodes[i + 1]), bloom ? Color.White * 0.3f : Color.Yellow, bloom ? 3 : 1);
-                    //Draw.LineAngle(Nodes[i + 1], angle, (float)Math.Floor(fullLength), Color.Yellow);
                 }
             }
         }
@@ -94,17 +89,17 @@ namespace FrostHelper {
         }
 
         private IEnumerator RefillRoutine(Player player) {
-            //Celeste.Celeste.Freeze(0.05f);
             yield return null;
-            (Scene as Level).Shake(0.3f);
+            var level = (Scene as Level)!;
+            level.Shake(0.3f);
             Sprite.Visible = (Flash.Visible = false);
 
             Depth = 8999;
             yield return 0.05f;
-            float num = player.Speed.Angle();
-            (Scene as Level).ParticlesFG.Emit(p_shatter, 5, Position, Vector2.One * 4f, num - 1.57079637f);
-            (Scene as Level).ParticlesFG.Emit(p_shatter, 5, Position, Vector2.One * 4f, num + 1.57079637f);
-            SlashFx.Burst(Position, num);
+            float angle = player.Speed.Angle();
+            level.ParticlesFG.Emit(p_shatter, 5, Position, Vector2.One * 4f, angle - 1.57079637f);
+            level.ParticlesFG.Emit(p_shatter, 5, Position, Vector2.One * 4f, angle + 1.57079637f);
+            SlashFx.Burst(Position, angle);
 
             RemoveSelf();
             yield break;
@@ -136,13 +131,13 @@ namespace FrostHelper {
         public static int HeldDashState;
 
         public static void HeldDashBegin(Entity e) {
-            Player player = e as Player;
+            Player player = (e as Player)!;
             var refill = GetHeldRefillUsedByPlayer(player);
             player.Position = refill.Position;
             player.Speed = Vector2.Zero;
         }
         public static int HeldDashUpdate(Entity e) {
-            Player player = e as Player;
+            Player player = (e as Player)!;
             var refill = GetHeldRefillUsedByPlayer(player);
             //player.Speed = Vector2.Zero;
             //var tunnelNode = TunnelNodes[i];
@@ -193,9 +188,9 @@ namespace FrostHelper {
         }
 
         public static void HeldDashEnd(Entity e) {
-            Player player = e as Player;
+            Player player = (e as Player)!;
             var refill = GetHeldRefillUsedByPlayer(player);
-            SetHeldRefillUsedByPlayer(player, null);
+            SetHeldRefillUsedByPlayer(player, null!);
 
             refill.TravelPercent = refill.Nodes.Length - 1;
             //player.Speed = refill.LastTravelDelta * (1f / Engine.DeltaTime);
@@ -204,8 +199,8 @@ namespace FrostHelper {
         }
 
         public static IEnumerator HeldDashRoutine(Entity e) {
-            Player player = e as Player;
-            Level level = player.Scene as Level;
+            Player player = (e as Player)!;
+            Level level = (player.Scene as Level)!;
             while (true) {
                 level.ParticlesFG.Emit(ZipMover.P_Sparks, 64, player.Position, new Vector2(4f));
                 yield return null;
@@ -213,11 +208,11 @@ namespace FrostHelper {
         }
 
         public static HeldRefill GetHeldRefillUsedByPlayer(Player player) {
-            return new DynData<Player>(player).Get<HeldRefill>("fh.heldRefill");
+            return DynamicData.For(player).Get<HeldRefill>("fh.heldRefill");
         }
 
         public static void SetHeldRefillUsedByPlayer(Player player, HeldRefill refill) {
-            new DynData<Player>(player).Set("fh.heldRefill", refill);
+            DynamicData.For(player).Set("fh.heldRefill", refill);
         }
 
         public static bool AnyDashHeld() {

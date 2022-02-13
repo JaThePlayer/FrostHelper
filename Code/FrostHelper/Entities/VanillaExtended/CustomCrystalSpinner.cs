@@ -16,7 +16,7 @@ namespace FrostHelper {
             CustomSpinner crystalStaticSpinner = self.Scene.CollideFirst<CustomSpinner>(new Rectangle((int) (self.X - 4f), (int) (self.Y - 40f), 8, 12));
             if (crystalStaticSpinner != null) {
                 crystalStaticSpinner.Destroy(false);
-                (self.Scene as Level).Shake(0.3f);
+                (self.Scene as Level)!.Shake(0.3f);
                 Input.Rumble(RumbleStrength.Medium, RumbleLength.Short);
                 Celeste.Celeste.Freeze(0.01f);
             }
@@ -145,7 +145,7 @@ namespace FrostHelper {
             if (AttachToSolid) {
                 var mover = AttachGroup switch {
                     -1 => new StaticMover(),
-                    _ => new GroupedStaticMover(AttachGroup)
+                    _ => new GroupedStaticMover(AttachGroup, true)
                 };
 
                 mover.OnShake = OnShake;
@@ -198,7 +198,7 @@ namespace FrostHelper {
             ConnectorRendererJustAdded = false;
             if (isCore) {
                 Add(new CoreModeListener(new Action<Session.CoreModes>(OnChangeMode)));
-                if ((scene as Level).CoreMode == Session.CoreModes.Cold) {
+                if ((scene as Level)!.CoreMode == Session.CoreModes.Cold) {
                     UpdateDirectoryFields(false);
                 } else {
                     UpdateDirectoryFields(true);
@@ -253,9 +253,9 @@ namespace FrostHelper {
                     UnregisterFromRenderers();
                 }
                 if (HasCollider && Scene.OnInterval(0.05f, offset)) {
-                    Player entity = Scene.Tracker.GetEntity<Player>();
-                    if (entity != null) {
-                        Collidable = Math.Abs(entity.X - X) < 128f && Math.Abs(entity.Y - Y) < 128f;
+                    Player player = Scene.Tracker.GetEntity<Player>();
+                    if (player != null) {
+                        Collidable = Math.Abs(player.X - X) < 128f && Math.Abs(player.Y - Y) < 128f;
                     }
                 }
             }
@@ -265,8 +265,8 @@ namespace FrostHelper {
             }
 
             if (moveWithWind) {
-                float move = Calc.ClampedMap(Math.Abs((Scene as Level).Wind.X), 0f, 800f, 0f, 5f);
-                if ((Scene as Level).Wind.X < 0)
+                float move = Calc.ClampedMap(Math.Abs((Scene as Level)!.Wind.X), 0f, 800f, 0f, 5f);
+                if ((Scene as Level)!.Wind.X < 0)
                     move -= move * 2;
                 MoveH(move);
             }
@@ -295,7 +295,7 @@ namespace FrostHelper {
         }
 
         private bool InView() {
-            Camera camera = (Scene as Level).Camera;
+            var camera = (Scene as Level)!.Camera;
             return X > camera.X - 16f && Y > camera.Y - 16f && X < camera.X + 336f && Y < camera.Y + 196f;
         }
 
@@ -606,10 +606,10 @@ namespace FrostHelper {
 
         public bool AttachToSolid;
 
-        public Entity filler;
-        public Entity deco;
+        public Entity? filler;
+        public Entity? deco;
 
-        private Border border;
+        private Border? border;
 
         private float offset;
 
@@ -746,7 +746,7 @@ namespace FrostHelper {
                     item.filler.Position = item.Position;
                     var fillerComponents = item.filler.Components;
 
-                    Image image = fillerComponents[0] as Image;
+                    Image image = (fillerComponents[0] as Image)!;
                     Texture2D texture = image.Texture.Texture.Texture_Safe;
                     Rectangle? clipRect = new Rectangle?(image.Texture.ClipRect);
                     float scaleFix = image.Texture.ScaleFix;

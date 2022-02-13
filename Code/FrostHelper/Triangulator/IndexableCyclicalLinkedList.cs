@@ -43,7 +43,7 @@
         /// <returns>The index of the item if found; -1 if the item is not found.</returns>
         public int IndexOf(T item) {
             for (int i = 0; i < Count; i++)
-                if (this[i].Value.Equals(item))
+                if (this[i].Value!.Equals(item))
                     return i;
 
             return -1;

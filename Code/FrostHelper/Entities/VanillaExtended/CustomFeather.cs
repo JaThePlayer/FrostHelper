@@ -35,6 +35,7 @@ namespace FrostHelper {
         static void modFeatherState(ILContext il) {
             ILCursor cursor = new ILCursor(il);
             while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdcI4(Player.StStarFly) && instr.Previous.MatchCallvirt<StateMachine>("get_State"))) {
+                Console.WriteLine($"FEATHER MOD\n{il.Method.GetID()}\n{cursor.Index}\n");
                 cursor.Emit(OpCodes.Ldarg_0); // this
                 cursor.EmitDelegate(FrostModule.GetFeatherState);
             }
@@ -53,25 +54,26 @@ namespace FrostHelper {
         public static MethodInfo player_WallJumpCheck = typeof(Player).GetMethod("WallJumpCheck", BindingFlags.Instance | BindingFlags.NonPublic);
 
         public static void CustomFeatherBegin(Entity e) {
-            Player player = e as Player;
-            DynData<Player> data = new DynData<Player>(player);
-            CustomFeather feather = (CustomFeather) data["fh.customFeather"];
+            Player player = (e as Player)!;
+
+            var data = DynamicData.For(player);
+            CustomFeather feather = data.Get<CustomFeather>("fh.customFeather");
             player.Sprite.Play("startStarFly", false, false);
-            data["starFlyTransforming"] = true;
-            data["starFlyTimer"] = feather.FlyTime;
-            data["starFlySpeedLerp"] = 0f;
-            data["jumpGraceTimer"] = 0f;
-            BloomPoint starFlyBloom = (BloomPoint) data["starFlyBloom"];
+            data.Set("starFlyTransforming", true);
+            data.Set("starFlyTimer", feather.FlyTime);
+            data.Set("starFlySpeedLerp", 0f);
+            data.Set("jumpGraceTimer", 0f);
+            BloomPoint starFlyBloom = data.Get<BloomPoint>("starFlyBloom");
             if (starFlyBloom == null) {
                 player.Add(starFlyBloom = new BloomPoint(new Vector2(0f, -6f), 0f, 16f));
             }
             starFlyBloom.Visible = true;
             starFlyBloom.Alpha = 0f;
-            data["starFlyBloom"] = starFlyBloom;
-            player.Collider = (Hitbox) data["starFlyHitbox"];
-            data["hurtbox"] = data["starFlyHurtbox"];
-            SoundSource starFlyLoopSfx = (SoundSource) data["starFlyLoopSfx"];
-            SoundSource starFlyWarningSfx = (SoundSource) data["starFlyWarningSfx"];
+            data.Set("starFlyBloom", starFlyBloom);
+            player.Collider = data.Get<Hitbox>("starFlyHitbox");
+            data.Set("hurtbox", data.Get("starFlyHurtbox"));
+            SoundSource starFlyLoopSfx = data.Get<SoundSource>("starFlyLoopSfx");
+            SoundSource starFlyWarningSfx = data.Get<SoundSource>("starFlyWarningSfx");
             if (starFlyLoopSfx == null) {
                 player.Add(starFlyLoopSfx = new SoundSource());
                 starFlyLoopSfx.DisposeOnTransition = false;
@@ -80,21 +82,21 @@ namespace FrostHelper {
             }
             starFlyLoopSfx.Play("event:/game/06_reflection/feather_state_loop", "feather_speed", 1f);
             starFlyWarningSfx.Stop(true);
-            data["starFlyLoopSfx"] = starFlyLoopSfx;
-            data["starFlyWarningSfx"] = starFlyWarningSfx;
+            data.Set("starFlyLoopSfx", starFlyLoopSfx);
+            data.Set("starFlyWarningSfx", starFlyWarningSfx);
         }
         public static void CustomFeatherEnd(Entity e) {
-            Player player = e as Player;
-            DynData<Player> data = new DynData<Player>(player);
-            CustomFeather feather = (CustomFeather) data["fh.customFeather"];
+            Player player = (e as Player)!;
+            var data = DynamicData.For(player);
+            CustomFeather feather = data.Get<CustomFeather>("fh.customFeather");
             player.Play("event:/game/06_reflection/feather_state_end", null, 0f);
-            ((SoundSource) data["starFlyWarningSfx"]).Stop(true);
-            ((SoundSource) data["starFlyLoopSfx"]).Stop(true);
+            data.Get<SoundSource>("starFlyWarningSfx").Stop(true);
+            data.Get<SoundSource>("starFlyLoopSfx").Stop(true);
             player.Hair.DrawPlayerSpriteOutline = false;
             player.Sprite.Color = Color.White;
             player.SceneAs<Level>().Displacement.AddBurst(player.Center, 0.25f, 8f, 32f, 1f, null, null);
-            ((BloomPoint) data["starFlyBloom"]).Visible = false;
-            player.Sprite.HairCount = (int) data["startHairCount"];
+            data.Get<BloomPoint>("starFlyBloom").Visible = false;
+            player.Sprite.HairCount = data.Get<int>("startHairCount");
             player_StarFlyReturnToNormalHitbox.Invoke(player, null);
 
             if (player.StateMachine.State != 2) {
@@ -102,9 +104,9 @@ namespace FrostHelper {
             }
         }
         public static IEnumerator CustomFeatherCoroutine(Entity e) {
-            Player player = e as Player;
-            DynData<Player> data = new DynData<Player>(player);
-            CustomFeather feather = (CustomFeather) data["fh.customFeather"];
+            Player player = (e as Player)!;
+            var data = DynamicData.For(player);
+            CustomFeather feather = data.Get<CustomFeather>("fh.customFeather");
             while (player.Sprite.CurrentAnimationID == "startStarFly") {
                 yield return null;
             }
@@ -116,8 +118,8 @@ namespace FrostHelper {
             player.Sprite.HairCount = 7;
             player.Hair.DrawPlayerSpriteOutline = true;
             player.SceneAs<Level>().Displacement.AddBurst(player.Center, 0.25f, 8f, 32f, 1f, null, null);
-            data["starFlyTransforming"] = false;
-            data["starFlyTimer"] = feather.FlyTime;
+            data.Set("starFlyTransforming", false);
+            data.Set("starFlyTimer", feather.FlyTime);
             player.RefillDash();
             player.RefillStamina();
 
@@ -127,37 +129,37 @@ namespace FrostHelper {
             }
 
             player.Speed = dir * 250f;
-            data["starFlyLastDir"] = dir;
+            data.Set("starFlyLastDir", dir);
             player.SceneAs<Level>().Particles.Emit(feather.P_Boost, 12, player.Center, Vector2.One * 4f, feather.FlyColor, (-dir).Angle());
             Input.Rumble(RumbleStrength.Strong, RumbleLength.Medium);
-            player.SceneAs<Level>().DirectionalShake((Vector2) data["starFlyLastDir"], 0.3f);
-            while ((float) data["starFlyTimer"] > 0.5f) {
+            player.SceneAs<Level>().DirectionalShake(data.Get<Vector2>("starFlyLastDir"), 0.3f);
+            while (data.Get<float>("starFlyTimer") > 0.5f) {
                 yield return null;
             }
-            ((SoundSource) data["starFlyWarningSfx"]).Play("event:/game/06_reflection/feather_state_warning", null, 0f);
+            data.Get<SoundSource>("starFlyWarningSfx").Play("event:/game/06_reflection/feather_state_warning", null, 0f);
             yield break;
         }
 
         public static int StarFlyUpdate(Entity e) {
-            Player player = e as Player;
+            Player player = (e as Player)!;
             Level level = player.SceneAs<Level>();
-            DynData<Player> data = new DynData<Player>(player);
-            BloomPoint bloomPoint = (BloomPoint) data["starFlyBloom"];
-            CustomFeather feather = (CustomFeather) data["fh.customFeather"];
+            var data = DynamicData.For(player);
+            BloomPoint bloomPoint = data.Get<BloomPoint>("starFlyBloom");
+            CustomFeather feather = data.Get<CustomFeather>("fh.customFeather");
 
             float StarFlyTime = feather.FlyTime;
             bloomPoint.Alpha = Calc.Approach(bloomPoint.Alpha, 0.7f, Engine.DeltaTime * StarFlyTime);
-            data["starFlyBloom"] = bloomPoint;
+            data.Set("starFlyBloom", bloomPoint);
             Input.Rumble(RumbleStrength.Climb, RumbleLength.Short);
 
-            if ((bool) data["starFlyTransforming"]) {
+            if (data.Get<bool>("starFlyTransforming")) {
                 player.Speed = Calc.Approach(player.Speed, Vector2.Zero, 1000f * Engine.DeltaTime);
             } else {
                 Vector2 aimValue = Input.Aim.Value;
                 bool notAiming = false;
                 if (aimValue == Vector2.Zero) {
                     notAiming = true;
-                    aimValue = (Vector2) data["starFlyLastDir"];
+                    aimValue = data.Get<Vector2>("starFlyLastDir");
                 }
                 Vector2 lastSpeed = player.Speed.SafeNormalize(Vector2.Zero);
 
@@ -166,23 +168,23 @@ namespace FrostHelper {
                 } else {
                     lastSpeed = lastSpeed.RotateTowards(aimValue.Angle(), 5.58505344f * Engine.DeltaTime);
                 }
-                data["starFlyLastDir"] = lastSpeed;
+                data.Set("starFlyLastDir", lastSpeed);
                 float target;
                 if (notAiming) {
-                    data["starFlySpeedLerp"] = 0f;
+                    data.Set("starFlySpeedLerp", 0f);
                     target = feather.NeutralSpeed; // was 91f
                 } else {
                     if (lastSpeed != Vector2.Zero && Vector2.Dot(lastSpeed, aimValue) >= 0.45f) {
-                        data["starFlySpeedLerp"] = Calc.Approach((float) data["starFlySpeedLerp"], 1f, Engine.DeltaTime / 1f);
-                        target = MathHelper.Lerp(feather.LowSpeed, feather.MaxSpeed, (float) data["starFlySpeedLerp"]);
+                        data.Set("starFlySpeedLerp", Calc.Approach(data.Get<float>("starFlySpeedLerp"), 1f, Engine.DeltaTime / 1f));
+                        target = MathHelper.Lerp(feather.LowSpeed, feather.MaxSpeed, data.Get<float>("starFlySpeedLerp"));
                     } else {
-                        data["starFlySpeedLerp"] = 0f;
+                        data.Set("starFlySpeedLerp", 0f);
                         target = 140f;
                     }
                 }
-                SoundSource ss = (SoundSource) data["starFlyLoopSfx"];
+                SoundSource ss = data.Get<SoundSource>("starFlyLoopSfx");
                 ss.Param("feather_speed", notAiming ? 0 : 1);
-                data["starFlyLoopSfx"] = ss;
+                data.Set("starFlyLoopSfx", ss);
 
                 float speed = player.Speed.Length();
                 speed = Calc.Approach(speed, target, 1000f * Engine.DeltaTime);
@@ -237,9 +239,9 @@ namespace FrostHelper {
                     return player.StartDash();
                 }
 
-                float starFlyTimer = (float) data["starFlyTimer"];
+                float starFlyTimer = data.Get<float>("starFlyTimer");
                 starFlyTimer -= Engine.DeltaTime;
-                data["starFlyTimer"] = starFlyTimer;
+                data.Set("starFlyTimer", starFlyTimer);
 
                 if (starFlyTimer <= 0f) {
                     if (Input.MoveY.Value == -1) {
@@ -247,10 +249,10 @@ namespace FrostHelper {
                     }
 
                     if (Input.MoveY.Value < 1) {
-                        data["varJumpSpeed"] = player.Speed.Y;
+                        data.Set("varJumpSpeed", player.Speed.Y);
                         player.AutoJump = true;
                         player.AutoJumpTimer = 0f;
-                        data["varJumpTimer"] = 0.2f;
+                        data.Set("varJumpTimer", 0.2f);
                     }
 
                     if (player.Speed.Y > 0f) {
@@ -426,15 +428,15 @@ namespace FrostHelper {
         public float FlyTime;
 
         public bool StartStarFly(Player player) {
-            DynData<Player> data = new DynData<Player>(player);
+            var data = DynamicData.For(player);
             player.RefillStamina();
             bool result;
             if (player.StateMachine.State == Player.StReflectionFall) {
                 result = false;
             } else {
-                data["fh.customFeather"] = this;
+                data.Set("fh.customFeather", this);
                 if (player.StateMachine.State == CustomFeatherState) {
-                    data["starFlyTimer"] = FlyTime;
+                    data.Set("starFlyTimer", FlyTime);
                     player.Sprite.Color = FlyColor;
                     Input.Rumble(RumbleStrength.Medium, RumbleLength.Medium);
                 } else {

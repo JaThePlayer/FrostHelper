@@ -161,7 +161,7 @@ public class CustomSpring : Spring {
             -1 => new StaticMover() {
                 OnAttach = oldMover.OnAttach,
             },
-            _ => new GroupedStaticMover(attachGroup).SetOnAttach(oldMover.OnAttach)
+            _ => new GroupedStaticMover(attachGroup, true).SetOnAttach(oldMover.OnAttach)
         };
 
         mover.OnEnable = oldMover.OnEnable;
@@ -307,8 +307,7 @@ public class CustomSpring : Spring {
         if (h.HitSpring(this)) {
             BounceAnimate();
             TryBreak();
-            if (h.Entity is Glider) {
-                Glider glider = h.Entity as Glider;
+            if (h.Entity is Glider glider) {
                 if (Orientation == CustomOrientations.Floor) {
                     glider.Speed.Y *= speedMult.Y;
                 } else if (Orientation == CustomOrientations.Ceiling) {
@@ -316,8 +315,7 @@ public class CustomSpring : Spring {
                 } else {
                     glider.Speed *= speedMult;
                 }
-            } else if (h.Entity is TheoCrystal) {
-                TheoCrystal theo = h.Entity as TheoCrystal;
+            } else if (h.Entity is TheoCrystal theo) {
                 if (Orientation == CustomOrientations.Floor) {
                     theo.Speed.Y *= speedMult.Y;
                 } else if (Orientation == CustomOrientations.Ceiling) {

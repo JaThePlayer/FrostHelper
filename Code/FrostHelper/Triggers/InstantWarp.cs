@@ -9,7 +9,7 @@ public class InstantWarp : Trigger {
     }
 
     public override void OnEnter(Player player) {
-        Level level = Engine.Scene as Level;
+        Level level = player.SceneAs<Level>();
         level.OnEndOfFrame += delegate {
             new Vector2(level.LevelOffset.X + level.Bounds.Width - player.X, player.Y - level.LevelOffset.Y);
             Vector2 levelOffset = level.LevelOffset;

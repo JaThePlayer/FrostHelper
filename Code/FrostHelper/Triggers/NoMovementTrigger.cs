@@ -1,6 +1,4 @@
-﻿using Celeste.Mod.Entities;
-
-namespace FrostHelper;
+﻿namespace FrostHelper;
 
 [Tracked]
 [CustomEntity("FrostHelper/NoMovementTrigger")]
@@ -39,8 +37,8 @@ public class NoMovementTrigger : Trigger {
     }
 
     public static bool IsMovementDisabled(Scene scene) {
-        foreach (var item in scene.Tracker.SafeGetEntities<NoMovementTrigger>()) {
-            if ((item as Trigger).Triggered) {
+        foreach (Trigger item in scene.Tracker.SafeGetEntities<NoMovementTrigger>()) {
+            if (item.Triggered) {
                 return true;
             }
         }

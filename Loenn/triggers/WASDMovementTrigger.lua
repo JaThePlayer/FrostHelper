@@ -1,11 +1,13 @@
-return {
+local jautils = require("mods").requireFromPlugin("libraries.jautils")
+
+local trigger = {
     name = "FrostHelper/WASDMovementTrigger",
-    placements = {
-        name = "default",
-        data = {
-            hitboxWidth = 2,
-            speed = 80.0,
-            texture = "util/pixel",
-        }
-    }
 }
+
+jautils.createPlacementsPreserveOrder(trigger, "default", {
+    { "hitboxWidth", 2, "integer" },
+    { "texture", "util/pixel" },
+    { "speed", 80.0 },
+})
+
+return trigger

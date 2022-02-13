@@ -93,14 +93,14 @@ namespace FrostHelper {
         }
 
         private bool InView() {
-            Camera camera = (Scene as Level).Camera;
+            Camera camera = (Scene as Level)!.Camera;
             //Logger.Log(lavaRect.Location.ToString(), new Point((int)camera.Position.X, (int)camera.Position.Y).ToString());
             return lavaRect.Location.X + lavaRect.Width > camera.X - 16f && lavaRect.Location.Y + lavaRect.Height > camera.Y - 16f && lavaRect.Location.X < camera.X + 320f + 16f && lavaRect.Location.Y < camera.Y + 180f + 16f;//lavaRect.Contains(new Point((int)camera.Position.X, (int)camera.Position.Y));//
         }
 
         public override void Update() {
             Visible = Collidable && InView();
-            if ((Scene as Level).Transitioning) {
+            if ((Scene as Level)!.Transitioning) {
                 idleSfx?.UpdateSfxPosition();
             } else {
                 if (Visible)

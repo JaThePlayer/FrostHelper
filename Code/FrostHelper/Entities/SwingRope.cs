@@ -4,7 +4,7 @@
 public class SwingRope : Entity {
     public float PlayerSpeedCarryMult;
 
-    public Player CarriedPlayer;
+    public Player? CarriedPlayer;
 
     float preservedSpeed;
     float playerGrabCooldown = 0f;

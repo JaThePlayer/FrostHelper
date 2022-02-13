@@ -44,7 +44,7 @@ namespace FrostHelper {
             var last = nodes.Last();
             if (spawnBerry) {
                 Collider = new Hitbox(width, height, last.X - Position.X, last.Y - Position.Y);
-                BerryToSpawn = null;
+                BerryToSpawn = null!;
                 foreach (var berry in Scene.Entities.OfType<Strawberry>()) {
                     if (new Rectangle((int) last.X, (int) last.Y, (int) width, (int) height).Contains(new Point((int) berry.Position.X, (int) berry.Position.Y))) {
                         BerryToSpawn = berry;
@@ -126,7 +126,7 @@ namespace FrostHelper {
 
         public override void Render() {
             base.Render();
-            if (!(Scene as Level).Paused) {
+            if (!(Scene as Level)!.Paused) {
                 lerp += 3f * Engine.DeltaTime;
                 if (lerp >= 1f) {
                     lerp = 0f;
@@ -147,7 +147,7 @@ namespace FrostHelper {
 
             float direction = Calc.Angle(player.Center, Center);
             float scale = 1f;
-            MTexture mtexture = null;
+            MTexture? mtexture = null;
             float rotation = float.MaxValue;
             for (int i = 0; i < 8; i++) {
                 float angleDifference = Calc.AngleDiff(6.28318548f * (i / 8f), direction);

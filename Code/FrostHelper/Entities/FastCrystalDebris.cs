@@ -52,7 +52,7 @@ public class FastCrystalDebris : Actor {
         MoveH(speed.X * Engine.DeltaTime, collideH, null);
         MoveV(speed.Y * Engine.DeltaTime, collideV, null);
         if (Scene.OnInterval(0.05f)) {
-            (Scene as Level).ParticlesFG.Emit(P_Dust, Position);
+            (Scene as Level)!.ParticlesFG.Emit(P_Dust, Position);
         }
     }
 

@@ -12,3 +12,5 @@ using System.Diagnostics.CodeAnalysis;
 [assembly: SuppressMessage("Style", "IDE0017:Simplify object initialization", Justification = "<Pending>", Scope = "member", Target = "~M:FrostHelper.Entities.WallBouncePresentation.Page04.Added(FrostHelper.Entities.WallBouncePresentation.WallbouncePresentation)")]
 [assembly: SuppressMessage("Style", "IDE0017:Simplify object initialization", Justification = "<Pending>", Scope = "member", Target = "~M:FrostHelper.Entities.WallBouncePresentation.Page05.Display.#ctor(Microsoft.Xna.Framework.Vector2,System.String,System.String,Microsoft.Xna.Framework.Vector2)")]
 [assembly: SuppressMessage("Style", "IDE0017:Simplify object initialization", Justification = "<Pending>", Scope = "member", Target = "~M:FrostHelper.TemporaryKey.#ctor(Celeste.EntityData,Microsoft.Xna.Framework.Vector2,Celeste.EntityID)")]
+[assembly: SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Entity ctors need to be EntityData, Vector2", Scope = "module")]
+[assembly: SuppressMessage("Style", "CS8618:Non-nullable field must contain a non-null value when exiting constructor", Justification = "Cope", Scope = "module")]

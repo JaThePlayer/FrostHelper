@@ -101,7 +101,7 @@ public class LightningColorTrigger : Trigger {
 
     private static FieldInfo LightningRenderer_bolts = typeof(LightningRenderer).GetField("bolts", BindingFlags.Instance | BindingFlags.NonPublic);
 
-    private static FieldInfo Bolt_color = null;
+    private static FieldInfo? Bolt_color = null;
 
     bool persistent;
 
@@ -122,10 +122,6 @@ public class LightningColorTrigger : Trigger {
         LightningRenderer r = player.Scene.Tracker.GetEntity<LightningRenderer>();
         ChangeLightningColor(r, electricityColors);
         if (persistent) {
-            var session = SceneAs<Level>().Session;
-            //SessionHelper.WriteColorToSession(session, "fh.lightningColorA", electricityColors[0]);
-            //SessionHelper.WriteColorToSession(session, "fh.lightningColorB", electricityColors[1]);
-            //SessionHelper.WriteColorToSession(session, "fh.lightningBloomColor", BloomColor);
             FrostModule.Session.LightningColorA = ColorHelper.ColorToHex(electricityColors[0]);
             FrostModule.Session.LightningColorB = ColorHelper.ColorToHex(electricityColors[1]);
             FrostModule.Session.LightningFillColor = FillColor;

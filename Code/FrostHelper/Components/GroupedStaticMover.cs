@@ -4,10 +4,12 @@
 [TrackedAs(typeof(StaticMover))]
 public class GroupedStaticMover : StaticMover {
     public int Group;
+    public bool CanBeLeader = true;
 
-    public GroupedStaticMover(int group) {
+    public GroupedStaticMover(int group, bool canBeLeader) {
+        CanBeLeader = canBeLeader;
         Group = group;
-        OnAttach = (p) => AttachGroupableExt.TryGroupAttach(Entity, p);
+        OnAttach = CanBeLeader ? (p) => AttachGroupableExt.TryGroupAttach(Entity, p) : null;
     }
 
     public GroupedStaticMover SetOnAttach(Action<Celeste.Platform> callback) {
@@ -22,11 +24,14 @@ public class GroupedStaticMover : StaticMover {
 public static class AttachGroupableExt {
     public static void TryGroupAttach(Entity entity, Celeste.Platform platform) {
         var baseMover = entity.Get<GroupedStaticMover>();
+        if (baseMover == null || !baseMover.CanBeLeader || entity == platform) {
+            return;
+        }
+
 
         var group = baseMover.Group;
         var staticMovers = platform.GetValue<List<StaticMover>>("staticMovers");
-        //foreach (Entity item in entity.Scene.Entities) {
-        //    var mover = item.Get<GroupedStaticMover>();
+
         foreach (GroupedStaticMover mover in entity.Scene.Tracker.GetComponents<GroupedStaticMover>()) {
             if (mover is not null && mover.Group == group && mover.Platform is null) {
                 mover.OnAttach = null;

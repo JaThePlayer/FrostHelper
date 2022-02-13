@@ -9,17 +9,13 @@
             Add(sprite = GFX.SpriteBank.Create("lockdoor_" + spriteName));
             sprite.Play("idle", false, false);
             sprite.Position = new Vector2(Width / 2f, Height / 2f);
-            bool flag = string.IsNullOrWhiteSpace(unlock_sfx);
-            if (flag) {
+
+            if (string.IsNullOrWhiteSpace(unlock_sfx)) {
                 unlockSfxName = "event:/game/03_resort/key_unlock";
-                bool flag2 = spriteName == "temple_a";
-                if (flag2) {
+                if (spriteName == "temple_a") {
                     unlockSfxName = "event:/game/05_mirror_temple/key_unlock_light";
-                } else {
-                    bool flag3 = spriteName == "temple_b";
-                    if (flag3) {
-                        unlockSfxName = "event:/game/05_mirror_temple/key_unlock_dark";
-                    }
+                } else if (spriteName == "temple_b") {
+                    unlockSfxName = "event:/game/05_mirror_temple/key_unlock_dark";
                 }
             } else {
                 unlockSfxName = SFX.EventnameByHandle(unlock_sfx);
@@ -33,9 +29,8 @@
             Visible = true;
             sprite.Play("appear", false, false);
             Add(Alarm.Create(Alarm.AlarmMode.Oneshot, delegate {
-                Level level = Scene as Level;
-                bool flag = !CollideCheck<Solid>(Position - Vector2.UnitX);
-                if (flag) {
+                Level level = (Scene as Level)!;
+                if (!CollideCheck<Solid>(Position - Vector2.UnitX)) {
                     level.Particles.Emit(P_Appear, 16, Position + new Vector2(3f, 16f), new Vector2(2f, 10f), 3.14159274f);
                     level.Particles.Emit(P_Appear, 16, Position + new Vector2(29f, 16f), new Vector2(2f, 10f), 0f);
                 }
@@ -44,11 +39,9 @@
         }
 
         private void OnPlayer(Player player) {
-            bool flag = !opening;
-            if (flag) {
+            if (!opening) {
                 foreach (Follower follower in player.Leader.Followers) {
-                    bool flag2 = follower.Entity is Key && !(follower.Entity as Key).StartedUsing;
-                    if (flag2) {
+                    if (follower.Entity is Key && !(follower.Entity as Key)!.StartedUsing) {
                         TryOpen(player, follower);
                         break;
                     }
@@ -58,10 +51,9 @@
 
         private void TryOpen(Player player, Follower fol) {
             Collidable = false;
-            bool flag = !Scene.CollideCheck<Solid>(player.Center, Center);
-            if (flag) {
+            if (!Scene.CollideCheck<Solid>(player.Center, Center)) {
                 opening = true;
-                (fol.Entity as Key).StartedUsing = true;
+                (fol.Entity as Key)!.StartedUsing = true;
                 Add(new Coroutine(UnlockRoutine(fol), true));
             }
             Collidable = true;
@@ -71,18 +63,18 @@
             SoundEmitter emitter = SoundEmitter.Play(unlockSfxName, this, null);
             emitter.Source.DisposeOnTransition = true;
             Level level = SceneAs<Level>();
-            Key key = fol.Entity as Key;
+            Key key = (fol.Entity as Key)!;
             Add(new Coroutine(key.UseRoutine(Center + new Vector2(0f, 2f)), true));
             yield return 1.2f;
             UnlockingRegistered = true;
-            bool flag = stepMusicProgress;
-            if (flag) {
+
+            if (stepMusicProgress) {
                 AudioTrackState music = level.Session.Audio.Music;
                 int progress = music.Progress;
                 music.Progress = progress + 1;
                 level.Session.Audio.Apply(false);
             }
-            //level.Session.DoNotLoad.Add(this.ID);
+
             key.RegisterUsed();
             while (key.Turning) {
                 yield return null;

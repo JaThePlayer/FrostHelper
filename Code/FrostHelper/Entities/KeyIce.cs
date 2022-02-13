@@ -12,8 +12,8 @@
             }
         }
 
-        private Alarm alarm;
-        private Tween tween;
+        private Alarm? alarm;
+        private Tween? tween;
         public new bool Turning { get; private set; }
 
         public KeyIce(EntityData data, Vector2 offset, EntityID id, Vector2[] nodes) : base(data.Position + offset, id, nodes) {
@@ -59,54 +59,46 @@
 
         }
 
-        public override void Added(Monocle.Scene scene) {
+        public override void Added(Scene scene) {
             base.Added(scene);
-            Level level = scene as Level;
-            bool flag = level == null;
-            if (!flag) {
+            if (scene is Level level) {
                 start = Position;
                 startLevel = level.Session.Level;
             }
         }
 
         public override void Update() {
-            Level level = Scene as Level;
-            Session session = (level != null) ? level.Session : null;
-            bool flag = IsUsed && !wasUsed;
-            if (flag) {
-                session.DoNotLoad.Add(ID);
+            var session = (Scene as Level)?.Session;
+
+            if (IsUsed && !wasUsed) {
+                session?.DoNotLoad.Add(ID);
                 wasUsed = true;
             }
-            bool flag2 = !dissolved && !IsUsed && !base.Turning;
-            if (flag2) {
-                bool flag3 = session != null && session.Keys.Contains(ID);
-                if (flag3) {
+
+            if (!dissolved && !IsUsed && !base.Turning) {
+                if (session != null && session.Keys.Contains(ID)) {
                     session.DoNotLoad.Remove(ID);
                     session.Keys.Remove(ID);
                     session.UpdateLevelStartDashes();
                 }
-                int followIndex = follower.FollowIndex;
-                bool flag4 = follower.Leader != null && follower.DelayTimer <= 0f && IsFirstIceKey;
             }
             base.Update();
         }
 
         public void Dissolve() {
-            bool flag = dissolved || IsUsed || base.Turning;
-            if (!flag) {
+            if (!(dissolved || IsUsed || base.Turning)) {
                 dissolved = true;
-                bool flag2 = follower.Leader != null;
-                if (flag2) {
-                    Player player = follower.Leader.Entity as Player;
+                if (follower.Leader != null) {
+                    Player player = (follower.Leader.Entity as Player)!;
                     player.StrawberryCollectResetTimer = 2.5f;
                     follower.Leader.LoseFollower(follower);
                 }
-                Add(new Monocle.Coroutine(DissolveRoutine(), true));
+                Add(new Coroutine(DissolveRoutine(), true));
             }
         }
 
         private IEnumerator DissolveRoutine() {
-            Level level = Scene as Level;
+            Level level = (Scene as Level)!;
             Session session = level.Session;
             session.DoNotLoad.Remove(ID);
             session.Keys.Remove(ID);

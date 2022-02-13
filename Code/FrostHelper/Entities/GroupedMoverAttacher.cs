@@ -14,6 +14,7 @@ public class GroupedMoverAttacher : Entity {
     public readonly bool IsBlacklist;
     public readonly Type[] Types;
     public readonly bool SpecialHandling;
+    public readonly bool CanBeLeader;
 
     #region Hooks
     private static bool _loaded;
@@ -39,6 +40,8 @@ public class GroupedMoverAttacher : Entity {
     public static void PreAwake(List<Entity> toAwake, EntityList entitiyList) {
 #if DebugLog
         Console.WriteLine("Pre Awake");
+        Console.WriteLine();
+        Console.WriteLine();
 #endif
 
         foreach (GroupedMoverAttacher item in entitiyList.Scene.Tracker.GetEntities<GroupedMoverAttacher>()) {
@@ -57,6 +60,8 @@ public class GroupedMoverAttacher : Entity {
         IsBlacklist = data.Bool("isBlacklist", false);
         Types = FrostModule.GetTypes(data.Attr("types", ""));
         SpecialHandling = data.Bool("specialHandling", false);
+        CanBeLeader = data.Bool("canBeLeader", true);
+
         Collider = new Hitbox(data.Width, data.Height);
         Collidable = true;
 
@@ -77,7 +82,22 @@ public class GroupedMoverAttacher : Entity {
 #if DebugLog
                 Console.WriteLine("Adding!!!!");
 #endif
-                Action<Vector2> onMove = null;
+
+                switch (entity) {
+                    case Solid solid:
+                        solid.AllowStaticMovers = false;
+                        break;
+                }
+
+                var prevMover = entity.Get<StaticMover>();
+                if (prevMover is not null) {
+                    entity.Remove(prevMover);
+                    var newMover = API.API.ToGroupedStaticMover(prevMover, AttachGroup, CanBeLeader) as GroupedStaticMover;
+                    entity.Add(newMover);
+                    continue;
+                }
+
+                Action<Vector2>? onMove = null;
                 
                 if (SpecialHandling) {
                     onMove = entity switch {
@@ -91,17 +111,14 @@ public class GroupedMoverAttacher : Entity {
 
                 onMove ??= (amt) => entity.Position += amt;
 
-                entity.Add(new GroupedStaticMover(AttachGroup) {
+                entity.Add(new GroupedStaticMover(AttachGroup, CanBeLeader) {
                     OnMove = onMove,
                     OnShake = onMove,
-                    SolidChecker = (solid) => entity.CollideCheck(solid),
+                    SolidChecker = (solid) => entity != solid && entity.CollideCheck(solid),
+                    JumpThruChecker = (solid) => entity != solid && entity.CollideCheck(solid),
+                    CanBeLeader = CanBeLeader,
                 });
 
-                switch (entity) {
-                    case Solid solid:
-                        solid.AllowStaticMovers = false;
-                        break;
-                }
             }
         }
     }

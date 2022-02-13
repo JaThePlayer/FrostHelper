@@ -10,7 +10,7 @@ public static class ColorHelper {
                 cache[prop.Name] = color;
         }
         cache[""] = Color.White;
-        colorArrayCache[""] = null;
+        colorArrayCache[""] = null!;
     }
     /// <summary>
     /// Returns a list of colors from a comma-separated string of hex colors OR xna color names

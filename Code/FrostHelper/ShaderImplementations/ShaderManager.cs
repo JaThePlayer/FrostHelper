@@ -24,8 +24,10 @@ public class ShaderManager {
         }*/
 
         if (FrostModule.GetCurrentLevel().Tracker.Entities.TryGetValue(typeof(ShaderController), out var entities))
-            foreach (var item in entities) {
-                (item as ShaderController).Apply(source);
+            foreach (ShaderController item in entities) {
+                if (item.Visible) { 
+                    item.Apply(source);
+                }
             }
         //foreach (var item in FrostModule.GetCurrentLevel().Tracker.Entities[typeof(IShaderController)]) {
 

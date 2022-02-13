@@ -26,11 +26,9 @@ public class CassetteTempoTrigger : Trigger {
     }
 
     public void SetManagerTempo(float Tempo) {
-        // let me speak to your manager... to change the tempo
         CassetteBlockManager manager = Scene.Tracker.GetEntity<CassetteBlockManager>();
         if (manager != null) {
-            DynData<CassetteBlockManager> data = new DynData<CassetteBlockManager>(manager);
-            data.Set("tempoMult", Tempo);
+            DynamicData.For(manager).Set("tempoMult", Tempo);
         }
     }
 }

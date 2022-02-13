@@ -1,6 +1,4 @@
-﻿using Celeste.Mod.Entities;
-
-namespace FrostHelper;
+﻿namespace FrostHelper;
 
 [CustomEntity("CCH/WASDMovementTrigger",
               "FrostHelper/WASDMovementTrigger")]

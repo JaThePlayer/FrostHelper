@@ -10,7 +10,7 @@ namespace FrostHelper {
         [OnLoad]
         public static void Load() {
             levelRenderManipulator = AllowColorChange((object self) => {
-                var controller = (self as Level).Tracker?.GetEntity<EntityRainbowifyController>();
+                var controller = (self as Level)!.Tracker?.GetEntity<EntityRainbowifyController>();
                 return controller != null && controller.all;
             }, (object self) => {
                 return Vector2.Zero;
@@ -23,7 +23,7 @@ namespace FrostHelper {
         [OnUnload]
         public static void Unload() {
             IL.Celeste.Level.Render -= levelRenderManipulator;
-            levelRenderManipulator = null;
+            levelRenderManipulator = null!;
             //IL.Celeste.Player.Render -= AllowColorChangeForEntity;
         }
 
@@ -34,7 +34,7 @@ namespace FrostHelper {
                 while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchCall<Color>("get_White"))) {
                     cursor.Emit(OpCodes.Pop);
                     cursor.Emit(OpCodes.Ldarg_0); // this
-                    cursor.EmitDelegate<Func<object, Color>>((object self) => {
+                    cursor.EmitDelegate((object self) => {
                         if (condition(self)) {
                             return ColorHelper.GetHue(Engine.Scene, positionGetter(self));
                         } else {
@@ -53,9 +53,9 @@ namespace FrostHelper {
             while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchCall<Color>("get_White"))) {
                 cursor.Emit(OpCodes.Pop);
                 cursor.Emit(OpCodes.Ldarg_0); // this
-                cursor.EmitDelegate<Func<object, Color>>((object self) => {
-                    if ((self as Entity).Get<Rainbowifier>() != null) {
-                        return ColorHelper.GetHue(Engine.Scene, (self as Entity).Position);
+                cursor.EmitDelegate((object self) => {
+                    if ((self as Entity)!.Get<Rainbowifier>() != null) {
+                        return ColorHelper.GetHue(Engine.Scene, (self as Entity)!.Position);
                     } else {
                         return Color.White;
                     }
@@ -93,7 +93,7 @@ namespace FrostHelper {
             }
 
             affectedBackdrops = new List<Backdrop>();
-            foreach (var backdrop in (scene as Level).Background.Backdrops) {
+            foreach (var backdrop in (scene as Level)!.Background.Backdrops) {
                 if (Types.Contains(backdrop.GetType()))
                     affectedBackdrops.Add(backdrop);
             }

@@ -1,6 +1,4 @@
-﻿using Celeste.Mod.Entities;
-
-namespace FrostHelper.Triggers;
+﻿namespace FrostHelper.Triggers;
 
 [CustomEntity("FrostHelper/CapDashOnGroundTrigger")]
 public class CapDashOnGroundTrigger : Trigger {

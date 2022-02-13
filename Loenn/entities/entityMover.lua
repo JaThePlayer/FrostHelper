@@ -19,7 +19,7 @@ jautils.createPlacementsPreserveOrder(entityMover, "normal", {
     { "types", "" },
     { "blacklist", false },
     { "moveDuration", 1.0 },
-    { "easing", "CubeInOut" },
+    { "easing", "CubeInOut", jautils.easings },
     { "pauseTimeLength", 0.0 },
     { "startPauseTimeLength", 0.0 },
     { "onEndSFX", "" },

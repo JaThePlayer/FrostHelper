@@ -131,7 +131,7 @@ public class FrostModule : EverestModule {
 
     public static Player StateGetPlayer() {
         // TODO: Make smarter
-        return (Engine.Scene as Level).Tracker.GetEntity<Player>();
+        return (Engine.Scene as Level)!.Tracker.GetEntity<Player>();
     }
 
     private void modCallDashEvents(ILContext il) {
@@ -179,18 +179,18 @@ public class FrostModule : EverestModule {
 
     private void Player_ctor(On.Celeste.Player.orig_ctor orig, Player self, Vector2 position, PlayerSpriteMode spriteMode) {
         orig(self, position, spriteMode);
-        new DynData<Player>(self).Set("lastDreamSpeed", 0f);
+        DynamicData.For(self).Set("lastDreamSpeed", 0f);
         // Let's define new states
         // .AddState is defined in StateMachineExt
         YellowBoostState = self.StateMachine.AddState(YellowBoostUpdate, YellowBoostCoroutine, YellowBoostBegin, YellowBoostEnd);
         GenericCustomBooster.CustomBoostState = self.StateMachine.AddState(GenericCustomBooster.BoostUpdate, GenericCustomBooster.BoostCoroutine, GenericCustomBooster.BoostBegin, GenericCustomBooster.BoostEnd);
         GenericCustomBooster.CustomRedBoostState = self.StateMachine.AddState(GenericCustomBooster.RedDashUpdate, GenericCustomBooster.RedDashCoroutine, GenericCustomBooster.RedDashBegin, GenericCustomBooster.RedDashEnd);
 #pragma warning disable CS0618 // Type or member is obsolete
-        CustomDreamDashState = self.StateMachine.AddState(CustomDreamBlock.DreamDashUpdate, null, CustomDreamBlock.DreamDashBegin, CustomDreamBlock.DreamDashEnd);
+        CustomDreamDashState = self.StateMachine.AddState(CustomDreamBlock.DreamDashUpdate, null!, CustomDreamBlock.DreamDashBegin, CustomDreamBlock.DreamDashEnd);
 #pragma warning restore CS0618 // Type or member is obsolete
         CustomFeather.CustomFeatherState = self.StateMachine.AddState(CustomFeather.StarFlyUpdate, CustomFeather.CustomFeatherCoroutine, CustomFeather.CustomFeatherBegin, CustomFeather.CustomFeatherEnd);
         HeldRefill.HeldDashState = self.StateMachine.AddState(HeldRefill.HeldDashUpdate, HeldRefill.HeldDashRoutine, HeldRefill.HeldDashBegin, HeldRefill.HeldDashEnd);
-        WASDMovementState.ID = self.StateMachine.AddState(WASDMovementState.Update, null, WASDMovementState.Begin, WASDMovementState.End);
+        WASDMovementState.ID = self.StateMachine.AddState(WASDMovementState.Update, null!, WASDMovementState.Begin, WASDMovementState.End);
 
         ModIntegration.CelesteTASIntegration.RegisterState(YellowBoostState, "Yellow Boost");
         ModIntegration.CelesteTASIntegration.RegisterState(GenericCustomBooster.CustomBoostState, "Custom Boost");
@@ -208,20 +208,19 @@ public class FrostModule : EverestModule {
     public static int YellowBoostState;
 
     private void YellowBoostBegin(Entity e) {
-        Player player = e as Player;
+        Player player = (e as Player)!;
         player.CurrentBooster = null;
         Level level = player.SceneAs<Level>();
-        bool? flag;
+        bool? dontDrop;
         if (level == null) {
-            flag = null;
+            dontDrop = null;
         } else {
             MapMetaModeProperties meta = level.Session.MapData.GetMeta();
-            flag = meta?.TheoInBubble;
+            dontDrop = meta?.TheoInBubble;
         }
-        bool? flag2 = flag;
-        //GenericCustomBooster.GetBoosterThatIsBoostingPlayer(e).
+
         YellowBoosterOLD GetBoosterThatIsBoostingPlayer() {
-            return new DynData<Player>(e as Player).Get<YellowBoosterOLD>("fh.customyellowBooster");
+            return DynamicData.For(e as Player).Get<YellowBoosterOLD>("fh.customyellowBooster");
         }
         YellowBoosterOLD booster = GetBoosterThatIsBoostingPlayer();
         if (booster.DashRecovery == -1) {
@@ -231,14 +230,14 @@ public class FrostModule : EverestModule {
         }
 
         player.RefillStamina();
-        if (flag2.GetValueOrDefault()) {
+        if (dontDrop.GetValueOrDefault()) {
             return;
         }
         player.Drop();
     }
 
     private int YellowBoostUpdate(Entity e) {
-        Player player = e as Player;
+        Player player = (e as Player)!;
         Vector2 boostTarget = (Vector2) player_boostTarget.GetValue(player);
         Vector2 value = Input.Aim.Value * 3f;
         Vector2 vector = Calc.Approach(player.ExactPosition, boostTarget - player.Collider.Center + value, 80f * Engine.DeltaTime);
@@ -259,7 +258,7 @@ public class FrostModule : EverestModule {
     }
 
     private void YellowBoostEnd(Entity e) {
-        Player player = e as Player;
+        Player player = (e as Player)!;
         Vector2 boostTarget = (Vector2) player_boostTarget.GetValue(player);
         Vector2 vector = (boostTarget - player.Collider.Center).Floor();
         player.MoveToX(vector.X, null);
@@ -267,8 +266,8 @@ public class FrostModule : EverestModule {
     }
 
     private IEnumerator YellowBoostCoroutine(Entity e) {
-        Player player = e as Player;
-        YellowBoosterOLD booster = null;
+        Player player = (e as Player)!;
+        YellowBoosterOLD booster = null!;
         foreach (YellowBoosterOLD b in player.Scene.Tracker.GetEntities<YellowBoosterOLD>()) {
             if (b.StartedBoosting) {
                 booster = b;
@@ -388,9 +387,9 @@ public class FrostModule : EverestModule {
         }
 
         if (Engine.Scene is AssetReloadHelper) {
-            return AssetReloadHelper.ReturnToScene as Level;
+            return (AssetReloadHelper.ReturnToScene as Level)!;
         }
 
-        return null;
+        throw new Exception("GetCurrentLevel called outside of a level... how did you manage that?");
     }
 }

@@ -10,8 +10,8 @@ public class ForcedFastfallTrigger : Trigger {
     }
 
     public static bool IsForcedFastfall(Scene scene) {
-        foreach (var item in scene.Tracker.GetEntities<ForcedFastfallTrigger>()) {
-            if ((item as Trigger).Triggered)
+        foreach (ForcedFastfallTrigger item in scene.Tracker.GetEntities<ForcedFastfallTrigger>()) {
+            if (item.Triggered)
                 return true;
         }
 

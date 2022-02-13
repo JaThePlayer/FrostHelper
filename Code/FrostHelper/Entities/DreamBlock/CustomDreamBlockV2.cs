@@ -204,13 +204,13 @@
 
         private static void Player_DreamDashEnd(On.Celeste.Player.orig_DreamDashEnd orig, Player self) {
             orig(self);
-            new DynData<Player>(self).Set("lastDreamSpeed", 0f);
+            DynamicData.For(self).Set("lastDreamSpeed", 0f);
         }
 
         private static int Player_DreamDashUpdate(On.Celeste.Player.orig_DreamDashUpdate orig, Player self) {
             CustomDreamBlockV2 currentDreamBlock = self.CollideFirst<CustomDreamBlockV2>();
             if (currentDreamBlock != null) {
-                var dyn = new DynData<Player>(self);
+                var dyn = DynamicData.For(self);
 
                 if (!currentDreamBlock.ConserveSpeed) {
                     float lastDreamSpeed = dyn.Get<float>("lastDreamSpeed");

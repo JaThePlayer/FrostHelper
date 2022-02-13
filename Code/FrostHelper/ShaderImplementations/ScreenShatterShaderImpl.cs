@@ -95,7 +95,7 @@ public class ScreenShatterShaderController : ShaderController {
 
     public static RenderTarget2D ShatterMap;
 
-    public static void DrawVertices<T>(Matrix matrix, T[] vertices, int vertexCount, Effect effect = null, BlendState blendState = null, RasterizerState rasterizerState = null) where T : struct, IVertexType {
+    public static void DrawVertices<T>(Matrix matrix, T[] vertices, int vertexCount, Effect? effect = null, BlendState? blendState = null, RasterizerState? rasterizerState = null) where T : struct, IVertexType {
         effect ??= GFX.FxPrimitive;
         blendState ??= BlendState.AlphaBlend;
         rasterizerState ??= RasterizerState.CullNone;

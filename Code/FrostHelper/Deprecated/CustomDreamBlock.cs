@@ -320,24 +320,21 @@ public class CustomDreamBlock : Solid {
     }
 
     public void ActivateNoRoutine() {
-        bool flag = !playerHasDreamDash;
-        if (flag) {
+        if (!playerHasDreamDash) {
             playerHasDreamDash = true;
             Setup();
             Remove(occlude);
             whiteHeight = 0f;
             whiteFill = 0f;
-            bool flag2 = shaker != null;
-            if (flag2) {
+            if (shaker is not null) {
                 shaker.On = false;
             }
         }
     }
 
     public void FootstepRipple(Vector2 position) {
-        bool flag = playerHasDreamDash;
-        if (flag) {
-            DisplacementRenderer.Burst burst = (Scene as Level).Displacement.AddBurst(position, 0.5f, 0f, 40f, 1f, null, null);
+        if (playerHasDreamDash) {
+            DisplacementRenderer.Burst burst = (Scene as Level)!.Displacement.AddBurst(position, 0.5f, 0f, 40f, 1f, null, null);
             burst.WorldClipCollider = Collider;
             burst.WorldClipPadding = 1;
         }
@@ -393,16 +390,15 @@ public class CustomDreamBlock : Solid {
 
     // CUSTOM DREAM DASH STATE
     public static int DreamDashUpdate(Entity e) {
-        Player player = e as Player;
+        Player player = (e as Player)!;
         DynData<Player> data = new DynData<Player>(player);
         Input.Rumble(RumbleStrength.Light, RumbleLength.Medium);
         Vector2 position = player.Position;
         player.Speed = player.DashDir * data.Get<CustomDreamBlock>("customDreamBlock").DashSpeed;
         player.NaiveMove(player.Speed * Engine.DeltaTime);
         float dreamDashCanEndTimer = data.Get<float>("dreamDashCanEndTimer");
-        bool flag = dreamDashCanEndTimer > 0f;
-        if (flag) {
-            data.Set<float>("dreamDashCanEndTimer", dreamDashCanEndTimer -= Engine.DeltaTime);
+        if (dreamDashCanEndTimer > 0f) {
+            data.Set("dreamDashCanEndTimer", dreamDashCanEndTimer -= Engine.DeltaTime);
         }
         CustomDreamBlock dreamBlock = player.CollideFirst<CustomDreamBlock>();
         if (dreamBlock == null) {
@@ -482,7 +478,7 @@ public class CustomDreamBlock : Solid {
     }
 
     public static void DreamDashBegin(Entity e) {
-        Player player = e as Player;
+        Player player = (e as Player)!;
         DynData<Player> data = new DynData<Player>(player);
         SoundSource dreamSfxLoop = data.Get<SoundSource>("dreamSfxLoop");
         bool flag = dreamSfxLoop == null;
@@ -502,7 +498,7 @@ public class CustomDreamBlock : Solid {
     }
 
     public static void DreamDashEnd(Entity e) {
-        Player player = e as Player;
+        Player player = (e as Player)!;
         DynData<Player> data = new DynData<Player>(player);
         player.Depth = 0;
         if (!data.Get<bool>("dreamJump")) {
@@ -525,7 +521,7 @@ public class CustomDreamBlock : Solid {
                 data.Set("jumpGraceTimer", 0f);
             }
             dreamBlock.OnPlayerExit(player);
-            data.Set<CustomDreamBlock>("customDreamBlock", null);
+            data.Set<CustomDreamBlock>("customDreamBlock", null!);
         }
         player.Stop(data.Get<SoundSource>("dreamSfxLoop"));
         player.Play("event:/char/madeline/dreamblock_exit", null, 0f);
@@ -565,42 +561,38 @@ public class CustomDreamBlock : Solid {
 
     public static bool DreamDashCheck(Player player, Vector2 dir) {
         DynData<Player> data = new DynData<Player>(player);
-        bool flag = player.Inventory.DreamDash && player.DashAttacking && (dir.X == Math.Sign(player.DashDir.X) || dir.Y == Math.Sign(player.DashDir.Y));
-        if (flag) {
+        if (player.Inventory.DreamDash && player.DashAttacking && (dir.X == Math.Sign(player.DashDir.X) || dir.Y == Math.Sign(player.DashDir.Y))) {
             CustomDreamBlock dreamBlock = player.CollideFirst<CustomDreamBlock>(player.Position + dir);
-            bool flag2 = dreamBlock != null;
-            if (flag2) {
-                bool flag3 = player.CollideCheck<Solid, CustomDreamBlock>(player.Position + dir);
-                if (flag3) {
+            if (dreamBlock != null) {
+                if (player.CollideCheck<Solid, CustomDreamBlock>(player.Position + dir)) {
                     Vector2 value = new Vector2(Math.Abs(dir.Y), Math.Abs(dir.X));
-                    bool flag4 = dir.X != 0f;
-                    bool flag5;
-                    bool flag6;
-                    if (flag4) {
-                        flag5 = player.Speed.Y <= 0f;
-                        flag6 = player.Speed.Y >= 0f;
+                    bool leftCheck;
+                    bool rightCheck;
+                    if (dir.X != 0f) {
+                        leftCheck = player.Speed.Y <= 0f;
+                        rightCheck = player.Speed.Y >= 0f;
                     } else {
-                        flag5 = player.Speed.X <= 0f;
-                        flag6 = player.Speed.X >= 0f;
+                        leftCheck = player.Speed.X <= 0f;
+                        rightCheck = player.Speed.X >= 0f;
                     }
-                    if (flag5) {
+                    if (leftCheck) {
                         for (int i = -1; i >= -4; i--) {
                             Vector2 at = player.Position + dir + value * i;
                             bool flag8 = !player.CollideCheck<Solid, CustomDreamBlock>(at);
                             if (flag8) {
                                 player.Position += value * i;
-                                data.Set<CustomDreamBlock>("customDreamBlock", dreamBlock);
+                                data.Set("customDreamBlock", dreamBlock);
                                 return true;
                             }
                         }
                     }
-                    if (flag6) {
+                    if (rightCheck) {
                         for (int j = 1; j <= 4; j++) {
                             Vector2 at2 = player.Position + dir + value * j;
                             bool flag10 = !player.CollideCheck<Solid, CustomDreamBlock>(at2);
                             if (flag10) {
                                 player.Position += value * j;
-                                data.Set<CustomDreamBlock>("customDreamBlock", dreamBlock);
+                                data.Set("customDreamBlock", dreamBlock);
                                 return true;
                             }
                         }

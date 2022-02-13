@@ -13,6 +13,7 @@ jautils.createPlacementsPreserveOrder(entityGroupAttacher, "default", {
     { "types", "" },
     { "isBlacklist", false },
     { "specialHandling", true },
+    { "canBeLeader", true },
     { "attachGroup", 0, "FrostHelper.attachGroup" },
 })
 

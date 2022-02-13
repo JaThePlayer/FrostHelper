@@ -16,7 +16,7 @@ public static class IntegrationUtils {
             }
         }
 
-        module = null;
+        module = null!;
         return false;
     }
 }

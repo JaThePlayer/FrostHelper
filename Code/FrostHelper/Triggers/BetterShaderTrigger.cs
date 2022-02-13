@@ -38,7 +38,7 @@ public class BetterShaderTrigger : Trigger {
         orig(source, timer, seed, amplitude);
         foreach (var trigger in FrostModule.GetCurrentLevel().Tracker.GetEntities<BetterShaderTrigger>()) {
             if (trigger is BetterShaderTrigger s && s.Activated)
-                foreach (var item in (trigger as BetterShaderTrigger).Effects) {
+                foreach (var item in s.Effects) {
                     Apply(source, source, ShaderHelperIntegration.GetEffect(item));
 
                 }

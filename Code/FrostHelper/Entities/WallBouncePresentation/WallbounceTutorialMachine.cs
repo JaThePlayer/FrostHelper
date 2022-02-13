@@ -43,7 +43,7 @@ namespace FrostHelper.Entities.WallBouncePresentation {
         private static void WaveDashTutorialMachine_OnInteract(On.Celeste.WaveDashTutorialMachine.orig_OnInteract orig, WaveDashTutorialMachine self, Player player) {
             if (self is WallbounceTutorialMachine wbMachine) {
                 if (!wbMachine.inCutscene) {
-                    Level level = self.Scene as Level;
+                    Level level = (self.Scene as Level)!;
                     if (wbMachine.usingSfx != null) {
                         Audio.SetParameter(wbMachine.usingSfx, "end", 1f);
                         Audio.Stop(wbMachine.usingSfx, true);
@@ -61,7 +61,7 @@ namespace FrostHelper.Entities.WallBouncePresentation {
         private static void WaveDashTutorialMachine_SkipInteraction(On.Celeste.WaveDashTutorialMachine.orig_SkipInteraction orig, WaveDashTutorialMachine self, Level level) {
             if (self is WallbounceTutorialMachine wbMachine) {
                 wbMachine.presentation?.RemoveSelf();
-                wbMachine.presentation = null;
+                wbMachine.presentation = null!;
                 orig(self, level);
             } else {
                 orig(self, level);
@@ -71,7 +71,7 @@ namespace FrostHelper.Entities.WallBouncePresentation {
         private WallbouncePresentation presentation;
 
         private IEnumerator InteractRoutine(Player player) {
-            Level level = Scene as Level;
+            Level level = (Scene as Level)!;
             player.StateMachine.State = 11;
             player.StateMachine.Locked = true;
             yield return CutsceneEntity.CameraTo(new Vector2(X, Y - 30f) - new Vector2(160f, 90f), 0.25f, Ease.CubeOut, 0f);

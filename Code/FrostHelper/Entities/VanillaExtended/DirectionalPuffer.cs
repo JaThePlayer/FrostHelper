@@ -146,7 +146,7 @@ public class DirectionalPuffer : Puffer {
 
         // find the branch that skips over Puffer.Explode
         if (cursor.TryGotoNext(MoveType.After, instr => instr.OpCode.Code == Code.Ble_Un_S)) {
-            ILLabel label = cursor.Prev.Operand as ILLabel;
+            ILLabel label = (cursor.Prev.Operand as ILLabel)!;
 
             // emit new branch
             cursor.Emit(OpCodes.Ldarg_0); // this

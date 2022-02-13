@@ -2,7 +2,7 @@
 
 public static class EaseHelper {
     /// <returns>An easer of the name specified by <paramref name="name"/>, defaulting to <paramref name="defaultValue"/> or <see cref="Ease.Linear"/> if <paramref name="defaultValue"/> is null </returns>
-    public static Ease.Easer GetEase(string name, Ease.Easer defaultValue = null) {
+    public static Ease.Easer GetEase(string name, Ease.Easer? defaultValue = null) {
         foreach (var propertyInfo in easeProps) {
             if (name.Equals(propertyInfo.Name, StringComparison.OrdinalIgnoreCase)) {
                 return (Ease.Easer) propertyInfo.GetValue(default(Ease));

@@ -14,7 +14,7 @@ public class ColoredLightbeam : LightBeam {
     public override void Render() {
         Vector2 oldPosition = Position;
         if (ParallaxAmount != 0f) {
-            Vector2 camera = (Scene as Level).Camera.Position + new Vector2(160f, 90f);
+            Vector2 camera = (Scene as Level)!.Camera.Position + new Vector2(160f, 90f);
             Position += (Position - camera) * ParallaxAmount;
         }
         base.Render();

@@ -10,6 +10,8 @@ local xnaColors = require("consts.xna_colors")
 
 local jautils = {}
 
+jautils.easings = require("mods").requireFromPlugin("libraries.easings")
+
 --[[
     UTILS
 ]]
@@ -37,10 +39,22 @@ jautils.fieldTypeOverrides = {
     color = {
         fieldType = "color",
         allowXNAColors = true,
-    }
+    },
+    editableDropdown = function(data)
+        return {
+            options = data,
+            editable = true
+        }
+    end,
+    dropdown = function(data)
+        return {
+            options = data,
+            editable = false
+        }
+    end,
 }
 
-function jautils.createPlacementsPreserveOrder(handler, placementName, ...)
+function jautils.createPlacementsPreserveOrder(handler, placementName, placementData, appendSize)
     handler.placements = {{
         name = placementName,
         data = {}
@@ -48,19 +62,42 @@ function jautils.createPlacementsPreserveOrder(handler, placementName, ...)
     local fieldOrder = { "x", "y" }
     local fieldInformation = {}
     local hasAnyFieldInformation = false
-    for _,v in ipairs(...) do
-        local fieldName, defaultValue, fieldType = v[1], v[2], v[3]
+
+    if appendSize then
+        table.insert(placementData, 1, { "height", 16 })
+        table.insert(placementData, 1, { "width", 16 })
+    end
+
+    for _,v in ipairs(placementData) do
+        local fieldName, defaultValue, fieldType, fieldData = v[1], v[2], v[3], v[4]
 
         table.insert(fieldOrder, fieldName)
         handler.placements[1].data[fieldName] = defaultValue
         if fieldType then
-            if jautils.fieldTypeOverrides[fieldType] then
+            local override = jautils.fieldTypeOverrides[fieldType]
+            if override then
                 -- use an override from jaUtils if available
                 -- used by color to automatically support XNA color names
-                fieldInformation[fieldName] = jautils.fieldTypeOverrides[fieldType]
+                local typ = type(override)
+                if typ == "function" then
+                    fieldInformation[fieldName] = override(fieldData)
+                else
+                    fieldInformation[fieldName] = override
+                end
             else
                 -- otherwise just use it normally
-                fieldInformation[fieldName] = { fieldType = fieldType }
+                local typ = type(fieldType)
+                if typ == "table" then
+                    if fieldType[fieldType] then
+                        -- we have a full field definition here, don't do anything about it
+                        fieldInformation[fieldName] = fieldType
+                    else
+                        -- didn't define a type, treat it as a dropdown
+                        fieldInformation[fieldName] = jautils.fieldTypeOverrides.dropdown(fieldType)
+                    end
+                else
+                    fieldInformation[fieldName] = { fieldType = fieldType }
+                end
             end
 
             hasAnyFieldInformation = true

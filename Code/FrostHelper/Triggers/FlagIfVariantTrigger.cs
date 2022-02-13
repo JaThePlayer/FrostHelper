@@ -55,6 +55,6 @@ public class FlagIfVariantTrigger : Trigger {
 
     public override void OnStay(Player player) {
         base.OnStay(player);
-        (Scene as Level).Session.SetFlag(Flag, Inverted != VariantCheckers[Variant](Value));
+        (Scene as Level)!.Session.SetFlag(Flag, Inverted != VariantCheckers[Variant](Value));
     }
 }

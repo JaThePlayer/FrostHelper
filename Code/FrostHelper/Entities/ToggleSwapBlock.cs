@@ -9,6 +9,8 @@ namespace FrostHelper {
         bool renderBG = false;
 
         public string MoveSFX, MoveEndSFX;
+        public bool EmitParticles;
+        public Color? ParticleColor;
 
         public ToggleSwapBlock(EntityData data, Vector2 offset) : base(data.Position + offset, data.Width, data.Height, true) {
             MoveSFX = data.Attr("moveSFX", "event:/game/05_mirror_temple/swapblock_move");
@@ -61,6 +63,13 @@ namespace FrostHelper {
             Add(middleRed);
             Add(new LightOcclude(0.2f));
             Depth = -9999;
+
+            ParticleType = new ParticleType(SwapBlock.P_Move) {
+                Color = Calc.HexToColor(data.Attr("particleColor1", "fbf236")),
+                Color2 = Calc.HexToColor(data.Attr("particleColor2", "6abe30"))
+            };
+
+            EmitParticles = data.Bool("emitParticles", true);
         }
 
         public override void Awake(Scene scene) {
@@ -88,7 +97,7 @@ namespace FrostHelper {
             moveSfx = Audio.Play(MoveSFX, Center);
             target = (target == 1) ? 0 : 1;
             returnTimer = 0.8f;
-            burst = (Scene as Level).Displacement.AddBurst(Center, 0.2f, 0f, 16f, 1f, null, null);
+            burst = (Scene as Level)!.Displacement.AddBurst(Center, 0.2f, 0f, 16f, 1f, null, null);
             if (lerp >= 0.2f) {
                 speed = maxForwardSpeed;
             } else {
@@ -132,8 +141,11 @@ namespace FrostHelper {
                 if (lerp < num) {
                     vector *= -1f;
                 }
-                if (target == 1 && Scene.OnInterval(0.02f)) {
-                    MoveParticles(end - start);
+                if (/*target == 1 &&*/ Scene.OnInterval(0.02f)) {
+                    MoveParticles(target switch { 
+                        1 => end - start,
+                        _ => start - end,
+                    });
                 }
                 MoveTo(Vector2.Lerp(start, end, lerp), vector);
                 if (position != Position) {
@@ -157,36 +169,41 @@ namespace FrostHelper {
         }
 
         private void MoveParticles(Vector2 normal) {
+            if (!EmitParticles) {
+                return;
+            }
+
             Vector2 position;
-            Vector2 vector;
+            Vector2 positionRange;
             float direction;
-            float num;
+            float newParticles;
             if (normal.X > 0f) {
                 position = CenterLeft;
-                vector = Vector2.UnitY * (Height - 6f);
+                positionRange = Vector2.UnitY * (Height - 6f);
                 direction = 3.14159274f;
-                num = Math.Max(2f, Height / 14f);
+                newParticles = Math.Max(2f, Height / 14f);
             } else if (normal.X < 0f) {
                 position = CenterRight;
-                vector = Vector2.UnitY * (Height - 6f);
+                positionRange = Vector2.UnitY * (Height - 6f);
                 direction = 0f;
-                num = Math.Max(2f, Height / 14f);
+                newParticles = Math.Max(2f, Height / 14f);
             } else if (normal.Y > 0f) {
                 position = TopCenter;
-                vector = Vector2.UnitX * (Width - 6f);
+                positionRange = Vector2.UnitX * (Width - 6f);
                 direction = -1.57079637f;
-                num = Math.Max(2f, Width / 14f);
+                newParticles = Math.Max(2f, Width / 14f);
             } else {
                 position = BottomCenter;
-                vector = Vector2.UnitX * (Width - 6f);
+                positionRange = Vector2.UnitX * (Width - 6f);
                 direction = 1.57079637f;
-                num = Math.Max(2f, Width / 14f);
+                newParticles = Math.Max(2f, Width / 14f);
             }
-            particlesRemainder += num;
-            int num2 = (int) particlesRemainder;
-            particlesRemainder -= num2;
-            vector *= 0.5f;
-            SceneAs<Level>().Particles.Emit(SwapBlock.P_Move, num2, position, vector, direction);
+            particlesRemainder += newParticles;
+            int particleAmt = (int) particlesRemainder;
+            particlesRemainder -= particleAmt;
+            positionRange *= 0.5f;
+
+            SceneAs<Level>().Particles.Emit(ParticleType, particleAmt, position, positionRange, direction);
         }
 
         public override void Render() {
@@ -212,7 +229,7 @@ namespace FrostHelper {
             }
         }
 
-        private void DrawBlockStyle(Vector2 pos, float width, float height, MTexture[,] ninSlice, Sprite middle, Color color) {
+        private void DrawBlockStyle(Vector2 pos, float width, float height, MTexture[,] ninSlice, Sprite? middle, Color color) {
             int num = (int) (width / 8f);
             int num2 = (int) (height / 8f);
             ninSlice[0, 0].Draw(pos + new Vector2(0f, 0f), Vector2.Zero, color);
@@ -239,7 +256,7 @@ namespace FrostHelper {
             }
         }
 
-        public static ParticleType P_Move;
+        public ParticleType ParticleType;
 
         private const float ReturnTime = 0.8f;
 
@@ -277,7 +294,7 @@ namespace FrostHelper {
 
         private Sprite middleRed;
 
-        private ToggleSwapBlock.PathRenderer path;
+        private PathRenderer path;
 
         private EventInstance moveSfx;
 
