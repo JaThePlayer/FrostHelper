@@ -367,6 +367,13 @@ entities.FrostHelper/JumpStar.attributes.description.mode=The mode of this Star.
 entities.FrostHelper/LineIndicator.placements.name.default=Line Indicator
 entities.FrostHelper/LineIndicator.attributes.description.color=The color of this line.
 
+entities.FrostHelper/StaticDoor.placements.name.default=Static Door
+entities.FrostHelper/StaticDoor.placements.tooltip.default=A door that doesn't get moved by solids and doesn't get disabled when inside a solid
+entities.FrostHelper/StaticDoor.attributes.description.type=Changes the door type. If this is not 'wood', then the game grabs the sprite from the Sprites.xml entry of name '{type}door'\nFor example, for type = 'metal', it will use the 'metaldoor' Sprites.xml entry.
+entities.FrostHelper/StaticDoor.attributes.description.openSfx=Overrides the sfx played when this door opens.
+entities.FrostHelper/StaticDoor.attributes.description.closeSfx=Overrides the sfx played when this door closes.
+entities.FrostHelper/StaticDoor.attributes.description.lightOccludeAlpha=The alpha value of the Light Occlude. Values below 1 mean that light will partially pass through the door even when it's closed.
+
 # -- Mod Names --
 # mods.modName.*
 mods.FrostHelper.name=Frost Helper
@@ -423,6 +430,8 @@ triggers.FrostHelper/WASDMovementTrigger.attributes.description.texture=Path to 
 triggers.FrostHelper/CustomRisingLavaStartHeightTrigger.placements.name.normal=Custom Rising Lava Start Height
 
 triggers.FrostHelper/DoorDisableTrigger.placements.name.default=Disable Door
+
+triggers.FrostHelper/FlagIfVisibleTrigger.placements.name.default=Flag If Visible
 
 # other
 ui.fh.attachGroup.tooltip=Assigns this entity a new group that's not yet used in this room

@@ -22,6 +22,18 @@ public static class Extensions {
         return ColorHelper.GetColors(data.Attr(key, "")) ?? def;
     }
 
+    /// <summary>
+    /// Calls data.Attr, but uses the default value if the attribute is null or an empty string
+    /// </summary>
+    public static string AttrNullable(this EntityData data, string key, string def) { 
+        var attr = data.Attr(key, null);
+        if (string.IsNullOrEmpty(attr)) {
+            return def;
+        }
+        return attr;
+    }
+
+
     public static Vector2 GetVec2(this EntityData data, string key, Vector2 defaultValue, bool treatFloatAsXOnly = false) {
         string val = data.Attr(key, null);
         if (val is null) {

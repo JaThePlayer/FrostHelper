@@ -41,8 +41,12 @@ public static class ShaderHelperIntegration {
     private static EverestModule module;
 
     public static Effect GetEffect(string id) {
-        if (Loaded)
-            return (module_FX.GetValue(module) as Dictionary<string, Effect>)![id] ?? throw new MissingShaderException(id);
+        if (Loaded) {
+            if ((module_FX.GetValue(module) as Dictionary<string, Effect>)!.TryGetValue(id, out var eff)) {
+                return eff;
+            }
+            throw new MissingShaderException(id);
+        }
 
         throw new NotLoadedException();
     }
