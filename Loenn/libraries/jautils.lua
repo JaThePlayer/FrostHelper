@@ -155,7 +155,7 @@ function jautils.getBorder(sprite, color)
         local texture = drawableSpriteStruct.fromMeta(sprite.meta, sprite)
         texture.x += xOffset
         texture.y += yOffset
-        texture.depth = 2
+        texture.depth = 2 -- fix preview depth
         texture.color = color and utils.getColor(color) or {0, 0, 0, 1}
 
         return texture

@@ -72,8 +72,6 @@ public class LightningColorTrigger : Trigger {
         orig(self, scene);
         //if (scene is Level)
         {
-            Console.WriteLine(FrostModule.Session.LightningColorA);
-            Console.WriteLine(FrostModule.Session.LightningColorB);
             Color[] colors = getColors();
             if (FrostModule.Session.LightningColorA != null) {
                 ChangeLightningColor(self, colors);

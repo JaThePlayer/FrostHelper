@@ -140,11 +140,14 @@ public static class ShaderHelperIntegration {
         }
     }
 
-    public static void ApplyParametersFrom(this Effect shader, Dictionary<string, object> parameters) {
+    public static void ApplyParametersFrom(this Effect shader, Dictionary<string, object> parameters, bool throwOnMissingProp = true) {
         foreach (var item in parameters) {
             var prop = shader.Parameters[item.Key];
             if (prop is null) {
-                throw new Exception($"Shader doesn't have a {item.Key} property!");
+                if (throwOnMissingProp)
+                    throw new Exception($"Shader doesn't have a {item.Key} property!");
+                else
+                    continue;
             }
 
 

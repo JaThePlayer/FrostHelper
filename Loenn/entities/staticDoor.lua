@@ -18,7 +18,8 @@ jautils.createPlacementsPreserveOrder(staticDoor, "default", {
     { "type", "wood", "editableDropdown", textureOptions },
     { "openSfx", "" },
     { "closeSfx", "" },
-    { "lightOccludeAlpha", 1.0 }
+    { "lightOccludeAlpha", 1.0 },
+    { "solidIfDisabled", false }
 })
 
 

@@ -79,7 +79,6 @@ namespace FrostHelper.Entities.WallBouncePresentation {
             usingSfx = Audio.Play("event:/state/cafe_computer_active", player.Position);
             Audio.Play("event:/new_content/game/10_farewell/cafe_computer_on", player.Position);
             Audio.Play("event:/new_content/game/10_farewell/cafe_computer_startupsfx", player.Position);
-            Console.WriteLine("WallbouncePresentation");
             presentation = new WallbouncePresentation(usingSfx, DialogKeyPrefix, GraphicsKeyPrefix, PlaybackKeyPrefix);
             Scene.Add(presentation);
             while (presentation.Viewing) {

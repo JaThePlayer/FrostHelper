@@ -35,7 +35,6 @@ namespace FrostHelper {
         static void modFeatherState(ILContext il) {
             ILCursor cursor = new ILCursor(il);
             while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdcI4(Player.StStarFly) && instr.Previous.MatchCallvirt<StateMachine>("get_State"))) {
-                Console.WriteLine($"FEATHER MOD\n{il.Method.GetID()}\n{cursor.Index}\n");
                 cursor.Emit(OpCodes.Ldarg_0); // this
                 cursor.EmitDelegate(FrostModule.GetFeatherState);
             }

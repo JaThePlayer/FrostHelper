@@ -8,11 +8,12 @@ script.tooltip = "Converts vanilla doors to Frost Helper Static Doors"
 script.parameters = {
     openSfx = "",
     closeSfx = "",
-    lightOccludeAlpha = 1.0
+    lightOccludeAlpha = 1.0,
+    solidIfDisabled = false,
 }
 
 script.fieldOrder = {
-    "openSfx", "closeSfx", "lightOccludeAlpha"
+    "openSfx", "closeSfx", "lightOccludeAlpha", "solidIfDisabled"
 }
 
 function script.run(room, args)
@@ -22,6 +23,7 @@ function script.run(room, args)
             entity.openSfx = args.openSfx
             entity.closeSfx = args.closeSfx
             entity.lightOccludeAlpha = args.lightOccludeAlpha
+            entity.solidIfDisabled = args.solidIfDisabled
             --print(require("utils").serialize(entity))
         end
     end

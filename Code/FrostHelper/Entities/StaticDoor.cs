@@ -11,6 +11,7 @@ public class StaticDoor : Entity {
     public string CloseSfx;
     public LightOcclude Occlude;
     public bool Disabled;
+    public bool SolidIfDisabled;
 
     public StaticDoor(EntityData data, Vector2 offset) : base(data.Position + offset) {
         Depth = 8998;
@@ -27,6 +28,7 @@ public class StaticDoor : Entity {
 
         OpenSfx = data.AttrNullable("openSfx", OpenSfx);
         CloseSfx = data.AttrNullable("closeSfx", CloseSfx);
+        SolidIfDisabled = data.Bool("solidIfDisabled", false);
 
         Sprite.Play("idle", false, false);
         Collider = new Hitbox(12f, 22f, -6f, -23f);
@@ -37,6 +39,20 @@ public class StaticDoor : Entity {
     private void HitPlayer(Player player) {
         if (!Disabled) {
             Open(player.X);
+        }
+    }
+
+    public void Disable() {
+        if (!Disabled) {
+            Disabled = true;
+
+            if (SolidIfDisabled) {
+                var solid = new Solid(Position - new Vector2(1f, 24f), 3, 24, false) { 
+                    new ClimbBlocker(true) 
+                };
+                Scene.Add(solid);
+            }
+
         }
     }
 

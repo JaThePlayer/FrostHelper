@@ -16,13 +16,13 @@ public class DoorDisableTrigger : Trigger {
             return;
         }
         if (door is null) {
-            staticDoor.Disabled = true;
+            staticDoor.Disable();
             return;
         }
 
         // Disable the closest one
         if (Vector2.DistanceSquared(door.Position, pPos) > Vector2.DistanceSquared(staticDoor.Position, pPos)) {
-            staticDoor.Disabled = true;
+            staticDoor.Disable();
         } else {
             door.SetValue("disabled", true);
         }

@@ -171,7 +171,9 @@ namespace FrostHelper {
         }
         
         private static Effect GetMaskShader(Dictionary<string, object> shaderParameters) {
-            return ShaderHelperIntegration.GetEffect(shaderParameters["maskShader"] as string ?? throw new Exception("Mask shaders need a 'maskShader' parameter!"));
+            var shader = ShaderHelperIntegration.GetEffect(shaderParameters["maskShader"] as string ?? throw new Exception("Mask shaders need a 'maskShader' parameter!"));
+            shader.ApplyParametersFrom(shaderParameters, false);
+            return shader;
         }
 
 

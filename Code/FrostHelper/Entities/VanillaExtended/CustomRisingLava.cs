@@ -82,24 +82,25 @@
                 iceMode = !iceMode;
             loopSfx.Play("event:/game/09_core/rising_threat", "room_state", iceMode ? 1 : 0);
             loopSfx.Position = new Vector2(Width / 2f, 0f);
+            lerp = iceMode ? 1 : 0;
+            UpdateColors();
         }
 
         public override void Awake(Scene scene) {
             base.Awake(scene);
-            Player entity = Scene.Tracker.GetEntity<Player>();
+            Player player = Scene.Tracker.GetEntity<Player>();
 
             CustomRisingLavaStartHeightTrigger trigger;
-            if ((trigger = entity.CollideFirst<CustomRisingLavaStartHeightTrigger>()) != null) {
+            if ((trigger = player.CollideFirst<CustomRisingLavaStartHeightTrigger>()) != null) {
                 Y = trigger.Node.Y;
             }
 
             if (intro) {
                 waiting = true;
                 Visible = true;
-            } else {
-                if (entity != null && entity.JustRespawned) {
-                    waiting = true;
-                }
+                UpdateColors();
+            } else if (player != null && player.JustRespawned) {
+                waiting = true;
             }
         }
 
@@ -162,6 +163,10 @@
                     Y += Speed * ySpeed * Engine.DeltaTime;
                 }
             }
+            UpdateColors();
+        }
+
+        private void UpdateColors() {
             lerp = Calc.Approach(lerp, iceMode ? 1 : 0, Engine.DeltaTime * 4f);
             bottomRect.SurfaceColor = Color.Lerp(Hot[0], Cold[0], lerp);
             bottomRect.EdgeColor = Color.Lerp(Hot[1], Cold[1], lerp);
@@ -171,19 +176,9 @@
             bottomRect.Fade = iceMode ? 128 : 32;
         }
 
-        Color[] Hot = new Color[]
-        {
-            Calc.HexToColor("ff8933"),
-            Calc.HexToColor("f25e29"),
-            Calc.HexToColor("d01c01")
-        };
+        Color[] Hot;
 
-        Color[] Cold = new Color[]
-        {
-            Calc.HexToColor("33ffe7"),
-            Calc.HexToColor("4ca2eb"),
-            Calc.HexToColor("0151d0")
-        };
+        Color[] Cold;
 
         private float Speed = -30f;
 
