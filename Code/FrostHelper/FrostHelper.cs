@@ -140,8 +140,10 @@ public class FrostModule : EverestModule {
         if (cursor.TryGotoNext(MoveType.After, instr => instr.MatchStfld<Player>("calledDashEvents"))) {
             cursor.Emit(OpCodes.Ldarg_0);
             cursor.EmitDelegate<Func<Player, bool>>((Player self) => {
-                if (GenericCustomBooster.GetBoosterThatIsBoostingPlayer(self) != null) {
+                if (GenericCustomBooster.GetBoosterThatIsBoostingPlayer(self) is { BoostingPlayer: true }) {
                     player_calledDashEvents.SetValue(self, false);
+                    // new
+                    new DynData<Player>(self).Set<GenericCustomBooster>("fh.customBooster", null!);
                     return false;
                 }
 
@@ -159,7 +161,7 @@ public class FrostModule : EverestModule {
                     }
                 }
                 foreach (GenericCustomBooster b in self.Scene.Tracker.GetEntities<GenericCustomBooster>()) {
-                    if (b.StartedBoosting && b.CollideCheck(self)) {
+                    if (b.StartedBoosting/* && b.CollideCheck(self)*/) {
                         b.PlayerBoosted(self, self.DashDir);
                         return false;
                     }
@@ -372,6 +374,22 @@ public class FrostModule : EverestModule {
         return parsed;
     }
 
+    /// <summary>
+    /// Returns a list of types from a comma-separated string of types
+    /// </summary>
+    public static List<Type> GetTypesAsList(string typeString) {
+        if (typeString == string.Empty) {
+            return new();
+        }
+
+        string[] split = typeString.Trim().Split(',');
+        var parsed = new List<Type>(split.Length);
+        for (int i = 0; i < split.Length; i++) {
+            parsed[i] = TypeHelper.EntityNameToType(split[i].Trim());
+        }
+        return parsed;
+    }
+
     public static char[] GetCharArrayFromCommaSeparatedList(string list) {
         string[] split = list.Trim().Split(',');
         char[] ret = new char[split.Length];
@@ -382,14 +400,11 @@ public class FrostModule : EverestModule {
     }
 
     public static Level GetCurrentLevel() {
-        if (Engine.Scene is Level lvl) {
-            return lvl;
-        }
-
-        if (Engine.Scene is AssetReloadHelper) {
-            return (AssetReloadHelper.ReturnToScene as Level)!;
-        }
-
-        throw new Exception("GetCurrentLevel called outside of a level... how did you manage that?");
+        return Engine.Scene switch {
+            Level level => level,
+            LevelLoader loader => loader.Level,
+            AssetReloadHelper => (Level)AssetReloadHelper.ReturnToScene,
+            _ => throw new Exception("GetCurrentLevel called outside of a level... how did you manage that?")
+        };
     }
 }

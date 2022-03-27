@@ -267,7 +267,7 @@ namespace FrostHelper.Entities.Boosters {
             }
 
             if (player != null && GetBoosterThatIsBoostingPlayer(player) == this && BoostTime > 0f) {
-                sprite.Position = player.Center + Booster.playerOffset - Position;
+                //sprite.Position = player.Center + Booster.playerOffset - Position;
 
                 // if the player is far away, render the outline because clearly the bubble got moved
                 if (Vector2.DistanceSquared(Position, player.Center) > 16f * 16f)
@@ -530,7 +530,7 @@ namespace FrostHelper.Entities.Boosters {
             player.MoveToY(vector.Y, null);
 
             GetBoosterThatIsBoostingPlayer(player).OnBoostEnd(player);
-            new DynData<Player>(player).Set<GenericCustomBooster>("fh.customBooster", null!);
+            //new DynData<Player>(player).Set<GenericCustomBooster>("fh.customBooster", null!);
 
 
         }

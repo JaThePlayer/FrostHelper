@@ -20,10 +20,10 @@ public class LightningColorTrigger : Trigger {
         IL.Celeste.LightningRenderer.OnBeforeRender -= LightningRenderer_OnBeforeRender;
     }
 
-    public static string OrDefault(string value, string def) {
+    public static string OrDefault(string? value, string def) {
         if (string.IsNullOrWhiteSpace(value))
             return def;
-        return value;
+        return value!;
     }
 
     public static Color OrDefault(Color? value, Color def) {
@@ -38,52 +38,78 @@ public class LightningColorTrigger : Trigger {
             cursor.Emit(OpCodes.Pop);
             cursor.Emit(OpCodes.Ldarg_0); // this
             cursor.EmitDelegate<Func<LightningRenderer, string>>((LightningRenderer self) => {
-                LightningColorTrigger trigger;
-                if ((trigger = self.Scene.Tracker.GetEntity<LightningColorTrigger>()) != null && trigger.PlayerIsInside) {
-                    return trigger.FillColor;
-                } else {
-                    return OrDefault(FrostModule.Session.LightningFillColor, "f7b262");
-                }
+                return GetFillColorString();
             });
         }
         while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdcR4(0.1f))) {
             cursor.Emit(OpCodes.Pop);
             cursor.Emit(OpCodes.Ldarg_0); // this
             cursor.EmitDelegate<Func<LightningRenderer, float>>((LightningRenderer self) => {
-                LightningColorTrigger trigger;
-                if ((trigger = self.Scene.Tracker.GetEntity<LightningColorTrigger>()) != null && trigger.PlayerIsInside) {
-                    return trigger.FillColorMultiplier;
-                } else {
-                    return FrostModule.Session.LightningFillColorMultiplier;
-                }
+                return GetLightningFillColorMultiplier();
             });
         }
     }
 
-    private static Color[] getColors() {
-        return new Color[2]
-            {
-                    ColorHelper.GetColor(OrDefault(FrostModule.Session.LightningColorA, "fcf579")),
-                    ColorHelper.GetColor(OrDefault(FrostModule.Session.LightningColorB, "8cf7e2")),
-            };
+    internal static LightningColorTrigger? GetFirstEnteredTrigger() {
+        foreach (LightningColorTrigger trigger in Engine.Scene.Tracker.GetEntities<LightningColorTrigger>()) {
+            if (trigger.PlayerIsInside) {
+                return trigger;
+            }
+        }
+
+        return null;
+    }
+
+    internal static string GetFillColorString() {
+        LightningColorTrigger? trigger = GetFirstEnteredTrigger();
+
+        return trigger?.FillColor ?? OrDefault(FrostModule.Session.LightningFillColor, "f7b262");
+        /*
+        if () {
+            return trigger.FillColor;
+        } else {
+            return OrDefault(FrostModule.Session.LightningFillColor, "f7b262");
+        }*/
+    }
+
+    internal static float GetLightningFillColorMultiplier() {
+        /*
+        LightningColorTrigger trigger;
+        if ((trigger = Engine.Scene.Tracker.GetEntity<LightningColorTrigger>()) != null && trigger.PlayerIsInside) {
+            return trigger.FillColorMultiplier;
+        } else {
+            return FrostModule.Session.LightningFillColorMultiplier;
+        }*/
+        return GetFirstEnteredTrigger()?.FillColorMultiplier ?? FrostModule.Session.LightningFillColorMultiplier;
+    }
+
+    internal static void GetColors(out Color colorA, out Color colorB) {
+        colorA = ColorHelper.GetColor(OrDefault(FrostModule.Session?.LightningColorA, "fcf579"));
+        colorB = ColorHelper.GetColor(OrDefault(FrostModule.Session?.LightningColorB, "8cf7e2"));
+    }
+
+    internal static void GetColors(out Color colorA, out Color colorB, out Color fillColor, out float fillColorMultiplier) {
+        GetColors(out colorA, out colorB);
+        fillColor = ColorHelper.GetColor(GetFillColorString());
+        fillColorMultiplier = GetLightningFillColorMultiplier();
     }
 
     private static void LightningRenderer_Awake(On.Celeste.LightningRenderer.orig_Awake orig, LightningRenderer self, Scene scene) {
         orig(self, scene);
         //if (scene is Level)
         {
-            Color[] colors = getColors();
+            GetColors(out var a, out var b);
             if (FrostModule.Session.LightningColorA != null) {
-                ChangeLightningColor(self, colors);
+                ChangeLightningColor(self, a, b);
             }
         }
     }
 
     private static void LightningRenderer_Reset(On.Celeste.LightningRenderer.orig_Reset orig, LightningRenderer self) {
         if (self.Scene is Level) {
-            Color[] colors = getColors();
+            GetColors(out var a, out var b);
             if (FrostModule.Session.LightningColorA != null) {
-                ChangeLightningColor(self, colors);
+                ChangeLightningColor(self, a, b);
             }
         }
         orig(self);
@@ -117,8 +143,7 @@ public class LightningColorTrigger : Trigger {
 
     public override void OnEnter(Player player) {
         base.OnEnter(player);
-        LightningRenderer r = player.Scene.Tracker.GetEntity<LightningRenderer>();
-        ChangeLightningColor(r, electricityColors);
+        ChangeLightningColor(electricityColors);
         if (persistent) {
             FrostModule.Session.LightningColorA = ColorHelper.ColorToHex(electricityColors[0]);
             FrostModule.Session.LightningColorB = ColorHelper.ColorToHex(electricityColors[1]);
@@ -127,16 +152,42 @@ public class LightningColorTrigger : Trigger {
         }
     }
 
-    public static void ChangeLightningColor(LightningRenderer renderer, Color[] colors) {
+    public static void ChangeLightningColor(LightningRenderer? renderer, Color colorA, Color colorB) {
+        if (renderer is null)
+            return;
+
+        ChangeLightningColor(renderer, new[] { colorA, colorB });
+    }
+
+    public static void ChangeLightningColor(Color colorA, Color colorB) {
+        ChangeLightningColor(new[] { colorA, colorB });
+    }
+
+    public static void ChangeLightningColor(Color[] colors) {
+        ChangeLightningColor(Engine.Scene.Tracker.GetEntity<LightningRenderer>(), colors);
+
+        if (Engine.Scene.Tracker.GetEntity<CustomLightningRenderer>() is { } customRenderer) {
+            customRenderer.ElectricityColors = colors;
+            var bolts = customRenderer.Bolts;
+            for (int i = 0; i < bolts.Count; i++) {
+                bolts[i].Color = colors[i % 2];
+            }
+        }
+    }
+
+    public static void ChangeLightningColor(LightningRenderer? renderer, Color[] colors) {
+        if (renderer is null)
+            return;
+
         LightningRenderer_electricityColors.SetValue(renderer, colors);
         var bolts = LightningRenderer_bolts.GetValue(renderer);
-        List<object> objs = ((IEnumerable<object>) bolts).ToList();
-        for (int i = 0; i < objs.Count; i++) {
-            object obj = objs[i];
+        var i = 0;
+        foreach (var bolt in (IEnumerable<object>) bolts) {
             if (Bolt_color == null) {
-                Bolt_color = obj.GetType().GetField("color", BindingFlags.Instance | BindingFlags.NonPublic);
+                Bolt_color = bolt.GetType().GetField("color", BindingFlags.Instance | BindingFlags.NonPublic);
             }
-            Bolt_color.SetValue(obj, colors[i % 2]);
+            Bolt_color.SetValue(bolt, colors[i % 2]);
+            i++;
         }
     }
 }

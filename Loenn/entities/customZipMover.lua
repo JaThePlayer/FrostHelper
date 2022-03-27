@@ -70,19 +70,26 @@ local function addNodeSprites(sprites, entity, centerX, centerY, centerNodeX, ce
     table.insert(sprites, nodeCogSprite)
 end
 
-local function addBlockSprites(sprites, entity, x, y, width, height)
-    local rectangle = drawableRectangle.fromRectangle("fill", x + 2, y + 2, width - 4, height - 4, {0,0,0})
+local function addBlockSprites(sprites, entity, x, y, width, height, alpha)
+    alpha = alpha or 1
+    local tint = {1, 1, 1, alpha}
+    local rectangle = drawableRectangle.fromRectangle("fill", x + 2, y + 2, width - 4, height - 4, {0, 0, 0, alpha})
 
-    local frameSprites = jautils.getCustomBlockSprites(entity, "directory", "/block", "objects/zipmover/block")
+    local frameSprites = jautils.getCustomBlockSprites(entity, "directory", "/block", "objects/zipmover/block", nil, nil, tint, {x=x, y=y})
 
     local lightsSprite = jautils.getCustomSprite(entity, "directory", "/light00", "objects/zipmover/light01")
 
-    lightsSprite:addPosition(math.floor(width / 2), 0)
+    lightsSprite:setPosition(x + math.floor(width / 2), y)
     lightsSprite:setJustification(0.5, 0.0)
+    if alpha ~= 1 then
+        lightsSprite:setColor(tint)
+    end
+
 
     table.insert(sprites, rectangle:getDrawableSprite())
 
     for _, sprite in ipairs(frameSprites) do
+        --sprite:addPosition()
         table.insert(sprites, sprite)
     end
 
@@ -104,6 +111,7 @@ function zipper.sprite(room, entity)
 
     addNodeSprites(sprites, entity, centerX, centerY, centerNodeX, centerNodeY)
     addBlockSprites(sprites, entity, x, y, width, height)
+    addBlockSprites(sprites, entity, nodeX, nodeY, width, height, .3)
 
     return sprites
 end

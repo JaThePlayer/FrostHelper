@@ -30,6 +30,8 @@ public class ShapeHitbox : Collider {
 
     public Vector2[] Points;
 
+    public bool Fill = true;
+
     public Rectangle Rectangle => new Rectangle((int) Left, (int) Top, (int) Width, (int) Height);
 
     public override float Width { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
@@ -58,7 +60,7 @@ public class ShapeHitbox : Collider {
                 return true;
         }
 
-        if (Monocle.Collide.RectToLine(rect.Left, rect.Top, rect.Width, rect.Height, Points[0], Points[Points.Length - 1]))
+        if (Fill && Monocle.Collide.RectToLine(rect.Left, rect.Top, rect.Width, rect.Height, Points[0], Points[Points.Length - 1]))
             return true;
 
         return false;

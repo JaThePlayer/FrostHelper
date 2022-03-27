@@ -374,6 +374,8 @@ entities.FrostHelper/StaticDoor.attributes.description.openSfx=Overrides the sfx
 entities.FrostHelper/StaticDoor.attributes.description.closeSfx=Overrides the sfx played when this door closes.
 entities.FrostHelper/StaticDoor.attributes.description.lightOccludeAlpha=The alpha value of the Light Occlude. Values below 1 mean that light will partially pass through the door even when it's closed.
 
+entities.FrostHelper/ArbitraryShapeLightning.placements.name.default=Arbitrary Shape Lightning
+
 # -- Mod Names --
 # mods.modName.*
 mods.FrostHelper.name=Frost Helper
@@ -432,6 +434,9 @@ triggers.FrostHelper/CustomRisingLavaStartHeightTrigger.placements.name.normal=C
 triggers.FrostHelper/DoorDisableTrigger.placements.name.default=Disable Door
 
 triggers.FrostHelper/FlagIfVisibleTrigger.placements.name.default=Flag If Visible
+
+triggers.FrostHelper/TemporaryFlagTrigger.placements.name.default=Temporary Flag
+triggers.FrostHelper/TemporaryFlagTrigger.placements.tooltip.default=Sets a flag which will get reset automatically when you die
 
 # other
 ui.fh.attachGroup.tooltip=Assigns this entity a new group that's not yet used in this room

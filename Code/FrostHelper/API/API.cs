@@ -44,8 +44,31 @@ public static class API {
     /// 
     /// Example input: jumpthru,FrostHelper/SpringLeft,FrostHelper.DirectionalPuffer
     /// </summary>
-    public static Type[] GetTypes(string typeString) {
-        return FrostModule.GetTypes(typeString);
+    public static Type[] GetTypes(string typeString) 
+        => FrostModule.GetTypes(typeString);
+
+    /// <inheritdoc cref="GetTypes(string)"/>
+    public static List<Type> GetTypesAsList(string typeString)
+        => FrostModule.GetTypesAsList(typeString);
+
+    public static string? EntityNameFromType(Type entityType) => TypeHelper.TypeToEntityName(entityType);
+    public static string? EntityNameFromTypeName(string entityTypeName) => TypeHelper.TypeNameToEntityName(entityTypeName);
+    public static IEnumerable<string?> EntityNamesFromTypeNames(IEnumerable<string> entityTypeNames) =>
+        entityTypeNames.Select(name => TypeHelper.TypeNameToEntityName(name)).Where(s => s is not null);
+    /// <summary>
+    /// Returns an array of types from an <see cref="IEnumerable{T}"/> of entity types.
+    /// These types could either be c# type names, OR entity ID's.
+    /// In case of an empty string, an empty array is returned.
+    /// 
+    /// Example input: jumpthru,FrostHelper/SpringLeft,FrostHelper.DirectionalPuffer
+    /// </summary>
+    public static Type[] GetTypes(IEnumerable<string> types) {
+        return types.Select(type => EntityNameToType(type)).ToArray();
+    }
+
+    /// <inheritdoc cref="GetTypes(IEnumerable{string})"/>
+    public static List<Type> GetTypesAsList(IEnumerable<string> types) {
+        return types.Select(type => EntityNameToType(type)).ToList();
     }
 
     /// <summary>
@@ -129,5 +152,45 @@ public static class API {
         } else {
             throw new ArgumentException($"The first argument to {nameof(UpdateShapeColliderPoint)} must be a {nameof(ShapeHitbox)}!");
         }
+    }
+
+    /// <summary>
+    /// Gets the current Lightning block colors
+    /// </summary>
+    public static void GetLightningColors(out Color colorA, out Color colorB, out Color fillColor, out float fillColorMultiplier) {
+        LightningColorTrigger.GetColors(out colorA, out colorB, out fillColor, out fillColorMultiplier);
+    }
+
+    public static void GetLightningFillColor(out Color fillColor, out float fillColorMultiplier) {
+        fillColor = ColorHelper.GetColor(LightningColorTrigger.GetFillColorString());
+        fillColorMultiplier = LightningColorTrigger.GetLightningFillColorMultiplier();
+    }
+
+    /// <summary>
+    /// Sets the current Lightning block colors for the current <see cref="LightingRenderer"/>
+    /// </summary>
+    public static void SetLightningColors(Color colorA, Color colorB) {
+        LightningColorTrigger.ChangeLightningColor(colorA, colorB);
+    }
+
+    /// <summary>
+    /// Sets the current Lightning block colors for the current <see cref="LightingRenderer"/>
+    /// </summary>
+    public static void SetLightningColors(Color[] colors) {
+        LightningColorTrigger.ChangeLightningColor(colors);
+    }
+
+    /// <summary>
+    /// Sets the current Lightning block colors for a given <paramref name="renderer"/>
+    /// </summary>
+    public static void SetLightningColors(LightningRenderer? renderer, Color colorA, Color colorB) {
+        LightningColorTrigger.ChangeLightningColor(renderer, colorA, colorB);
+    }
+
+    /// <summary>
+    /// Sets the current Lightning block colors for a given <paramref name="renderer"/>
+    /// </summary>
+    public static void SetLightningColors(LightningRenderer? renderer, Color[] colors) {
+        LightningColorTrigger.ChangeLightningColor(renderer, colors);
     }
 }

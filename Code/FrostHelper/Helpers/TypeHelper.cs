@@ -7,6 +7,10 @@ public static class TypeHelper {
     private static Dictionary<string, Type> entityNameToType = null!;
     private static Dictionary<string, Type> entityNameToType2 = new();
     public static Type EntityNameToType(string entityName) {
+        return EntityNameToTypeSafe(entityName) ?? throw new Exception($"Unknown entity name: {entityName}.");
+    }
+
+    public static Type? EntityNameToTypeSafe(string entityName) {
         // see if this is just a type name
         Type ret = FakeAssembly.GetFakeEntryAssembly().GetType(entityName, false, true);
         if (ret != null)
@@ -22,7 +26,28 @@ public static class TypeHelper {
         if (entityNameToType!.TryGetValue(entityName, out ret))
             return ret;
 
-        throw new Exception($"Unknown entity name: {entityName}.");
+        return null;
+    }
+
+    private static string? TryFindTypeToEntityName(Dictionary<string, Type>? dict, Type targetType) {
+        if (dict is null)
+            return null;
+        foreach (var item in dict) {
+            if (ReferenceEquals(item.Value, targetType))
+                return item.Key;
+        }
+
+        return null;
+    }
+
+    public static string? TypeToEntityName(Type entityType) {
+        return TryFindTypeToEntityName(entityNameToType2, entityType)
+                ?? TryFindTypeToEntityName(entityNameToType, entityType);
+    }
+
+    public static string? TypeNameToEntityName(string typeName) {
+        var type = EntityNameToTypeSafe(typeName);
+        return type is null ? null : TypeToEntityName(type);
     }
 
     private static void CreateCache() {
@@ -157,7 +182,7 @@ public static class TypeHelper {
             ["birdForsakenCityGem"] = typeof(ForsakenCitySatellite),
             ["whiteblock"] = typeof(WhiteBlock),
             ["plateau"] = typeof(Plateau),
-            ["soundSource"] = typeof(SoundSource),
+            ["soundSource"] = typeof(SoundSourceEntity),
             ["templeMirror"] = typeof(TempleMirror),
             ["templeEye"] = typeof(TempleEye),
             ["clutterCabinet"] = typeof(ClutterCabinet),

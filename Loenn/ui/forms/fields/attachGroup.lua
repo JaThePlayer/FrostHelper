@@ -4,6 +4,7 @@ local stringField = require("ui.forms.fields.string")
 local uiElements = require("ui.elements")
 local utils = require("utils")
 local languageRegistry = require("language_registry")
+local loadedState = require("loaded_state")
 
 local integerField = {}
 
@@ -24,7 +25,7 @@ local function fieldCallback(self, value, prev)
     -- should just be button.width, but that isn't correct initially :(
     local offset = -font:getWidth(button.text) - (2 * button.style.padding)
 
-    self.button.x = -font:getWidth(text) + self.minWidth + offset
+    self.button.x = -font:getWidth(text) + self.minWidth + offset - 40
 end
 
 function integerField.getElement(name, value, options)
@@ -40,6 +41,7 @@ function integerField.getElement(name, value, options)
 
         return utils.isInteger(number) and number >= minimumValue and number <= maximumValue
     end
+    options.options = attachGroupHelper.findAllGroupsAsList(loadedState.getSelectedRoom())
 
     local formField = stringField.getElement(name, value, options)
 

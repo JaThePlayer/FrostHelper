@@ -16,6 +16,25 @@ jautils.easings = require("mods").requireFromPlugin("libraries.easings")
     UTILS
 ]]
 
+---Returns a table which contains all of the elements of all passed tables.
+---Argument tables that have a _type field will be added to the returned table directly instead of being looped over
+---@param ... table
+---@return table
+function jautils.union(...)
+    local union = {}
+
+    for _, value in ipairs({...}) do
+        if not value then
+        elseif value._type then -- specific to lonn, allows reducing one layer of {}
+            table.insert(union, value)
+        else
+            jautils.addAll(union, value)
+        end
+    end
+
+    return union
+end
+
 function jautils.addAll(addTo, toAddTable, insertLoc)
     if insertLoc then
         for _, value in ipairs(toAddTable) do
@@ -260,8 +279,8 @@ local defaultNinePatchOptions = {
 ---@param spritePostfix string
 ---@param fallback string
 ---@return table<integer, sprite>
-function jautils.getCustomBlockSprites(entity, spritePropertyName, spritePostfix, fallback, spriteTintPropertyName, ninePatchOptions)
-
+function jautils.getCustomBlockSprites(entity, spritePropertyName, spritePostfix, fallback, spriteTintPropertyName, ninePatchOptions, color, pos)
+    pos = pos or entity
     if ninePatchOptions == "old" then
         local sprites = {}
         local baseTexture = jautils.getCustomSprite(entity, spritePropertyName, spritePostfix, fallback, spriteTintPropertyName)
@@ -290,7 +309,10 @@ function jautils.getCustomBlockSprites(entity, spritePropertyName, spritePostfix
         return sprites
     else
         local baseTexture = jautils.getCustomSpritePath(entity, spritePropertyName, spritePostfix, fallback)
-        local ninePatch = drawableNinePatch.fromTexture(baseTexture, ninePatchOptions or defaultNinePatchOptions, entity.x, entity.y, entity.width, entity.height)
+        local ninePatch = drawableNinePatch.fromTexture(baseTexture, ninePatchOptions or defaultNinePatchOptions, pos.x, pos.y, entity.width, entity.height)
+        if color then
+            ninePatch.color = color
+        end
         return ninePatch:getDrawableSprite()
     end
 end
@@ -411,13 +433,14 @@ function jautils.drawArrow(x1, y1, x2, y2, len, angle)
 	love.graphics.line(x2, y2, x2 + len * math.cos(a - angle), y2 + len * math.sin(a - angle))
 end
 
-function jautils.getArrowSprites(x1, y1, x2, y2, len, angle, thickness)
+function jautils.getArrowSprites(x1, y1, x2, y2, len, angle, thickness, color)
+    color = color or jautils.colorWhite
     local a = math.atan2(y1 - y2, x1 - x2)
 
     return {
-        drawableLineStruct.fromPoints({x1, y1, x2, y2}, jautils.colorWhite, thickness),
-        drawableLineStruct.fromPoints({x2, y2, x2 + len * math.cos(a + angle), y2 + len * math.sin(a + angle)}, jautils.colorWhite, thickness),
-        drawableLineStruct.fromPoints({x2, y2, x2 + len * math.cos(a - angle), y2 + len * math.sin(a - angle)}, jautils.colorWhite, thickness),
+        drawableLineStruct.fromPoints({x1, y1, x2, y2}, color, thickness),
+        drawableLineStruct.fromPoints({x2, y2, x2 + len * math.cos(a + angle), y2 + len * math.sin(a + angle)}, color, thickness),
+        drawableLineStruct.fromPoints({x2, y2, x2 + len * math.cos(a - angle), y2 + len * math.sin(a - angle)}, color, thickness),
     }
 end
 
