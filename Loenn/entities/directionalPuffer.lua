@@ -40,6 +40,12 @@ jautils.addPlacement(directionalPuffer, "left", {
     { "explodeDirection", "Left" },
 })
 
+jautils.addPlacement(directionalPuffer, "spiky", {
+    { "killOnJump", true },
+    { "directory", "objects/FrostHelper/spikyPuffer/" },
+    { "explodeDirection", "Both" },
+})
+
 function directionalPuffer.sprite(room, entity)
     local sprites = jautils.getOutlinedSpriteFromPath(entity, (entity.directory or "objects/puffer/") .. "idle00", entity.color, nil, entity.right and 1 or -1)
 

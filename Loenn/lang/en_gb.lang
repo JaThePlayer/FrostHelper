@@ -320,6 +320,7 @@ entities.FrostHelper/WireLamps.attributes.description.lightEndFade=the End Fade 
 entities.FrostHelper/DirectionalPuffer.placements.name.none=Directional Puffer (None)
 entities.FrostHelper/DirectionalPuffer.placements.name.left=Directional Puffer (Left)
 entities.FrostHelper/DirectionalPuffer.placements.name.right=Directional Puffer (Right)
+entities.FrostHelper/DirectionalPuffer.placements.name.spiky=Directional Puffer (Spiky)
 entities.FrostHelper/DirectionalPuffer.attributes.description.right=Whether the puffer is facing right. DOESN'T impact explode direction.
 entities.FrostHelper/DirectionalPuffer.attributes.description.directory=The directory to get the sprites from.
 entities.FrostHelper/DirectionalPuffer.attributes.description.explodeDirection=The direction in which the puffer can explode in. Can be: None, Left, Right, Both
@@ -328,6 +329,8 @@ entities.FrostHelper/DirectionalPuffer.attributes.description.static=Whether the
 entities.FrostHelper/DirectionalPuffer.attributes.description.color=Color used to tint the sprites
 entities.FrostHelper/DirectionalPuffer.attributes.description.noRespawn=Whether this puffer respawns
 entities.FrostHelper/DirectionalPuffer.attributes.description.respawnTime=How long it takes for the puffer to respawn (in seconds). By default, this is 2.5 seconds
+entities.FrostHelper/DirectionalPuffer.attributes.description.killOnJump=Whether the player should die when trying to jump on the puffer.
+entities.FrostHelper/DirectionalPuffer.attributes.description.killOnLaunch=Whether the player should die if they make the puffer explode.
 
 entities.FrostHelper/PufferIndicator.placements.name.default=Puffer Indicator
 entities.FrostHelper/PufferIndicator.attributes.description.spritePath=The path to get the sprite from. This is NOT a directory path!
