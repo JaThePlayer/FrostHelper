@@ -1,22 +1,11 @@
 ﻿namespace FrostHelper.EXPERIMENTAL;
 
-// ISSUE: entities dissapear during screen transitions
-
 internal static class LayerHelper {
     internal static LayerTracker? _temporaryCurrentTracker;
     private static EntityData? _nextEntityData;
     private static Level? _nextLevel;
 
     public static LayerTracker GetLayerTracker(this Scene level) {
-        /*
-        const string layerTrackerFieldName = "fh.layerTracker";
-        var data = DynamicData.For(level);
-        if (data.TryGet<LayerTracker>(layerTrackerFieldName, out var tracker)) {
-            return tracker;
-        }
-        tracker = new LayerTracker();
-        data.Set(layerTrackerFieldName, tracker);
-        return tracker;*/
         var tracker = _temporaryCurrentTracker ?? level.Tracker.GetEntity<LayerTracker>();
         if (tracker is null) {
             tracker = _temporaryCurrentTracker = new();
@@ -28,21 +17,14 @@ internal static class LayerHelper {
 
     public static List<Entity> GetEntitiesOnLayer(int layer) => GetLayerTracker(FrostModule.GetCurrentLevel()).GetEntitiesOnLayer(layer);
 
-    /*
-    public static int GetLayer(this Entity self) {
-        var tracker = GetLayerTracker(self.Scene);
-
-        return tracker.Get
-    }*/
-
-    [OnLoad]
+    //[OnLoad]
     public static void Load() {
         Everest.Events.Level.OnLoadEntity += Level_OnLoadEntity;
         On.Monocle.Entity.ctor_Vector2 += Entity_ctor_Vector2;
         On.Celeste.Player.OnTransition += Player_OnTransition;
     }
 
-    [OnUnload]
+    //[OnUnload]
     public static void Unload() {
         Everest.Events.Level.OnLoadEntity -= Level_OnLoadEntity;
         On.Monocle.Entity.ctor_Vector2 -= Entity_ctor_Vector2;
