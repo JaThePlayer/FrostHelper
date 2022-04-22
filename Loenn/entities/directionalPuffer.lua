@@ -7,6 +7,11 @@ local explodeDirectionsEnum = {
     "Left", "Right", "Both", "None"
 }
 
+local builtinSprites = {
+    "objects/puffer/",
+    "objects/FrostHelper/spikyPuffer/"
+}
+
 local directionalPuffer = {
     name = "FrostHelper/DirectionalPuffer",
     depth = 0,
@@ -14,13 +19,15 @@ local directionalPuffer = {
 
 jautils.createPlacementsPreserveOrder(directionalPuffer, "none", {
     { "explodeDirection", "None", explodeDirectionsEnum },
-    { "directory", "objects/puffer/" },
+    { "directory", "objects/puffer/", "editableDropdown", builtinSprites },
     { "color", "ffffff", "color" },
     { "dashRecovery", 1, "integer" },
     { "static", false },
     { "right", false },
     { "respawnTime", 2.5 },
     { "noRespawn", false },
+    { "killOnJump", false },
+    { "killOnLaunch", false },
 })
 
 jautils.addPlacement(directionalPuffer, "right", {

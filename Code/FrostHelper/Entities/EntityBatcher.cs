@@ -230,7 +230,10 @@ namespace FrostHelper {
 
             foreach (var item in AffectedEntities) {
                 if (item is not null && item.Scene is not null && (requiredDepth is null || item.Depth == requiredDepth)) {
+                    var v = item.Visible;
+                    item.Visible = true;
                     item.Render();
+                    item.Visible = v;
                 }
 
             }
@@ -252,7 +255,7 @@ namespace FrostHelper {
             var shader = ShaderHelperIntegration.GetEffect(Shader);
             shader.ApplyParametersFrom(ShaderParameters);
 
-            BetterShaderTrigger.SimpleApply(GameplayBuffers.TempB, GameplayBuffers.Gameplay, shader);
+            BetterShaderTrigger.SimpleApply(maskTarget, GameplayBuffers.Gameplay, shader);
             Engine.Graphics.GraphicsDevice.SetRenderTarget(GameplayBuffers.Gameplay);
             GameplayRenderer.Begin();
         }

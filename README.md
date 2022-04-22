@@ -38,3 +38,17 @@ Triggers:
 - Chronos Trigger -> Activates the gimmick from the New Year's Mapping Contest map Chronos
 - Forced Fastfall Trigger -> Forces the player to fastfall while in the trigger
 - Cap Dash On Ground Trigger -> Forces the player's dash count to respect the max dash count when they're on the ground (a.k.a you can't conserve the 2 dashes from a two-dash refill)
+
+# Credits
+
+This mod uses a MIT Triangulator libary: https://github.com/kellygravelyn/Triangulator
+
+Nyan: Default Spiky Puffer sprites
+
+Flagpole1up: Core Berry sprites
+
+RadleyMcTuneston: Badeline Chaser Block sprites
+
+Max480: some linux testing, some code snippets from Max's Helping Hand
+
+Communal Helper team: some code snippets from Communal Helper

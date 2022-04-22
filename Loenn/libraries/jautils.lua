@@ -4,6 +4,7 @@ local drawableNinePatch = require("structs.drawable_nine_patch")
 local drawableLineStruct = require("structs.drawable_line")
 local utils = require("utils")
 local xnaColors = require("consts.xna_colors")
+local rainbowHelper = require("mods").requireFromPlugin("libraries.rainbowHelper")
 
 ---@alias color string | table<integer, number>
 ---@alias sprite table
@@ -454,10 +455,7 @@ function jautils.rainbowifyAll(room, sprites)
 end
 
 function jautils.getRainbowHue(room, x, y)
-    local rx,ry = x + room.x, y + room.y
-    local posLength = math.sqrt((rx * rx) + (ry * ry)) % 280 / 280
-
-    return { utils.hsvToRgb(0.4 + jautils.yoyo(posLength) * 0.4, 0.4, 0.9) }
+    return rainbowHelper.getRainbowHue(room, x, y)
 end
 
 --TODO: pretty sure lonn supports rgba at this point, making this useless

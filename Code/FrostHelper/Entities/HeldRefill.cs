@@ -16,7 +16,18 @@ namespace FrostHelper {
         public Vector2 LastTravelDelta;
 
         public HeldRefill(EntityData data, Vector2 offset) : base(data.Position + offset) {
-            Nodes = data.NodesOffset(offset);
+            if (data.Nodes[0] == data.Position) {
+                Nodes = data.NodesOffset(offset);
+            } else {
+                var dataNodes = data.Nodes;
+                Nodes = new Vector2[dataNodes.Length + 1];
+                Nodes[0] = data.Position + offset;
+                for (int i = 0; i < dataNodes.Length; i++) {
+                    Nodes[i + 1] = dataNodes[i] + offset;
+                }
+            }
+
+
             SpeedMult = data.Float("speed", 6f);
 
             Add(Sprite = new Sprite(GFX.Game, "objects/refill/idle"));

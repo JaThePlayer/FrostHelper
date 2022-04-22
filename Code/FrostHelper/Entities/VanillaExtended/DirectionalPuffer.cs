@@ -34,11 +34,13 @@ public class DirectionalPuffer : Puffer {
         None,
     }
 
-    private ExplodeDirection direction;
+    public ExplodeDirection Direction;
     public bool Static;
     public int DashRecovery;
     public float RespawnTime;
     public bool NoRespawn;
+    public bool KillOnJump;
+    public bool KillOnLaunch;
 
     public DirectionalPuffer(EntityData data, Vector2 offset) : base(data, offset) {
         // replace the sprite with a custom one
@@ -51,18 +53,21 @@ public class DirectionalPuffer : Puffer {
 
         DashRecovery = data.Name == "CCH/PinkPuffer" ? 2 : data.Int("dashRecovery", 1);
 
-        direction = data.Enum("explodeDirection", ExplodeDirection.Both);
+        Direction = data.Enum("explodeDirection", ExplodeDirection.Both);
 
         Static = data.Bool("static", false);
         NoRespawn = data.Bool("noRespawn", false);
         RespawnTime = data.Float("respawnTime", 2.5f);
+        KillOnJump = data.Bool("killOnJump", false);
+        KillOnLaunch = data.Bool("killOnLaunch", false);
+
 
         MakeStaticIfNeeded();
     }
 
     public static bool IsRightPuffer(Puffer p) {
         if (p is DirectionalPuffer puffer) {
-            return puffer.direction == ExplodeDirection.Right;
+            return puffer.Direction == ExplodeDirection.Right;
         }
 
         return false;
@@ -70,14 +75,14 @@ public class DirectionalPuffer : Puffer {
 
     public static bool IsLeftPuffer(Puffer p) {
         if (p is DirectionalPuffer puffer) {
-            return puffer.direction == ExplodeDirection.Left;
+            return puffer.Direction == ExplodeDirection.Left;
         }
 
         return false;
     }
 
     public bool DirectionCheck(Player player) {
-        return direction switch {
+        return Direction switch {
             ExplodeDirection.Left => player.Position.X > Position.X,
             ExplodeDirection.Right => player.Position.X < Position.X,
             ExplodeDirection.Both => false,
@@ -88,7 +93,7 @@ public class DirectionalPuffer : Puffer {
 
     private static int getRenderStartIndex(int orig, Puffer puffer) {
         if (puffer is DirectionalPuffer dirPuff) {
-            return dirPuff.direction switch {
+            return dirPuff.Direction switch {
                 ExplodeDirection.Left => 14,
                 ExplodeDirection.Right => orig,
                 ExplodeDirection.Both => orig,
@@ -102,7 +107,7 @@ public class DirectionalPuffer : Puffer {
 
     private static int getRenderEndIndex(int orig, Puffer puffer) {
         if (puffer is DirectionalPuffer dirPuff) {
-            return dirPuff.direction switch {
+            return dirPuff.Direction switch {
                 ExplodeDirection.Left => orig,
                 ExplodeDirection.Right => 14,
                 ExplodeDirection.Both => orig,
@@ -154,6 +159,42 @@ public class DirectionalPuffer : Puffer {
             cursor.EmitDelegate<Func<Puffer, Player, bool>>((p, player) => (p is DirectionalPuffer dirPuff) && dirPuff.DirectionCheck(player));
             cursor.Emit(OpCodes.Brtrue, label.Target);
         }
+
+        // add a label to the end of the function so that it's easier to branch to it later
+        cursor.Index = cursor.Instrs.Count - 1;
+        var returnLabel = cursor.DefineLabel();
+        cursor.MarkLabel(returnLabel);
+        cursor.Index = 0;
+
+        if (cursor.SeekVirtFunctionCall(typeof(Player), "Bounce")) {
+            cursor.Index--;
+
+            VariableDefinition fromYLocal = new VariableDefinition(il.Import(typeof(float)));
+            il.Body.Variables.Add(fromYLocal);
+
+            cursor.Emit(OpCodes.Stloc, fromYLocal); // store this.Top for later
+
+            cursor.Emit(OpCodes.Ldarg_0); // this
+            cursor.EmitCall(HandleCustomBounceEvents);
+
+            // if the func returned false, early return
+            cursor.Emit(OpCodes.Brfalse, returnLabel.Target);
+
+            // restore the stack
+            cursor.Emit(OpCodes.Ldarg_1); // player
+            cursor.Emit(OpCodes.Ldloc, fromYLocal); // this.Top
+        }
+    }
+
+    internal static bool HandleCustomBounceEvents(Player player, Puffer self) {
+        if (self is DirectionalPuffer { KillOnJump: true } && !player.Dead) {
+            player.Die(-Vector2.UnitY);
+            self.GetValue<Wiggler>("inflateWiggler").Start();
+            self.GetValue<Wiggler>("bounceWiggler").Start();
+            return false;
+        }
+
+        return true;
     }
 
     /// <summary>Only render part of the puffer's explosion radius indicator</summary>
@@ -181,7 +222,7 @@ public class DirectionalPuffer : Puffer {
 
             cursor.Emit(OpCodes.Ldarg_0); // this
             cursor.Emit(OpCodes.Ldloc_1); // player
-            cursor.EmitDelegate(Restore2DashesIfPinkPuffer);
+            cursor.EmitCall(HandleCustomExplodeEvents);
         }
     }
 
@@ -197,9 +238,17 @@ public class DirectionalPuffer : Puffer {
         return orig(self);
     }
 
-    private static void Restore2DashesIfPinkPuffer(Puffer puffer, Player player) {
-        if (puffer is DirectionalPuffer { DashRecovery: > 1 } p) {
-            player.Dashes = p.DashRecovery;
+    private static void HandleCustomExplodeEvents(Puffer puffer, Player player) {
+        if (puffer is not DirectionalPuffer dirPuffer) 
+            return;
+
+        if (dirPuffer.KillOnLaunch && !player.Dead) {
+            player.Die(Calc.AngleToVector(Calc.Angle(dirPuffer.Position, player.Position), 1f));
+            return;
+        }
+
+        if (dirPuffer.DashRecovery > 1) {
+            player.Dashes = dirPuffer.DashRecovery;
         }
     }
 

@@ -1,5 +1,6 @@
 local utils = require("utils")
 local jautils = require("mods").requireFromPlugin("libraries.jautils")
+local frostSettings = require("mods").requireFromPlugin("libraries.settings")
 
 local fallback = "danger/FrostHelper/icecrystal/fg03"
 local fallbackbg = "danger/FrostHelper/icecrystal/bg"
@@ -40,8 +41,11 @@ local function createConnectorsForSpinner(room, entity, baseBGSprite)
         if e2 == entity then break end
 
         if e2._name == entity._name and e2.attachGroup == entity.attachGroup and e2.attachToSolid == entity.attachToSolid and jautils.distanceSquared(entity.x, entity.y, e2.x, e2.y) < 576 then
-            local connector = jautils.copyTexture(baseBGSprite, (entity.x + e2.x) / 2, (entity.y + e2.y) / 2, false)
-            connector.depth = 1---8499
+            local connector = jautils.copyTexture(baseBGSprite,
+                math.floor((entity.x + e2.x) / 2),
+                math.floor((entity.y + e2.y) / 2),
+                false)
+            connector.depth = -8499 --  1---8499
             table.insert(sprites, connector)
         end
     end
@@ -52,7 +56,9 @@ end
 function spinner.sprite(room, entity)
     local pathSuffix = entity.spritePathSuffix or ""
 
-    local sprites = createConnectorsForSpinner(room, entity, jautils.getCustomSprite(entity, "directory", "/bg" .. pathSuffix, fallbackbg))
+    local sprites = frostSettings.spinnersConnect()
+        and createConnectorsForSpinner(room, entity, jautils.getCustomSprite(entity, "directory", "/bg" .. pathSuffix, fallbackbg))
+        or {}
 
     table.insert(sprites, jautils.getCustomSprite(entity, "directory", "/fg" .. pathSuffix .. "03", fallback))
 
@@ -60,7 +66,7 @@ function spinner.sprite(room, entity)
         jautils.rainbowifyAll(room, sprites)
     end
 
-    local drawBorder = entity.drawOutline == nil and true or entity.drawOutline
+    local drawBorder = frostSettings.spinnerBorder() and (entity.drawOutline == nil and true or entity.drawOutline)
     if drawBorder then
         sprites = jautils.getBordersForAll(sprites, entity.borderColor)
     end

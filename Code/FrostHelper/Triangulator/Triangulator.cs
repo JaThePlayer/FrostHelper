@@ -1,5 +1,6 @@
-﻿namespace Triangulator {
-    // https://github.com/nickgravelyn/Triangulator/blob/master/Triangulator/Triangulator.cs
+﻿// https://github.com/nickgravelyn/Triangulator
+
+namespace Triangulator {
     /// <summary>
     /// A static class exposing methods for triangulating 2D polygons. This is the sole public
     /// class in the entire library; all other classes/structures are intended as internal-only

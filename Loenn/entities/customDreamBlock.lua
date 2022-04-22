@@ -1,6 +1,7 @@
 local jautils = require("mods").requireFromPlugin("libraries.jautils")
 local utils = require("utils")
 local drawableSprite = require("structs.drawable_sprite")
+local frostSettings = require("mods").requireFromPlugin("libraries.settings")
 
 local particlePath = "objects/dreamblock/particles"
 local particleColors = { jautils.getColor("FFEF11"), jautils.getColor("FF00D0"), jautils.getColor("08a310"),
@@ -32,13 +33,9 @@ jautils.createPlacementsPreserveOrder(dreamBlock, "custom_dream_block", {
     { "old", false },
     { "moveEase", "SineInOut", jautils.easings },
     { "moveSpeedMult", 1.0 },
- })
+})
 
-function dreamBlock.sprite(room, entity)
-    local rectangle = utils.rectangle(entity.x, entity.y, entity.width, entity.height)
-
-    local sprites = jautils.getBorderedRectangleSprites(rectangle, entity.activeBackColor or "000000", entity.activeLineColor or "ffffff")
-
+local function addParticles(sprites, entity)
     utils.setSimpleCoordinateSeed(entity.x, entity.y)
     local baseParticle = drawableSprite.fromTexture(particlePath, entity)
     for i = 1, entity.width / 8 * (entity.height / 8) * 0.7, 1 do
@@ -51,6 +48,16 @@ function dreamBlock.sprite(room, entity)
         particle:setPosition(entity.x + math.random(0, entity.width - particleSize - 3), entity.y + math.random(0, entity.height - particleSize - 3))
 
         table.insert(sprites, particle)
+    end
+end
+
+function dreamBlock.sprite(room, entity)
+    local rectangle = utils.rectangle(entity.x, entity.y, entity.width, entity.height)
+
+    local sprites = jautils.getBorderedRectangleSprites(rectangle, entity.activeBackColor or "000000", entity.activeLineColor or "ffffff")
+
+    if frostSettings.fancyDreamBlocks() then
+        addParticles(sprites, entity)
     end
 
     return sprites

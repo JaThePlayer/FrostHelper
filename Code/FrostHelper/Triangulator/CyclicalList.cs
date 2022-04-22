@@ -1,4 +1,6 @@
-﻿namespace Triangulator {
+﻿// https://github.com/nickgravelyn/Triangulator
+
+namespace Triangulator {
     /// <summary>
     /// Implements a List structure as a cyclical list where indices are wrapped.
     /// </summary>

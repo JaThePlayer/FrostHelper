@@ -274,7 +274,7 @@ namespace FrostHelper.Entities.Boosters {
                     outline.Visible = true;
             }
 
-            if (sprite.CurrentAnimationID == "inside" && !BoostingPlayer && !CollideCheck(player)) {
+            if (sprite.CurrentAnimationID == "inside" && !BoostingPlayer && (player is null || !CollideCheck(player))) {
                 sprite.Play("loop", false, false);
             }
         }

@@ -13,19 +13,21 @@ jautils.createPlacementsPreserveOrder(heldRefill, "normal", {
     { "speed", 6 }
 })
 
+function heldRefill.nodeSprite() end
+
 function heldRefill.sprite(room, entity)
     local sprites = {drawableSpriteStruct.fromTexture("objects/refill/idle00", entity)}
 
-    for i = 1, #entity.nodes - 1 do
-        local points = {entity.nodes[i].x, entity.nodes[i].y, entity.nodes[i+1].x, entity.nodes[i+1].y}
-        local line = drawableLine.fromPoints(points, entity.lineColor, 1)
-        line.depth = -100
-        for _, sprite in ipairs(line:getDrawableSprite()) do
-            table.insert(sprites, sprite)
-        end
+    local points = { entity.x, entity.y }
+    for _, value in ipairs(entity.nodes) do
+        table.insert(points, value.x)
+        table.insert(points, value.y)
     end
 
-    return sprites
+    return jautils.union(
+        sprites,
+        drawableLine.fromPoints(points, entity.lineColor, 1)
+    )
 end
 
 function heldRefill.selection(room, entity)

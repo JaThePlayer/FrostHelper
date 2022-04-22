@@ -76,6 +76,10 @@ public class BetterShaderTrigger : Trigger {
     }
 
     public static void SimpleApply(VirtualRenderTarget source, VirtualRenderTarget target, Effect eff) {
+        SimpleApply((RenderTarget2D)source, target, eff);
+    }
+
+    public static void SimpleApply(RenderTarget2D source, VirtualRenderTarget target, Effect eff) {
         ShaderHelperIntegration.ApplyStandardParameters(eff);
 
         Engine.Instance.GraphicsDevice.SetRenderTarget(target);

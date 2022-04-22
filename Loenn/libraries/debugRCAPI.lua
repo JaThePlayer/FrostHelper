@@ -1,7 +1,7 @@
 -- provides friendly wrappers over Frost Helper's DebugRC API
 local utils = require("utils")
 local tasks = require("utils.tasks")
-
+local frostSettings = require("mods").requireFromPlugin("libraries.settings")
 local hasRequest, request = utils.tryrequire("lib.luajit-request.luajit-request")
 
 local port = 32270
@@ -33,9 +33,6 @@ local function splitList(list)
     return t
 end
 
--- TODO: Make a setting for this, singlethreading is a pain
-local useDebugRCForEntityTypes = false
-
 ---cached
 ---@param entityTypes string
 ---@return table
@@ -48,7 +45,7 @@ function debugRC.entityTypesToNames(entityTypes)
         end
 
         local response =
-            useDebugRCForEntityTypes and request.send(_entityTypesToNamesUrl, {
+            frostSettings.useDebugRC() and request.send(_entityTypesToNamesUrl, {
                 headers = {
                     types = entityTypes,
                 },
