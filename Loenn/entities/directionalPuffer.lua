@@ -21,6 +21,8 @@ jautils.createPlacementsPreserveOrder(directionalPuffer, "none", {
     { "explodeDirection", "None", explodeDirectionsEnum },
     { "directory", "objects/puffer/", "editableDropdown", builtinSprites },
     { "color", "ffffff", "color" },
+    { "eyeColor", "000000", "color" },
+    { "explosionRangeIndicatorColor", "ffffff", "color" },
     { "dashRecovery", 1, "integer" },
     { "static", false },
     { "right", false },
@@ -44,6 +46,7 @@ jautils.addPlacement(directionalPuffer, "spiky", {
     { "killOnJump", true },
     { "directory", "objects/FrostHelper/spikyPuffer/" },
     { "explodeDirection", "Both" },
+    { "eyeColor", "c6845e" },
 })
 
 function directionalPuffer.sprite(room, entity)
@@ -55,6 +58,7 @@ function directionalPuffer.sprite(room, entity)
         local endIndex = explodeDir == "Right" and 14 or 28
 
         for i = startIndex, endIndex, 1 do
+            local indicatorColor = jautils.getColor(entity.explosionRangeIndicatorColor) or jautils.colorWhite
             local angle = jautils.map(i / 28, 0., 1., explodeIndicatorStartAngle, explodeIndicatorEndAngle)
             local angleVecX, angleVecY = jautils.angleToVector(angle, 1.)
             local offsetX, offsetY = angleVecX * 32, angleVecY * 32
@@ -63,11 +67,12 @@ function directionalPuffer.sprite(room, entity)
 
             if i == 0 or i == 28 then
                 -- draw lines at the edges
-                local offset2X, offset2Y = angleVecX * 22, angleVecY * 22
+                local offset2X = angleVecX * 22
                 table.insert(sprites, jautils.getLineSprite(entity.x + offsetX, entity.y + offsetY,
-                                                            entity.x + offset2X, entity.y + offsetY))
+                                                            entity.x + offset2X, entity.y + offsetY,
+                                                            indicatorColor))
             else
-                table.insert(sprites, jautils.getPixelSprite(entity.x + offsetX, entity.y + offsetY))
+                table.insert(sprites, jautils.getPixelSprite(entity.x + offsetX, entity.y + offsetY, indicatorColor))
             end
 
         end

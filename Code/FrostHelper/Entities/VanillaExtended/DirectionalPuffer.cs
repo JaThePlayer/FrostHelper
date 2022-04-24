@@ -41,6 +41,8 @@ public class DirectionalPuffer : Puffer {
     public bool NoRespawn;
     public bool KillOnJump;
     public bool KillOnLaunch;
+    public Color EyeColor;
+    public Color ExplosionRangeIndicatorColor;
 
     public DirectionalPuffer(EntityData data, Vector2 offset) : base(data, offset) {
         // replace the sprite with a custom one
@@ -60,6 +62,8 @@ public class DirectionalPuffer : Puffer {
         RespawnTime = data.Float("respawnTime", 2.5f);
         KillOnJump = data.Bool("killOnJump", false);
         KillOnLaunch = data.Bool("killOnLaunch", false);
+        EyeColor = data.GetColor("eyeColor", "000000");
+        ExplosionRangeIndicatorColor = data.GetColor("explosionRangeIndicatorColor", "ffffff");
 
 
         MakeStaticIfNeeded();
@@ -197,7 +201,10 @@ public class DirectionalPuffer : Puffer {
         return true;
     }
 
-    /// <summary>Only render part of the puffer's explosion radius indicator</summary>
+    /// <summary>
+    /// - Only render part of the puffer's explosion radius indicator
+    /// - Implement the eye color property
+    /// </summary>
     internal static void IL_Render(ILContext il) {
         ILCursor cursor = new(il);
 
@@ -213,6 +220,28 @@ public class DirectionalPuffer : Puffer {
             cursor.Emit(OpCodes.Ldarg_0); // this
             cursor.EmitDelegate(getRenderEndIndex);
         }
+
+        cursor.Index = 0;
+
+        // implement explosion range indicator changing
+        while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchCall<Color>("get_White"))) {
+            cursor.Emit(OpCodes.Ldarg_0);
+            cursor.EmitCall(GetExplosionRangeIndicatorColor);
+        }
+
+        // implement eye color changing
+        if (cursor.TryGotoNext(MoveType.After, instr => instr.MatchCall<Color>("get_Black"))) {
+            cursor.Emit(OpCodes.Ldarg_0);
+            cursor.EmitCall(GetEyeColor);
+        }
+    }
+
+    public static Color GetEyeColor(Color prev, Puffer self) {
+        return self is DirectionalPuffer dirPuf ? dirPuf.EyeColor : prev;
+    }
+
+    public static Color GetExplosionRangeIndicatorColor(Color prev, Puffer self) {
+        return self is DirectionalPuffer dirPuf ? dirPuf.ExplosionRangeIndicatorColor : prev;
     }
 
     internal static void Puffer_Explode(ILContext il) {
