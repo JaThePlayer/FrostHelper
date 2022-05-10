@@ -1,6 +1,7 @@
 local utils = require("utils")
 local jautils = require("mods").requireFromPlugin("libraries.jautils")
 local frostSettings = require("mods").requireFromPlugin("libraries.settings")
+local bloomSprite = require("mods").requireFromPlugin("libraries.bloomSprite")
 
 local fallback = "danger/FrostHelper/icecrystal/fg03"
 local fallbackbg = "danger/FrostHelper/icecrystal/bg"
@@ -69,6 +70,10 @@ function spinner.sprite(room, entity)
     local drawBorder = frostSettings.spinnerBorder() and (entity.drawOutline == nil and true or entity.drawOutline)
     if drawBorder then
         sprites = jautils.getBordersForAll(sprites, entity.borderColor)
+    end
+
+    if entity.bloomAlpha and entity.bloomAlpha > 0 then
+        table.insert(sprites, bloomSprite.getSprite(entity, entity.bloomAlpha, entity.bloomRadius or 1))
     end
 
     return sprites

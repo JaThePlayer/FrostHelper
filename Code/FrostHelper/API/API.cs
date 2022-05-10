@@ -193,4 +193,7 @@ public static class API {
     public static void SetLightningColors(LightningRenderer? renderer, Color[] colors) {
         LightningColorTrigger.ChangeLightningColor(renderer, colors);
     }
+
+    public static Color GetBloomColor() => BloomColorChange.Color;
+    public static void SetBloomColor(Color color) => BloomColorChange.Color = color;
 }

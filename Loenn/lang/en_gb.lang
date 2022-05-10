@@ -308,14 +308,15 @@ entities.FrostHelper/Icicle.attributes.description.directory=The directory conta
 entities.FrostHelper/Icicle.attributes.description.breakSfx=SFX to play when the icicle breaks
 entities.FrostHelper/Icicle.attributes.description.speed=The speed at which the icicle falls
 
-entities.FrostHelper/WireLamps.placements.name.normal=Wire Lamps
+entities.FrostHelper/WireLamps.placements.name.default=Wire Lamps
 entities.FrostHelper/WireLamps.attributes.description.above=Whether the wire should be rendered above many other entities.
 entities.FrostHelper/WireLamps.attributes.description.colors=A comma seperated list of colors that can be used for lamp colors. Each lamp will get a random color from this list.
 entities.FrostHelper/WireLamps.attributes.description.wireColor=The color of the wire.
-entities.FrostHelper/WireLamps.attributes.description.lightCount=How many lights should be created.
+entities.FrostHelper/WireLamps.attributes.description.lightCount=How many lights should be created. Remember about the 64 visible light source limit!
 entities.FrostHelper/WireLamps.attributes.description.lightAlpha=The Alpha value for the lights.
 entities.FrostHelper/WireLamps.attributes.description.lightStartFade=the Start Fade value for the lights.
 entities.FrostHelper/WireLamps.attributes.description.lightEndFade=the End Fade value for the lights.
+entities.FrostHelper/WireLamps.attributes.description.lampSprite=The sprite used for lamps.
 
 entities.FrostHelper/DirectionalPuffer.placements.name.none=Directional Puffer (None)
 entities.FrostHelper/DirectionalPuffer.placements.name.left=Directional Puffer (Left)
@@ -379,6 +380,12 @@ entities.FrostHelper/StaticDoor.attributes.description.lightOccludeAlpha=The alp
 
 entities.FrostHelper/ArbitraryShapeLightning.placements.name.default=Arbitrary Shape Lightning
 
+entities.FrostHelper/ArbitraryBloom.placements.name.default=Arbitrary Bloom
+
+entities.FrostHelper/LightOccluderEntity.placements.name.default=Light Occluder
+
+entities.FrostHelper/BloomPoint.placements.name.default=Bloom Point
+
 # -- Mod Names --
 # mods.modName.*
 mods.FrostHelper.name=Frost Helper
@@ -440,6 +447,10 @@ triggers.FrostHelper/FlagIfVisibleTrigger.placements.name.default=Flag If Visibl
 
 triggers.FrostHelper/TemporaryFlagTrigger.placements.name.default=Temporary Flag
 triggers.FrostHelper/TemporaryFlagTrigger.placements.tooltip.default=Sets a flag which will get reset automatically when you die
+
+triggers.FrostHelper/BloomColorTrigger.placements.name.default=Bloom Color
+
+triggers.FrostHelper/RainbowBloomTrigger.placements.name.default=Rainbow Bloom
 
 # other
 ui.fh.attachGroup.tooltip=Assigns this entity a new group that's not yet used in this room

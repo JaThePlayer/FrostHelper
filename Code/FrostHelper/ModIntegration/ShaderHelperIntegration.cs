@@ -40,15 +40,32 @@ public static class ShaderHelperIntegration {
     private static FieldInfo module_FX;
     private static EverestModule module;
 
+    /// <summary>
+    /// Used for caching if Shader Helper is not installed
+    /// </summary>
+    private static Dictionary<string, Effect> FallbackEffectDict = new();
+
+    private static Dictionary<string, Effect> GetShaderHelperEffects() => Loaded ? (module_FX.GetValue(module) as Dictionary<string, Effect>)! : FallbackEffectDict;
+
     public static Effect GetEffect(string id) {
-        if (Loaded) {
-            if ((module_FX.GetValue(module) as Dictionary<string, Effect>)!.TryGetValue(id, out var eff)) {
-                return eff;
-            }
-            throw new MissingShaderException(id);
+        if (GetShaderHelperEffects().TryGetValue(id, out var eff)) {
+            return eff;
         }
 
-        throw new NotLoadedException();
+        // try to load the effect if Shader Helper isn't installed or it didn't find it
+        if (Everest.Content.TryGet("Effects/" + id, out var effectAsset, true)) {
+            try {
+                Effect effect = new Effect(Engine.Graphics.GraphicsDevice, effectAsset.Data);
+                GetShaderHelperEffects().Add(id, effect);
+                return effect;
+            } catch (Exception ex) {
+                Logger.Log(LogLevel.Error, "FrostHelper", "Failed to load the shader " + id);
+                Logger.Log(LogLevel.Error, "FrostHelper", "Exception: \n" + ex.ToString());
+            }
+        }
+
+        throw new MissingShaderException(id);
+        //throw new NotLoadedException();
     }
 
     public static Effect BeginGameplayRenderWithEffect(string id, bool endBatch) {
