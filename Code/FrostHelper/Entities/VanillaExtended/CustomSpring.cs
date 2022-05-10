@@ -71,6 +71,8 @@ public class CustomSpring : Spring {
         Ceiling
     }
 
+    private float inactiveTimer;
+
     public new CustomOrientations Orientation;
     public bool RenderOutline;
     public Sprite Sprite;
@@ -212,6 +214,12 @@ public class CustomSpring : Spring {
         base.Render();
     }
 
+    public override void Update() {
+        base.Update();
+
+        inactiveTimer -= Engine.DeltaTime;
+    }
+
     public override void Render() {
         if (Collidable && !RenderOutline) {
             Sprite.Render();
@@ -233,7 +241,8 @@ public class CustomSpring : Spring {
                     }
                     break;
                 case CustomOrientations.Ceiling:
-                    if (player.Speed.Y <= 0f) {
+                    // weird check here to fix buffered spring cancels
+                    if (player.Speed.Y < 0f || (player.Speed.Y == 0f && inactiveTimer <= 0f)) {
                         BounceAnimate();
                         player.SuperBounce(Bottom + player.Height);
                         player.Speed.Y *= -speedMult.Y;
@@ -241,6 +250,7 @@ public class CustomSpring : Spring {
                         TryBreak();
 
                         TimeBasedClimbBlocker.NoClimbTimer = 4f / 60f;
+                        inactiveTimer = 6f * Engine.DeltaTime;
                     }
                     break;
                 case CustomOrientations.WallLeft:
