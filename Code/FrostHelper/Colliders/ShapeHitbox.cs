@@ -34,12 +34,34 @@ public class ShapeHitbox : Collider {
 
     public Rectangle Rectangle => new Rectangle((int) Left, (int) Top, (int) Width, (int) Height);
 
-    public override float Width { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-    public override float Height { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-    public override float Top { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-    public override float Bottom { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-    public override float Left { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-    public override float Right { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+    public override float Width {
+        get => Math.Abs(Right - Left);
+        set => throw new NotImplementedException();
+    }
+
+    public override float Height {
+        get => Math.Abs(Bottom - Top);
+        set => throw new NotImplementedException();
+    }
+
+    public override float Top {
+        get => Points.Min(v => v.Y);
+        set => throw new NotImplementedException();
+    }
+
+    public override float Bottom {
+        get => Points.Max(v => v.Y);
+        set => throw new NotImplementedException();
+    }
+
+    public override float Left {
+        get => Points.Min(v => v.X);
+        set => throw new NotImplementedException();
+    }
+    public override float Right {
+        get => Points.Max(v => v.X);
+        set => throw new NotImplementedException();
+    }
 
     public ShapeHitbox(Vector2[] vectors) {
         Points = vectors;

@@ -8,6 +8,8 @@ public class EntityBackdrop : Backdrop {
         Layer = child.AttrInt("layer");
         AddParallax = child.AttrBool("addParallax");
         MakeUncollidable = child.AttrBool("makeUncollidable");
+
+        EXPERIMENTAL.LayerHelper.Load();
     }
 
     public Vector2 RenderPositionAtCamera(Vector2 position, Vector2 camera) {

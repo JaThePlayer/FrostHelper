@@ -63,7 +63,7 @@ public class ArbitraryShapeLightning : Entity {
             renderer.Remove(item);
         }
         if (Vertices is not null)
-        renderer.Remove(Vertices);
+            renderer.Remove(Vertices);
     }
 
     public override void DebugRender(Camera camera) {

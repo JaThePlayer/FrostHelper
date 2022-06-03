@@ -1,24 +1,22 @@
 ﻿namespace FrostHelper.EXPERIMENTAL;
 
 internal static class LayerHelper {
-    internal static LayerTracker? _temporaryCurrentTracker;
     private static EntityData? _nextEntityData;
     private static Level? _nextLevel;
+    private static bool _hooksLoaded;
 
-    public static LayerTracker GetLayerTracker(this Scene level) {
-        var tracker = _temporaryCurrentTracker ?? level.Tracker.GetEntity<LayerTracker>();
-        if (tracker is null) {
-            tracker = _temporaryCurrentTracker = new();
-            level.Add(tracker);
-        }
-
-        return tracker;
+    public static LayerTracker GetLayerTracker(this Scene scene) {
+        return ControllerHelper<LayerTracker>.AddToSceneIfNeeded(scene);
     }
 
     public static List<Entity> GetEntitiesOnLayer(int layer) => GetLayerTracker(FrostModule.GetCurrentLevel()).GetEntitiesOnLayer(layer);
 
     //[OnLoad]
     public static void Load() {
+        if (_hooksLoaded)
+            return;
+
+        _hooksLoaded = true;
         Everest.Events.Level.OnLoadEntity += Level_OnLoadEntity;
         On.Monocle.Entity.ctor_Vector2 += Entity_ctor_Vector2;
         On.Celeste.Player.OnTransition += Player_OnTransition;
@@ -26,6 +24,10 @@ internal static class LayerHelper {
 
     //[OnUnload]
     public static void Unload() {
+        if (!_hooksLoaded)
+            return;
+
+        _hooksLoaded = false;
         Everest.Events.Level.OnLoadEntity -= Level_OnLoadEntity;
         On.Monocle.Entity.ctor_Vector2 -= Entity_ctor_Vector2;
         On.Celeste.Player.OnTransition -= Player_OnTransition;
@@ -70,6 +72,7 @@ public class LayerTracker : Entity {
     public LayerTracker() {
         Tag |= Tags.Persistent;
         //Tag |= Tags.TransitionUpdate;
+        LayerHelper.Load();
     }
 
     public void OnTransitionEnd() {
@@ -96,11 +99,5 @@ public class LayerTracker : Entity {
 
     public List<Entity> GetEntitiesOnLayer(int layer) {
         return Layers.TryGetValue(layer, out var entities) ? entities : new();
-    }
-
-    public override void Awake(Scene scene) {
-        base.Awake(scene);
-
-        LayerHelper._temporaryCurrentTracker = null;
     }
 }

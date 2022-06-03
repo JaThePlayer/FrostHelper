@@ -1,4 +1,6 @@
-﻿namespace FrostHelper.ModIntegration;
+﻿//#define USE_SHADER_HELPER
+
+namespace FrostHelper.ModIntegration;
 
 public static class ShaderHelperIntegration {
     public class MissingShaderException : Exception {
@@ -17,35 +19,72 @@ public static class ShaderHelperIntegration {
         public override string Message => "Shader Helper is not installed, but Frost Helper tried getting an effect!\nAdd ShaderHelper as a dependency in your everest.yaml!";
     }
 
-    [OnLoadContent]
+    [OnLoad]
     public static void Load() {
+        Everest.Content.OnUpdate += Content_OnUpdate;
+    }
+
+    [OnUnload]
+    public static void Unload() {
+        Everest.Content.OnUpdate -= Content_OnUpdate;
+    }
+
+    private static void Content_OnUpdate(ModAsset from, ModAsset to) {
+        if (to.Format == "cso" || to.Format == ".cso") {
+            try {
+                var effectName = to.PathVirtual.Substring("Effects/".Length, to.PathVirtual.Length - ".cso".Length - "Effects/".Length);
+
+                if (FallbackEffectDict.TryGetValue(effectName, out var effect)) {
+                    effect.Dispose();
+                    FallbackEffectDict.Remove(effectName);
+                }
+
+                Logger.Log(LogLevel.Info, "FrostHelper.ShaderHelper", $"Reloaded {effectName}");
+            } catch (Exception e) {
+                // there's a catch-all filter on Content.OnUpdate that completely ignores the exception,
+                // would nice to actually see it though
+                Logger.LogDetailed(e);
+            }
+
+        }
+    }
+#if USE_SHADER_HELPER
+    [OnLoadContent]
+    public static void TryFindShaderHelper() {
         EverestModuleMetadata shaderHelperMeta = new EverestModuleMetadata { Name = "ShaderHelper", VersionString = "0.0.3" };
         if (IntegrationUtils.TryGetModule(shaderHelperMeta, out EverestModule shaderHelperModule)) {
             module = shaderHelperModule;
             module_FX = shaderHelperModule.GetType().GetField("FX");
-            Loaded = true;
+            ShaderHelperLoaded = true;
         }
     }
 
+
     private static bool _loaded;
-    public static bool Loaded {
+    public static bool ShaderHelperLoaded {
         set => _loaded = value;
         get {
             if (!_loaded)
-                Load();
+                TryFindShaderHelper();
             return _loaded;
         }
     }
 
     private static FieldInfo module_FX;
     private static EverestModule module;
+#endif
 
     /// <summary>
     /// Used for caching if Shader Helper is not installed
     /// </summary>
     private static Dictionary<string, Effect> FallbackEffectDict = new();
 
-    private static Dictionary<string, Effect> GetShaderHelperEffects() => Loaded ? (module_FX.GetValue(module) as Dictionary<string, Effect>)! : FallbackEffectDict;
+    private static Dictionary<string, Effect> GetShaderHelperEffects() =>
+#if USE_SHADER_HELPER
+        ShaderHelperLoaded ? (module_FX.GetValue(module) as Dictionary<string, Effect>)! : FallbackEffectDict;
+#else
+        FallbackEffectDict;
+#endif
 
     public static Effect GetEffect(string id) {
         if (GetShaderHelperEffects().TryGetValue(id, out var eff)) {
@@ -53,7 +92,7 @@ public static class ShaderHelperIntegration {
         }
 
         // try to load the effect if Shader Helper isn't installed or it didn't find it
-        if (Everest.Content.TryGet("Effects/" + id, out var effectAsset, true)) {
+        if (Everest.Content.TryGet($"Effects/{id}.cso", out var effectAsset, true)) {
             try {
                 Effect effect = new Effect(Engine.Graphics.GraphicsDevice, effectAsset.Data);
                 GetShaderHelperEffects().Add(id, effect);
@@ -65,13 +104,9 @@ public static class ShaderHelperIntegration {
         }
 
         throw new MissingShaderException(id);
-        //throw new NotLoadedException();
     }
 
     public static Effect BeginGameplayRenderWithEffect(string id, bool endBatch) {
-        if (!Loaded)
-            throw new NotLoadedException();
-
         Effect effect = GetEffect(id);
 
         ApplyStandardParameters(effect);
@@ -181,7 +216,7 @@ public static class ShaderHelperIntegration {
                             prop.SetValue(f);
                             break;
                     }
-                    
+
                     break;
                 default:
                     throw new Exception($"Entity Batcher doesn't know how to set a parameter of type {prop.ParameterType} for property {item.Key}");

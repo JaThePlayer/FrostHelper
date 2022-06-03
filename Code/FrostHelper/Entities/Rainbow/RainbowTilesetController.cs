@@ -55,6 +55,7 @@ namespace FrostHelper {
                         } else {
                             Draw.SpriteBatch.Draw(mtexture.Texture.Texture, renderPos, mtexture.ClipRect, color);
                         }*/
+                        //Console.WriteLine(self.Alpha);
                         Draw.SpriteBatch.Draw(mtexture.Texture.Texture, renderPos, mtexture.ClipRect,
                             color: contains(controller.TilesetTextures, mtexture.Parent)
                             ? ColorHelper.GetHue(renderPos) * self.Alpha

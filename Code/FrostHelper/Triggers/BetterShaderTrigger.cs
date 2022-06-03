@@ -6,12 +6,10 @@ namespace FrostHelper;
 /// <summary>
 /// Should really be a part of shader helper
 /// </summary>
-[CustomEntity("FrostHelper/BetterShaderTrigger")]
+[CustomEntity("FrostHelper/BetterShaderTrigger", "FrostHelper/ScreenwideShaderTrigger")]
 [Tracked]
 public class BetterShaderTrigger : Trigger {
-
     public string[] Effects;
-
     public bool Activated;
 
     public BetterShaderTrigger(EntityData data, Vector2 offset) : base(data, offset) {
@@ -44,11 +42,7 @@ public class BetterShaderTrigger : Trigger {
                 }
             return;
         }
-
-
     }
-
-
 
     public static void Apply(VirtualRenderTarget source, VirtualRenderTarget target, Effect eff) {
         ShaderHelperIntegration.ApplyStandardParameters(eff);
@@ -63,12 +57,7 @@ public class BetterShaderTrigger : Trigger {
 
         GameplayRenderer.End();
 
-
-        //FrostModule.GetCurrentLevel().Bloom.Apply(GameplayBuffers.TempB, FrostModule.GetCurrentLevel());
-        //Engine.Instance.GraphicsDevice.Textures[1] = GameplayBuffers.TempB;
-
         Engine.Instance.GraphicsDevice.SetRenderTarget(target);
-
 
         Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.Default, RasterizerState.CullNone, eff);
         Draw.SpriteBatch.Draw(tempA, Vector2.Zero, Color.White);

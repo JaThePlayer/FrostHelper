@@ -5,7 +5,7 @@ namespace FrostHelper.Backdrops;
 /// <summary>
 /// Responsible for loading Frost Helper custom backdrops
 /// </summary>
-public class BackdropLoader {
+public static class BackdropLoader {
     [OnLoad]
     public static void Load() {
         On.Celeste.Mod.Everest.Events.Level.LoadBackdrop += Level_LoadBackdrop;

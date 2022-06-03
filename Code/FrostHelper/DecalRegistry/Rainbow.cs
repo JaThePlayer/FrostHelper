@@ -5,18 +5,29 @@ namespace FrostHelper.DecalRegistry;
 public static class Rainbow {
     [OnLoad]
     public static void Load() {
-        IL.Celeste.Decal.Banner.Render += AllowColorChange;
-        IL.Celeste.Decal.CoreSwapImage.Render += AllowColorChange;
-        IL.Celeste.Decal.DecalImage.Render += AllowColorChange;
-        IL.Celeste.Decal.FinalFlagDecalImage.Render += AllowColorChange;
-
         Celeste.Mod.DecalRegistry.AddPropertyHandler("frosthelper.rainbow", (Decal decal, XmlAttributeCollection attrs) => {
             decal.Add(new DecalRainbowifier());
         });
     }
+}
+
+public class DecalRainbowifier : Component {
+    private static bool _loaded;
+    public static void LoadHooks() {
+        if (!_loaded) {
+            _loaded = true;
+            IL.Celeste.Decal.Banner.Render += AllowColorChange;
+            IL.Celeste.Decal.CoreSwapImage.Render += AllowColorChange;
+            IL.Celeste.Decal.DecalImage.Render += AllowColorChange;
+            IL.Celeste.Decal.FinalFlagDecalImage.Render += AllowColorChange;
+        }
+    }
 
     [OnUnload]
-    public static void Unload() {
+    public static void UnloadHooks() {
+        if (!_loaded)
+            return;
+
         IL.Celeste.Decal.Banner.Render -= AllowColorChange;
         IL.Celeste.Decal.CoreSwapImage.Render -= AllowColorChange;
         IL.Celeste.Decal.DecalImage.Render -= AllowColorChange;
@@ -29,18 +40,20 @@ public static class Rainbow {
         while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchCall<Color>("get_White"))) {
             cursor.Emit(OpCodes.Pop);
             cursor.Emit(OpCodes.Ldarg_0); // this
-            cursor.EmitDelegate<Func<Component, Color>>((Component self) => {
-                if (self.Entity.Get<DecalRainbowifier>() != null) {
-                    return ColorHelper.GetHue(self.Scene, self.Entity.Position);
-                } else {
-                    return Color.White;
-                }
-            });
+            cursor.EmitCall(GetColor);
             return;
         }
     }
 
-    public class DecalRainbowifier : Component {
-        public DecalRainbowifier() : base(false, false) { }
+    private static Color GetColor(Component self) {
+        if (self.Entity.Get<DecalRainbowifier>() != null) {
+            return ColorHelper.GetHue(self.Scene, self.Entity.Position);
+        } else {
+            return Color.White;
+        }
+    }
+
+    public DecalRainbowifier() : base(false, false) {
+        LoadHooks();
     }
 }

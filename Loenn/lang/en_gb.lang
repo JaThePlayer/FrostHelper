@@ -446,11 +446,14 @@ triggers.FrostHelper/DoorDisableTrigger.placements.name.default=Disable Door
 triggers.FrostHelper/FlagIfVisibleTrigger.placements.name.default=Flag If Visible
 
 triggers.FrostHelper/TemporaryFlagTrigger.placements.name.default=Temporary Flag
-triggers.FrostHelper/TemporaryFlagTrigger.placements.tooltip.default=Sets a flag which will get reset automatically when you die
+triggers.FrostHelper/TemporaryFlagTrigger.attributes.description.default=Sets a flag which will get reset automatically when you die
 
 triggers.FrostHelper/BloomColorTrigger.placements.name.default=Bloom Color
 
 triggers.FrostHelper/RainbowBloomTrigger.placements.name.default=Rainbow Bloom
+
+triggers.FrostHelper/ScreenwideShaderTrigger.placements.name.default=Screenwide Shader
+triggers.FrostHelper/ScreenwideShaderTrigger.attributes.description.effects=A comma-seperated list of effect names that will be activated by this trigger. Effect names provided here should not start with "Effects/"
 
 # other
 ui.fh.attachGroup.tooltip=Assigns this entity a new group that's not yet used in this room

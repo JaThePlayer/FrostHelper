@@ -1,4 +1,6 @@
-﻿using System.Runtime.CompilerServices;
+﻿//#define SPINNER_BORDERS_USE_RENDER_TARGET
+using System.Runtime.CompilerServices;
+
 
 namespace FrostHelper {
     [CustomEntity("FrostHelper/IceSpinner", "FrostHelperExt/CustomBloomSpinner")]
@@ -304,7 +306,7 @@ namespace FrostHelper {
             if (RegisteredToRenderers) {
                 Scene.Tracker.GetEntity<SpinnerConnectorRenderer>()?.Spinners.Remove(this);
                 if (RenderBorder)
-                    Scene.Tracker.GetEntity<SpinnerBorderRenderer>()?.Spinners.Remove(this);
+                    Scene.Tracker.GetEntity<SpinnerBorderRenderer>()?.Remove(this);
                 if (HasDeco)
                     Scene.Tracker.GetEntity<SpinnerDecoRenderer>()?.Spinners.Remove(this);
                 RegisteredToRenderers = false;
@@ -316,7 +318,7 @@ namespace FrostHelper {
             if (!RegisteredToRenderers) {
                 Scene.Tracker.GetEntity<SpinnerConnectorRenderer>()?.Spinners.Add(this);
                 if (RenderBorder)
-                    Scene.Tracker.GetEntity<SpinnerBorderRenderer>()?.Spinners.Add(this);
+                    Scene.Tracker.GetEntity<SpinnerBorderRenderer>()?.Add(this);
                 if (HasDeco)
                     Scene.Tracker.GetEntity<SpinnerDecoRenderer>()?.Spinners.Add(this);
                 RegisteredToRenderers = true;
@@ -479,7 +481,7 @@ namespace FrostHelper {
             }
             List<MTexture> atlasSubtextures = GFX.Game.GetAtlasSubtextures(bgDirectory);
             Image image = new Image(Calc.Random.Choose(atlasSubtextures)) {
-                Position = offset,
+                Position = offset.Floor(),
                 Rotation = Calc.Random.Choose(0, 1, 2, 3) * 1.57079637f,
                 Color = Tint,
                 Active = false
@@ -686,6 +688,15 @@ namespace FrostHelper {
         }
 
         public override void Render() {
+#if SPINNER_BORDERS_USE_RENDER_TARGET
+            if (Scene.Tracker.GetEntity<SpinnerBorderRenderer>() is { CanUseRenderTargetRender: true })
+                return;
+#endif
+
+            ForceRender();
+        }
+
+        public void ForceRender() {
             foreach (var item in Spinners) {
                 item.filler?.Render();
             }
@@ -698,13 +709,11 @@ namespace FrostHelper {
 
         public SpinnerDecoRenderer() : base() {
             Active = false;
-            //Depth = -8500 - 1;
             Depth = -10000 - 1;
             Tag = Tags.Persistent;
         }
 
         public override void Render() {
-            //Console.WriteLine(Spinners.Count);
             foreach (var item in Spinners) {
                 item.deco?.Render();
             }
@@ -715,6 +724,28 @@ namespace FrostHelper {
     public class SpinnerBorderRenderer : Entity {
         public HashSet<CustomSpinner> Spinners = new HashSet<CustomSpinner>();
 
+#if SPINNER_BORDERS_USE_RENDER_TARGET
+        private Color? _firstBorderColor = null;
+        internal bool CanUseRenderTargetRender;
+#endif
+
+        public void Add(CustomSpinner item) {
+#if SPINNER_BORDERS_USE_RENDER_TARGET
+            if (_firstBorderColor == null) {
+                _firstBorderColor = item.BorderColor;
+                CanUseRenderTargetRender = true;
+            } else if (CanUseRenderTargetRender && (_firstBorderColor != item.BorderColor)) {
+                CanUseRenderTargetRender = false;
+            }
+#endif
+
+            Spinners.Add(item);
+        }
+
+        public void Remove(CustomSpinner item) {
+            Spinners.Remove(item);
+        }
+
         public SpinnerBorderRenderer() : base() {
             Active = false;
             Depth = -8500 + 2;
@@ -722,6 +753,40 @@ namespace FrostHelper {
         }
 
         public override void Render() {
+#if SPINNER_BORDERS_USE_RENDER_TARGET
+            if (CanUseRenderTargetRender) {
+                var target = RenderTargetHelper<SpinnerBorderRenderer>.Get(true);
+                var connectorRenderer = Scene.Tracker.GetEntity<SpinnerConnectorRenderer>();
+
+                GameplayRenderer.End();
+                Engine.Instance.GraphicsDevice.SetRenderTarget(target);
+                Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
+
+                GameplayRenderer.Begin();
+                connectorRenderer?.ForceRender();
+                foreach (var spinner in Scene.Tracker.GetEntities<CustomSpinner>()) {
+                    if (spinner.Visible)
+                        spinner.Render();
+                }
+                GameplayRenderer.End();
+
+                Engine.Instance.GraphicsDevice.SetRenderTarget(GameplayBuffers.Gameplay);
+                GameplayRenderer.Begin();
+
+                // border
+                var renderPos = SceneAs<Level>().Camera.Position;
+                Draw.SpriteBatch.Draw(target, renderPos - Vector2.UnitY, _firstBorderColor!.Value);
+                Draw.SpriteBatch.Draw(target, renderPos + Vector2.UnitY, _firstBorderColor!.Value);
+                Draw.SpriteBatch.Draw(target, renderPos - Vector2.UnitX, _firstBorderColor!.Value);
+                Draw.SpriteBatch.Draw(target, renderPos + Vector2.UnitX, _firstBorderColor!.Value);
+
+                // might as well render everything now
+                Draw.SpriteBatch.Draw(target, renderPos, Color.White);
+
+                return;
+            }
+#endif
+
             foreach (var item in Spinners) {
                 var color = item.BorderColor;
                 var spinnerComponents = item.Components;

@@ -72,7 +72,7 @@ function spinner.sprite(room, entity)
         sprites = jautils.getBordersForAll(sprites, entity.borderColor)
     end
 
-    if entity.bloomAlpha and entity.bloomAlpha > 0 then
+    if entity.bloomAlpha and entity.bloomAlpha > 0 and frostSettings.spinnerBloom() then
         table.insert(sprites, bloomSprite.getSprite(entity, entity.bloomAlpha, entity.bloomRadius or 1))
     end
 

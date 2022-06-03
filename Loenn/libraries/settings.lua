@@ -24,6 +24,10 @@ function frostSettings.spinnerBorder()
     return frostSettings.get("graphics_spinners_createOutlines", true)
 end
 
+function frostSettings.spinnerBloom()
+    return frostSettings.get("graphics_spinners_renderBloom", false)
+end
+
 function frostSettings.rainbowsUseControllers()
     return frostSettings.get("graphics_rainbows_useMaxHelpingHandControllers", true)
 end

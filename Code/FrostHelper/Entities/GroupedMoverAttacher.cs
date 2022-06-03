@@ -102,8 +102,10 @@ public class GroupedMoverAttacher : Entity {
                 if (SpecialHandling) {
                     onMove = entity switch {
                         Platform p => (amt) => {
-                            p.MoveH(amt.X);
-                            p.MoveV(amt.Y);
+                            if (p.Scene is { }) {
+                                p.MoveH(amt.X);
+                                p.MoveV(amt.Y);
+                            }
                         },
                         _ => null,
                     };

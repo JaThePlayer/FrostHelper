@@ -41,7 +41,7 @@ function wireLamps.sprite(room, entity)
 
     local sprites = { drawableLine.fromPoints(points, color, 1) }
 
-    local lightCount = entity.lightCount
+    local lightCount = entity.lightCount or 3
     local lightColors = jautils.getColors(entity.colors or "Red,Yellow,Blue,Green,Orange")
 
     for i = 1, lightCount, 1 do
