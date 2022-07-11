@@ -37,7 +37,7 @@ namespace FrostHelper {
 
             Add(Flash = new Sprite(GFX.Game, "objects/refill/flash"));
             Flash.Add("flash", "", 0.05f);
-            Flash.OnFinish = (_) => Flash.Visible = false;
+            Flash.OnFinish = _ => Flash.Visible = false;
             Flash.CenterOrigin();
 
             Add(Bloom = new BloomPoint(0.8f, 16f));

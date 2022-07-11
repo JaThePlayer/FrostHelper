@@ -18,7 +18,8 @@ temporaryKey.placements =
 {
     name = "normal",
     data = {
-        directory = "collectables/FrostHelper/keytemp"
+        directory = "collectables/FrostHelper/keytemp",
+        emitParticles = true,
     }
 }
 

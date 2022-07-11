@@ -11,11 +11,13 @@ namespace FrostHelper;
 public class BetterShaderTrigger : Trigger {
     public string[] Effects;
     public bool Activated;
+    public bool Clear;
 
     public BetterShaderTrigger(EntityData data, Vector2 offset) : base(data, offset) {
         Effects = data.Attr("effects").Split(',');
 
         Activated = data.Bool("alwaysOn", true);
+        Clear = data.Bool("clear", false);
     }
 
     public override void OnEnter(Player player) {
@@ -37,14 +39,14 @@ public class BetterShaderTrigger : Trigger {
         foreach (var trigger in FrostModule.GetCurrentLevel().Tracker.GetEntities<BetterShaderTrigger>()) {
             if (trigger is BetterShaderTrigger s && s.Activated)
                 foreach (var item in s.Effects) {
-                    Apply(source, source, ShaderHelperIntegration.GetEffect(item));
+                    Apply(source, source, ShaderHelperIntegration.GetEffect(item), s.Clear);
 
                 }
             return;
         }
     }
 
-    public static void Apply(VirtualRenderTarget source, VirtualRenderTarget target, Effect eff) {
+    public static void Apply(VirtualRenderTarget source, VirtualRenderTarget target, Effect eff, bool clear = false) {
         ShaderHelperIntegration.ApplyStandardParameters(eff);
         VirtualRenderTarget tempA = GameplayBuffers.TempA;
 
@@ -58,6 +60,8 @@ public class BetterShaderTrigger : Trigger {
         GameplayRenderer.End();
 
         Engine.Instance.GraphicsDevice.SetRenderTarget(target);
+        if (clear)
+            Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
 
         Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.Default, RasterizerState.CullNone, eff);
         Draw.SpriteBatch.Draw(tempA, Vector2.Zero, Color.White);
@@ -72,6 +76,17 @@ public class BetterShaderTrigger : Trigger {
         ShaderHelperIntegration.ApplyStandardParameters(eff);
 
         Engine.Instance.GraphicsDevice.SetRenderTarget(target);
+
+
+        Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.Default, RasterizerState.CullNone, eff);
+        Draw.SpriteBatch.Draw(source, Vector2.Zero, Color.White);
+        Draw.SpriteBatch.End();
+    }
+
+    public static void SimpleApply(RenderTarget2D source, RenderTargetBinding[] targets, Effect eff) {
+        ShaderHelperIntegration.ApplyStandardParameters(eff);
+
+        Engine.Instance.GraphicsDevice.SetRenderTargets(targets);
 
 
         Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.Default, RasterizerState.CullNone, eff);

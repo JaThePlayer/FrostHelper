@@ -32,14 +32,18 @@ public static class ShaderHelperIntegration {
     private static void Content_OnUpdate(ModAsset from, ModAsset to) {
         if (to.Format == "cso" || to.Format == ".cso") {
             try {
-                var effectName = to.PathVirtual.Substring("Effects/".Length, to.PathVirtual.Length - ".cso".Length - "Effects/".Length);
+                AssetReloadHelper.Do("Reloading Shader", () => {
+                    var effectName = to.PathVirtual.Substring("Effects/".Length, to.PathVirtual.Length - ".cso".Length - "Effects/".Length);
 
-                if (FallbackEffectDict.TryGetValue(effectName, out var effect)) {
-                    effect.Dispose();
-                    FallbackEffectDict.Remove(effectName);
-                }
+                    if (FallbackEffectDict.TryGetValue(effectName, out var effect)) {
+                        if (!effect.IsDisposed)
+                            effect.Dispose();
+                        FallbackEffectDict.Remove(effectName);
+                    }
 
-                Logger.Log(LogLevel.Info, "FrostHelper.ShaderHelper", $"Reloaded {effectName}");
+                    Logger.Log(LogLevel.Info, "FrostHelper.ShaderHelper", $"Reloaded {effectName}");
+                });
+
             } catch (Exception e) {
                 // there's a catch-all filter on Content.OnUpdate that completely ignores the exception,
                 // would nice to actually see it though

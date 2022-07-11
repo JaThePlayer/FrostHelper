@@ -28,7 +28,6 @@ public static class AttachGroupableExt {
             return;
         }
 
-
         var group = baseMover.Group;
         var staticMovers = platform.GetValue<List<StaticMover>>("staticMovers");
 

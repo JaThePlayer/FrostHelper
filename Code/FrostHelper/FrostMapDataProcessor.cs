@@ -12,11 +12,11 @@ public class FrostMapDataProcessor : EverestMapDataProcessor {
     /// <summary>
     /// SID -> roomName, container
     /// </summary>
-    public static Dictionary<string, KeyValuePair<string, BinaryPacker.Element>> GlobalEntityMarkers = new();
+    public static Dictionary<string, List<KeyValuePair<string, BinaryPacker.Element>>> GlobalEntityMarkers = new();
     private string levelName;
 
     public override Dictionary<string, Action<BinaryPacker.Element>> Init() {
-        return new Dictionary<string, Action<BinaryPacker.Element>> {
+        return new() {
             {
                 "level", level => {
                     // be sure to write the level name down.
@@ -36,12 +36,17 @@ public class FrostMapDataProcessor : EverestMapDataProcessor {
             },
             {
                 "entity:FrostHelper/GlobalEntityMarker", container => {
-                    GlobalEntityMarkers[AreaData.SID] = new(levelName, container);
+                    var sid = AreaData.SID;
+
+                    if (!GlobalEntityMarkers.ContainsKey(sid)) {
+                        GlobalEntityMarkers[sid] = new();
+                    }
+                    GlobalEntityMarkers[sid].Add(new(levelName, container));
+                    
                 }
             }
         };
     }
-
     public override void Reset() {
         /*
         string SID = AreaKey.GetSID();
@@ -49,6 +54,7 @@ public class FrostMapDataProcessor : EverestMapDataProcessor {
         {
             SpeedChallenges.Remove(SID);
         }*/
+        GlobalEntityMarkers = new();
     }
 
     

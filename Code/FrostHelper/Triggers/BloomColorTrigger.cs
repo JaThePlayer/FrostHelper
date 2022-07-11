@@ -15,6 +15,56 @@ public class BloomColorTrigger : Trigger {
     }
 }
 
+[CustomEntity("FrostHelper/BloomColorFadeTrigger")]
+public class BloomColorFadeTrigger : Trigger {
+    public BloomColorFadeTrigger(EntityData data, Vector2 offset) : base(data, offset) {
+        From = data.GetColor("bloomAddFrom", "ffffff");
+        To = data.GetColor("bloomAddTo", "ff00ff");
+        PositionMode = data.Enum("positionMode", PositionModes.NoEffect);
+    }
+
+    public override void OnStay(Player player) {
+        var lerped = Color.Lerp(From, To, MathHelper.Clamp(GetPositionLerp(player, PositionMode), 0f, 1f));
+
+        API.API.SetBloomColor(lerped);
+    }
+
+    public Color From;
+
+    public Color To;
+
+    public PositionModes PositionMode;
+}
+
+[CustomEntity("FrostHelper/BloomColorPulseTrigger")]
+public class BloomColorPulseTrigger : Trigger {
+    public Color From;
+    public Color To;
+
+    public float Duration;
+    public Ease.Easer Easer;
+
+    public BloomColorPulseTrigger(EntityData data, Vector2 offset) : base(data, offset) {
+        From = data.GetColor("bloomAddFrom", "ffffff");
+        To = data.GetColor("bloomAddTo", "ff00ff");
+        Duration = data.Float("duration", 0.4f);
+        Easer = data.Easing("easing", Ease.Linear);
+    }
+
+    public override void OnEnter(Player player) {
+        base.OnEnter(player);
+
+        var tween = Tween.Create(Tween.TweenMode.YoyoOneshot, Easer, Duration);
+        tween.OnUpdate = (t) => {
+            var lerped = Color.Lerp(From, To, MathHelper.Clamp(t.Percent, 0f, 1f));
+
+            API.API.SetBloomColor(lerped);
+        };
+        tween.Start();
+        Add(tween);
+    }
+}
+
 
 [CustomEntity("FrostHelper/RainbowBloomTrigger")]
 public class RainbowBloomTrigger : Trigger {

@@ -5,7 +5,8 @@
 /// </summary>
 [CustomEntity("FrostHelper/WireLamps")]
 public class WireLamps : Entity {
-    public MTexture LampTexture;
+    public MTexture? LampTexture;
+    public Sprite[]? Sprites;
 
     public WireLamps(EntityData data, Vector2 offset) : base(data.Position + offset) {
         Vector2 to = data.Nodes[0] + offset;
@@ -22,12 +23,28 @@ public class WireLamps : Entity {
         var lightStartFade = data.Int("lightStartFade", 8);
         var lightEndFade = data.Int("lightEndFade", 16);
 
+        var spritePath = data.Attr("lampSprite", "objects/FrostHelper/wireLamp");
+        var animated = !GFX.Game.Has(spritePath);
+
+        if (animated)
+            Sprites = new Sprite[lights.Length];
+        else
+            LampTexture = GFX.Game[spritePath];
+
         for (int i = 0; i < lights.Length; i++) {
             lights[i] = new VertexLight(colors[random.Next(0, colors.Length)], lightAlpha, lightStartFade, lightEndFade);
             Add(lights[i]);
-        }
 
-        LampTexture = GFX.Game[data.Attr("lampSprite", "objects/FrostHelper/wireLamp")];
+            if (animated) {
+                var sprite = new Sprite(GFX.Game, spritePath) {
+                    Color = lights[i].Color
+                };
+                sprite.AddLoop("i", "", data.Float("frameDelay", .5f));
+                sprite.Play("i", randomizeFrame: true);
+
+                Add(Sprites![i] = sprite);
+            }
+        }
     }
 
     static Color[] defaultColors = new Color[]
@@ -40,13 +57,21 @@ public class WireLamps : Entity {
     };
 
     public override void Render() {
-        Level level = SceneAs<Level>();
-        Vector2 value = new Vector2((float) Math.Sin(sineX + level.WindSineTimer * 2f), (float) Math.Sin(sineY + level.WindSineTimer * 2.8f)) * 8f * level.VisualWind;
-        Curve.Control = (Curve.Begin + Curve.End) / 2f + new Vector2(0f, 24f) + value;
-        Vector2 start = Curve.Begin;
+        var level = SceneAs<Level>();
 
-        for (int i = 1; i <= 16; i++) {
-            float percent = i / 16f;
+        var controlOffset = new Vector2(
+            (float) Math.Sin(sineX + level.WindSineTimer * 2f),
+            (float) Math.Sin(sineY + level.WindSineTimer * 2.8f)
+        ) * 8f;
+
+        Curve.Control = (Curve.Begin + Curve.End) / 2f + new Vector2(0f, 24f) + controlOffset;
+        var start = Curve.Begin;
+
+        const int segments = 16;
+
+        for (int i = 1; i <= segments; i++) {
+            float percent = i / (float) segments;
+
             Vector2 point = Curve.GetPoint(percent);
             Draw.Line(start, point, Color);
             start = point;
@@ -55,8 +80,14 @@ public class WireLamps : Entity {
         for (int i = 1; i <= lights.Length; i++) {
             float percent = i / (lights.Length + 1f);
             Vector2 point = Curve.GetPoint(percent);
-            LampTexture.DrawCentered(point, getColor(i));
+
             lights[i - 1].Position = point - Position;
+
+            if (LampTexture is { }) {
+                LampTexture.DrawCentered(point, getColor(i));
+            } else {
+                Sprites![i - 1].Position = lights[i - 1].Position;
+            }
         }
 
         base.Render();

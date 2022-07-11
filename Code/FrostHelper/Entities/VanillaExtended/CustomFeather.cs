@@ -1,6 +1,4 @@
-﻿using Celeste.Mod.Entities;
-
-namespace FrostHelper {
+﻿namespace FrostHelper {
     [Tracked(false)]
     [CustomEntity("FrostHelper/CustomFeather")]
     public class CustomFeather : Entity {
@@ -18,6 +16,19 @@ namespace FrostHelper {
 
             FrostModule.RegisterILHook(new ILHook(typeof(Player).GetMethod("orig_Update", BindingFlags.Instance | BindingFlags.Public), modFeatherState));
             FrostModule.RegisterILHook(new ILHook(typeof(Player).GetMethod("orig_UpdateSprite", BindingFlags.Instance | BindingFlags.NonPublic), modFeatherState));
+
+            On.Celeste.PlayerSprite.Render += PlayerSprite_Render;
+        }
+
+        private static void PlayerSprite_Render(On.Celeste.PlayerSprite.orig_Render orig, PlayerSprite self) {
+            if (self.EntityAs<Player>() is { } player && self.Color == Color.White && player.StateMachine.State == CustomFeatherState) {
+                var origC = self.Color;
+                self.SetColor(player.Get<PlayerHair>()?.Color ?? self.Color);
+                orig(self);
+                self.Color = origC;
+            } else {
+                orig(self);
+            }
         }
 
         [OnUnload]
@@ -30,18 +41,20 @@ namespace FrostHelper {
             IL.Celeste.Player.BeforeDownTransition -= modFeatherState;
             IL.Celeste.Player.BeforeUpTransition -= modFeatherState;
             IL.Celeste.Player.HiccupJump -= modFeatherState;
+
+            On.Celeste.PlayerSprite.Render -= PlayerSprite_Render;
         }
 
         static void modFeatherState(ILContext il) {
             ILCursor cursor = new ILCursor(il);
             while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdcI4(Player.StStarFly) && instr.Previous.MatchCallvirt<StateMachine>("get_State"))) {
                 cursor.Emit(OpCodes.Ldarg_0); // this
-                cursor.EmitDelegate(FrostModule.GetFeatherState);
+                cursor.EmitCall(FrostModule.GetFeatherState);
             }
             cursor.Index = 0;
             while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdcI4(Player.StRedDash) && instr.Previous.MatchCallvirt<StateMachine>("get_State"))) {
                 cursor.Emit(OpCodes.Ldarg_0); // this
-                cursor.EmitDelegate(FrostModule.GetRedDashState);
+                cursor.EmitCall(FrostModule.GetRedDashState);
             }
         }
         #endregion
@@ -101,6 +114,9 @@ namespace FrostHelper {
             if (player.StateMachine.State != 2) {
                 player.SceneAs<Level>().Particles.Emit(feather.P_Boost, 12, player.Center, Vector2.One * 4f, (-player.Speed).Angle());
             }
+
+            // reset to vanilla value
+            player.SetValue("starFlyColor", ColorHelper.GetColor("ffd65c"));
         }
         public static IEnumerator CustomFeatherCoroutine(Entity e) {
             Player player = (e as Player)!;
@@ -133,6 +149,7 @@ namespace FrostHelper {
             Input.Rumble(RumbleStrength.Strong, RumbleLength.Medium);
             player.SceneAs<Level>().DirectionalShake(data.Get<Vector2>("starFlyLastDir"), 0.3f);
             while (data.Get<float>("starFlyTimer") > 0.5f) {
+                player.Hair.Color = player.Sprite.Color = feather.FlyColor;
                 yield return null;
             }
             data.Get<SoundSource>("starFlyWarningSfx").Play("event:/game/06_reflection/feather_state_warning", null, 0f);
@@ -408,6 +425,8 @@ namespace FrostHelper {
                 Input.Rumble(RumbleStrength.Medium, RumbleLength.Medium);
             } else {
                 if (StartStarFly(player)) {
+                    player.SetValue("starFlyColor", FlyColor);
+
                     if (player.StateMachine.State != CustomFeatherState && player.StateMachine.State != Player.StStarFly) {
                         Audio.Play(shielded ? "event:/game/06_reflection/feather_bubble_get" : "event:/game/06_reflection/feather_get", Position);
                     } else {

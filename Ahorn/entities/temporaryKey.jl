@@ -2,7 +2,7 @@ module TemporaryKeyFrostHelper
 
 using ..Ahorn, Maple
 
-@mapdef Entity "FrostHelper/TemporaryKey" TemporaryKey(x::Integer, y::Integer, directory::String="collectables/FrostHelper/keytemp")
+@mapdef Entity "FrostHelper/TemporaryKey" TemporaryKey(x::Integer, y::Integer, directory::String="collectables/FrostHelper/keytemp", emitParticles::Bool=true)
 
 const placements = Ahorn.PlacementDict(
     "Temporary Key (Frost Helper)" => Ahorn.EntityPlacement(

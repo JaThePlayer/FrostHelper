@@ -1,4 +1,5 @@
-﻿using MonoMod;
+﻿using FrostHelper.ModIntegration;
+using MonoMod;
 
 namespace FrostHelper;
 
@@ -232,9 +233,9 @@ public class CustomSpring : Spring {
         if (!(player.StateMachine.State == Player.StDreamDash || !playerCanUse)) {
             switch (Orientation) {
                 case CustomOrientations.Floor:
-                    if (player.Speed.Y >= 0f) {
+                    if (GravityHelperIntegration.InvertIfPlayerInverted(player.Speed.Y) >= 0f) {
                         BounceAnimate();
-                        player.SuperBounce(Top);
+                        GravityHelperIntegration.SuperBounce(player, Top);
                         player.Speed.Y *= speedMult.Y;
 
                         TryBreak();
@@ -242,10 +243,19 @@ public class CustomSpring : Spring {
                     break;
                 case CustomOrientations.Ceiling:
                     // weird check here to fix buffered spring cancels
-                    if (player.Speed.Y < 0f || (player.Speed.Y == 0f && inactiveTimer <= 0f)) {
+                    if (GravityHelperIntegration.InvertIfPlayerInverted(player.Speed.Y) < 0f 
+                        || (player.Speed.Y == 0f && inactiveTimer <= 0f)
+                    ) {
                         BounceAnimate();
-                        player.SuperBounce(Bottom + player.Height);
-                        player.Speed.Y *= -speedMult.Y;
+
+                        if (GravityHelperIntegration.IsPlayerInverted?.Invoke() ?? false) {
+                            player.SuperBounce(Bottom + player.Height);
+                            player.Speed.Y *= speedMult.Y;
+                        } else {
+                            player.SuperBounce(Bottom + player.Height);
+                            player.Speed.Y *= -speedMult.Y;
+                        }
+
                         Player_varJumpSpeed.SetValue(player, player.Speed.Y);
                         TryBreak();
 

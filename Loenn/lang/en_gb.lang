@@ -450,6 +450,8 @@ triggers.FrostHelper/TemporaryFlagTrigger.attributes.description.default=Sets a 
 
 triggers.FrostHelper/BloomColorTrigger.placements.name.default=Bloom Color
 
+triggers.FrostHelper/BloomColorFadeTrigger.placements.name.default=Bloom Color Fade
+
 triggers.FrostHelper/RainbowBloomTrigger.placements.name.default=Rainbow Bloom
 
 triggers.FrostHelper/ScreenwideShaderTrigger.placements.name.default=Screenwide Shader

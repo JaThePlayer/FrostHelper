@@ -21,4 +21,8 @@ public static class CustomSpriteHelper {
         cache[customDirectory] = customData;
         return customData.Create();
     }
+
+    public static Sprite Clone(this Sprite sprite) {
+        return sprite.Invoke<Sprite>("CreateClone");
+    }
 }

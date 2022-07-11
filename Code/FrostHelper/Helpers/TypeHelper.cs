@@ -1,11 +1,28 @@
-﻿using Celeste.Mod.Entities;
-using Celeste.Mod.Helpers;
+﻿using Celeste.Mod.Helpers;
 
 namespace FrostHelper;
 
 public static class TypeHelper {
-    private static Dictionary<string, Type> entityNameToType = null!;
+    private static Dictionary<string, Type>? entityNameToType = null;
     private static Dictionary<string, Type> entityNameToType2 = new();
+
+    [OnLoad]
+    public static void Load() {
+        On.Celeste.Mod.Everest.Loader.LoadModAssembly += Loader_LoadModAssembly;
+    }
+
+    [OnUnload]
+    public static void Unload() {
+        On.Celeste.Mod.Everest.Loader.LoadModAssembly -= Loader_LoadModAssembly;
+    }
+
+    // Clear the cache if a mod is loaded/hot reloaded
+    private static void Loader_LoadModAssembly(On.Celeste.Mod.Everest.Loader.orig_LoadModAssembly orig, EverestModuleMetadata meta, Assembly asm) {
+        orig(meta, asm);
+        entityNameToType = null!;
+        entityNameToType2.Clear();
+    }
+
     public static Type EntityNameToType(string entityName) {
         return EntityNameToTypeSafe(entityName) ?? throw new Exception($"Unknown entity name: {entityName}.");
     }
@@ -265,7 +282,7 @@ public static class TypeHelper {
                     }
 
                     string IDTrim = id.Trim();
-                    if (!entityNameToType.ContainsKey(IDTrim)) {
+                    if (!entityNameToType!.ContainsKey(IDTrim)) {
                         entityNameToType.Add(IDTrim, type);
                     } else {
                         if (!entityNameToType2.ContainsKey(IDTrim))

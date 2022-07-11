@@ -1,4 +1,5 @@
 ﻿using Celeste.Mod.Meta;
+using FrostHelper.ModIntegration;
 
 #if PLAYERSTATEHELPER
 using Celeste.Mod.PlayerStateHelper.API;
@@ -186,7 +187,7 @@ namespace FrostHelper.Entities.Boosters {
                 if (player.Dead) {
                     PlayerDied();
                 } else {
-                    sprite.RenderPosition = player.Center + Booster.playerOffset;
+                    sprite.RenderPosition = player.Center + PlayerOffset;
                     loopingSfx.Position = sprite.Position;
                     if (Scene.OnInterval(0.02f)) {
                         (Scene as Level)!.ParticlesBG.Emit(particleType, 2, player.Center - dir * 3f + new Vector2(0f, -2f), new Vector2(3f, 3f), ParticleColor, angle);
@@ -261,7 +262,7 @@ namespace FrostHelper.Entities.Boosters {
                 Vector2 target = Vector2.Zero;
 
                 if (player != null && CollideCheck(player)) {
-                    target = player.Center + Booster.playerOffset - Position;
+                    target = player.Center + PlayerOffset - Position;
                 }
                 sprite.Position = Calc.Approach(sprite.Position, target, 80f * Engine.DeltaTime);
             }
@@ -342,7 +343,7 @@ namespace FrostHelper.Entities.Boosters {
 
         public static ParticleType P_RedAppear => Booster.P_RedAppear;
 
-        public static readonly Vector2 playerOffset = new Vector2(0f, -2f);
+        public static Vector2 PlayerOffset => GravityHelperIntegration.InvertIfPlayerInverted(Booster.playerOffset);
 
         public Sprite sprite;
 
@@ -506,7 +507,7 @@ namespace FrostHelper.Entities.Boosters {
             Player player = (e as Player)!;
             var booster = GetBoosterThatIsBoostingPlayer(player);
 
-            Vector2 boostTarget = (Vector2) FrostModule.player_boostTarget.GetValue(player);
+            Vector2 boostTarget = GravityHelperIntegration.InvertIfPlayerInverted( (Vector2) FrostModule.player_boostTarget.GetValue(player));
             Vector2 value = Input.Aim.Value * 3f;
             Vector2 vector = Calc.Approach(player.ExactPosition, boostTarget - player.Collider.Center + value, 80f * Engine.DeltaTime);
             player.MoveToX(vector.X, null);
@@ -531,8 +532,6 @@ namespace FrostHelper.Entities.Boosters {
 
             GetBoosterThatIsBoostingPlayer(player).OnBoostEnd(player);
             //new DynData<Player>(player).Set<GenericCustomBooster>("fh.customBooster", null!);
-
-
         }
 
         public static IEnumerator BoostCoroutine(Entity e) {

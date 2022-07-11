@@ -1,7 +1,55 @@
-﻿namespace FrostHelper {
-    [Celeste.Mod.Entities.CustomEntity("FrostHelper/TemporaryKey")]
+﻿using MonoMod;
+
+namespace FrostHelper {
+    [CustomEntity("FrostHelper/TemporaryKey")]
     public class TemporaryKey : Key {
+        #region Hooks
+        [OnLoad]
+        public static void Load() {
+            IL.Celeste.Key.Added += Key_Added;
+        }
+
+        [OnUnload]
+        public static void Unload() {
+            IL.Celeste.Key.Added -= Key_Added;
+        }
+
+        private static void Key_Added(ILContext il) {
+            ILCursor cursor = new(il);
+
+            while (cursor.TryGotoNext(MoveType.Before, instr => instr.MatchCall<Entity>(nameof(Entity.Add)))) {
+                /*
+                  ParticleSystem particlesFG = (scene as Level).ParticlesFG;
+                  var loc1 = this.shimmerParticles = new ParticleEmitter(particlesFG, Key.P_Shimmer, Vector2.Zero, new Vector2(6f, 6f), 1, 0.1f)
+                + if (!ShouldSpawnParticles(this)) {
+			        base.Add(loc1);
+			        this.shimmerParticles.SimulateCycle();
+                + }
+                 */
+                var label = cursor.DefineLabel();
+
+                cursor.Emit(OpCodes.Pop); // pop the ldloc_1.
+                // 'this' is already on the stack
+                cursor.EmitCall(ShouldSpawnParticles);
+                cursor.Emit(OpCodes.Brfalse, label);
+
+                // restore the stack
+                cursor.Emit(OpCodes.Ldarg_0); // this
+                cursor.Emit(OpCodes.Ldloc_1);
+
+                cursor.GotoNext(MoveType.After, instr => instr.MatchCallvirt<ParticleEmitter>(nameof(ParticleEmitter.SimulateCycle)));
+                cursor.MarkLabel(label);
+            }
+        }
+
+        private static bool ShouldSpawnParticles(Key key) {
+            return !(key is TemporaryKey { EmitParticles: false });
+        }
+        #endregion
+
         public new bool Turning { get; private set; }
+
+        public readonly bool EmitParticles;
 
         public TemporaryKey(EntityData data, Vector2 offset, EntityID id) : base(data.Position + offset, id, data.NodesOffset(offset)) {
             this.follower = Get<Follower>();
@@ -20,17 +68,20 @@
             follower.OnLoseLeader = (Action) Delegate.Combine(follower.OnLoseLeader, new Action(Dissolve));
             this.follower.PersistentFollow = false; // was false
             Add(new TransitionListener {
-                OnOut = delegate (float f) {
+                OnOut = f => {
                     StartedUsing = false;
                     if (!IsUsed) {
                         Dissolve();
                     }
                 }
             });
+
+            EmitParticles = data.Bool("emitParticles", true);
         }
 
         public override void Added(Scene scene) {
             base.Added(scene);
+
             if (scene is Level level) {
                 start = Position;
                 startLevel = level.Session.Level;
@@ -83,12 +134,14 @@
             }
             sprite.Scale = Vector2.Zero;
             Visible = false;
-            bool flag = level.Session.Level != startLevel;
-            if (flag) {
+
+            if (level.Session.Level != startLevel) {
                 RemoveSelf();
                 yield break;
             }
+
             yield return 0.3f;
+
             dissolved = false;
             Audio.Play("event:/game/general/seed_reappear", Position);
             Position = start;

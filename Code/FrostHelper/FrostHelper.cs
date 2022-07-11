@@ -1,6 +1,8 @@
 ﻿using Celeste.Mod.Meta;
 using FrostHelper.Entities.Boosters;
+using FrostHelper.ModIntegration;
 using MonoMod.ModInterop;
+using System.Threading;
 
 namespace FrostHelper;
 
@@ -38,6 +40,7 @@ public class FrostModule : EverestModule {
 #endif
 
         AttributeHelper.InvokeAllWithAttribute(typeof(OnLoadContent));
+        GravityHelperIntegration.Load();
     }
 
     private static List<ILHook> registeredHooks = new List<ILHook>();
@@ -49,6 +52,7 @@ public class FrostModule : EverestModule {
     // Load runs before Celeste itself has initialized properly.
     public override void Load() {
         typeof(API.API).ModInterop();
+
         // Legacy entity creation (for back when we didn't have the CustomEntity attribute)
         Everest.Events.Level.OnLoadEntity += OnLoadEntity;
 
@@ -64,13 +68,6 @@ public class FrostModule : EverestModule {
         On.Celeste.Player.UpdateSprite += Player_UpdateSprite;
 
         AttributeHelper.InvokeAllWithAttribute(typeof(OnLoad));
-
-        //On.Celeste.CassetteBlock.BoxSide.Render += BoxSide_Render;
-    }
-
-    // TODO:REMOVE
-    private void BoxSide_Render(On.Celeste.CassetteBlock.BoxSide.orig_Render orig, Entity self) {
-
     }
 
     public static List<Entity> CollideAll(Entity entity) {
@@ -318,17 +315,10 @@ public class FrostModule : EverestModule {
         AttributeHelper.InvokeAllWithAttribute(typeof(OnUnload));
 
         OutlineHelper.Dispose();
-
-        On.Celeste.CassetteBlock.BoxSide.Render -= BoxSide_Render;
     }
 
     // Optional, initialize anything after Celeste has initialized itself properly.
     public override void Initialize() {
-        foreach (EverestModule mod in Everest.Modules) {
-            if (mod.Metadata.Name == "FrostHelperExtension") {
-                throw new Exception("MOD CONFLICT: Please uninstall the FrostHelperExtension mod");
-            }
-        }
     }
 
     private static bool OnLoadEntity(Level level, LevelData levelData, Vector2 offset, EntityData entityData) {

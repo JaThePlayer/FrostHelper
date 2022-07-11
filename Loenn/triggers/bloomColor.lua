@@ -1,3 +1,6 @@
+local enums = require("consts.celeste_enums")
+local jautils = require("mods").requireFromPlugin("libraries.jautils")
+
 return {
     {
         name = "FrostHelper/BloomColorTrigger",
@@ -22,5 +25,56 @@ return {
                 enable = true,
             }
         },
+    },
+    {
+        name = "FrostHelper/BloomColorFadeTrigger",
+        placements = {
+            name = "default",
+            data = {
+                bloomAddFrom = "ffffff",
+                bloomAddTo = "ff00ff",
+                positionMode = "NoEffect",
+            }
+        },
+        fieldInformation = {
+            bloomAddFrom = {
+                fieldType = "color",
+                allowXNAColors = true,
+            },
+            bloomAddTo = {
+                fieldType = "color",
+                allowXNAColors = true,
+            },
+            positionMode = {
+                options = enums.trigger_position_modes,
+                editable = false
+            }
+        }
+    },
+    {
+        name = "FrostHelper/BloomColorPulseTrigger",
+        placements = {
+            name = "default",
+            data = {
+                bloomAddFrom = "ffffff",
+                bloomAddTo = "ff00ff",
+                duration = 0.4,
+                easing = "Linear"
+            }
+        },
+        fieldInformation = {
+            bloomAddFrom = {
+                fieldType = "color",
+                allowXNAColors = true,
+            },
+            bloomAddTo = {
+                fieldType = "color",
+                allowXNAColors = true,
+            },
+            easing = {
+                options = jautils.easings,
+                editable = false
+            }
+        }
     }
 }
