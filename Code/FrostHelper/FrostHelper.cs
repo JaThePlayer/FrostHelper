@@ -2,7 +2,6 @@
 using FrostHelper.Entities.Boosters;
 using FrostHelper.ModIntegration;
 using MonoMod.ModInterop;
-using System.Threading;
 
 namespace FrostHelper;
 
@@ -393,7 +392,7 @@ public class FrostModule : EverestModule {
         return Engine.Scene switch {
             Level level => level,
             LevelLoader loader => loader.Level,
-            AssetReloadHelper => (Level)AssetReloadHelper.ReturnToScene,
+            AssetReloadHelper => (Level) AssetReloadHelper.ReturnToScene,
             _ => throw new Exception("GetCurrentLevel called outside of a level... how did you manage that?")
         };
     }

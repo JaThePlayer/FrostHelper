@@ -1,6 +1,4 @@
-﻿using Celeste.Mod.Entities;
-
-namespace FrostHelper;
+﻿namespace FrostHelper;
 
 [CustomEntity("FrostHelper/StopCustomSnowballTrigger")]
 public class StopCustomSnowballTrigger : Trigger {

@@ -1,47 +1,47 @@
-﻿namespace FrostHelper.Entities.WallBouncePresentation {
-    public abstract class WallbouncePresentationPage {
-        public int Width => Presentation.ScreenWidth;
+﻿namespace FrostHelper.Entities.WallBouncePresentation;
 
-        public int Height => Presentation.ScreenHeight;
+public abstract class WallbouncePresentationPage {
+    public int Width => Presentation.ScreenWidth;
 
-        public abstract IEnumerator Routine();
+    public int Height => Presentation.ScreenHeight;
 
-        public virtual void Added(WallbouncePresentation presentation) {
-            Presentation = presentation;
+    public abstract IEnumerator Routine();
+
+    public virtual void Added(WallbouncePresentation presentation) {
+        Presentation = presentation;
+    }
+
+    public virtual void Update() {
+    }
+
+    public virtual void Render() {
+    }
+
+    protected IEnumerator PressButton() {
+        WaitingForInput = true;
+        while (!Input.MenuConfirm.Pressed) {
+            yield return null;
         }
+        WaitingForInput = false;
+        Audio.Play("event:/new_content/game/10_farewell/ppt_mouseclick");
+        yield break;
+    }
 
-        public virtual void Update() {
-        }
+    public WallbouncePresentation Presentation;
 
-        public virtual void Render() {
-        }
+    public Color ClearColor;
 
-        protected IEnumerator PressButton() {
-            WaitingForInput = true;
-            while (!Input.MenuConfirm.Pressed) {
-                yield return null;
-            }
-            WaitingForInput = false;
-            Audio.Play("event:/new_content/game/10_farewell/ppt_mouseclick");
-            yield break;
-        }
+    public Transitions Transition;
 
-        public WallbouncePresentation Presentation;
+    public bool AutoProgress;
 
-        public Color ClearColor;
+    public bool WaitingForInput;
 
-        public Transitions Transition;
-
-        public bool AutoProgress;
-
-        public bool WaitingForInput;
-
-        public enum Transitions {
-            ScaleIn,
-            FadeIn,
-            Rotate3D,
-            Blocky,
-            Spiral
-        }
+    public enum Transitions {
+        ScaleIn,
+        FadeIn,
+        Rotate3D,
+        Blocky,
+        Spiral
     }
 }

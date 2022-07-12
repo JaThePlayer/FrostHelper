@@ -9,6 +9,12 @@ public static class TimeBasedClimbBlocker {
         On.Celeste.Level.Update += Level_Update;
     }
 
+    [OnUnload]
+    public static void Unload() {
+        On.Celeste.Player.ClimbCheck -= Player_ClimbCheck;
+        On.Celeste.Level.Update -= Level_Update;
+    }
+
     private static void Level_Update(On.Celeste.Level.orig_Update orig, Celeste.Level self) {
         orig(self);
         NoClimbTimer -= Engine.DeltaTime;
@@ -19,11 +25,5 @@ public static class TimeBasedClimbBlocker {
             return false;
         }
         return orig(self, dir, yAdd);
-    }
-
-    [OnUnload]
-    public static void Unload() {
-        On.Celeste.Player.ClimbCheck -= Player_ClimbCheck;
-        On.Celeste.Level.Update -= Level_Update;
     }
 }

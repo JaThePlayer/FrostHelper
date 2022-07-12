@@ -1,6 +1,4 @@
-﻿using Celeste.Mod.Entities;
-
-namespace FrostHelper;
+﻿namespace FrostHelper;
 
 public abstract class IndicatorEntity : Entity {
     public Image Image;
