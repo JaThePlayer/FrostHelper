@@ -48,7 +48,10 @@ function wireLamps.sprite(room, entity)
     for i = 1, lightCount, 1 do
         local percent = i / (lightCount + 1)
         local pointX, pointY = drawing.getCurvePoint(start, stop, control, percent)
-        local lamp = drawableSprite.fromTexture(entity.lampSprite or "objects/FrostHelper/wireLamp", { x = pointX, y = pointY })
+        local path = entity.lampSprite or "objects/FrostHelper/wireLamp"
+        local lamp =
+            drawableSprite.fromTexture(path, { x = pointX, y = pointY }) or
+            drawableSprite.fromTexture(path .. "00", { x = pointX, y = pointY })
         lamp:setColor(lightColors[i % #lightColors])
 
         table.insert(sprites, lamp)

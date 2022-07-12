@@ -41,6 +41,7 @@ public class WireLamps : Entity {
                 };
                 sprite.AddLoop("i", "", data.Float("frameDelay", .5f));
                 sprite.Play("i", randomizeFrame: true);
+                sprite.CenterOrigin();
 
                 Add(Sprites![i] = sprite);
             }
