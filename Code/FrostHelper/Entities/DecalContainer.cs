@@ -1,4 +1,4 @@
-﻿#define DEBUG_DISPLAY
+﻿//#define DEBUG_DISPLAY
 
 using System.Runtime.CompilerServices;
 

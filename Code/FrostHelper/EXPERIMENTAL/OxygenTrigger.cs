@@ -1,6 +1,4 @@
-﻿using System.Security.Policy;
-
-namespace FrostHelper.EXPERIMENTAL; 
+﻿namespace FrostHelper.EXPERIMENTAL; 
 
 [CustomEntity("FrostHelper/OxygenLossTrigger")]
 

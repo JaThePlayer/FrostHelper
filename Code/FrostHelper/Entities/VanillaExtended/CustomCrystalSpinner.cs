@@ -649,7 +649,16 @@ public class SpinnerConnectorRenderer : Entity {
             //item.filler?.Render();
             // Entity.Render is hooked by some mods, and has a lot of indirection, let's just do this manually...
             if (spinner.Visible && spinner.filler is { } filler) {
-                DrawWithColor(filler, spinner.Tint);
+                var fillerComponents = filler.Components;
+                Image image = (fillerComponents[0] as Image)!;
+                Texture2D texture = image.Texture.Texture.Texture_Safe;
+                Rectangle? clipRect = new Rectangle?(image.Texture.ClipRect);
+                float scaleFix = image.Texture.ScaleFix;
+                Vector2 origin = (image.Origin - image.Texture.DrawOffset) / scaleFix;
+
+                foreach (Image img in fillerComponents) {
+                    Draw.SpriteBatch.Draw(texture, img.RenderPosition, clipRect, img.Color, img.Rotation, origin, scaleFix, SpriteEffects.None, 0f);
+                }
             }
         }
     }
