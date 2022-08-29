@@ -71,4 +71,24 @@ function helper.selection(room, entity)
     return main, { }
 end
 
+-- will be added to lonn soon:tm:
+--[[
+function helper.nodeAdded(room, entity, node)
+    -- place node at mouse position
+    local mx, my = love.mouse.getPosition()
+    local nodeX, nodeY = viewportHandler.getRoomCoordinates(room, mx, my)
+
+    local nodes = entity.nodes
+
+    if node == 0 then
+        table.insert(nodes, 1, {x = nodeX, y = nodeY})
+
+    else
+        table.insert(nodes, node + 1, {x = nodeX, y = nodeY})
+    end
+
+    return true
+end
+]]
+
 return helper

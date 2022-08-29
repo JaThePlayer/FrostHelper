@@ -34,7 +34,9 @@ public class ShaderWrapperBackdrop : Backdrop {
 
         Renderer.EndSpritebatch();
         gd.SetRenderTarget(tempBuffer);
+        gd.Clear(Color.Transparent);
         //Renderer.StartSpritebatch(BlendState.AlphaBlend);
+        //gd.Textures[1] = GFX.MagicGlowNoise.Texture;
         Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone, 
                                null, Matrix.Identity);
         Renderer.SetValue("usingSpritebatch", true);

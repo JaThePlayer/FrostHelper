@@ -5,14 +5,18 @@ public class CustomSnowball : Entity {
     public float ResetTime;
     public bool DrawOutline;
     public AppearDirection appearDirection;
+    public float SafeZoneSize;
 
     private bool leaving;
 
-    public CustomSnowball(string spritePath = "snowball", float speed = 200f, float resetTime = 0.8f, float sineWaveFrequency = 0.5f, bool drawOutline = true, AppearDirection dir = AppearDirection.Right) {
+    public CustomSnowball(string spritePath = "snowball", float speed = 200f, float resetTime = 0.8f, 
+                          float sineWaveFrequency = 0.5f, bool drawOutline = true,
+                          AppearDirection dir = AppearDirection.Right,
+                          float safeZoneSize = 64f) {
         appearDirection = dir;
 
         Speed = speed;
-        if (dir == AppearDirection.Left)
+        if (dir == AppearDirection.Left || dir == AppearDirection.Top)
             Speed = -speed;
 
         ResetTime = resetTime;
@@ -22,14 +26,15 @@ public class CustomSnowball : Entity {
         Collider = new Hitbox(12f, 9f, -5f, -2f);
         bounceCollider = new Hitbox(16f, 6f, -6f, -8f);
 
-        Add(new PlayerCollider(new Action<Player>(OnPlayer), null, null));
-        Add(new PlayerCollider(new Action<Player>(OnPlayerBounce), bounceCollider, null));
+        Add(new PlayerCollider(OnPlayer, null, null));
+        Add(new PlayerCollider(OnPlayerBounce, bounceCollider, null));
         Add(Sine = new SineWave(sineWaveFrequency, 0f));
 
         CreateSprite(spritePath);
 
         Sprite!.Play("spin", false, false);
         Add(spawnSfx = new SoundSource());
+        SafeZoneSize = safeZoneSize;
     }
 
     public void StartLeaving() {
@@ -39,6 +44,10 @@ public class CustomSnowball : Entity {
     public void CreateSprite(string path) {
         Sprite?.RemoveSelf();
         Add(Sprite = GFX.SpriteBank.Create(path));
+
+        if (IsVertical()) {
+        //    Sprite.Rotation = Calc.ToRad(90f);
+        }
     }
 
     public override void Added(Scene scene) {
@@ -48,13 +57,21 @@ public class CustomSnowball : Entity {
     }
 
     private void ResetPosition() {
-        Player entity = level.Tracker.GetEntity<Player>();
-        if (entity != null && CheckIfPlayerOutOfBounds(entity)) {
+        Player player = level.Tracker.GetEntity<Player>();
+        if (player != null && CheckIfPlayerOutOfBounds(player)) {
+            Console.WriteLine("Reset");
             spawnSfx.Play("event:/game/04_cliffside/snowball_spawn", null, 0f);
             Collidable = Visible = true;
             resetTimer = 0f;
-            X = GetResetXPosition();
-            atY = Y = entity.CenterY;
+
+            if (IsVertical()) {
+                Y = GetResetXPosition();
+                atY = X = player.CenterX;
+            } else {
+                X = GetResetXPosition();
+                atY = Y = player.CenterY;
+            }
+
             Sine.Reset();
             Sprite.Play("spin", false, false);
             return;
@@ -62,37 +79,42 @@ public class CustomSnowball : Entity {
         resetTimer = 0.05f;
     }
 
-    private bool CheckIfPlayerOutOfBounds(Player entity) {
-        if (entity is null)
+    private bool IsVertical() => appearDirection is AppearDirection.Top or AppearDirection.Bottom;
+
+    /// <summary>
+    /// If false, the snowball should not respawn, so as to not kill the player unfairly
+    /// </summary>
+    private bool CheckIfPlayerOutOfBounds(Player player) {
+        if (player is null)
             return false;
 
-        if (appearDirection == AppearDirection.Right) {
-            return entity.Right < (level.Bounds.Right - 64);
-        } else if (appearDirection == AppearDirection.Left) {
-            return entity.Left > (level.Bounds.Left + 64);
-        }
-
-        return false;
+        return appearDirection switch {
+            AppearDirection.Right => player.Right < (level.Bounds.Right - SafeZoneSize),
+            AppearDirection.Left => player.Left > (level.Bounds.Left + SafeZoneSize),
+            AppearDirection.Top => player.Top > (level.Bounds.Top + SafeZoneSize),
+            AppearDirection.Bottom => (player.Bottom < (level.Bounds.Bottom - SafeZoneSize)),
+            _ => throw new NotImplementedException($"Unknown direction for snowballs: {appearDirection}"),
+        };
     }
 
     private float GetResetXPosition() {
-        if (appearDirection == AppearDirection.Right) {
-            return level.Camera.Right + 10f;
-        } else if (appearDirection == AppearDirection.Left) {
-            return level.Camera.Left - 10f;
-        }
-
-        return 0f;
+        return appearDirection switch {
+            AppearDirection.Right => level.Camera.Right + 10f,
+            AppearDirection.Left => level.Camera.Left - 10f,
+            AppearDirection.Top => level.Camera.Top - 10f,
+            AppearDirection.Bottom => level.Camera.Bottom + 10f,
+            _ => throw new NotImplementedException($"Unknown direction for snowballs: {appearDirection}"),
+        };
     }
 
     private bool IsOutOfBounds() {
-        if (appearDirection == AppearDirection.Right) {
-            return X < level.Camera.Left - 60f;
-        } else if (appearDirection == AppearDirection.Left) {
-            return X > level.Camera.Right + 60f;
-        }
-
-        return false;
+        return appearDirection switch {
+            AppearDirection.Right => X < level.Camera.Left - 60f,
+            AppearDirection.Left => X > level.Camera.Right + 60f,
+            AppearDirection.Top => Y > level.Camera.Bottom + 60f,
+            AppearDirection.Bottom => Y < level.Camera.Top - 60f,
+            _ => throw new NotImplementedException(),
+        };
     }
 
     private void Destroy() {
@@ -117,8 +139,22 @@ public class CustomSnowball : Entity {
 
     public override void Update() {
         base.Update();
-        X -= Speed * Engine.DeltaTime;
-        Y = atY + 4f * Sine.Value;
+
+        if (IsVertical()) {
+            Y -= Speed * Engine.DeltaTime;
+            X = atY + 4f * Sine.Value;
+        } else {
+            X -= Speed * Engine.DeltaTime;
+            Y = atY + 4f * Sine.Value;
+        }
+
+        /*
+        Console.WriteLine(Y);
+        Console.WriteLine(level.Camera.Top - 60f);
+        Console.WriteLine(Scene.Tracker.GetEntity<Player>()?.Position.Y.ToString() ?? "");
+        Console.WriteLine(X);
+        Console.WriteLine(Scene.Tracker.GetEntity<Player>()?.Position.X.ToString() ?? "");*/
+
         if (IsOutOfBounds()) {
             if (leaving) {
                 RemoveSelf();
@@ -147,6 +183,8 @@ public class CustomSnowball : Entity {
 
     public enum AppearDirection {
         Right, // default
-        Left
+        Left,
+        Top,
+        Bottom,
     }
 }

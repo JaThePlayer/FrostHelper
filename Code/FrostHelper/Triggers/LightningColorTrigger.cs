@@ -31,25 +31,16 @@ public class LightningColorTrigger : Trigger {
     private static void LightningRenderer_OnBeforeRender(ILContext il) {
         ILCursor cursor = new ILCursor(il);
 
-        //while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchCall<Color>("get_White")))
         while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdstr("f7b262"))) {
-            cursor.Emit(OpCodes.Pop);
-            cursor.Emit(OpCodes.Ldarg_0); // this
-            cursor.EmitDelegate<Func<LightningRenderer, string>>((LightningRenderer self) => {
-                return GetFillColorString();
-            });
+            cursor.EmitCall(GetFillColorString);
         }
         while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdcR4(0.1f))) {
-            cursor.Emit(OpCodes.Pop);
-            cursor.Emit(OpCodes.Ldarg_0); // this
-            cursor.EmitDelegate<Func<LightningRenderer, float>>((LightningRenderer self) => {
-                return GetLightningFillColorMultiplier();
-            });
+            cursor.EmitCall(GetLightningFillColorMultiplier);
         }
     }
 
     internal static LightningColorTrigger? GetFirstEnteredTrigger() {
-        foreach (LightningColorTrigger trigger in Engine.Scene.Tracker.GetEntities<LightningColorTrigger>()) {
+        foreach (LightningColorTrigger trigger in Engine.Scene.Tracker.SafeGetEntities<LightningColorTrigger>()) {
             if (trigger.PlayerIsInside) {
                 return trigger;
             }
@@ -58,19 +49,13 @@ public class LightningColorTrigger : Trigger {
         return null;
     }
 
-    internal static string GetFillColorString() {
+    internal static string GetFillColorString(string prev = "f7b262") {
         LightningColorTrigger? trigger = GetFirstEnteredTrigger();
 
-        return trigger?.FillColor ?? OrDefault(FrostModule.Session.LightningFillColor, "f7b262");
-        /*
-        if () {
-            return trigger.FillColor;
-        } else {
-            return OrDefault(FrostModule.Session.LightningFillColor, "f7b262");
-        }*/
+        return trigger?.FillColor ?? OrDefault(FrostModule.Session.LightningFillColor, prev);
     }
 
-    internal static float GetLightningFillColorMultiplier() {
+    internal static float GetLightningFillColorMultiplier(float prev = 0.1f) {
         /*
         LightningColorTrigger trigger;
         if ((trigger = Engine.Scene.Tracker.GetEntity<LightningColorTrigger>()) != null && trigger.PlayerIsInside) {
@@ -78,7 +63,7 @@ public class LightningColorTrigger : Trigger {
         } else {
             return FrostModule.Session.LightningFillColorMultiplier;
         }*/
-        return GetFirstEnteredTrigger()?.FillColorMultiplier ?? FrostModule.Session.LightningFillColorMultiplier;
+        return GetFirstEnteredTrigger()?.FillColorMultiplier ?? FrostModule.Session.LightningFillColorMultiplier ?? prev;
     }
 
     internal static void GetColors(out Color colorA, out Color colorB) {

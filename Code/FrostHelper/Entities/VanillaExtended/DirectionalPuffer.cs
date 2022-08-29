@@ -4,8 +4,14 @@
               "CCH/PinkPuffer",
               "FrostHelper/DirectionalPuffer")]
 public class DirectionalPuffer : Puffer {
-    [OnLoad]
-    public static void Load() {
+    private static bool _hooksLoaded;
+
+    [HookPreload]
+    public static void LoadIfNeeded() {
+        if (_hooksLoaded)
+            return;
+        _hooksLoaded = true;
+
         IL.Celeste.Puffer.OnPlayer += IL_OnPlayer;
         IL.Celeste.Puffer.Render += IL_Render;
         On.Celeste.Puffer.ProximityExplodeCheck += ApplyDirectionalCheck;
@@ -17,6 +23,10 @@ public class DirectionalPuffer : Puffer {
     }
 
     public static void Unload() {
+        if (!_hooksLoaded)
+            return;
+        _hooksLoaded = false;
+
         IL.Celeste.Puffer.OnPlayer -= IL_OnPlayer;
         IL.Celeste.Puffer.Render -= IL_Render;
         On.Celeste.Puffer.ProximityExplodeCheck -= ApplyDirectionalCheck;
@@ -45,6 +55,8 @@ public class DirectionalPuffer : Puffer {
     public Color ExplosionRangeIndicatorColor;
 
     public DirectionalPuffer(EntityData data, Vector2 offset) : base(data, offset) {
+        LoadIfNeeded();
+
         // replace the sprite with a custom one
         Remove(Get<Sprite>());
         var sprite = CustomSpriteHelper.CreateCustomSprite("pufferFish", data.Attr("directory", "objects/puffer/"));

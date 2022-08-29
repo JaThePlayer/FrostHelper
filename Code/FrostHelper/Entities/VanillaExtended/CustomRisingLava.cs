@@ -1,18 +1,27 @@
 ﻿namespace FrostHelper;
 
 [CustomEntity("FrostHelper/CustomRisingLava")]
+[Tracked]
 public class CustomRisingLava : Entity {
     #region Hooks
-    [OnLoad]
-    public static void Load() {
-        On.Celeste.Mod.Entities.LavaBlockerTrigger.Awake += LavaBlockerTrigger_Awake;
+    private static bool _hooksLoaded;
+
+    [HookPreload]
+    public static void LoadIfNeeded() {
+        if (_hooksLoaded)
+            return;
+        _hooksLoaded = !_hooksLoaded;
+
         On.Celeste.Mod.Entities.LavaBlockerTrigger.OnStay += LavaBlockerTrigger_OnStay;
         On.Celeste.Mod.Entities.LavaBlockerTrigger.OnLeave += LavaBlockerTrigger_OnLeave;
     }
 
     [OnUnload]
     public static void Unload() {
-        On.Celeste.Mod.Entities.LavaBlockerTrigger.Awake -= LavaBlockerTrigger_Awake;
+        if (!_hooksLoaded)
+            return;
+        _hooksLoaded = !_hooksLoaded;
+
         On.Celeste.Mod.Entities.LavaBlockerTrigger.OnStay -= LavaBlockerTrigger_OnStay;
         On.Celeste.Mod.Entities.LavaBlockerTrigger.OnLeave -= LavaBlockerTrigger_OnLeave;
     }
@@ -22,7 +31,7 @@ public class CustomRisingLava : Entity {
 
     private static void LavaBlockerTrigger_OnLeave(On.Celeste.Mod.Entities.LavaBlockerTrigger.orig_OnLeave orig, Celeste.Mod.Entities.LavaBlockerTrigger self, Player player) {
         if ((bool) LavaBlockerTrigger_enabled.GetValue(self))
-            foreach (CustomRisingLava lava in customRisingLavas)
+            foreach (CustomRisingLava lava in self.Scene.Tracker.SafeGetEntities<CustomRisingLava>())
                 if (lava != null)
                     lava.waiting = false;
 
@@ -31,17 +40,10 @@ public class CustomRisingLava : Entity {
 
     private static void LavaBlockerTrigger_OnStay(On.Celeste.Mod.Entities.LavaBlockerTrigger.orig_OnStay orig, Celeste.Mod.Entities.LavaBlockerTrigger self, Player player) {
         if ((bool) LavaBlockerTrigger_enabled.GetValue(self))
-            foreach (CustomRisingLava lava in customRisingLavas)
+            foreach (CustomRisingLava lava in self.Scene.Tracker.SafeGetEntities<CustomRisingLava>())
                 if (lava != null)
                     lava.waiting = true;
         orig(self, player);
-    }
-
-    static List<CustomRisingLava> customRisingLavas;
-
-    private static void LavaBlockerTrigger_Awake(On.Celeste.Mod.Entities.LavaBlockerTrigger.orig_Awake orig, Celeste.Mod.Entities.LavaBlockerTrigger self, Scene scene) {
-        orig(self, scene);
-        customRisingLavas = scene.Entities.OfType<CustomRisingLava>().ToList();
     }
 
     #endregion
@@ -49,6 +51,8 @@ public class CustomRisingLava : Entity {
     public bool DoRubberbanding;
 
     public CustomRisingLava(bool intro, float speed, Color[] coldColors, Color[] hotColors, bool reverseCoreMode) {
+        LoadIfNeeded();
+
         delay = 0f;
         this.intro = intro;
         Speed = speed;

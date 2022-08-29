@@ -35,7 +35,7 @@ internal static class LayerHelper {
 
     // transition listeners don't work lol
     private static void Player_OnTransition(On.Celeste.Player.orig_OnTransition orig, Player self) {
-        foreach (LayerTracker item in self.Scene.Tracker.GetEntities<LayerTracker>()) {
+        foreach (LayerTracker item in self.Scene.Tracker.SafeGetEntities<LayerTracker>()) {
             item.OnTransitionEnd();
         }
         orig(self);

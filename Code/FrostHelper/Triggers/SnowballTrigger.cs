@@ -9,6 +9,7 @@ public class SnowballTrigger : Trigger {
     public float SineWaveFrequency;
     public CustomSnowball.AppearDirection AppearDirection;
     public bool ReplaceExisting;
+    public float SafeZoneSize;
 
     public SnowballTrigger(EntityData data, Vector2 offset) : base(data, offset) {
         SpritePath = data.Attr("spritePath", "snowball");
@@ -18,6 +19,7 @@ public class SnowballTrigger : Trigger {
         DrawOutline = data.Bool("drawOutline", true);
         AppearDirection = data.Enum("direction", CustomSnowball.AppearDirection.Right);
         ReplaceExisting = data.Bool("replaceExisting", true);
+        SafeZoneSize = data.Float("safeZoneSize", 64f);
     }
 
     public override void OnEnter(Player player) {
@@ -32,8 +34,9 @@ public class SnowballTrigger : Trigger {
             }
             snowball.DrawOutline = DrawOutline;
             snowball.appearDirection = AppearDirection;
+            snowball.SafeZoneSize = SafeZoneSize;
         } else {
-            Scene.Add(new CustomSnowball(SpritePath, Speed, ResetTime, SineWaveFrequency, DrawOutline, AppearDirection));
+            Scene.Add(new CustomSnowball(SpritePath, Speed, ResetTime, SineWaveFrequency, DrawOutline, AppearDirection, SafeZoneSize));
         }
         RemoveSelf();
     }

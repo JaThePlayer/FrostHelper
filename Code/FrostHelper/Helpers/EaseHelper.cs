@@ -16,5 +16,19 @@ public static class EaseHelper {
         return GetEase(data.Attr(key), defaultValue);
     }
 
+    // TODO: move this somewhere else lol
+    public static Tween.TweenMode TweenMode(this EntityData data, string key, Tween.TweenMode defaultValue) {
+        var attr = data.Attr(key);
+
+        return attr switch {
+            nameof(Tween.TweenMode.Persist) => Tween.TweenMode.Persist,
+            nameof(Tween.TweenMode.Oneshot) => Tween.TweenMode.Oneshot,
+            nameof(Tween.TweenMode.Looping) => Tween.TweenMode.Looping,
+            nameof(Tween.TweenMode.YoyoOneshot) => Tween.TweenMode.YoyoOneshot,
+            nameof(Tween.TweenMode.YoyoLooping) => Tween.TweenMode.YoyoLooping,
+            _ => defaultValue
+        };
+    }
+
     private static readonly FieldInfo[] easeProps = typeof(Ease).GetFields(BindingFlags.Static | BindingFlags.Public);
 }

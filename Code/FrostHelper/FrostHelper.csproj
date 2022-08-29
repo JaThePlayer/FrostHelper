@@ -2,7 +2,7 @@
   <PropertyGroup>
     <OutputType>Library</OutputType>
     <TargetFrameworks>net452</TargetFrameworks>
-    <LangVersion>10.0</LangVersion>
+    <LangVersion>preview</LangVersion>
     <AssemblyName>FrostTempleHelper</AssemblyName>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
@@ -14,9 +14,12 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net452|AnyCPU'">
     <DefineConstants>$(DefineConstants)TRACE;SPEEDCHALLENGES</DefineConstants>
+    <Optimize>True</Optimize>
+    <DebugType>embedded</DebugType>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net452|AnyCPU'">
     <DefineConstants>$(DefineConstants)TRACE;SPEEDCHALLENGES</DefineConstants>
+    <DebugType>embedded</DebugType>
   </PropertyGroup>
 
   <!-- Packages -->

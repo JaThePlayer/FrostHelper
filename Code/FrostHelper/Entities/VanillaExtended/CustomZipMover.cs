@@ -204,11 +204,9 @@ public class CustomZipMover : Solid {
 
     public MultiImage BorderImages;
     public void CreateSprites() {
-        foreach (var item in Components) {
-            if (item is Image || item is MultiImage || item is Sprite) {
-                Remove(item);
-            }
-        }
+        Components.RemoveAll<Image>();
+        Components.RemoveAll<MultiImage>();
+        Components.RemoveAll<Sprite>();
 
         #region Border
         {

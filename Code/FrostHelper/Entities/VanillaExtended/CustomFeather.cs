@@ -4,8 +4,14 @@
 [CustomEntity("FrostHelper/CustomFeather")]
 public class CustomFeather : Entity {
     #region Hooks
-    [OnLoad]
-    public static void LoadHooks() {
+    private static bool _hooksLoaded;
+
+    [HookPreload]
+    public static void LoadIfNeeded() {
+        if (_hooksLoaded)
+            return;
+        _hooksLoaded = true;
+
         IL.Celeste.Player.UpdateHair += modFeatherState;
         IL.Celeste.Player.UpdateSprite += modFeatherState;
         IL.Celeste.Player.OnCollideH += modFeatherState;
@@ -34,6 +40,10 @@ public class CustomFeather : Entity {
 
     [OnUnload]
     public static void UnloadHooks() {
+        if (!_hooksLoaded)
+            return;
+        _hooksLoaded = false;
+
         IL.Celeste.Player.UpdateHair -= modFeatherState;
         IL.Celeste.Player.UpdateSprite -= modFeatherState;
         IL.Celeste.Player.OnCollideH -= modFeatherState;
@@ -61,12 +71,14 @@ public class CustomFeather : Entity {
     #endregion
 
     #region CustomState
-    public static int CustomFeatherState;
+    public static int CustomFeatherState = int.MaxValue;
     public static MethodInfo player_StarFlyReturnToNormalHitbox = typeof(Player).GetMethod("StarFlyReturnToNormalHitbox", BindingFlags.Instance | BindingFlags.NonPublic);
     public static MethodInfo player_WallJump = typeof(Player).GetMethod("WallJump", BindingFlags.Instance | BindingFlags.NonPublic);
     public static MethodInfo player_WallJumpCheck = typeof(Player).GetMethod("WallJumpCheck", BindingFlags.Instance | BindingFlags.NonPublic);
 
     public static void CustomFeatherBegin(Entity e) {
+        LoadIfNeeded();
+
         Player player = (e as Player)!;
 
         var data = DynamicData.For(player);
@@ -313,6 +325,8 @@ public class CustomFeather : Entity {
     public float NeutralSpeed;
 
     public CustomFeather(EntityData data, Vector2 offset) : base(data.Position + offset) {
+        LoadIfNeeded();
+
         shielded = data.Bool("shielded", false);
         singleUse = data.Bool("singleUse", false);
         RespawnTime = data.Float("respawnTime", 3f);

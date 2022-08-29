@@ -44,7 +44,7 @@ public class Skateboard : JumpThru {
     }
 
     bool HasNonGhostRider() {
-        using (List<Entity>.Enumerator enumerator = Scene.Tracker.GetEntities<Actor>().GetEnumerator()) {
+        using (List<Entity>.Enumerator enumerator = Scene.Tracker.SafeGetEntities<Actor>().GetEnumerator()) {
             while (enumerator.MoveNext()) {
                 var actor = enumerator.Current;
                 if (((Actor) actor).IsRiding(this) && actor.GetType().Name != "Ghost") {

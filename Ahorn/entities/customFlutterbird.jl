@@ -2,7 +2,9 @@ module FrostHelperFlutterBird
 
 using ..Ahorn, Maple
 
-@mapdef Entity "FrostHelper/CustomFlutterBird" FHCustomFlutterbird(x::Integer, y::Integer, colors::String="89fbff,f0fc6c,f493ff,93baff")
+@mapdef Entity "FrostHelper/CustomFlutterBird" FHCustomFlutterbird(x::Integer, y::Integer, colors::String="89fbff,f0fc6c,f493ff,93baff", dontFlyAway::Bool=false,
+                                                                   hopSfx::String="event:/game/general/birdbaby_hop", flyAwaySfx::String="event:/game/general/birdbaby_flyaway",
+                                                                   tweetingSfx::String="event:/game/general/birdbaby_tweet_loop")
 
 const placements = Ahorn.PlacementDict(
     "Custom Flutterbird (Frost Helper)" => Ahorn.EntityPlacement(

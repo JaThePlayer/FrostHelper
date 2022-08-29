@@ -26,7 +26,7 @@ class CameraTargetTriggerv2 : Trigger {
     public override void OnStay(Player play) {
         bool flag = string.IsNullOrEmpty(DeleteFlag) || !SceneAs<Level>().Session.GetFlag(DeleteFlag);
         if (flag) {
-            foreach (Player player in Scene.Tracker.GetEntities<Player>()) {
+            foreach (Player player in Scene.Tracker.SafeGetEntities<Player>()) {
                 player.CameraAnchor = Target;
                 player.CameraAnchorLerp = Vector2.One * MathHelper.Clamp(LerpStrength * GetPositionLerp(player, PositionMode), 0f, 1f);
                 player.CameraAnchorIgnoreX = YOnly;
@@ -38,7 +38,7 @@ class CameraTargetTriggerv2 : Trigger {
     public override void OnLeave(Player play) {
         base.OnLeave(play);
         bool flag = false;
-        foreach (Entity entity in Engine.Scene.Tracker.GetEntities<CameraTargetTriggerv2>()) {
+        foreach (Entity entity in Engine.Scene.Tracker.SafeGetEntities<CameraTargetTriggerv2>()) {
             CameraTargetTriggerv2 cameraTargetTrigger = (CameraTargetTriggerv2) entity;
             bool playerIsInside = cameraTargetTrigger.PlayerIsInside;
             if (playerIsInside) {
@@ -47,7 +47,7 @@ class CameraTargetTriggerv2 : Trigger {
             }
         }
         if (!flag) {
-            foreach (Entity entity2 in Engine.Scene.Tracker.GetEntities<CameraAdvanceTargetTrigger>()) {
+            foreach (Entity entity2 in Engine.Scene.Tracker.SafeGetEntities<CameraAdvanceTargetTrigger>()) {
                 CameraAdvanceTargetTrigger cameraAdvanceTargetTrigger = (CameraAdvanceTargetTrigger) entity2;
                 bool playerIsInside2 = cameraAdvanceTargetTrigger.PlayerIsInside;
                 if (playerIsInside2) {
@@ -57,7 +57,7 @@ class CameraTargetTriggerv2 : Trigger {
             }
         }
         if (!flag) {
-            foreach (Player player in Engine.Scene.Tracker.GetEntities<Player>())
+            foreach (Player player in Engine.Scene.Tracker.SafeGetEntities<Player>())
                 player.CameraAnchorLerp = Vector2.Zero;
         }
     }

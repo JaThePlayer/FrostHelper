@@ -36,7 +36,7 @@ public class BetterShaderTrigger : Trigger {
 
     public static void Apply_HOOK(On.Celeste.Glitch.orig_Apply orig, VirtualRenderTarget source, float timer, float seed, float amplitude) {
         orig(source, timer, seed, amplitude);
-        foreach (var trigger in FrostModule.GetCurrentLevel().Tracker.GetEntities<BetterShaderTrigger>()) {
+        foreach (var trigger in FrostModule.GetCurrentLevel().Tracker.SafeGetEntities<BetterShaderTrigger>()) {
             if (trigger is BetterShaderTrigger s && s.Activated)
                 foreach (var item in s.Effects) {
                     Apply(source, source, ShaderHelperIntegration.GetEffect(item), s.Clear);

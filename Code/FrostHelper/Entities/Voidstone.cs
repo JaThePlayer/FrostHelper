@@ -1,4 +1,6 @@
-﻿namespace FrostHelper;
+﻿using FrostHelper.ModIntegration;
+
+namespace FrostHelper;
 
 [CustomEntity("FrostHelper/Voidstone")]
 [Tracked]
@@ -21,45 +23,25 @@ public class Voidstone : Solid {
     }) : _boostParticle;
     private static ParticleType _boostParticle;
 
-    [OnLoad]
-    public static void Load() {
+    private static bool _loadedHooks;
+
+    public static void LoadHooksIfNeeded() {
+        if (_loadedHooks)
+            return;
+        _loadedHooks = true;
+
         On.Celeste.Player.SuperWallJump += Player_SuperWallJump;
     }
 
     [OnUnload]
     public static void Unload() {
+        if (!_loadedHooks)
+            return;
+        _loadedHooks = false;
         On.Celeste.Player.SuperWallJump -= Player_SuperWallJump;
     }
 
-    public override void Render() {
-        //return;
 
-        Camera c = SceneAs<Level>().Camera;
-        Draw.Rect(Collider, Color.Black);
-        VirtualRenderTarget tempA = GameplayBuffers.TempA;
-        GameplayRenderer.End();
-        Engine.Instance.GraphicsDevice.SetRenderTarget(tempA);
-
-        Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone, null, Matrix.Identity);
-
-        Engine.Instance.GraphicsDevice.Clear(Color.White);
-        Draw.Rect(0, 0, GameplayBuffers.Gameplay.Width, GameplayBuffers.Gameplay.Height, Color.DarkSlateGray);
-
-        GameplayRenderer.End();
-
-        Effect eff = ModIntegration.ShaderHelperIntegration.GetEffect("trippy");
-        eff.Parameters["Time"].SetValue(Scene.TimeActive);
-
-        Engine.Instance.GraphicsDevice.SetRenderTarget(GameplayBuffers.Gameplay);
-        int s = GameplayBuffers.Gameplay.Width / 320;
-        Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone, eff, c.Matrix * s);
-
-
-        Draw.SpriteBatch.Draw(tempA, (Position - c.Position) * s + c.Position, new Rectangle((int) Position.X * s, (int) Position.Y * s, (int) Width * s, (int) Height * s), Color.Black);
-
-        GameplayRenderer.End();
-        GameplayRenderer.Begin();
-    }
 
     // Check if the player is next to a voidstone when wallbouncing
     private static void Player_SuperWallJump(On.Celeste.Player.orig_SuperWallJump orig, Player self, int dir) {
@@ -86,6 +68,8 @@ public class Voidstone : Solid {
         Add(new DashListener(OnDash));
         Add(new ClimbBlocker(false));
         Depth = Depths.Top;
+
+        LoadHooksIfNeeded();
     }
 
     public void OnDash(Vector2 dir) {
@@ -109,5 +93,67 @@ public class Voidstone : Solid {
     public void Used(Player player) {
         player.Speed *= 2f;
         PlayerThatWallbounced = player;
+    }
+}
+
+[Tracked]
+[CustomEntity("FrostHelper/VoidstoneRenderer")]
+public class VoidstoneRenderer : Entity {
+    public string Shader;
+
+    public VoidstoneRenderer(EntityData data, Vector2 offset) : base(data.Position + offset) {
+        Shader = data.Attr("shader", "");
+    }
+
+    public override void Render() {
+        //return;
+
+
+        Camera c = SceneAs<Level>().Camera;
+        //Draw.Rect(Collider, Color.Black);
+        VirtualRenderTarget tempA = GameplayBuffers.TempA;
+        GameplayRenderer.End();
+        Engine.Instance.GraphicsDevice.SetRenderTarget(tempA);
+
+        Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone, null, Matrix.Identity);
+
+        Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
+        //Draw.Rect(0, 0, GameplayBuffers.Gameplay.Width, GameplayBuffers.Gameplay.Height, Color.DarkSlateGray);
+        foreach (var item in Scene.Tracker.SafeGetEntities<Voidstone>()) {
+            Draw.Rect(item.Position - c.Position, item.Width, item.Height, Color.Wheat);
+        }
+        GameplayRenderer.End();
+
+        Effect eff = ShaderHelperIntegration.GetEffect(Shader);
+        ShaderHelperIntegration.ApplyStandardParameters(eff);
+
+        Engine.Instance.GraphicsDevice.SetRenderTarget(GameplayBuffers.Gameplay);
+        int s = GameplayBuffers.Gameplay.Width / 320;
+        Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone, eff, c.Matrix * s);
+
+        foreach (var item in Scene.Tracker.SafeGetEntities<Voidstone>()) {
+            Draw.SpriteBatch.Draw(tempA, (item.Position - c.Position) * s + c.Position, new Rectangle((int) (item.Position.X) * s, (int) (item.Position.Y) * s, (int) (item.Width) * s, (int) (item.Height) * s), Color.Black);
+        }
+        
+
+        GameplayRenderer.End();
+        GameplayRenderer.Begin();
+        /*
+        foreach (var item in Scene.Tracker.GetEntities<Voidstone>()) {
+            float x = item.Position.X;
+            float y = item.Position.Y;
+            float w = item.Width - 1f;
+            float h = item.Height;
+            //top
+            if (!item.CollideCheck<Voidstone>(item.Position + new Vector2(0, -2f)))
+                Draw.Rect(x, y, w, 1f, Color.White);
+            // bottom
+            if (!item.CollideCheck<Voidstone>(item.Position + new Vector2(0, 2f)))
+                Draw.Rect(x, y + h - 1f, w + 1f, 1f, Color.White);
+            // left
+            Draw.Rect(x, y, 1f, h, Color.White);
+            // right
+            Draw.Rect(x + w, y, 1f, h, Color.White);
+        }*/
     }
 }

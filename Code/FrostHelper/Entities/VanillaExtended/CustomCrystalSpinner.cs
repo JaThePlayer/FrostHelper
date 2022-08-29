@@ -10,8 +10,14 @@ namespace FrostHelper;
 [Tracked(false)]
 public class CustomSpinner : Entity {
     // Hooks
-    [OnLoad]
-    public static void LoadHooks() {
+    private static bool _hooksLoaded;
+
+    [HookPreload]
+    public static void LoadIfNeeded() {
+        if (_hooksLoaded)
+            return;
+        _hooksLoaded = true;
+
         On.Celeste.Mod.Entities.CrystalShatterTrigger.OnEnter += CrystalShatterTrigger_OnEnter;
         On.Celeste.Player.SummitLaunchUpdate += Player_SummitLaunchUpdate;
     }
@@ -30,6 +36,10 @@ public class CustomSpinner : Entity {
 
     [OnUnload]
     public static void UnloadHooks() {
+        if (!_hooksLoaded)
+            return;
+        _hooksLoaded = false;
+
         On.Celeste.Mod.Entities.CrystalShatterTrigger.OnEnter -= CrystalShatterTrigger_OnEnter;
         On.Celeste.Player.SummitLaunchUpdate -= Player_SummitLaunchUpdate;
     }
@@ -37,7 +47,7 @@ public class CustomSpinner : Entity {
     // smh
     private static FieldInfo CrystalShatterTrigger_mode = typeof(CrystalShatterTrigger).GetField("mode", BindingFlags.NonPublic | BindingFlags.Instance);
     private static void CrystalShatterTrigger_OnEnter(On.Celeste.Mod.Entities.CrystalShatterTrigger.orig_OnEnter orig, CrystalShatterTrigger self, Player player) {
-        var list = self.Scene.Tracker.GetEntities<CustomSpinner>();
+        var list = self.Scene.Tracker.SafeGetEntities<CustomSpinner>();
         if (list.Count > 0) {
             CrystalShatterTrigger.Modes mode = (CrystalShatterTrigger.Modes) CrystalShatterTrigger_mode.GetValue(self);
             if (mode == CrystalShatterTrigger.Modes.All) {
@@ -98,6 +108,8 @@ public class CustomSpinner : Entity {
     public CustomSpinner(EntityData data, Vector2 offset) : this(data, offset, data.Bool("attachToSolid", false), data.Attr("directory", "danger/FrostHelper/icecrystal"), data.Attr("destroyColor", "639bff"), data.Bool("isCore", false), data.Attr("tint", "ffffff")) { }
 
     public CustomSpinner(EntityData data, Vector2 position, bool attachToSolid, string directory, string destroyColor, bool isCore, string tint) : base(data.Position + position) {
+        LoadIfNeeded();
+
         Rainbow = data.Bool("rainbow", false);
         RenderBorder = data.Bool("drawOutline", true);
         DestroyDebrisCount = data.Int("debrisCount", 8);
@@ -362,7 +374,7 @@ public class CustomSpinner : Entity {
             image = new Image(mtexture).CenterOrigin();
             image.Color = Calc.HexToColor(tint);
             Add(image); */
-            foreach (Entity entity in Scene.Tracker.GetEntities<CustomSpinner>()) {
+            foreach (Entity entity in Scene.Tracker.SafeGetEntities<CustomSpinner>()) {
                 CustomSpinner crystalStaticSpinner = (CustomSpinner) entity;
                 if (crystalStaticSpinner.ID > ID && crystalStaticSpinner.AttachGroup == AttachGroup && crystalStaticSpinner.AttachToSolid == AttachToSolid && (crystalStaticSpinner.Position - Position).LengthSquared() < 24f * 24f) {
                     AddSprite((Position + crystalStaticSpinner.Position) / 2f - Position);
@@ -624,10 +636,10 @@ public class SpinnerConnectorRenderer : Entity {
     }
 
     public override void Render() {
-#if SPINNER_BORDERS_USE_RENDER_TARGET
-        if (Scene.Tracker.GetEntity<SpinnerBorderRenderer>() is { CanUseRenderTargetRender: true })
-            return;
-#endif
+//#if SPINNER_BORDERS_USE_RENDER_TARGET
+//        if (Scene.Tracker.GetEntity<SpinnerBorderRenderer>() is { CanUseRenderTargetRender: true })
+//            return;
+//#endif
 
         ForceRender();
     }
@@ -637,18 +649,32 @@ public class SpinnerConnectorRenderer : Entity {
             //item.filler?.Render();
             // Entity.Render is hooked by some mods, and has a lot of indirection, let's just do this manually...
             if (spinner.Visible && spinner.filler is { } filler) {
-                var fillerComponents = filler.Components;
-                Color color = spinner.Tint;
-
-                Image image = (fillerComponents[0] as Image)!;
-                Texture2D texture = image.Texture.Texture.Texture_Safe;
-                Rectangle? clipRect = new Rectangle?(image.Texture.ClipRect);
-                float scaleFix = image.Texture.ScaleFix;
-                Vector2 origin = (image.Origin - image.Texture.DrawOffset) / scaleFix;
-                foreach (Image img in fillerComponents) {
-                    Draw.SpriteBatch.Draw(texture, img.RenderPosition, clipRect, img.Color, img.Rotation, origin, scaleFix, SpriteEffects.None, 0f);
-                }
+                DrawWithColor(filler, spinner.Tint);
             }
+        }
+    }
+
+    public void ForceRenderWithColor(Color c) {
+        foreach (var spinner in Spinners) {
+            //item.filler?.Render();
+            // Entity.Render is hooked by some mods, and has a lot of indirection, let's just do this manually...
+            if (spinner.Visible && spinner.filler is { } filler) {
+                DrawWithColor(filler, c);
+            }
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void DrawWithColor(Entity filler, Color color) {
+        var fillerComponents = filler.Components;
+        Image image = (fillerComponents[0] as Image)!;
+        Texture2D texture = image.Texture.Texture.Texture_Safe;
+        Rectangle? clipRect = new Rectangle?(image.Texture.ClipRect);
+        float scaleFix = image.Texture.ScaleFix;
+        Vector2 origin = (image.Origin - image.Texture.DrawOffset) / scaleFix;
+
+        foreach (Image img in fillerComponents) {
+            Draw.SpriteBatch.Draw(texture, img.RenderPosition, clipRect, color, img.Rotation, origin, scaleFix, SpriteEffects.None, 0f);
         }
     }
 
@@ -716,16 +742,24 @@ public class SpinnerBorderRenderer : Entity {
             var target = RenderTargetHelper<SpinnerBorderRenderer>.Get(true, true);
             var connectorRenderer = Scene.Tracker.GetEntity<SpinnerConnectorRenderer>();
             var batch = Draw.SpriteBatch;
+            var borderColor = _firstBorderColor!.Value;
 
             GameplayRenderer.End();
             Engine.Instance.GraphicsDevice.SetRenderTarget(target);
             Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
 
             GameplayRenderer.Begin();
-            connectorRenderer?.ForceRender();
-            foreach (var spinner in Scene.Tracker.GetEntities<CustomSpinner>()) {
+            connectorRenderer?.ForceRenderWithColor(borderColor);
+            foreach (var spinner in Scene.Tracker.SafeGetEntities<CustomSpinner>()) {
                 if (spinner.Visible)
-                    spinner.Render();
+                    foreach (var component in spinner.Components) {
+                        if (component is Image img) {
+                            var c = img.Color;
+                            img.Color = borderColor;
+                            img.Render();
+                            img.Color = c;
+                        }
+                    }
             }
             GameplayRenderer.End();
 
@@ -733,16 +767,18 @@ public class SpinnerBorderRenderer : Entity {
             GameplayRenderer.Begin();
 
             // border
-            var renderPos = SceneAs<Level>().Camera.Position;
-            var borderColor = _firstBorderColor!.Value;
+            var renderPos = SceneAs<Level>().Camera.Position.Floor();
+            
             float scale = 1f / HDlesteCompat.Scale;
-            batch.Draw(target, renderPos - Vector2.UnitY, null, borderColor, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
-            batch.Draw(target, renderPos + Vector2.UnitY, null, borderColor, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
-            batch.Draw(target, renderPos - Vector2.UnitX, null, borderColor, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
-            batch.Draw(target, renderPos + Vector2.UnitX, null, borderColor, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
+            batch.Draw(target, renderPos - Vector2.UnitY, null, Color.White, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
+            batch.Draw(target, renderPos + Vector2.UnitY, null, Color.White, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
+            batch.Draw(target, renderPos - Vector2.UnitX, null, Color.White, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
+            batch.Draw(target, renderPos + Vector2.UnitX, null, Color.White, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
 
             // might as well render everything now
-            batch.Draw(target, renderPos, null, Color.White, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
+            // since the outlines are now rendered in black, this won't work anymore
+            // TODO:(Perf) use this method when using black outlines
+            //batch.Draw(target, renderPos, null, Color.White, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
 
             return;
         }

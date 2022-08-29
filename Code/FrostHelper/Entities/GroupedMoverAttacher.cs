@@ -44,7 +44,7 @@ public class GroupedMoverAttacher : Entity {
         Console.WriteLine();
 #endif
 
-        foreach (GroupedMoverAttacher item in entitiyList.Scene.Tracker.GetEntities<GroupedMoverAttacher>()) {
+        foreach (GroupedMoverAttacher item in entitiyList.Scene.Tracker.SafeGetEntities<GroupedMoverAttacher>()) {
             item.Check(toAwake);
         }
     }

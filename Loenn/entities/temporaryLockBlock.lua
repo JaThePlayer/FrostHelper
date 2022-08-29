@@ -4,6 +4,7 @@ local temporaryLockBlock = {}
 
 temporaryLockBlock.name = "FrostHelper/TemporaryKeyDoor"
 temporaryLockBlock.depth = 8990
+temporaryLockBlock.justification = {0.25, 0.25}
 
 local sprites = {
     moon = "objects/door/moonDoor11",
@@ -26,7 +27,10 @@ end
 
 function temporaryLockBlock.sprite(room, entity)
     local path = sprites[entity.sprite] or sprites.wood
-    return drawableSpriteStruct.fromTexture(path, entity)
+    local sprite = drawableSpriteStruct.fromTexture(path, entity)
+    sprite:addPosition(16, 16)
+
+    return sprite
 end
 
 return temporaryLockBlock

@@ -6,8 +6,14 @@ namespace FrostHelper;
 [CustomEntity("FrostHelper/SpringLeft", "FrostHelper/SpringRight", "FrostHelper/SpringFloor", "FrostHelper/SpringCeiling")]
 public class CustomSpring : Spring {
     #region Hooks
-    [OnLoad]
-    public static void Load() {
+    private static bool _hooksLoaded;
+
+    [HookPreload]
+    public static void LoadIfNeeded() {
+        if (_hooksLoaded)
+            return;
+        _hooksLoaded = true;
+
         On.Celeste.TheoCrystal.HitSpring += TheoCrystal_HitSpring;
         On.Celeste.Glider.HitSpring += Glider_HitSpring;
         On.Celeste.Puffer.HitSpring += Puffer_HitSpring;
@@ -15,6 +21,10 @@ public class CustomSpring : Spring {
 
     [OnUnload]
     public static void Unload() {
+        if (!_hooksLoaded)
+            return;
+        _hooksLoaded = false;
+
         On.Celeste.TheoCrystal.HitSpring -= TheoCrystal_HitSpring;
         On.Celeste.Glider.HitSpring -= Glider_HitSpring;
         On.Celeste.Puffer.HitSpring -= Puffer_HitSpring;
@@ -102,6 +112,10 @@ public class CustomSpring : Spring {
     public CustomSpring(EntityData data, Vector2 offset) : this(data, offset, EntityDataNameToOrientation[data.Name]) { }
 
     public CustomSpring(EntityData data, Vector2 offset, CustomOrientations orientation) : base(data.Position + offset, CustomToRegularOrientation[orientation], data.Bool("playerCanUse", true)) {
+        LoadIfNeeded();
+        // this class also has lazy hooks, and we don't want a lag spike when first hitting a spring
+        TimeBasedClimbBlocker.LoadIfNeeded();
+
         bool playerCanUse = data.Bool("playerCanUse", true);
         dir = data.Attr("directory", "objects/spring/");
         RenderOutline = data.Bool("renderOutline", true);

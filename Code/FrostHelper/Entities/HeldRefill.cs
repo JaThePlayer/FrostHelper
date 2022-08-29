@@ -138,7 +138,7 @@ public class HeldRefill : Entity {
     ParticleType p_shatter = Refill.P_Shatter; // TODO
 
     #region State
-    public static int HeldDashState;
+    public static int HeldDashState = int.MaxValue;
 
     public static void HeldDashBegin(Entity e) {
         Player player = (e as Player)!;

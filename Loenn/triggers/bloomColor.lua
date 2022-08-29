@@ -59,7 +59,8 @@ return {
                 bloomAddFrom = "ffffff",
                 bloomAddTo = "ff00ff",
                 duration = 0.4,
-                easing = "Linear"
+                easing = "Linear",
+                tweenMode = "Oneshot",
             }
         },
         fieldInformation = {
@@ -74,6 +75,10 @@ return {
             easing = {
                 options = jautils.easings,
                 editable = false
+            },
+            tweenMode = {
+                options = jautils.tweenModes,
+                editable = false,
             }
         }
     }

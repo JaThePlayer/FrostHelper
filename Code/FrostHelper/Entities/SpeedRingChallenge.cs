@@ -72,7 +72,7 @@ public class SpeedRingChallenge : Entity {
                 Scene.Add(timer = new SpeedRingTimerDisplay(this));
                 started = true;
                 initialRespawn = SceneAs<Level>().Session.RespawnPoint.GetValueOrDefault();
-                disabledChallenges = Scene.Tracker.GetEntities<SpeedRingChallenge>().Cast<SpeedRingChallenge>().ToList();
+                disabledChallenges = Scene.Tracker.SafeGetEntities<SpeedRingChallenge>().Cast<SpeedRingChallenge>().ToList();
                 disabledChallenges.Remove(this);
                 foreach (var item in disabledChallenges) {
                     item.Active = item.Collidable = item.Visible = false;

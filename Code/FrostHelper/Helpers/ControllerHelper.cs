@@ -14,8 +14,6 @@ public static class ControllerHelper<T> where T : Entity, new() {
 
         return tracked ?? _justAddedController!;
     }
-
-     
 }
 
 public class OnAwakeCallbackComponent : Component {

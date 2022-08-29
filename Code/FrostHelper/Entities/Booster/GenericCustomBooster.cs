@@ -10,16 +10,31 @@ namespace FrostHelper.Entities.Boosters {
     [Tracked(true)]
     public class GenericCustomBooster : Entity {
         #region Hooks
-        [OnLoad]
-        public static void Load() {
+        private static bool _hooksLoaded;
+
+        [HookPreload]
+        public static void LoadIfNeeded() {
+            if (_hooksLoaded)
+                return;
+            _hooksLoaded = true;
+
             IL.Celeste.Player.OnBoundsH += modRedDashState;
             IL.Celeste.Player.OnBoundsV += modRedDashState;
             IL.Celeste.DashBlock.OnDashed += modRedDashStateDashBlock;
             FrostModule.RegisterILHook(new ILHook(typeof(Player).GetProperty("DashAttacking", BindingFlags.Instance | BindingFlags.Public).GetGetMethod(true), modRedDashState));
+            FrostModule.RegisterILHook(new ILHook(typeof(Player).GetMethod("CallDashEvents", BindingFlags.NonPublic | BindingFlags.Instance), modCallDashEvents));
+            FrostModule.RegisterILHook(new ILHook(typeof(Player).GetMethod("orig_WindMove", BindingFlags.NonPublic | BindingFlags.Instance), modBoosterState));
+
+            // eliminate a lag spike when first leaving a booster
+            ChangeDashSpeedOnce.LoadIfNeeded();
         }
 
         [OnUnload]
         public static void Unload() {
+            if (!_hooksLoaded)
+                return;
+            _hooksLoaded = false;
+
             IL.Celeste.Player.OnBoundsH -= modRedDashState;
             IL.Celeste.Player.OnBoundsV -= modRedDashState;
             IL.Celeste.DashBlock.OnDashed -= modRedDashStateDashBlock;
@@ -29,7 +44,7 @@ namespace FrostHelper.Entities.Boosters {
             ILCursor cursor = new ILCursor(il);
             while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdcI4(5) && instr.Previous.MatchCallvirt<StateMachine>("get_State"))) {
                 cursor.Emit(OpCodes.Ldarg_0); // this
-                cursor.EmitDelegate<Func<int, Player, int>>(FrostModule.GetRedDashState);
+                cursor.EmitCall(FrostModule.GetRedDashState);
             }
         }
 
@@ -37,7 +52,61 @@ namespace FrostHelper.Entities.Boosters {
             ILCursor cursor = new ILCursor(il);
             while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdcI4(5) && instr.Previous.MatchCallvirt<StateMachine>("get_State"))) {
                 cursor.Emit(OpCodes.Ldarg_1); // arg 1
-                cursor.EmitDelegate<Func<int, Player, int>>(FrostModule.GetRedDashState);
+                cursor.EmitCall(FrostModule.GetRedDashState);
+            }
+        }
+
+        static void modCallDashEvents(ILContext il) {
+            var cursor = new ILCursor(il);
+
+            if (cursor.TryGotoNext(MoveType.After, instr => instr.MatchStfld<Player>("calledDashEvents"))) {
+                cursor.Emit(OpCodes.Ldarg_0);
+                cursor.EmitDelegate((Player self) => {
+                    if (GetBoosterThatIsBoostingPlayer(self) is { BoostingPlayer: true }) {
+                        FrostModule.player_calledDashEvents.SetValue(self, false);
+                        // new
+                        new DynData<Player>(self).Set<GenericCustomBooster>("fh.customBooster", null!);
+                        return false;
+                    }
+
+#if OLD_YELLOW_BOOSTER
+                foreach (YellowBoosterOLD b in self.Scene.Tracker.GetEntities<YellowBoosterOLD>()) {
+                    b.sprite.SetColor(Color.White);
+                    if (b.StartedBoosting) {
+                        b.PlayerBoosted(self, self.DashDir);
+                        player_calledDashEvents.SetValue(self, false);
+                        return false;
+                    }
+                    if (b.BoostingPlayer) {
+                        player_calledDashEvents.SetValue(self, false);
+                        return false;
+                    }
+                }
+#endif
+                    foreach (GenericCustomBooster b in self.Scene.Tracker.SafeGetEntities<GenericCustomBooster>()) {
+                        if (b.StartedBoosting/* && b.CollideCheck(self)*/) {
+                            b.PlayerBoosted(self, self.DashDir);
+                            return false;
+                        }
+                        if (b.BoostingPlayer && GetBoosterThatIsBoostingPlayer(self) == b) {
+                            return false;
+                        }
+                    }
+
+                    return true;
+                });
+
+                // if delegateOut == false: return
+                cursor.Emit(OpCodes.Brtrue, cursor.Instrs[cursor.Index]);
+                cursor.Emit(OpCodes.Ret);
+            }
+        }
+
+        static void modBoosterState(ILContext il) {
+            ILCursor cursor = new ILCursor(il);
+            while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdcI4(Player.StBoost) && instr.Previous.MatchCallvirt<StateMachine>("get_State"))) {
+                cursor.Emit(OpCodes.Ldarg_0); // this
+                cursor.Emit(OpCodes.Call, typeof(FrostModule).GetMethod(nameof(FrostModule.GetBoosterState)));
             }
         }
         #endregion
@@ -63,6 +132,8 @@ namespace FrostHelper.Entities.Boosters {
         public Vector2 EnterSpeed;
 
         public GenericCustomBooster(EntityData data, Vector2 offset) : base(data.Position + offset) {
+            LoadIfNeeded();
+
             Depth = -8500;
             Collider = new Circle(10f, 0f, 2f);
             sprite = new Sprite(GFX.Game, data.Attr("directory", "objects/FrostHelper/blueBooster/")) {
@@ -377,7 +448,7 @@ namespace FrostHelper.Entities.Boosters {
         public static MethodInfo player_WallJump = typeof(Player).GetMethod("WallJump", BindingFlags.Instance | BindingFlags.NonPublic);
         public static MethodInfo player_WallJumpCheck = typeof(Player).GetMethod("WallJumpCheck", BindingFlags.Instance | BindingFlags.NonPublic);
 
-        public static int CustomRedBoostState;
+        public static int CustomRedBoostState = int.MaxValue;
         public static void RedDashBegin(Entity e) {
             Player player = (e as Player)!;
             DynData<Player> data = new DynData<Player>(player);
@@ -412,7 +483,7 @@ namespace FrostHelper.Entities.Boosters {
             bool ch9hub = false;//this.LastBooster != null && this.LastBooster.Ch9HubTransition;
             data["gliderBoostTimer"] = 0.05f;
             if (player.CanDash) {
-                foreach (GenericCustomBooster b in player.Scene.Tracker.GetEntities<GenericCustomBooster>()) {
+                foreach (GenericCustomBooster b in player.Scene.Tracker.SafeGetEntities<GenericCustomBooster>()) {
                     if (b.BoostingPlayer) {
                         b.BoostingPlayer = false;
                         break;
@@ -421,7 +492,7 @@ namespace FrostHelper.Entities.Boosters {
                 return player.StartDash();
             }
             if (player.DashDir.Y == 0f) {
-                foreach (Entity entity in player.Scene.Tracker.GetEntities<JumpThru>()) {
+                foreach (Entity entity in player.Scene.Tracker.SafeGetEntities<JumpThru>()) {
                     JumpThru jumpThru = (JumpThru) entity;
                     if (player.CollideCheck(jumpThru) && player.Bottom - jumpThru.Top <= 6f) {
                         player.MoveVExact((int) (jumpThru.Top - player.Bottom), null, null);
@@ -484,7 +555,7 @@ namespace FrostHelper.Entities.Boosters {
 
         #region BoostState
 
-        public static int CustomBoostState;
+        public static int CustomBoostState = int.MaxValue;
         public static bool RedDash;
 
         public static int ExitBoostState(Player player, GenericCustomBooster booster) {
@@ -542,7 +613,7 @@ namespace FrostHelper.Entities.Boosters {
         }
 
         public static GenericCustomBooster GetBoosterThatIsBoostingPlayer(Player e) {
-            return new DynData<Player>(e).Get<GenericCustomBooster>("fh.customBooster");
+            return (GenericCustomBooster)new DynData<Player>(e)["fh.customBooster"];
         }
 
         #endregion

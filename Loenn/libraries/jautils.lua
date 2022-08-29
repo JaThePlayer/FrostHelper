@@ -12,7 +12,7 @@ local rainbowHelper = require("mods").requireFromPlugin("libraries.rainbowHelper
 local jautils = {}
 
 jautils.easings = require("mods").requireFromPlugin("libraries.easings")
-
+jautils.tweenModes = require("mods").requireFromPlugin("libraries.tweenModes")
 --[[
     UTILS
 ]]
@@ -72,6 +72,17 @@ jautils.fieldTypeOverrides = {
             editable = false
         }
     end,
+    path = function (data)
+        print("path property here!!!")
+        return {
+            fieldType = "path",
+            allowFolders = true,
+            allowFiles = false,
+            relativeToMod = true,
+            allowMissingPath = false,
+            allowEmpty = false,
+        }
+    end
 }
 
 function jautils.createPlacementsPreserveOrder(handler, placementName, placementData, appendSize)

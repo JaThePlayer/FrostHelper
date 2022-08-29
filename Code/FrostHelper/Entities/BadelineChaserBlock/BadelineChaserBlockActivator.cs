@@ -55,7 +55,7 @@ namespace FrostHelper {
 
             if (!DoneCollisionChecks) {
                 bool state = false;
-                foreach (BadelineChaserBlockActivator activator in Scene.Tracker.GetEntities<BadelineChaserBlockActivator>()) {
+                foreach (BadelineChaserBlockActivator activator in Scene.Tracker.SafeGetEntities<BadelineChaserBlockActivator>()) {
                     activator.DoneCollisionChecks = true;
                     if (!state) {
                         if (activator.Solid && activator.HasBaddyRider()) {
@@ -63,7 +63,7 @@ namespace FrostHelper {
                             break;
                         }
 
-                        foreach (var baddy in Scene.Tracker.GetEntities<BadelineOldsite>()) {
+                        foreach (var baddy in Scene.Tracker.SafeGetEntities<BadelineOldsite>()) {
                             if (activator.Solid) {
                                 // on the side
                                 if (baddy.CollideCheck(activator, baddy.Position + (Vector2.UnitX * 2)) || baddy.CollideCheck(activator, baddy.Position + (Vector2.UnitX * -2))) {
@@ -91,7 +91,7 @@ namespace FrostHelper {
                     }
                 }
 
-                foreach (BadelineChaserBlock block in Scene.Tracker.GetEntities<BadelineChaserBlock>()) {
+                foreach (BadelineChaserBlock block in Scene.Tracker.SafeGetEntities<BadelineChaserBlock>()) {
                     block.SetState(state);
                 }
 
@@ -106,13 +106,12 @@ namespace FrostHelper {
         }
 
         public bool HasBaddyRider() {
-            using (List<Entity>.Enumerator enumerator = Scene.Tracker.GetEntities<BadelineOldsite>().GetEnumerator()) {
-                while (enumerator.MoveNext()) {
-                    if (enumerator.Current.CollideCheck(this, enumerator.Current.Position + (Vector2.UnitY * 2))) {
-                        return true;
-                    }
+            foreach (var item in Scene.Tracker.SafeGetEntities<BadelineOldsite>()) {
+                if (item.CollideCheck(this, item.Position + (Vector2.UnitY * 2))) {
+                    return true;
                 }
             }
+
             return false;
         }
 

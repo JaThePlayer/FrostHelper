@@ -9,19 +9,30 @@ public class WallbounceTutorialMachine : WaveDashTutorialMachine {
     public string PlaybackKeyPrefix;
 
     public WallbounceTutorialMachine(EntityData data, Vector2 offset) : base(data, offset) {
+        LoadIfNeeded();
+
         DialogKeyPrefix = data.Attr("dialogKeyPrefix", "WAVEDASH");
         GraphicsKeyPrefix = data.Attr("graphicsKeyPrefix", "");
         PlaybackKeyPrefix = data.Attr("playbackKeyPrefix", "");
     }
 
-    [OnLoad]
-    public static void Load() {
+    private static bool _hooksLoaded;
+
+    [HookPreload]
+    public static void LoadIfNeeded() {
+        if (_hooksLoaded)
+            return;
+        _hooksLoaded = true;
         On.Celeste.WaveDashTutorialMachine.OnInteract += WaveDashTutorialMachine_OnInteract;
         On.Celeste.WaveDashTutorialMachine.SkipInteraction += WaveDashTutorialMachine_SkipInteraction;
     }
 
     [OnUnload]
     public static void Unload() {
+        if (!_hooksLoaded)
+            return;
+        _hooksLoaded = false;
+
         On.Celeste.WaveDashTutorialMachine.OnInteract -= WaveDashTutorialMachine_OnInteract;
         On.Celeste.WaveDashTutorialMachine.SkipInteraction -= WaveDashTutorialMachine_SkipInteraction;
     }

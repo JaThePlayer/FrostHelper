@@ -93,4 +93,13 @@ public static class Extensions {
     }
 
     private static List<Entity> _emptyListEntity = new();
+
+    /// <summary>
+    /// Calls <see cref="Entity.Add(Component)"/> with the given component, and then returns that component
+    /// </summary>
+    public static T AddF<T>(this Entity e, T component) where T : Component {
+        e.Add(component);
+
+        return component;
+    }
 }

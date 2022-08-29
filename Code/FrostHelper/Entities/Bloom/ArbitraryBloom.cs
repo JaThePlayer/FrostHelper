@@ -54,6 +54,7 @@ public class ArbitraryBloomRenderer : Entity {
 
     public void RenderBloom() {
         int index = 0;
+        // todo: cache?
         foreach (var bloom in Blooms) {
             var alpha = bloom.Alpha;
             foreach (var vert in bloom.Fill) {
@@ -71,14 +72,12 @@ public class ArbitraryBloomRenderer : Entity {
         Engine.Instance.GraphicsDevice.SetRenderTarget(target);
         Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
 
-        //Engine.Graphics.GraphicsDevice.Textures[0] = GFX.Game["util/lightbeam"].Texture.Texture;
         GFX.DrawVertices(cam, verts, index, null, BlendState.AlphaBlend);
 
-        //Engine.Instance.GraphicsDevice.SetRenderTarget(GameplayBuffers.TempA);
         GaussianBlur.Blur(target, tempTarget, GameplayBuffers.TempA, 0f, false, GaussianBlur.Samples.Nine, 1f, GaussianBlur.Direction.Both, 1f);
 
+        // reset stuff back to what it was previously
         Engine.Instance.GraphicsDevice.SetRenderTarget(GameplayBuffers.TempA);
-
         Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone, null, cam);
     }
 }

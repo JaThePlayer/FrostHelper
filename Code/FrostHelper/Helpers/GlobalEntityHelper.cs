@@ -1,12 +1,22 @@
 ﻿namespace FrostHelper;
 public static class GlobalEntityHelper {
-    [OnLoad]
-    public static void Load() {
+    private static bool _hooksLoaded;
+
+    [HookPreload]
+    public static void LoadIfNeeded() {
+        if (_hooksLoaded)
+            return;
+        _hooksLoaded = true;
+
         On.Celeste.Level.LoadLevel += Level_LoadLevel;
     }
 
     [OnUnload]
     public static void Unload() {
+        if (!_hooksLoaded)
+            return;
+        _hooksLoaded = false;
+
         On.Celeste.Level.LoadLevel -= Level_LoadLevel;
     }
 

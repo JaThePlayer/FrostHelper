@@ -3,7 +3,7 @@ local jautils = require("mods").requireFromPlugin("libraries.jautils")
 local snowballTrigger = {}
 
 local directions = {
-    "Left", "Right"
+    "Left", "Right", "Top", "Bottom"
 }
 
 snowballTrigger.name = "FrostHelper/SnowballTrigger"
@@ -16,6 +16,7 @@ jautils.createPlacementsPreserveOrder(snowballTrigger, "normal", {
     { "ySineWaveFrequency", 0.5 },
     { "drawOutline", true },
     { "replaceExisting", true },
+    { "safeZoneSize", 64.0 },
 }, true)
 
 return snowballTrigger

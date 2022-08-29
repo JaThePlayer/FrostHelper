@@ -32,6 +32,8 @@ public class CustomDreamBlockV2 : DreamBlock {
     bool fastMoving;
 
     public CustomDreamBlockV2(EntityData data, Vector2 offset) : base(data, offset) {
+        LoadIfNeeded();
+
         ActiveBackColor = ColorHelper.GetColor(data.Attr("activeBackColor", "Black"));
         DisabledBackColor = ColorHelper.GetColor(data.Attr("disabledBackColor", "1f2e2d"));
         ActiveLineColor = ColorHelper.GetColor(data.Attr("activeLineColor", "White"));
@@ -160,26 +162,29 @@ public class CustomDreamBlockV2 : DreamBlock {
 
         return (Action<Color, Color>) method.Generate().CreateDelegate(typeof(Action<Color, Color>));
     }
-    //private static readonly Color baseActiveBackColor = Color.Black;
-    //private static readonly Color baseDisabledBackColor = Calc.HexToColor("1f2e2d");
-    //private static readonly Color baseActiveLineColor = Color.White;
-    //private static readonly Color baseDisabledLineColor = Calc.HexToColor("6a8480");
 
     #region Hooks
-    // Hook initialization
-    [OnLoad]
-    public static void Load() {
+    private static bool _hooksLoaded;
+
+    [HookPreload]
+    public static void LoadIfNeeded() {
+        if (_hooksLoaded)
+            return;
+        _hooksLoaded = true;
+
         On.Celeste.Player.DreamDashUpdate += Player_DreamDashUpdate;
         On.Celeste.Player.DreamDashEnd += Player_DreamDashEnd;
-
         IL.Celeste.Player.DreamDashBegin += Player_DreamDashBegin;
     }
 
     [OnUnload]
     public static void Unload() {
+        if (!_hooksLoaded)
+            return;
+        _hooksLoaded = false;
+
         On.Celeste.Player.DreamDashUpdate -= Player_DreamDashUpdate;
         On.Celeste.Player.DreamDashEnd -= Player_DreamDashEnd;
-
         IL.Celeste.Player.DreamDashBegin -= Player_DreamDashBegin;
     }
 

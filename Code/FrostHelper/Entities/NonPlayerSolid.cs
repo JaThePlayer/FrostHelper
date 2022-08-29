@@ -8,7 +8,7 @@
 public class NonPlayerSolid : Solid {
     #region Hooks
     private static bool _hooksLoaded = false;
-    public static void Load() {
+    public static void LoadHooksIfNeeded() {
         if (!_hooksLoaded) {
             _hooksLoaded = true;
 
@@ -26,7 +26,7 @@ public class NonPlayerSolid : Solid {
     }
 
     private static void Player_Update(On.Celeste.Player.orig_Update orig, Player self) {
-        var blockers = self.Scene.Tracker.GetEntities<NonPlayerSolid>();
+        var blockers = self.Scene.Tracker.SafeGetEntities<NonPlayerSolid>();
         foreach (var item in blockers) {
             item.Collidable = false;
         }
@@ -48,6 +48,6 @@ public class NonPlayerSolid : Solid {
     #endregion
 
     public NonPlayerSolid(EntityData data, Vector2 offset) : base(data.Position + offset, data.Width, data.Height, true) {
-        Load();
+        LoadHooksIfNeeded();
     }
 }

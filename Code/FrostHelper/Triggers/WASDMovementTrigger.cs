@@ -20,7 +20,7 @@ public class WASDMovementTrigger : Trigger {
 }
 
 public static class WASDMovementState {
-    public static int ID;
+    public static int ID = int.MaxValue;
 
     public static int HitboxWidth;
     public static float Speed;
@@ -34,13 +34,22 @@ public static class WASDMovementState {
     private static Hitbox previousDuckHitbox;
     private static Hitbox previousHurbox;
 
-    [OnLoad]
-    public static void Load() {
+    private static bool _hooksLoaded;
+
+    [HookPreload]
+    public static void LoadIfNeeded() {
+        if (_hooksLoaded) 
+            return;
+        _hooksLoaded = true;
         On.Celeste.Player.OnCollideV += Player_OnCollideV;
     }
 
     [OnUnload]
     public static void Unload() {
+        if (!_hooksLoaded)
+            return;
+        _hooksLoaded = false;
+
         On.Celeste.Player.OnCollideV -= Player_OnCollideV;
     }
 
@@ -56,6 +65,8 @@ public static class WASDMovementState {
     public static string GetTasToolsDisplayName() => "WASD Movement";
 
     public static void Begin(Player player) {
+        LoadIfNeeded();
+
         WASDMovementTrigger wasdTrigger = player.CollideFirst<WASDMovementTrigger>();
         HitboxWidth = wasdTrigger.HitboxWidth;
         Speed = wasdTrigger.Speed;

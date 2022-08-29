@@ -28,7 +28,6 @@ public class HotGarbageGenerator : Entity {
 
         var blades = tileBounds.Width * tileBounds.Height / TilesPerBlade;
 
-        Console.WriteLine(blades);
         for (int i = 0; i < (int)blades; i++) {
             Vector2 pos, nodePos;
             while (true) {

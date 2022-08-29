@@ -36,7 +36,7 @@ public class FlagIfVisibleTrigger : Entity {
         if (!Active)
             return;
 
-        ChildTriggers = scene.Tracker.GetEntities<FlagIfVisibleTrigger>()
+        ChildTriggers = scene.Tracker.SafeGetEntities<FlagIfVisibleTrigger>()
             .Cast<FlagIfVisibleTrigger>()
             .Where(t => t != this && t.Active && t.Flag == Flag)
             .ToArray();

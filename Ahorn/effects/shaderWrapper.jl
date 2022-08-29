@@ -10,10 +10,4 @@ function Ahorn.canFgBg(effect::ShaderWrapper)
     return true, true
 end
 
-function Ahorn.editingOptions(effect::ShaderWrapper)
-    return Dict{String, Any}(
-        "side" => String["Top", "Bottom", "Left", "Right"]
-    )
-end
-
 end

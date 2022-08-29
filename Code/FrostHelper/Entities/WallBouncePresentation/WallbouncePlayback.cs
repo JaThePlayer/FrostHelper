@@ -63,17 +63,17 @@ public class WallbouncePlayback {
         Matrix transformationMatrix = Matrix.CreateScale(4f) * Matrix.CreateTranslation(position.X, position.Y, 0f);
         Draw.SpriteBatch.End();
         Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, null, null, null, transformationMatrix);
-        foreach (Entity entity in Engine.Scene.Tracker.GetEntities<TrailManager.Snapshot>()) {
+        foreach (Entity entity in Engine.Scene.Tracker.SafeGetEntities<TrailManager.Snapshot>()) {
             if (entity.Tag == tag) {
                 entity.Render();
             }
         }
-        foreach (Entity entity2 in Engine.Scene.Tracker.GetEntities<SlashFx>()) {
+        foreach (Entity entity2 in Engine.Scene.Tracker.SafeGetEntities<SlashFx>()) {
             if (entity2.Tag == tag && entity2.Visible) {
                 entity2.Render();
             }
         }
-        foreach (Entity entity3 in Engine.Scene.Tracker.GetEntities<SpeedRing>()) {
+        foreach (Entity entity3 in Engine.Scene.Tracker.SafeGetEntities<SpeedRing>()) {
             if (entity3.Tag == tag) {
                 entity3.Render();
             }

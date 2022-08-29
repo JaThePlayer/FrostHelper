@@ -7,6 +7,13 @@
 public class OnLoad : Attribute { }
 
 /// <summary>
+/// Method gets called when FrostModule.Load() is called,
+/// only if the user wants to preload hooks
+/// </summary>
+[AttributeUsage(AttributeTargets.Method, Inherited = false, AllowMultiple = false)]
+public class HookPreload : Attribute { }
+
+/// <summary>
 /// Method gets called when FrostModule.LoadContent() is called
 /// </summary>
 [AttributeUsage(AttributeTargets.Method, Inherited = false, AllowMultiple = false)]

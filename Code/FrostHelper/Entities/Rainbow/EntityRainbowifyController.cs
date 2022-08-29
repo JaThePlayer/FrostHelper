@@ -6,8 +6,14 @@ public class EntityRainbowifyController : Entity {
     #region Hooks
     private static ILContext.Manipulator levelRenderManipulator;
 
-    [OnLoad]
-    public static void Load() {
+    private static bool _hooksLoaded;
+
+    [HookPreload]
+    public static void LoadIfNeeded() {
+        if (_hooksLoaded)
+            return;
+        _hooksLoaded = true;
+
         levelRenderManipulator = AllowColorChange((object self) => {
             var controller = (self as Level)!.Tracker?.GetEntity<EntityRainbowifyController>();
             return controller != null && controller.all;
@@ -16,14 +22,16 @@ public class EntityRainbowifyController : Entity {
         });
 
         IL.Celeste.Level.Render += levelRenderManipulator;
-        //IL.Celeste.Player.Render += AllowColorChangeForEntity;
     }
 
     [OnUnload]
     public static void Unload() {
+        if (!_hooksLoaded)
+            return;
+        _hooksLoaded = false;
+
         IL.Celeste.Level.Render -= levelRenderManipulator;
         levelRenderManipulator = null!;
-        //IL.Celeste.Player.Render -= AllowColorChangeForEntity;
     }
 
     private static ILContext.Manipulator AllowColorChange(Func<object, bool> condition, Func<object, Vector2> positionGetter) {
@@ -45,24 +53,6 @@ public class EntityRainbowifyController : Entity {
             }
         };
     }
-
-    private static void AllowColorChangeForEntity(ILContext il) {
-        ILCursor cursor = new ILCursor(il);
-
-        while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchCall<Color>("get_White"))) {
-            cursor.Emit(OpCodes.Pop);
-            cursor.Emit(OpCodes.Ldarg_0); // this
-            cursor.EmitDelegate((object self) => {
-                if ((self as Entity)!.Get<Rainbowifier>() != null) {
-                    return ColorHelper.GetHue(Engine.Scene, (self as Entity)!.Position);
-                } else {
-                    return Color.White;
-                }
-
-            });
-            return;
-        }
-    }
     #endregion
 
     private bool all;
@@ -72,6 +62,8 @@ public class EntityRainbowifyController : Entity {
     private List<Backdrop> affectedBackdrops;
 
     public EntityRainbowifyController(EntityData data, Vector2 offset) : base(data.Position + offset) {
+        LoadIfNeeded();
+
         string types = data.Attr("types");
         if (types == "all") {
             all = true;
@@ -96,7 +88,6 @@ public class EntityRainbowifyController : Entity {
             if (Types.Contains(backdrop.GetType()))
                 affectedBackdrops.Add(backdrop);
         }
-        //RemoveSelf();
     }
 
     public override void Render() {

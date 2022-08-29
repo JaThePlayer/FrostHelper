@@ -17,6 +17,11 @@ public static class API {
         return player.StateMachine.State == GenericCustomBooster.CustomBoostState;
     }
 
+    public static int GetCustomFeatherStateId() => CustomFeather.CustomFeatherState;
+    public static int GetCustomBoostStateId() => GenericCustomBooster.CustomBoostState;
+    public static int GetCustomRedBoostStateId() => GenericCustomBooster.CustomRedBoostState;
+    public static int GetHeldDashStateId() => HeldRefill.HeldDashState;
+
     /// <summary>
     /// Converts an entity name to a Type.
     /// </summary>

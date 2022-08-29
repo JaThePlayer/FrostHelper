@@ -6,6 +6,8 @@
 [Obsolete("Use CustomDreamBlockV2 instead")]
 public class CustomDreamBlock : Solid {
     public CustomDreamBlock(EntityData data, Vector2 offset) : base(data.Position + offset, data.Width, data.Height, true) {
+        LoadIfNeeded();
+
         whiteFill = 0f;
         whiteHeight = 1f;
         wobbleFrom = Calc.Random.NextFloat(6.28318548f);
@@ -607,10 +609,14 @@ public class CustomDreamBlock : Solid {
     }
 
     #region Hooks
-    // Hook initialization
-    [OnLoad]
-    public static void Load() {
-        // legacy
+    private static bool _hooksLoaded;
+
+    //[HookPreload] this entity is deprecated, no need to load this on startup, ever
+    public static void LoadIfNeeded() {
+        if (_hooksLoaded)
+            return;
+        _hooksLoaded = true;
+
         On.Celeste.Player.OnCollideH += Player_OnCollideH;
         On.Celeste.Player.OnCollideV += Player_OnCollideV;
         On.Celeste.Player.RefillDash += Player_RefillDash;
@@ -619,6 +625,10 @@ public class CustomDreamBlock : Solid {
 
     [OnUnload]
     public static void Unload() {
+        if (!_hooksLoaded)
+            return;
+        _hooksLoaded = false;
+
         // legacy
         On.Celeste.Player.OnCollideH -= Player_OnCollideH;
         On.Celeste.Player.OnCollideV -= Player_OnCollideV;

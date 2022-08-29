@@ -1,4 +1,5 @@
-﻿namespace FrostHelper;
+﻿#if OLD_YELLOW_BOOSTER
+namespace FrostHelper;
 
 /// <summary>
 /// A booster that will kill you if you don't dash out of it
@@ -270,3 +271,4 @@ public class YellowBoosterOLD : Entity {
 
     private SoundSource loopingSfx;
 }
+#endif

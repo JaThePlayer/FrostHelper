@@ -208,6 +208,24 @@ public static class EasierILHook {
         return method.Generate().CreateDelegate<T>();
     }
 
+    public static Func<TDeclaring, TField> CreateFastGetter<TDeclaring, TField>(this FieldInfo field)
+        => CreateAnyFastGetter<Func<TDeclaring, TField>>(field);
+
+    public static Action<TField> CreateFastStaticGetter<TDeclaring, TField>(this FieldInfo field)
+        => CreateAnyFastGetter<Action<TField>>(field);
+
+    public static T CreateAnyFastGetter<T>(this FieldInfo field) where T : Delegate
+        => CreateDynamicMethod<T>($"{field.DeclaringType.FullName}.dyn_fastGet_{field.Name}", (il) => {
+            if (field.IsStatic) {
+                il.Emit(OpCodes.Ldsfld, field);
+            } else {
+                il.Ldarg0();
+                il.Emit(OpCodes.Ldfld, field);
+            }
+            
+            il.Ret();
+        });
+
     /// <summary>
     /// 
     /// The following method is written by max480. Thanks max!
@@ -252,16 +270,27 @@ public static class EasierILHook {
     /// Keeps moving the <paramref name="cursor"/> until a Callvirt opcode is found that calls <paramref name="declaringType"/>.<paramref name="methodName"/> 
     /// </summary>
     /// <returns>True if the specified function call got found</returns>
-    public static bool SeekVirtFunctionCall(this ILCursor cursor, Type declaringType, string methodName) {
-        while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchCallvirt(declaringType, methodName))) {
+    public static bool SeekVirtFunctionCall(this ILCursor cursor, Type declaringType, string methodName, MoveType moveType = MoveType.After) {
+        while (cursor.TryGotoNext(moveType, instr => instr.MatchCallvirt(declaringType, methodName))) {
             return true;
         }
 
         return false;
     }
 
+    public static bool SeekVirtFunctionCall<T>(this ILCursor cursor, string methodName, MoveType moveType = MoveType.After)
+        => SeekVirtFunctionCall(cursor, typeof(T), methodName, moveType);
+
     public static bool SeekLoadFloat(this ILCursor cursor, float value) {
         while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdcR4(value))) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public static bool SeekLoadString(this ILCursor cursor, string value) {
+        while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdstr(value))) {
             return true;
         }
 

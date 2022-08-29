@@ -7,19 +7,29 @@ public static class BloomColorChange {
     /// - <see cref="API.API.SetBloomColor(Color)"/>
     /// </summary>
     internal static Color Color {
-        get => FrostModule.Session.BloomColor; 
+        get => FrostModule.Session.BloomColor;
         set => FrostModule.Session.BloomColor = value;
     }
 
-    public static Func<Color, Color> ColorManipulator = (c) => c;
+    internal static Func<Color, Color> ColorManipulator = (c) => c;
+
+    private static bool _hooksLoaded;
 
     [OnLoad]
     public static void Load() {
+        if (_hooksLoaded)
+            return;
+        _hooksLoaded = true;
+
         IL.Celeste.BloomRenderer.Apply += BloomRenderer_Apply;
     }
 
     [OnUnload]
     public static void Unload() {
+        if (!_hooksLoaded)
+            return;
+        _hooksLoaded = false;
+
         IL.Celeste.BloomRenderer.Apply -= BloomRenderer_Apply;
     }
 

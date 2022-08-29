@@ -38,18 +38,17 @@ public class DecalRainbowifier : Component {
         ILCursor cursor = new ILCursor(il);
 
         while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchCall<Color>("get_White"))) {
-            cursor.Emit(OpCodes.Pop);
             cursor.Emit(OpCodes.Ldarg_0); // this
             cursor.EmitCall(GetColor);
             return;
         }
     }
 
-    private static Color GetColor(Component self) {
+    private static Color GetColor(Color orig, Component self) {
         if (self.Entity.Get<DecalRainbowifier>() != null) {
             return ColorHelper.GetHue(self.Scene, self.Entity.Position);
         } else {
-            return Color.White;
+            return orig;
         }
     }
 

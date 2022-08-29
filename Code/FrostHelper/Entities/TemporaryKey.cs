@@ -3,13 +3,23 @@
 [CustomEntity("FrostHelper/TemporaryKey")]
 public class TemporaryKey : Key {
     #region Hooks
-    [OnLoad]
-    public static void Load() {
+    private static bool _hooksLoaded;
+
+    [HookPreload]
+    public static void LoadIfNeeded() {
+        if (_hooksLoaded)
+            return;
+        _hooksLoaded = true;
+
         IL.Celeste.Key.Added += Key_Added;
     }
 
     [OnUnload]
     public static void Unload() {
+        if (!_hooksLoaded)
+            return;
+        _hooksLoaded = false;
+
         IL.Celeste.Key.Added -= Key_Added;
     }
 
@@ -51,6 +61,8 @@ public class TemporaryKey : Key {
     public readonly bool EmitParticles;
 
     public TemporaryKey(EntityData data, Vector2 offset, EntityID id) : base(data.Position + offset, id, data.NodesOffset(offset)) {
+        LoadIfNeeded();
+
         this.follower = Get<Follower>();
         // Create sprite
         DynData<Key> dyndata = new DynData<Key>(this);

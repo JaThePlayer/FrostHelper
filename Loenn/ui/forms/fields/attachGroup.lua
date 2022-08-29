@@ -14,6 +14,8 @@ local function buttonPressed(formField)
     return function (element)
         formField.field.text = tostring(attachGroupHelper.findNewGroup(state.getSelectedRoom()))
         formField.field.index = #formField.field.text
+
+        formField:notifyFieldChanged()
     end
 end
 
@@ -59,7 +61,10 @@ function integerField.getElement(name, value, options)
         fieldCallback(...)
     end
 
-    formField.field.cb(formField.field, formField.field.text, "")
+    --formField.formFieldChanged = fieldChangedCallback
+
+    fieldCallback(formField.field, formField.field.text, "")
+    --formField.field.cb(formField.field, formField.field.text, "")
 
     return formField
 end

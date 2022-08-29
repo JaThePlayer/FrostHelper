@@ -12,6 +12,11 @@ flutterbird.placements = {
     name = "normal",
     data = {
         colors = "89fbff,f0fc6c,f493ff,93baff",
+        directory = "scenery/flutterbird/",
+        dontFlyAway = false,
+        hopSfx = "event:/game/general/birdbaby_hop",
+        flyAwaySfx = "event:/game/general/birdbaby_flyaway",
+        tweetingSfx = "event:/game/general/birdbaby_tweet_loop",
     }
 }
 

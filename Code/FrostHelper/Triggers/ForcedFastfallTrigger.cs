@@ -7,10 +7,11 @@ namespace FrostHelper;
 public class ForcedFastfallTrigger : Trigger {
 
     public ForcedFastfallTrigger(EntityData data, Vector2 offset) : base(data, offset) {
+        LoadIfNeeded();
     }
 
     public static bool IsForcedFastfall(Scene scene) {
-        foreach (ForcedFastfallTrigger item in scene.Tracker.GetEntities<ForcedFastfallTrigger>()) {
+        foreach (ForcedFastfallTrigger item in scene.Tracker.SafeGetEntities<ForcedFastfallTrigger>()) {
             if (item.Triggered)
                 return true;
         }
@@ -18,13 +19,23 @@ public class ForcedFastfallTrigger : Trigger {
         return false;
     }
 
-    [OnLoad]
-    public static void Load() {
+    private static bool _hooksLoaded;
+
+    [HookPreload]
+    public static void LoadIfNeeded() {
+        if (_hooksLoaded)
+            return;
+        _hooksLoaded = true;
+
         IL.Celeste.Player.NormalUpdate += Player_NormalUpdate;
     }
 
     [OnUnload]
     public static void Unload() {
+        if (!_hooksLoaded)
+            return;
+        _hooksLoaded = false;
+
         IL.Celeste.Player.NormalUpdate -= Player_NormalUpdate;
     }
 

@@ -5,15 +5,23 @@ public static class ChangeDashSpeedOnce {
     public static float? NextSuperJumpSpeed;
 
     public static void ChangeNextDashSpeed(float speed) {
+        LoadIfNeeded();
         NextDashSpeed = speed;
     }
 
     public static void ChangeNextSuperJumpSpeed(float speed) {
+        LoadIfNeeded();
         NextSuperJumpSpeed = speed;
     }
 
-    [OnLoad]
-    public static void Load() {
+    private static bool _hooksLoaded;
+
+    [HookPreload]
+    public static void LoadIfNeeded() {
+        if (_hooksLoaded)
+            return;
+        _hooksLoaded = true;
+
         FrostModule.RegisterILHook(EasierILHook.HookCoroutine("Celeste.Player", "DashCoroutine", DashCoroutinePatch));
         FrostModule.RegisterILHook(EasierILHook.Hook<Player>("DashEnd", DashEndPatch));
         FrostModule.RegisterILHook(EasierILHook.Hook<Player>("SuperJump", SuperJumpPatch));

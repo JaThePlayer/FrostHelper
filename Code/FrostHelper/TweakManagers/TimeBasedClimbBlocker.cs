@@ -1,16 +1,35 @@
 ﻿namespace FrostHelper;
 
 public static class TimeBasedClimbBlocker {
-    public static float NoClimbTimer;
+    private static float _NoClimbTimer;
 
-    [OnLoad]
-    public static void Load() {
+    public static float NoClimbTimer { 
+        get => _NoClimbTimer; 
+        set {
+            _NoClimbTimer = value;
+
+            LoadIfNeeded();
+        } 
+    }
+
+    private static bool _hooksLoaded;
+
+    [HookPreload]
+    public static void LoadIfNeeded() {
+        if (_hooksLoaded)
+            return;
+        _hooksLoaded = true;
+
         On.Celeste.Player.ClimbCheck += Player_ClimbCheck;
         On.Celeste.Level.Update += Level_Update;
     }
 
     [OnUnload]
     public static void Unload() {
+        if (!_hooksLoaded)
+            return;
+        _hooksLoaded = false;
+
         On.Celeste.Player.ClimbCheck -= Player_ClimbCheck;
         On.Celeste.Level.Update -= Level_Update;
     }
