@@ -386,6 +386,10 @@ entities.FrostHelper/LightOccluderEntity.placements.name.default=Light Occluder
 
 entities.FrostHelper/BloomPoint.placements.name.default=Bloom Point
 
+entities.FrostHelper/DecalContainer.placements.name.default=Decal Container
+entities.FrostHelper/DecalContainer.placements.description.default=Groups decals into smaller chunks, which are then culled in an efficient way. Used for optimising huge rooms with hundreds of decals.
+entities.FrostHelper/DecalContainer.attributes.description.chunkSizeInTiles=How big each chunk is, in tiles. Lower numbers might improve performance, but numbers too low are wasteful.
+
 # -- Mod Names --
 # mods.modName.*
 mods.FrostHelper.name=Frost Helper

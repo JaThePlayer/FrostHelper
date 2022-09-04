@@ -104,13 +104,13 @@ public class DecalContainer {
 
     public void AddDecal(Decal item) {
         var t = DecalContainerMaker.getTextures(item)[0];
-        var w = t.Width;
-        var h = t.Height;
+        var w = t.Width * Math.Abs(item.Scale.X);
+        var h = t.Height * Math.Abs(item.Scale.Y);
 
         Decals.Add(new() { decal = item, HalfWidth = w / 2f, HalfHeight = h / 2f });
 
-        maxW = Math.Max(maxW, w);
-        maxH = Math.Max(maxH, h);
+        maxW = (int)Math.Max(maxW, w);
+        maxH = (int)Math.Max(maxH, h);
 
         item.RemoveSelf();
     }

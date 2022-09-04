@@ -26,7 +26,7 @@ function jautils.union(...)
 
     for _, value in ipairs({...}) do
         if not value then
-        elseif value._type then -- specific to lonn, allows reducing one layer of {}
+        elseif value._type then -- specific to lonn
             table.insert(union, value)
         else
             jautils.addAll(union, value)
