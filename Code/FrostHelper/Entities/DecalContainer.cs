@@ -1,4 +1,5 @@
 ﻿//#define DEBUG_DISPLAY
+#define NEW_IMPL
 
 using System.Runtime.CompilerServices;
 
@@ -14,6 +15,8 @@ public class DecalContainerMaker : Trigger {
 
     public DecalContainerMaker(EntityData data, Vector2 offset) : base(data, offset) {
         ChunkSize = data.Int("chunkSizeInTiles", 64) * 8;
+
+        Depth = Depths.Top;
     }
 
     public override void Awake(Scene scene) {
@@ -37,23 +40,68 @@ public class DecalContainerMaker : Trigger {
                     for (int y = bounds.Top; y < bounds.Bottom; y += chunkSize) {
                         var container = new DecalContainer(new Hitbox(chunkSize, chunkSize, x, y));
                         container.Position = new(x, y);
+                        container.Renderer = renderer;
                         renderer.Containers.Add(container);
                     }
             }
         }
 
-
+        int total = 0;
+        int newContainers = 0;
+        DecalContainer? lastContainer = null;
         foreach (var ent in entities) {
             if (ent is not Decal item || getParallax(item))
                 continue;
             var d = item.Depth;
             var r = renderers[d];
-            foreach (var c in r.Containers)                 
+
+            total++;
+
+#if NEW_IMPL
+            DecalContainer? newContainer = null;
+            var containers = r.Containers;
+            for (int i = containers.Count - 1; i >= 0; i--) {
+                var c = containers[i];
+                if (c.IsDecalValid(item)) {
+                    if (lastContainer is null || c == lastContainer) {
+                        lastContainer = c;
+                        c.AddDecal(item);
+                    } else {
+                        // adding this decal to 'c' would change decal rendering order!
+                        // to mitigate this, we'll create a new container over the same area as 'c', and we'll add the decal to that
+                        // future decals in this area will get added to the new container
+                        // since the container gets added to the *end* of the container list to preserve render order,
+                        // we need to loop over containers in reverse order, so that newly added containers will be checked first
+                        newContainer = new DecalContainer(c.collider) {
+                            Renderer = c.Renderer,
+                            Position = c.Position
+                        };
+                        newContainer.AddDecal(item);
+                        lastContainer = newContainer;
+
+                        newContainers++;
+                    }
+                    break;
+                }
+            }
+
+            if (newContainer is { }) {
+                r.Containers.Add(newContainer);
+            }
+#else
+            // causes decal render order changes
+            foreach (var c in r.Containers) {
                 if (c.IsDecalValid(item)) {
                     c.AddDecal(item);
                     break;
                 }
+            }
+#endif
         }
+
+#if DEBUG_DISPLAY
+        Console.WriteLine($"Decal container efficiency: {(float) total / (float)newContainers} per container (total: {total}, new containers: {newContainers})");
+#endif
 
         RemoveSelf();
     }
@@ -73,12 +121,16 @@ public class DecalContainerRenderer : Entity {
     public override void Awake(Scene scene) {
         foreach (var c in Containers)             
             c.Awake(scene);
+
+        base.Awake(scene);
     }
 
     public override void Render() {
         var scene = Scene;
         foreach (var c in Containers)             
             c.Render(scene);
+
+        base.Render();
     }
 }
 
@@ -88,8 +140,9 @@ public class DecalContainer {
         public float HalfWidth, HalfHeight;
     }
 
+    internal DecalContainerRenderer Renderer;
     internal List<DecalInfo> Decals = new();
-    Hitbox collider;
+    internal Hitbox collider;
     internal int maxW, maxH;
     public Vector2 Position;
 
@@ -111,6 +164,26 @@ public class DecalContainer {
 
         maxW = (int)Math.Max(maxW, w);
         maxH = (int)Math.Max(maxH, h);
+
+        // add some components to the renderer to work with decal registry
+        foreach (var comp in item) {
+            switch (comp) {
+                case VertexLight l:
+                    Renderer.Add(new VertexLight(l.Position + item.Position, l.Color, l.Alpha, (int)l.StartRadius, (int) l.EndRadius));
+                    break;
+                /* annoying
+                case LightOcclude l:
+                    l.Position += item.Position;
+                    Renderer.Add(comp);
+                    break;*/
+                case BloomPoint b: // untested
+                    Renderer.Add(new BloomPoint(b.Position + item.Position, b.Alpha, b.Radius));
+                    break;
+
+                default:
+                    break;
+            }
+        }
 
         item.RemoveSelf();
     }
@@ -162,7 +235,7 @@ public class DecalContainer {
             setEntity(c, item);
     }
 
-    private static readonly Action<Decal, Scene> setScene = typeof(Decal).CreateDelegateFor<Action<Decal, Scene>>("set_Scene");
+    internal static readonly Action<Entity, Scene> setScene = typeof(Entity).CreateDelegateFor<Action<Entity, Scene>>("set_Scene");
     private static readonly Action<Component, Entity> setEntity = typeof(Component).CreateDelegateFor<Action<Component, Entity>>("set_Entity");
 
     public void Render(Scene scene) {
@@ -190,8 +263,8 @@ public class DecalContainer {
         var w = collider.Width;
         var h = collider.Height;
 
-        Draw.HollowRect(x, y, w, h, Color.BlueViolet);
-        Draw.HollowRect(x, y, w - maxW, h - maxH, Color.Red);
+        Draw.HollowRect(x, y, w, h, Color.BlueViolet * 0.2f);
+        //Draw.HollowRect(x, y, w - maxW, h - maxH, Color.Red);
 #endif
     }
 }
