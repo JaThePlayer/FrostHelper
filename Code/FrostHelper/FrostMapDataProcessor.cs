@@ -50,16 +50,8 @@ public class FrostMapDataProcessor : EverestMapDataProcessor {
         };
     }
     public override void Reset() {
-        /*
-        string SID = AreaKey.GetSID();
-        if (SpeedChallenges.ContainsKey(AreaKey.GetLevelSet()))
-        {
-            SpeedChallenges.Remove(SID);
-        }*/
-        GlobalEntityMarkers = new();
     }
 
-    
     public override void End() {
     }
 }

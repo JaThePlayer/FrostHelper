@@ -31,6 +31,8 @@ public class FrostModule : EverestModule {
 #if SPEEDCHALLENGES
     public override void PrepareMapDataProcessors(MapDataFixup context) {
         base.PrepareMapDataProcessors(context);
+
+        FrostMapDataProcessor.GlobalEntityMarkers.Remove(context.AreaKey.SID);
         context.Add<FrostMapDataProcessor>();
     }
 #endif

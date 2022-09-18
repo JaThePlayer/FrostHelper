@@ -23,6 +23,8 @@ public class EntityBatcher : Entity {
 
     private Scene _firstScene;
 
+    public bool ConsumeStylegrounds;
+
     public EntityBatcher(EntityData data, Vector2 offset) : base(data.Position + offset) {
         Flag = data.Attr("flag", string.Empty);
         FlagInverted = data.Bool("flagInverted", false);
@@ -30,6 +32,7 @@ public class EntityBatcher : Entity {
         Depth = data.Int("depth", Depths.Top);
         Types = FrostModule.GetTypes(data.Attr("types"));
         MakeEntitiesInvisible = data.Bool("makeEntitiesInvisible", true);
+        ConsumeStylegrounds = data.Bool("consumeStylegrounds", false);
         Visible = true;
 
         string[] propertySplit = data.Attr("parameters", string.Empty).Split(new char[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
@@ -145,13 +148,25 @@ public class EntityBatcher : Entity {
         GameplayRenderer.Begin();
     }
 
-    private static void DrawMask(Dictionary<string, object> ShaderParameters) {
+    private static void DrawMask(Dictionary<string, object> ShaderParameters, bool consumeStylegrounds) {
         // step 1: draw mask
         Engine.Graphics.GraphicsDevice.SetRenderTarget(temp2);
         Engine.Graphics.GraphicsDevice.Clear(Color.Transparent);
         if (ShaderParameters.ContainsKey("renderBgStylegrounds")) {
             var lvl = FrostModule.GetCurrentLevel();
+
+            if (consumeStylegrounds)
+            foreach (var item in lvl.Background.Backdrops) {
+                item.Visible = true;
+               // item.BeforeRender(lvl);
+            }
+
             lvl.Background.Render(lvl);
+
+            if (consumeStylegrounds)
+            foreach (var item in lvl.Background.Backdrops) {
+                item.Visible = false;
+            }
         }
         Draw.SpriteBatch.Begin();
         Draw.SpriteBatch.Draw(GameplayBuffers.Gameplay, Vector2.Zero, Color.White);
@@ -179,8 +194,8 @@ public class EntityBatcher : Entity {
     }
 
 
-    public static void RenderMask(Dictionary<string, object> shaderParameters) {
-        DrawMask(shaderParameters);
+    public static void RenderMask(Dictionary<string, object> shaderParameters, bool consumeStylegrounds) {
+        DrawMask(shaderParameters, consumeStylegrounds);
 
         // step 2: render blur
         //GaussianBlur.Blur(temp2, temp, GameplayBuffers.TempA, GetFloatParam("fade", ShaderParameters), false, GetSamples(ShaderParameters), 1f, GaussianBlur.Direction.Both, GetFloatParam("alpha", ShaderParameters));
@@ -196,11 +211,11 @@ public class EntityBatcher : Entity {
         GameplayRenderer.Begin();
     }
 
-    public static void RenderBlurMask(Dictionary<string, object> shaderParameters) {
-        DrawMask(shaderParameters);
+    public static void RenderBlurMask(Dictionary<string, object> shaderParameters, bool consumeStylegrounds) {
+        DrawMask(shaderParameters, consumeStylegrounds);
 
         // step 2: render blur
-        GaussianBlur.Blur(temp2, temp, GameplayBuffers.TempA, GetFloatParam("fade", shaderParameters), false, GetSamples(shaderParameters), 1f, GaussianBlur.Direction.Both, GetFloatParam("alpha", shaderParameters));
+        GaussianBlur.Blur(temp2, temp, GameplayBuffers.TempA, GetFloatParam("fade", shaderParameters), false, GetSamples(shaderParameters), HDlesteCompat.Scale, GaussianBlur.Direction.Both, GetFloatParam("alpha", shaderParameters));
         var shader = GetMaskShader(shaderParameters);
 
         // step 3: shader
@@ -213,7 +228,7 @@ public class EntityBatcher : Entity {
         GameplayRenderer.Begin();
     }
 
-    public static void Apply(List<Entity> AffectedEntities, string Shader, Dictionary<string, object> ShaderParameters, int? requiredDepth) {
+    public static void Apply(List<Entity> AffectedEntities, string Shader, Dictionary<string, object> ShaderParameters, int? requiredDepth, bool consumeStylegrounds) {
         Draw.SpriteBatch.End();
 
         if (temp is null || temp.Width != GameplayBuffers.Gameplay.Width) {
@@ -244,10 +259,10 @@ public class EntityBatcher : Entity {
 
         switch (Shader) {
             case "mask":
-                RenderMask(ShaderParameters);
+                RenderMask(ShaderParameters, consumeStylegrounds);
                 return;
             case "blurMask":
-                RenderBlurMask(ShaderParameters);
+                RenderBlurMask(ShaderParameters, consumeStylegrounds);
                 return;
             case "vanilla.gaussianBlur":
                 RenderVanillaBlur(ShaderParameters);
@@ -268,9 +283,9 @@ public class EntityBatcher : Entity {
         }
 
         if (DynamicDepthPossibleDepths is not null) {
-            Apply(AffectedEntities, Shader, ShaderParameters, Depth);
+            Apply(AffectedEntities, Shader, ShaderParameters, Depth, ConsumeStylegrounds);
         } else {
-            Apply(AffectedEntities, Shader, ShaderParameters, null);
+            Apply(AffectedEntities, Shader, ShaderParameters, null, ConsumeStylegrounds);
         }
 
     }

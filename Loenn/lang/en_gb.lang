@@ -317,6 +317,7 @@ entities.FrostHelper/WireLamps.attributes.description.lightAlpha=The Alpha value
 entities.FrostHelper/WireLamps.attributes.description.lightStartFade=the Start Fade value for the lights.
 entities.FrostHelper/WireLamps.attributes.description.lightEndFade=the End Fade value for the lights.
 entities.FrostHelper/WireLamps.attributes.description.lampSprite=The sprite used for lamps.
+entities.FrostHelper/WireLamps.attributes.description.wobbliness=The wobbliness of the wire.
 
 entities.FrostHelper/DirectionalPuffer.placements.name.none=Directional Puffer (None)
 entities.FrostHelper/DirectionalPuffer.placements.name.left=Directional Puffer (Left)

@@ -59,7 +59,6 @@ public class CustomSnowball : Entity {
     private void ResetPosition() {
         Player player = level.Tracker.GetEntity<Player>();
         if (player != null && CheckIfPlayerOutOfBounds(player)) {
-            Console.WriteLine("Reset");
             spawnSfx.Play("event:/game/04_cliffside/snowball_spawn", null, 0f);
             Collidable = Visible = true;
             resetTimer = 0f;
@@ -147,13 +146,6 @@ public class CustomSnowball : Entity {
             X -= Speed * Engine.DeltaTime;
             Y = atY + 4f * Sine.Value;
         }
-
-        /*
-        Console.WriteLine(Y);
-        Console.WriteLine(level.Camera.Top - 60f);
-        Console.WriteLine(Scene.Tracker.GetEntity<Player>()?.Position.Y.ToString() ?? "");
-        Console.WriteLine(X);
-        Console.WriteLine(Scene.Tracker.GetEntity<Player>()?.Position.X.ToString() ?? "");*/
 
         if (IsOutOfBounds()) {
             if (leaving) {

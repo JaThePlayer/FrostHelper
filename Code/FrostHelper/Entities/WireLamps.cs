@@ -5,8 +5,10 @@
 /// </summary>
 [CustomEntity("FrostHelper/WireLamps")]
 public class WireLamps : Entity {
-    public MTexture? LampTexture;
-    public Sprite[]? Sprites;
+    internal MTexture? LampTexture;
+    internal Sprite[]? Sprites;
+
+    public float Wobbliness;
 
     public WireLamps(EntityData data, Vector2 offset) : base(data.Position + offset) {
         Vector2 to = data.Nodes[0] + offset;
@@ -17,6 +19,8 @@ public class WireLamps : Entity {
         Color = data.GetColor("wireColor", "595866");
         sineX = random.NextFloat(4f);
         sineY = random.NextFloat(4f);
+
+        Wobbliness = data.Float("wobbliness", 1.0f);
 
         lights = new VertexLight[data.Int("lightCount", 3)];
         var lightAlpha = data.Float("lightAlpha", 1f);
@@ -65,7 +69,7 @@ public class WireLamps : Entity {
             (float) Math.Sin(sineY + level.WindSineTimer * 2.8f)
         ) * 8f;
 
-        Curve.Control = (Curve.Begin + Curve.End) / 2f + new Vector2(0f, 24f) + controlOffset;
+        Curve.Control = (Curve.Begin + Curve.End) / 2f + new Vector2(0f, 24f) + (controlOffset * Wobbliness);
         var start = Curve.Begin;
 
         const int segments = 16;

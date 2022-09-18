@@ -19,5 +19,5 @@ return {
         return utils.rectangle(entity.x - 4, entity.y - 4, 8, 8)
     end,
     borderColor = { 1, 1, 1 },
-    fillColor = { 1, 1, 1, 0.3}
+    fillColor = { 1, 1, 1, 0.3 }
 }

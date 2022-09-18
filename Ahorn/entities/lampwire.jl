@@ -3,7 +3,7 @@ module FHLampWire
 using ..Ahorn, Maple
 
 @mapdef Entity "FrostHelper/WireLamps" WireLamps(x::Integer, y::Integer, above::Bool=false, colors::String="Red,Yellow,Blue,Green,Orange", wireColor::String="595866",
-                                                 lightCount::Integer=3, lightAlpha::Number=1.0, lightStartFade::Integer=8, lightEndFade::Integer=16)
+                                                 lightCount::Integer=3, lightAlpha::Number=1.0, lightStartFade::Integer=8, lightEndFade::Integer=16, wobbliness::Number=1.0)
 
 const placements = Ahorn.PlacementDict(
     "Wire Lamps (Frost Helper)" => Ahorn.EntityPlacement(
