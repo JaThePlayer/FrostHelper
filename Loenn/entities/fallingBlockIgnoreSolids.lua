@@ -18,4 +18,6 @@ jautils.createPlacementsPreserveOrder(fallingBlockIgnoreSolids, "default", {
     { "allowStaticMovers", true },
 })
 
+fallingBlockIgnoreSolids.fieldInformation = fakeTilesHelper.getFieldInformation("tiletype")
+
 return fallingBlockIgnoreSolids

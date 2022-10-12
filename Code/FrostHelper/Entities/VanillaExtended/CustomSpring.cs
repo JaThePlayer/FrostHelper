@@ -90,7 +90,7 @@ public class CustomSpring : Spring {
 
     string dir;
 
-    Vector2 speedMult;
+    internal Vector2 speedMult;
 
 
     public bool MultiplyPlayerY;

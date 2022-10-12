@@ -1,31 +1,30 @@
 ﻿namespace FrostHelper;
 
 public class KeyIce : Key {
-    private bool IsFirstIceKey {
-        get {
-            for (int i = follower.FollowIndex - 1; i > -1; i--) {
-                bool flag = follower.Leader.Followers[i].Entity is KeyIce;
-                if (flag) {
-                    return false;
-                }
-            }
-            return true;
-        }
-    }
-
     private Alarm? alarm;
     private Tween? tween;
     public new bool Turning { get; private set; }
 
     public KeyIce(EntityData data, Vector2 offset, EntityID id, Vector2[] nodes) : base(data.Position + offset, id, nodes) {
-        sprite = Get<Monocle.Sprite>();
+        sprite = Get<Sprite>();
         this.follower = Get<Follower>();
         FrostModule.SpriteBank.CreateOn(sprite, "keyice");
         Follower follower = this.follower;
         follower.OnLoseLeader = (Action) Delegate.Combine(follower.OnLoseLeader, new Action(Dissolve));
         this.follower.PersistentFollow = true; // was false
+
+        // fix bug where dying immediately after grabbing the key would make you gain a regular key after death
+        var pc = Get<PlayerCollider>();
+        var origOnCollide = pc.OnCollide;
+        pc.OnCollide = (Player p) => {
+            origOnCollide(p);
+            var session = p.SceneAs<Level>().Session;
+            session.Keys.Remove(ID);
+            session.DoNotLoad.Remove(ID);
+        };
+
         Add(new DashListener {
-            OnDash = new Action<Vector2>(OnDash)
+            OnDash = OnDash
         });
         Add(new TransitionListener {
             OnOut = delegate (float f) {
@@ -53,11 +52,9 @@ public class KeyIce : Key {
     }
 
     private void OnDash(Vector2 dir) {
-        bool flag1 = follower.Leader != null;
-        if (flag1) {
+        if (follower.Leader != null) {
             Dissolve();
         }
-
     }
 
     public override void Added(Scene scene) {
@@ -117,8 +114,8 @@ public class KeyIce : Key {
         }
         sprite.Scale = Vector2.Zero;
         Visible = false;
-        bool flag = level.Session.Level != startLevel;
-        if (flag) {
+
+        if (level.Session.Level != startLevel) {
             RemoveSelf();
             yield break;
         }

@@ -3,12 +3,12 @@ local jautils = require("mods").requireFromPlugin("libraries.jautils")
 
 local noDashArea = {}
 
-local particleColor = jautils.getColor("7f7f7f")
-local fillColor = jautils.getColor("400000")
+local particleColor = jautils.getColor("7f7f7f40")
+local fillColor = jautils.getColor("40000040")
 local lineColor = jautils.getColor("ff0000")
 
 noDashArea.name = "FrostHelper/NoDashArea"
-noDashArea.depth = -11000
+noDashArea.depth = 10000
 noDashArea.nodeLineRenderType = "line"
 noDashArea.placements = {
     name = "no_dash_area",

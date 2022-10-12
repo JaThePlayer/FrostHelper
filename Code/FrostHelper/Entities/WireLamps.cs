@@ -74,6 +74,9 @@ public class WireLamps : Entity {
 
         const int segments = 16;
 
+        if (!CameraCullHelper.IsRectVisible(level.Camera.Position, Curve.Begin, Curve.End))
+            return;
+
         for (int i = 1; i <= segments; i++) {
             float percent = i / (float) segments;
 

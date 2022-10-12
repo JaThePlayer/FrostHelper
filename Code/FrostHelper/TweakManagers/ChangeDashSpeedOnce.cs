@@ -1,6 +1,6 @@
 ﻿namespace FrostHelper;
 
-public static class ChangeDashSpeedOnce {
+internal static class ChangeDashSpeedOnce {
     public static float? NextDashSpeed;
     public static float? NextSuperJumpSpeed;
 
@@ -25,6 +25,15 @@ public static class ChangeDashSpeedOnce {
         FrostModule.RegisterILHook(EasierILHook.HookCoroutine("Celeste.Player", "DashCoroutine", DashCoroutinePatch));
         FrostModule.RegisterILHook(EasierILHook.Hook<Player>("DashEnd", DashEndPatch));
         FrostModule.RegisterILHook(EasierILHook.Hook<Player>("SuperJump", SuperJumpPatch));
+        FrostModule.RegisterILHook(EasierILHook.Hook<Player>("orig_Die", DiePatch));
+    }
+
+    // Reset the dash speed when the player dies
+    public static void DiePatch(ILContext context) {
+        var cursor = new ILCursor(context);
+
+        if (cursor.SeekVirtFunctionCall<Player>("Stop")) // this func is called right after the !Dead check
+            cursor.EmitCall(Reset);
     }
 
     public static void DashEndPatch(ILContext context) {

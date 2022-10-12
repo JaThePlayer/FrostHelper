@@ -10,6 +10,7 @@ local bubbler = {
 
 jautils.createPlacementsPreserveOrder(bubbler, "normal", {
     { "visible", true },
+    { "showReturnIndicator", true },
     { "color", "ffffff", "color"}
 })
 
