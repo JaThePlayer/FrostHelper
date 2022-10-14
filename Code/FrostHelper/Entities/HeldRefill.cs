@@ -182,7 +182,7 @@ public class HeldRefill : Entity {
 
         if (player.OnGround() && player.CanUnDuck) {
 
-            if (Input.Jump.Pressed && player.GetValue<float>("jumpGraceTimer") > 0f) {
+            if (Input.Jump.Pressed && player.jumpGraceTimer > 0f) {
                 //player.Invoke("SuperJump");
                 player.Jump(true, true);
             }

@@ -5,17 +5,11 @@ public class DirectionalFallingBlock : FallingBlock {
 
     public DirectionalFallingBlock(EntityData data, Vector2 offset) : base(data, offset) {
         Get<Coroutine>().RemoveSelf();
-        Add(new Coroutine(Sequence()));
+        Add(new Coroutine(NewSequence()));
     }
 
-    public bool PlayerFallCheckShim() => this.Invoke<bool>("PlayerFallCheck");
-    public bool PlayerWaitCheckShim() => this.Invoke<bool>("PlayerWaitCheck");
-    public void ShakeSfxShim() => this.Invoke("ShakeSfx");
-    public void ImpactSfxShim() => this.Invoke("ImpactSfx");
-    public void LandParticlesShim() => this.Invoke("LandParticles");
-
-    private IEnumerator Sequence() {
-        while (!Triggered && !PlayerFallCheckShim()) {
+    private IEnumerator NewSequence() {
+        while (!Triggered && !PlayerFallCheck()) {
             yield return null;
         }
         while (FallDelay > 0f) {
@@ -26,12 +20,12 @@ public class DirectionalFallingBlock : FallingBlock {
         Level level;
         while (true)
         {
-            ShakeSfxShim();
+            ShakeSfx();
             StartShaking(0f);
             Input.Rumble(RumbleStrength.Medium, RumbleLength.Medium);
             yield return 0.2f;
             float timer = 0.4f;
-            while (timer > 0f && PlayerWaitCheckShim()) {
+            while (timer > 0f && PlayerWaitCheck()) {
                 yield return null;
                 timer -= Engine.DeltaTime;
             }
@@ -58,11 +52,11 @@ public class DirectionalFallingBlock : FallingBlock {
                 }
                 yield return null;
             }
-            ImpactSfxShim();
+            ImpactSfx();
             Input.Rumble(RumbleStrength.Strong, RumbleLength.Medium);
             SceneAs<Level>().DirectionalShake(Vector2.UnitY, 0.3f);
             StartShaking(0f);
-            LandParticlesShim();
+            LandParticles();
             yield return 0.2f;
             StopShaking();
             if (CollideCheck<SolidTiles>(Position + new Vector2(0f, 1f))) {

@@ -1,8 +1,6 @@
 ﻿namespace FrostHelper;
 
 public class KeyIce : Key {
-    private Alarm? alarm;
-    private Tween? tween;
     public new bool Turning { get; private set; }
 
     public KeyIce(EntityData data, Vector2 offset, EntityID id, Vector2[] nodes) : base(data.Position + offset, id, nodes) {
@@ -129,10 +127,6 @@ public class KeyIce : Key {
         level.Displacement.AddBurst(Position, 0.2f, 8f, 28f, 0.2f, null, null);
         yield break;
     }
-
-    private Sprite sprite;
-
-    private Follower follower;
 
     private Vector2 start;
 

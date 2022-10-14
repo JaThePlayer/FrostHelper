@@ -12,7 +12,8 @@ public class DoorDisableTrigger : Trigger {
         var staticDoor = Scene.Tracker.GetNearestEntity<StaticDoor>(pPos);
 
         if (staticDoor is null) {
-            door?.SetValue("disabled", true);
+            if (door is { })
+                door.disabled = true;
             return;
         }
         if (door is null) {
@@ -24,7 +25,7 @@ public class DoorDisableTrigger : Trigger {
         if (Vector2.DistanceSquared(door.Position, pPos) > Vector2.DistanceSquared(staticDoor.Position, pPos)) {
             staticDoor.Disable();
         } else {
-            door.SetValue("disabled", true);
+            door.disabled = true;
         }
     }
 }

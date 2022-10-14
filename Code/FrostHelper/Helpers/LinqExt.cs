@@ -15,10 +15,6 @@ internal static class LinqExt {
         return default;
     }
 
-    private static void test(Entity e) {
-        var b = e.Components.FirstOfTypeOrDefault((BloomPoint p) => p.Alpha > 0.6f) ?? e.AddF(new BloomPoint(0.6f, 1f));
-    }
-
     public static void Foreach<T>(this IEnumerable<T> source, Action<T> action) {
         foreach (var item in source) {
             action(item);

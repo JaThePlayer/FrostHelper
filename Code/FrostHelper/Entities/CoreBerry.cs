@@ -29,7 +29,7 @@ public class CoreBerry : Strawberry, IStrawberry {
         }
     }
 
-    Sprite sprite;
+    //Sprite sprite;
     public override void Added(Scene scene) {
         base.Added(scene);
         Remove(Get<BloomPoint>());
@@ -51,12 +51,11 @@ public class CoreBerry : Strawberry, IStrawberry {
                 spr = "hotberry";
             }
         }
-        DynData<Strawberry> data = new DynData<Strawberry>(this);
-        sprite = data.Get<Sprite>("sprite");
+
         Remove(sprite);
         sprite = FrostHelper.FrostModule.SpriteBank.Create(spr);
         Add(sprite);
-        data.Set("sprite", sprite);
+
         indicator = new Sprite(GFX.Game, ind);
         indicator.AddLoop("idle", "", 0.1f);
         indicator.Play("idle", false, false);

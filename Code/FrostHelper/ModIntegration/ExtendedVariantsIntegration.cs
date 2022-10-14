@@ -39,7 +39,7 @@ public static class ExtendedVariantsIntegration {
     }
 
     public static int GetCurrentJumpCountVariantValue() {
-        var triggerManager = GetTriggerManager();
+        var triggerManager = DynamicData.For(GetTriggerManager());
 
         return (int) triggerManager.Invoke("GetCurrentVariantValue", JumpCountVariant);
     }

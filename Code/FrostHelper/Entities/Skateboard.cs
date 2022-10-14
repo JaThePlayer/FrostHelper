@@ -76,7 +76,7 @@ public class Skateboard : JumpThru {
                         break;
                 }
                 hasMoved = true;
-                CustomSpring.Spring_BounceAnimate.Invoke(spring, null);
+                spring.BounceAnimate();
             }
         }
 

@@ -226,9 +226,9 @@ public class DecalContainer {
     }
 
     public void SetScene(Decal item, Scene scene) {
-        setScene(item, scene);
-        foreach (var c in item)             
-            setEntity(c, item);
+        item.Scene = scene;
+        foreach (var c in item)
+            c.Entity = item;
     }
 
     public void Render(Level level) {
@@ -276,7 +276,4 @@ public class DecalContainer {
         //Draw.HollowRect(x, y, w - maxW, h - maxH, Color.Red);
 #endif
     }
-
-    internal static readonly Action<Entity, Scene> setScene = typeof(Entity).CreateDelegateFor<Action<Entity, Scene>>("set_Scene");
-    private static readonly Action<Component, Entity> setEntity = typeof(Component).CreateDelegateFor<Action<Component, Entity>>("set_Entity");
 }

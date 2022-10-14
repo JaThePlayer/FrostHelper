@@ -129,7 +129,7 @@ public class CustomFeather : Entity {
         }
 
         // reset to vanilla value
-        player.SetValue("starFlyColor", ColorHelper.GetColor("ffd65c"));
+        player.starFlyColor = ColorHelper.GetColor("ffd65c");
     }
     public static IEnumerator CustomFeatherCoroutine(Entity e) {
         Player player = (e as Player)!;
@@ -440,7 +440,7 @@ public class CustomFeather : Entity {
             Input.Rumble(RumbleStrength.Medium, RumbleLength.Medium);
         } else {
             if (StartStarFly(player)) {
-                player.SetValue("starFlyColor", FlyColor);
+                player.starFlyColor = FlyColor;
 
                 if (player.StateMachine.State != CustomFeatherState && player.StateMachine.State != Player.StStarFly) {
                     Audio.Play(shielded ? "event:/game/06_reflection/feather_bubble_get" : "event:/game/06_reflection/feather_get", Position);

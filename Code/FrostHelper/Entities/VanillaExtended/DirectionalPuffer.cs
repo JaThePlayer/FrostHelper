@@ -47,7 +47,7 @@ public class DirectionalPuffer : Puffer {
     public ExplodeDirection Direction;
     public bool Static;
     public int DashRecovery;
-    public float RespawnTime;
+    public new float RespawnTime;
     public bool NoRespawn;
     public bool KillOnJump;
     public bool KillOnLaunch;
@@ -137,7 +137,7 @@ public class DirectionalPuffer : Puffer {
 
     private static void setRespawnTime(Puffer puffer) {
         if (puffer is DirectionalPuffer dirPuff) {
-            puffer.SetValue("goneTimer", dirPuff.RespawnTime);
+            puffer.goneTimer = dirPuff.RespawnTime;
         }
     }
 
@@ -205,8 +205,8 @@ public class DirectionalPuffer : Puffer {
     internal static bool HandleCustomBounceEvents(Player player, Puffer self) {
         if (self is DirectionalPuffer { KillOnJump: true } && !player.Dead) {
             player.Die(-Vector2.UnitY);
-            self.GetValue<Wiggler>("inflateWiggler").Start();
-            self.GetValue<Wiggler>("bounceWiggler").Start();
+            self.inflateWiggler.Start();
+            self.bounceWiggler.Start();
             return false;
         }
 

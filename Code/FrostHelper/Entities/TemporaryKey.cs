@@ -172,10 +172,6 @@ public class TemporaryKey : Key {
             session.Keys.Remove(ID);
     }
 
-    private Sprite sprite;
-
-    private Follower follower;
-
     private Vector2 start;
 
     private string startLevel;

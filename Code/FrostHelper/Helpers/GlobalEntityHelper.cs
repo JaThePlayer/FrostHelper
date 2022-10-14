@@ -64,7 +64,7 @@ public static class GlobalEntityHelper {
         var mapData = self.Session.MapData;
 
         bool triggerTriggers = container.AttrBool("triggerTriggers", true);
-        HashSet<string> targetRooms = mapData.Invoke<HashSet<string>>("ParseLevelsList", container.Attr("rooms", "*"));
+        HashSet<string> targetRooms = mapData.ParseLevelsList(container.Attr("rooms", "*"));
 
         var globalRoom = mapData.Levels.FirstOrDefault(data => data.Name == globalEntityRoomName);
 

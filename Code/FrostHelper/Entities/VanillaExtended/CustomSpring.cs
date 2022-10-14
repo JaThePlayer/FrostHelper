@@ -32,11 +32,11 @@ public class CustomSpring : Spring {
 
     private static bool Puffer_HitSpring(On.Celeste.Puffer.orig_HitSpring orig, Puffer self, Spring spring) {
         if (spring is CustomSpring customSpring && customSpring.Orientation == CustomOrientations.Ceiling) {
-            if (self.GetValue<Vector2>("hitSpeed").Y <= 0f) {
-                self.Invoke("GotoHitSpeed", 224f * Vector2.UnitY);
+            if (self.hitSpeed.Y <= 0f) {
+                self.GotoHitSpeed(224f * Vector2.UnitY);
                 self.MoveTowardsX(spring.CenterX, 4f, null);
-                self.GetValue<Wiggler>("bounceWiggler").Start();
-                self.Invoke("Alert", true, false);
+                self.bounceWiggler.Start();
+                self.Alert(true, false);
                 return true;
             }
             return false;
@@ -50,8 +50,8 @@ public class CustomSpring : Spring {
             if (!self.Hold.IsHeld && self.Speed.Y <= 0f) {
                 self.Speed.X *= 0.5f;
                 self.Speed.Y = -160f;
-                self.SetValue("noGravityTimer", 0.15f);
-                self.GetValue<Wiggler>("wiggler").Start();
+                self.noGravityTimer = 0.15f;
+                self.wiggler.Start();
                 return true;
             }
             return false;
@@ -65,7 +65,7 @@ public class CustomSpring : Spring {
             if (!self.Hold.IsHeld && self.Speed.Y <= 0f) {
                 self.Speed.X *= 0.5f;
                 self.Speed.Y = -160f;
-                self.SetValue("noGravityTimer", 0.15f);
+                self.noGravityTimer = 0.15f;
                 return true;
             }
             return false;
@@ -143,11 +143,11 @@ public class CustomSpring : Spring {
         base.Orientation = CustomToRegularOrientation[orientation];
         this.playerCanUse = playerCanUse;
         Remove(Get<PlayerCollider>());
-        Add(new PlayerCollider(new Action<Player>(OnCollide), null, null));
+        Add(new PlayerCollider(new Action<Player>(NewOnCollide), null, null));
         Remove(Get<HoldableCollider>());
-        Add(new HoldableCollider(new Action<Holdable>(OnHoldable), null));
+        Add(new HoldableCollider(new Action<Holdable>(NewOnHoldable), null));
         Remove(Get<PufferCollider>());
-        PufferCollider pufferCollider = new PufferCollider(new Action<Puffer>(OnPuffer), null);
+        PufferCollider pufferCollider = new PufferCollider(new Action<Puffer>(NewOnPuffer), null);
         Add(pufferCollider);
         DynData<Spring> dyndata = new DynData<Spring>(this);
 
@@ -173,7 +173,7 @@ public class CustomSpring : Spring {
         }, false, false));
 
         var attachGroup = data.Int("attachGroup", -1);
-        var oldMover = this.GetValue<StaticMover>("staticMover");
+        var oldMover = staticMover;
         var mover = attachGroup switch {
             -1 => new StaticMover() {
                 OnAttach = oldMover.OnAttach,
@@ -214,7 +214,7 @@ public class CustomSpring : Spring {
 
         Remove(oldMover);
         Add(mover);
-        this.SetValue("staticMover", mover);
+        staticMover = mover;
 
         dyndata.Set("sprite", Sprite);
         OneUse = data.Bool("oneUse", false);
@@ -243,7 +243,7 @@ public class CustomSpring : Spring {
         }
     }
 
-    private void OnCollide(Player player) {
+    private void NewOnCollide(Player player) {
         if (!(player.StateMachine.State == Player.StDreamDash || !playerCanUse)) {
             switch (Orientation) {
                 case CustomOrientations.Floor:
@@ -332,12 +332,7 @@ public class CustomSpring : Spring {
         yield break;
     }
 
-    private void BounceAnimate() {
-        Spring_BounceAnimate.Invoke(this, null);
-    }
-    public static MethodInfo Spring_BounceAnimate = typeof(Spring).GetMethod("BounceAnimate", BindingFlags.NonPublic | BindingFlags.Instance);
-
-    private void OnHoldable(Holdable h) {
+    private void NewOnHoldable(Holdable h) {
         if (h.HitSpring(this)) {
             BounceAnimate();
             TryBreak();
@@ -361,7 +356,7 @@ public class CustomSpring : Spring {
         }
     }
 
-    private void OnPuffer(Puffer p) {
+    private void NewOnPuffer(Puffer p) {
         if (p.HitSpring(this)) {
             Vector2 pufferSpeed = (Vector2) Puffer_hitSpeed.GetValue(p);
             Puffer_hitSpeed.SetValue(p, pufferSpeed * speedMult);
@@ -439,6 +434,5 @@ public class CustomSpring : Spring {
         }
     }
 
-    private bool playerCanUse;
     public bool OneUse;
 }

@@ -226,7 +226,7 @@ namespace FrostHelper.Entities.Boosters {
 
             EnterSpeed = player.Speed;
             player.Speed = Vector2.Zero;
-            player.SetValue("boostRed", Red);
+            player.boostRed = Red;
             FrostModule.player_boostTarget.SetValue(player, Center);
             StartedBoosting = true;
         }
@@ -585,7 +585,7 @@ namespace FrostHelper.Entities.Boosters {
             player.MoveToY(vector.Y, null);
 
             if ((Input.Dash.Pressed || Input.CrouchDashPressed) && booster.CanFastbubble()) {
-                player.SetValue("demoDashed", Input.CrouchDashPressed);
+                player.demoDashed = Input.CrouchDashPressed;
                 Input.Dash.ConsumePress();
                 Input.CrouchDash.ConsumePress();
                 return ExitBoostState(player, booster);

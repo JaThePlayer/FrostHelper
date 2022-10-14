@@ -22,14 +22,8 @@ public class CustomDreamBlockV2 : DreamBlock {
     public Color ActiveLineColor;
 
     public Color DisabledLineColor;
-
-    private bool playerHasDreamDash;
-
-    private Vector2? node;
     float moveSpeedMult;
     Ease.Easer easer;
-    // legacy
-    bool fastMoving;
 
     public CustomDreamBlockV2(EntityData data, Vector2 offset) : base(data, offset) {
         LoadIfNeeded();
@@ -46,7 +40,6 @@ public class CustomDreamBlockV2 : DreamBlock {
         moveSpeedMult = data.Float("moveSpeedMult", 1f);
         easer = EaseHelper.GetEase(data.Attr("moveEase", "SineInOut"));
         ConserveSpeed = data.Bool("conserveSpeed", false);
-        // legacy
         fastMoving = data.Bool("fastMoving", false);
     }
 

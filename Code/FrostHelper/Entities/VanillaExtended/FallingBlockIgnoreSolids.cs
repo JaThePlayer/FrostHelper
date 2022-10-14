@@ -7,23 +7,17 @@ public class FallingBlockIgnoreSolids : FallingBlock {
 
     public FallingBlockIgnoreSolids(EntityData data, Vector2 offset) : base(data, offset) {
         Get<Coroutine>().RemoveSelf();
-        Add(new Coroutine(Sequence()));
+        Add(new Coroutine(NewSequence()));
 
         AllowStaticMovers = data.Bool("allowStaticMovers", true);
         Wrap = data.Bool("wrap", false);
         WaitForPlayer = data.Bool("waitForPlayer", true);
     }
 
-    public bool PlayerFallCheckShim() => this.Invoke<bool>("PlayerFallCheck");
-    public bool PlayerWaitCheckShim() => this.Invoke<bool>("PlayerWaitCheck");
-    public void ShakeSfxShim() => this.Invoke("ShakeSfx");
-    public void ImpactSfxShim() => this.Invoke("ImpactSfx");
-    public void LandParticlesShim() => this.Invoke("LandParticles");
-
-    private IEnumerator Sequence() {
+    private IEnumerator NewSequence() {
         Level level = SceneAs<Level>();
         if (WaitForPlayer) {
-            while (!Triggered && !PlayerFallCheckShim()) {
+            while (!Triggered && !PlayerFallCheck()) {
                 yield return null;
             }
 
@@ -35,13 +29,13 @@ public class FallingBlockIgnoreSolids : FallingBlock {
 
         while (true) {
             if (WaitForPlayer) {
-                ShakeSfxShim();
+                ShakeSfx();
                 StartShaking(0f);
                 Input.Rumble(RumbleStrength.Medium, RumbleLength.Medium);
                 yield return 0.2f;
 
                 float timer = 0.4f;
-                while (timer > 0f && PlayerWaitCheckShim()) {
+                while (timer > 0f && PlayerWaitCheck()) {
                     yield return null;
                     timer -= Engine.DeltaTime;
                 }

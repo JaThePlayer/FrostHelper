@@ -29,7 +29,7 @@ public static class AttachGroupableExt {
         }
 
         var group = baseMover.Group;
-        var staticMovers = platform.GetValue<List<StaticMover>>("staticMovers");
+        var staticMovers = platform.staticMovers;
 
         foreach (GroupedStaticMover mover in entity.Scene.Tracker.GetComponents<GroupedStaticMover>()) {
             if (mover is not null && mover.Group == group && mover.Platform is null) {

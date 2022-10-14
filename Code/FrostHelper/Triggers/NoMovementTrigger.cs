@@ -39,15 +39,15 @@ public class NoMovementTrigger : Trigger {
 
     private static int Player_NormalUpdate(On.Celeste.Player.orig_NormalUpdate orig, Player self) {
         if (IsMovementDisabled(self.Scene)) {
-            var prevMoveX = (int) self.GetValue("moveX");
-            self.SetValue("moveX", 0);
+            var prevMoveX = self.moveX;
+            self.moveX = 0;
             var prevMoveY = Input.MoveY.Value;
             Input.MoveX.Value = 0;
             Input.MoveY.Value = 0;
 
             var ret = orig(self);
 
-            self.SetValue("moveX", prevMoveX);
+            self.moveX = prevMoveX;
             Input.MoveY.Value = prevMoveY;
             Input.MoveX.Value = prevMoveX;
 
