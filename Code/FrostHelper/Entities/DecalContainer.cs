@@ -50,7 +50,7 @@ public class DecalContainerMaker : Trigger {
         int newContainers = 0;
         DecalContainer? lastContainer = null;
         foreach (var ent in entities) {
-            if (ent is not Decal item || getParallax(item))
+            if (ent is not Decal item || item.parallax)
                 continue;
             var d = item.Depth;
             var r = renderers[d];
@@ -105,14 +105,6 @@ public class DecalContainerMaker : Trigger {
 
         RemoveSelf();
     }
-
-    public static readonly Func<Decal, bool> getParallax =
-        typeof(Decal).GetField("parallax", BindingFlags.Instance | BindingFlags.NonPublic)
-        .CreateFastGetter<Decal, bool>();
-
-    public static readonly Func<Decal, List<MTexture>> getTextures =
-        typeof(Decal).GetField("textures", BindingFlags.Instance | BindingFlags.NonPublic)
-        .CreateFastGetter<Decal, List<MTexture>>();
 }
 
 public class DecalContainerRenderer : Entity {
@@ -126,9 +118,9 @@ public class DecalContainerRenderer : Entity {
     }
 
     public override void Render() {
-        var scene = Scene;
+        var scene = Scene as Level;
         foreach (var c in Containers)             
-            c.Render(scene);
+            c.Render(scene!);
 
         base.Render();
     }
@@ -146,6 +138,8 @@ public class DecalContainer {
     internal int maxW, maxH;
     public Vector2 Position;
 
+    internal bool hasSetScene;
+
     public DecalContainer(Hitbox collider) : base() {
         this.collider = collider;
     }
@@ -156,7 +150,9 @@ public class DecalContainer {
     }
 
     public void AddDecal(Decal item) {
-        var t = DecalContainerMaker.getTextures(item)[0];
+        hasSetScene = false;
+
+        var t = item.textures[0];
         var w = t.Width * Math.Abs(item.Scale.X);
         var h = t.Height * Math.Abs(item.Scale.Y);
 
@@ -235,24 +231,37 @@ public class DecalContainer {
             setEntity(c, item);
     }
 
-    internal static readonly Action<Entity, Scene> setScene = typeof(Entity).CreateDelegateFor<Action<Entity, Scene>>("set_Scene");
-    private static readonly Action<Component, Entity> setEntity = typeof(Component).CreateDelegateFor<Action<Component, Entity>>("set_Entity");
-
-    public void Render(Scene scene) {
-        var cam = FrostModule.GetCurrentLevel().Camera.Position;
+    public void Render(Level level) {
+        var cam = level.Camera.Position;
 
         if (!IsInside(cam))
             return;
 
-        foreach (var d in Decals) {
-            var item = d.decal;
-            if (item.Visible && IsInside(cam, d)) {
-                if (item.Scene is null)
-                    SetScene(item, scene);
+        if (!hasSetScene) {
+            hasSetScene = true;
 
-                if (item.Active)
-                    item.Update();
-                item.Render();
+            foreach (var d in Decals) {
+                var item = d.decal;
+                if (item.Scene is null)
+                    SetScene(item, level);
+            }
+        }
+
+        if (level.Paused) {
+            foreach (var d in Decals) {
+                var item = d.decal;
+                if (item.Visible && IsInside(cam, d)) {
+                    item.Render();
+                }
+            }
+        } else {
+            foreach (var d in Decals) {
+                var item = d.decal;
+                if (item.Visible && IsInside(cam, d)) {
+                    if (item.Active)
+                        item.Update();
+                    item.Render();
+                }
             }
         }
 
@@ -267,4 +276,7 @@ public class DecalContainer {
         //Draw.HollowRect(x, y, w - maxW, h - maxH, Color.Red);
 #endif
     }
+
+    internal static readonly Action<Entity, Scene> setScene = typeof(Entity).CreateDelegateFor<Action<Entity, Scene>>("set_Scene");
+    private static readonly Action<Component, Entity> setEntity = typeof(Component).CreateDelegateFor<Action<Component, Entity>>("set_Entity");
 }

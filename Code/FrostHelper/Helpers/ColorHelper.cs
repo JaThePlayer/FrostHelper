@@ -79,7 +79,7 @@ public static class ColorHelper {
     public static void SetGetHueScene(Scene scene) {
         crystalSpinner ??= new CrystalStaticSpinner(Vector2.Zero, false, CrystalColor.Rainbow);
 
-        _setGetHueScene(scene);
+        crystalSpinner.Scene = scene;
     }
 
     /// <summary>
@@ -88,78 +88,13 @@ public static class ColorHelper {
     /// <param name="position"></param>
     /// <returns></returns>
     public static Color GetHue(Vector2 position) {
-        return _getHueNoSetScene(position);
+        return crystalSpinner.GetHue(position);
     }
 
     public static Color GetHue(Scene scene, Vector2 position) {
         crystalSpinner ??= new CrystalStaticSpinner(Vector2.Zero, false, CrystalColor.Rainbow);
+        crystalSpinner.Scene = scene;
 
-        return _getHue(scene, position);
+        return crystalSpinner.GetHue(position);
     }
-
-    private static Func<Scene, Vector2, Color> _getHue = GetHueIL();
-    private static Func<Vector2, Color> _getHueNoSetScene = GetHueNoSetSceneIL();
-    private static Action<Scene> _setGetHueScene = GetSetGetHueSceneIL();
-
-    #region ILGeneration
-
-    private static Func<Scene, Vector2, Color> GetHueIL() {
-        string methodName = "ColorHelper._getHue";
-
-        DynamicMethodDefinition method = new DynamicMethodDefinition(methodName, typeof(Color), new[] { typeof(Scene), typeof(Vector2) });
-        var gen = method.GetILProcessor();
-
-        // ColorHelper.crystalSpinner.Scene = scene;
-        EmitSetScene(gen, 0);
-
-        // return ColorHelper.crystalSpinner.GetHue(position);
-        EmitCallGetHueAndReturn(gen, 1);
-
-        return (Func<Scene, Vector2, Color>) method.Generate().CreateDelegate(typeof(Func<Scene, Vector2, Color>));
-    }
-
-    private static Func<Vector2, Color> GetHueNoSetSceneIL() {
-        string methodName = "ColorHelper._getHueNoSetScene";
-
-        DynamicMethodDefinition method = new DynamicMethodDefinition(methodName, typeof(Color), new[] { typeof(Vector2) });
-
-        var gen = method.GetILProcessor();
-
-        // return ColorHelper.crystalSpinner.GetHue(position);
-        EmitCallGetHueAndReturn(gen, 0);
-
-        return method.Generate().CreateDelegate<Func<Vector2, Color>>();
-    }
-
-    private static Action<Scene> GetSetGetHueSceneIL() {
-        string methodName = "ColorHelper._setGetHueScene";
-
-        DynamicMethodDefinition method = new DynamicMethodDefinition(methodName, null, new[] { typeof(Scene) });
-
-        var gen = method.GetILProcessor();
-
-        // ColorHelper.crystalSpinner.Scene = scene;
-        EmitSetScene(gen, 0);
-
-        gen.Emit(OpCodes.Ret);
-
-        return (Action<Scene>) method.Generate().CreateDelegate(typeof(Action<Scene>));
-    }
-
-    private static void EmitCallGetHueAndReturn(ILProcessor gen, int argNum) {
-        FieldInfo crystalSpinner = typeof(ColorHelper).GetField(nameof(ColorHelper.crystalSpinner), BindingFlags.NonPublic | BindingFlags.Static);
-        gen.LoadStaticField(crystalSpinner);
-        gen.LoadArg(argNum);
-        gen.EmitCall(typeof(CrystalStaticSpinner).GetMethod("GetHue", BindingFlags.NonPublic | BindingFlags.Instance));
-        gen.Ret();
-    }
-
-    private static void EmitSetScene(ILProcessor gen, int argNum) {
-        FieldInfo crystalSpinner = typeof(ColorHelper).GetField(nameof(ColorHelper.crystalSpinner), BindingFlags.NonPublic | BindingFlags.Static);
-        gen.LoadStaticField(crystalSpinner);
-        gen.LoadArg(argNum);
-        gen.EmitCall(typeof(Entity).GetProperty("Scene").GetSetMethod(true));
-    }
-
-    #endregion
 }

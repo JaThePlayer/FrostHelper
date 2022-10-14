@@ -208,24 +208,6 @@ public static class EasierILHook {
         return method.Generate().CreateDelegate<T>();
     }
 
-    public static Func<TDeclaring, TField> CreateFastGetter<TDeclaring, TField>(this FieldInfo field)
-        => CreateAnyFastGetter<Func<TDeclaring, TField>>(field);
-
-    public static Action<TField> CreateFastStaticGetter<TDeclaring, TField>(this FieldInfo field)
-        => CreateAnyFastGetter<Action<TField>>(field);
-
-    public static T CreateAnyFastGetter<T>(this FieldInfo field) where T : Delegate
-        => CreateDynamicMethod<T>($"{field.DeclaringType.FullName}.dyn_fastGet_{field.Name}", (il) => {
-            if (field.IsStatic) {
-                il.Emit(OpCodes.Ldsfld, field);
-            } else {
-                il.Ldarg0();
-                il.Emit(OpCodes.Ldfld, field);
-            }
-            
-            il.Ret();
-        });
-
     /// <summary>
     /// 
     /// The following method is written by max480. Thanks max!

@@ -1,6 +1,7 @@
 ﻿namespace FrostHelper;
 
 [Tracked]
+[CustomEntity("fh/blah")]
 public class Paintball : Actor {
     public bool tutorial;
     bool bubble;
@@ -406,7 +407,7 @@ public class Paintball : Actor {
         return Speed.Y == 0f && base.IsRiding(solid);
     }
 
-    protected override void OnSquish(CollisionData data) {
+    public override void OnSquish(CollisionData data) {
         if (!TrySquishWiggle(data) && !SaveData.Instance.Assists.Invincible) {
             Die();
         }

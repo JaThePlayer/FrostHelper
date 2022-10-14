@@ -32,6 +32,13 @@ internal static class ChangeDashSpeedOnce {
     public static void DiePatch(ILContext context) {
         var cursor = new ILCursor(context);
 
+        /*
+        foreach (var item in cursor.Instrs) {
+            try {
+                Console.WriteLine(item.ToString());
+            } catch { }
+        }*/
+
         if (cursor.SeekVirtFunctionCall<Player>("Stop")) // this func is called right after the !Dead check
             cursor.EmitCall(Reset);
     }
