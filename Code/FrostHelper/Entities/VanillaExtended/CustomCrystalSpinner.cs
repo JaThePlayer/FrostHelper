@@ -316,11 +316,11 @@ public class CustomSpinner : Entity {
 
     private void UnregisterFromRenderers() {
         if (RegisteredToRenderers) {
-            Scene.Tracker.GetEntity<SpinnerConnectorRenderer>()?.Remove(this);
+            Scene.Tracker.SafeGetEntity<SpinnerConnectorRenderer>()?.Remove(this);
             if (RenderBorder)
-                Scene.Tracker.GetEntity<SpinnerBorderRenderer>()?.Remove(this);
+                Scene.Tracker.SafeGetEntity<SpinnerBorderRenderer>()?.Remove(this);
             if (HasDeco)
-                Scene.Tracker.GetEntity<SpinnerDecoRenderer>()?.Spinners.Remove(this);
+                Scene.Tracker.SafeGetEntity<SpinnerDecoRenderer>()?.Spinners.Remove(this);
             RegisteredToRenderers = false;
         }
 
@@ -328,11 +328,11 @@ public class CustomSpinner : Entity {
 
     private void RegisterToRenderers() {
         if (!RegisteredToRenderers) {
-            Scene.Tracker.GetEntity<SpinnerConnectorRenderer>()?.Add(this);
+            Scene.Tracker.SafeGetEntity<SpinnerConnectorRenderer>()?.Add(this);
             if (RenderBorder)
-                Scene.Tracker.GetEntity<SpinnerBorderRenderer>()?.Add(this);
+                Scene.Tracker.SafeGetEntity<SpinnerBorderRenderer>()?.Add(this);
             if (HasDeco)
-                Scene.Tracker.GetEntity<SpinnerDecoRenderer>()?.Spinners.Add(this);
+                Scene.Tracker.SafeGetEntity<SpinnerDecoRenderer>()?.Spinners.Add(this);
             RegisteredToRenderers = true;
         }
     }
@@ -458,7 +458,7 @@ public class CustomSpinner : Entity {
     }
 
     public SpinnerConnectorRenderer GetConnectorRenderer() {
-        SpinnerConnectorRenderer renderer = Scene.Tracker.GetEntity<SpinnerConnectorRenderer>();
+        var renderer = Scene.Tracker.SafeGetEntity<SpinnerConnectorRenderer>();
         if (renderer is null) {
             renderer = new SpinnerConnectorRenderer();
             Scene.Add(renderer);
@@ -467,7 +467,7 @@ public class CustomSpinner : Entity {
     }
 
     public SpinnerDecoRenderer GetDecoRenderer() {
-        SpinnerDecoRenderer renderer = Scene.Tracker.GetEntity<SpinnerDecoRenderer>();
+        var renderer = Scene.Tracker.SafeGetEntity<SpinnerDecoRenderer>();
         if (renderer is null) {
             renderer = new SpinnerDecoRenderer();
             Scene.Add(renderer);
@@ -476,7 +476,7 @@ public class CustomSpinner : Entity {
     }
 
     public SpinnerBorderRenderer GetBorderRenderer() {
-        SpinnerBorderRenderer renderer = Scene.Tracker.GetEntity<SpinnerBorderRenderer>();
+        var renderer = Scene.Tracker.SafeGetEntity<SpinnerBorderRenderer>();
         if (renderer is null) {
             renderer = new SpinnerBorderRenderer();
             Scene.Add(renderer);
@@ -749,7 +749,7 @@ public class SpinnerBorderRenderer : Entity {
 #if SPINNER_BORDERS_USE_RENDER_TARGET
         if (CanUseRenderTargetRender) {
             var target = RenderTargetHelper<SpinnerBorderRenderer>.Get(true, true);
-            var connectorRenderer = Scene.Tracker.GetEntity<SpinnerConnectorRenderer>();
+            var connectorRenderer = Scene.Tracker.SafeGetEntity<SpinnerConnectorRenderer>();
             var batch = Draw.SpriteBatch;
             var borderColor = _firstBorderColor!.Value;
 

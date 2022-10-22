@@ -83,13 +83,13 @@ public static class WASDMovementState {
         previousNormalHitbox = (Hitbox) Player_normalHitbox.GetValue(player);
         previousDuckHitbox = (Hitbox) Player_duckHitbox.GetValue(player);
         previousNormalHurtbox = (Hitbox) Player_normalHurtbox.GetValue(player);
-        previousHurbox = (Hitbox) Player_hurtbox.GetValue(player);
+        previousHurbox = player.hurtbox;
 
         player.Collider = Hitbox;
         Player_normalHitbox.SetValue(player, Hitbox);
         Player_duckHitbox.SetValue(player, Hitbox);
         Player_normalHurtbox.SetValue(player, Hitbox);
-        Player_hurtbox.SetValue(player, Hitbox);
+        player.hurtbox = Hitbox;
     }
 
     public static void End(Player player) {
@@ -100,22 +100,22 @@ public static class WASDMovementState {
         // revert colliders to what they used to be
         player.Collider = previousCollider;
         player.Collider = Hitbox;
+
         Player_normalHitbox.SetValue(player, previousNormalHitbox);
         Player_duckHitbox.SetValue(player, previousDuckHitbox);
         Player_normalHurtbox.SetValue(player, previousNormalHurtbox);
-        Player_hurtbox.SetValue(player, previousHurbox);
+        player.hurtbox = previousHurbox;
     }
 
     public static int Update(Player player) {
         player.MuffleLanding = true;
-        player.Speed = ((Vector2) Player_CorrectDashPrecision.Invoke(player, new object[] { Input.GetAimVector(0) })).SafeNormalize() * Speed;
+        player.Speed = player.CorrectDashPrecision(Input.GetAimVector(0)).SafeNormalize() * Speed;
 
         return ID;
     }
 
+    // these are readonly, and so we can't bypass access checks that easily.
     private static FieldInfo Player_normalHitbox = typeof(Player).GetField("normalHitbox", BindingFlags.NonPublic | BindingFlags.Instance);
     private static FieldInfo Player_duckHitbox = typeof(Player).GetField("duckHitbox", BindingFlags.NonPublic | BindingFlags.Instance);
     private static FieldInfo Player_normalHurtbox = typeof(Player).GetField("normalHurtbox", BindingFlags.NonPublic | BindingFlags.Instance);
-    private static FieldInfo Player_hurtbox = typeof(Player).GetField("hurtbox", BindingFlags.NonPublic | BindingFlags.Instance);
-    private static MethodInfo Player_CorrectDashPrecision = typeof(Player).GetMethod("CorrectDashPrecision", BindingFlags.NonPublic | BindingFlags.Instance);
 }

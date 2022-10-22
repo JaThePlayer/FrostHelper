@@ -187,6 +187,8 @@ public class DecalContainer {
     public void Awake(Scene scene) {
         collider.Width += maxW;
         collider.Height += maxH;
+        Position.X -= maxW / 2;
+        Position.Y -= maxH / 2;
     }
 
     private static bool IsInside(Vector2 cam, DecalInfo decal) {

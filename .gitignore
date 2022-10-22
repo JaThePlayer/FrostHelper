@@ -1,6 +1,7 @@
 *.packager
 *.zip
 *.png
+*.bat
 Starforge/
 Audio/
 Graphics/

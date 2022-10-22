@@ -1,4 +1,4 @@
-﻿using System.Runtime.CompilerServices;
+﻿//#define CULL_RECT_RENDER
 
 namespace FrostHelper; 
 public static class CameraCullHelper {
@@ -32,6 +32,10 @@ public static class CameraCullHelper {
 
         const float lenience = 4f;
 
+#if CULL_RECT_RENDER
+        Draw.Rect(x, y, w, h, Color.Pink * 0.7f);
+#endif
+
         return x + w >= camX - lenience
             && x <= camX + 320f + lenience
             && y + h >= camY - lenience
@@ -48,6 +52,22 @@ public static class CameraCullHelper {
         var h = Math.Abs(pointA.Y - pointB.Y);
 
         return IsRectVisible(cam, left, top, w, h);
+    }
+
+    /// <summary>
+    /// Checks if the curve is visible by creating a rectangle containing the edge points of the curve (Begin, Curve, End)
+    /// </summary>
+    public static bool IsVisible(Vector2 cam, SimpleCurve curve, float heightIncrease = 0f) {
+        var a = curve.Begin;
+        var b = curve.Control;
+        var c = curve.End;
+
+        var left   = Math.Min(a.X, Math.Min(b.X, c.X));
+        var right  = Math.Max(a.X, Math.Max(b.X, c.X));
+        var top    = Math.Min(a.Y, Math.Min(b.Y, c.Y));
+        var bottom = Math.Max(a.Y, Math.Max(b.Y, c.Y));
+
+        return IsRectVisible(cam, left, top, right - left, bottom - top + heightIncrease);
     }
 
     public static bool IsVisible(Vector2 cam, Sprite sprite) {

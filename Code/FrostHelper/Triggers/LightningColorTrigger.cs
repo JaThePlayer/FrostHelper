@@ -56,13 +56,6 @@ public class LightningColorTrigger : Trigger {
     }
 
     internal static float GetLightningFillColorMultiplier(float prev = 0.1f) {
-        /*
-        LightningColorTrigger trigger;
-        if ((trigger = Engine.Scene.Tracker.GetEntity<LightningColorTrigger>()) != null && trigger.PlayerIsInside) {
-            return trigger.FillColorMultiplier;
-        } else {
-            return FrostModule.Session.LightningFillColorMultiplier;
-        }*/
         return GetFirstEnteredTrigger()?.FillColorMultiplier ?? FrostModule.Session.LightningFillColorMultiplier ?? prev;
     }
 
@@ -147,9 +140,9 @@ public class LightningColorTrigger : Trigger {
     }
 
     public static void ChangeLightningColor(Color[] colors) {
-        ChangeLightningColor(Engine.Scene.Tracker.GetEntity<LightningRenderer>(), colors);
+        ChangeLightningColor(Engine.Scene.Tracker.SafeGetEntity<LightningRenderer>(), colors);
 
-        if (Engine.Scene.Tracker.GetEntity<CustomLightningRenderer>() is { } customRenderer) {
+        if (Engine.Scene.Tracker.SafeGetEntity<CustomLightningRenderer>() is { } customRenderer) {
             customRenderer.ElectricityColors = colors;
             var bolts = customRenderer.Bolts;
             for (int i = 0; i < bolts.Count; i++) {

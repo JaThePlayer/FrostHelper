@@ -84,6 +84,15 @@ public static class Extensions {
         return SafeGetEntities(t, typeof(T));
     }
 
+    public static T? SafeGetEntity<T>(this Tracker t) where T : Entity {
+        var type = typeof(T);
+        if (!t.Entities.TryGetValue(type, out var list) || list.Count == 0) {
+            return null;
+        }
+
+        return list[0] as T;
+    }
+
     public static List<Entity> SafeGetEntities(this Tracker t, Type type) {
         if (!t.Entities.ContainsKey(type)) {
             return _emptyListEntity;

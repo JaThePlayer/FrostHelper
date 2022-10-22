@@ -70,12 +70,13 @@ public class WireLamps : Entity {
         ) * 8f;
 
         Curve.Control = (Curve.Begin + Curve.End) / 2f + new Vector2(0f, 24f) + (controlOffset * Wobbliness);
+
+        if (!CameraCullHelper.IsVisible(level.Camera.Position, Curve))
+            return;
+
         var start = Curve.Begin;
 
         const int segments = 16;
-
-        if (!CameraCullHelper.IsRectVisible(level.Camera.Position, Curve.Begin, Curve.End))
-            return;
 
         for (int i = 1; i <= segments; i++) {
             float percent = i / (float) segments;

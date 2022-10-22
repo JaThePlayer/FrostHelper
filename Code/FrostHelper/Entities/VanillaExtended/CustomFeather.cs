@@ -72,9 +72,6 @@ public class CustomFeather : Entity {
 
     #region CustomState
     public static int CustomFeatherState = int.MaxValue;
-    public static MethodInfo player_StarFlyReturnToNormalHitbox = typeof(Player).GetMethod("StarFlyReturnToNormalHitbox", BindingFlags.Instance | BindingFlags.NonPublic);
-    public static MethodInfo player_WallJump = typeof(Player).GetMethod("WallJump", BindingFlags.Instance | BindingFlags.NonPublic);
-    public static MethodInfo player_WallJumpCheck = typeof(Player).GetMethod("WallJumpCheck", BindingFlags.Instance | BindingFlags.NonPublic);
 
     public static void CustomFeatherBegin(Entity e) {
         LoadIfNeeded();
@@ -112,17 +109,17 @@ public class CustomFeather : Entity {
     }
     public static void CustomFeatherEnd(Entity e) {
         Player player = (e as Player)!;
-        var data = DynamicData.For(player);
-        CustomFeather feather = data.Get<CustomFeather>("fh.customFeather");
+        CustomFeather feather = DynamicData.For(player).Get<CustomFeather>("fh.customFeather");
+
         player.Play("event:/game/06_reflection/feather_state_end", null, 0f);
-        data.Get<SoundSource>("starFlyWarningSfx").Stop(true);
-        data.Get<SoundSource>("starFlyLoopSfx").Stop(true);
+        player.starFlyWarningSfx.Stop(true);
+        player.starFlyLoopSfx.Stop(true);
         player.Hair.DrawPlayerSpriteOutline = false;
         player.Sprite.Color = Color.White;
         player.SceneAs<Level>().Displacement.AddBurst(player.Center, 0.25f, 8f, 32f, 1f, null, null);
-        data.Get<BloomPoint>("starFlyBloom").Visible = false;
-        player.Sprite.HairCount = data.Get<int>("startHairCount");
-        player_StarFlyReturnToNormalHitbox.Invoke(player, null);
+        player.starFlyBloom.Visible = false;
+        player.Sprite.HairCount = player.startHairCount;
+        player.StarFlyReturnToNormalHitbox();
 
         if (player.StateMachine.State != 2) {
             player.SceneAs<Level>().Particles.Emit(feather.P_Boost, 12, player.Center, Vector2.One * 4f, (-player.Speed).Angle());
@@ -133,8 +130,8 @@ public class CustomFeather : Entity {
     }
     public static IEnumerator CustomFeatherCoroutine(Entity e) {
         Player player = (e as Player)!;
-        var data = DynamicData.For(player);
-        CustomFeather feather = data.Get<CustomFeather>("fh.customFeather");
+        CustomFeather feather = DynamicData.For(player).Get<CustomFeather>("fh.customFeather");
+
         while (player.Sprite.CurrentAnimationID == "startStarFly") {
             yield return null;
         }
@@ -146,8 +143,8 @@ public class CustomFeather : Entity {
         player.Sprite.HairCount = 7;
         player.Hair.DrawPlayerSpriteOutline = true;
         player.SceneAs<Level>().Displacement.AddBurst(player.Center, 0.25f, 8f, 32f, 1f, null, null);
-        data.Set("starFlyTransforming", false);
-        data.Set("starFlyTimer", feather.FlyTime);
+        player.starFlyTransforming = false;
+        player.starFlyTimer = feather.FlyTime;
         player.RefillDash();
         player.RefillStamina();
 
@@ -157,15 +154,15 @@ public class CustomFeather : Entity {
         }
 
         player.Speed = dir * 250f;
-        data.Set("starFlyLastDir", dir);
+        player.starFlyLastDir = dir;
         player.SceneAs<Level>().Particles.Emit(feather.P_Boost, 12, player.Center, Vector2.One * 4f, feather.FlyColor, (-dir).Angle());
         Input.Rumble(RumbleStrength.Strong, RumbleLength.Medium);
-        player.SceneAs<Level>().DirectionalShake(data.Get<Vector2>("starFlyLastDir"), 0.3f);
-        while (data.Get<float>("starFlyTimer") > 0.5f) {
+        player.SceneAs<Level>().DirectionalShake(player.starFlyLastDir, 0.3f);
+        while (player.starFlyTimer > 0.5f) {
             player.Hair.Color = player.Sprite.Color = feather.FlyColor;
             yield return null;
         }
-        data.Get<SoundSource>("starFlyWarningSfx").Play("event:/game/06_reflection/feather_state_warning", null, 0f);
+        player.starFlyWarningSfx.Play("event:/game/06_reflection/feather_state_warning", null, 0f);
         yield break;
     }
 
@@ -228,13 +225,14 @@ public class CustomFeather : Entity {
                     player.Jump(true, true);
                     return Player.StNormal;
                 }
-                if ((bool) player_WallJumpCheck.Invoke(player, new object[] { -1 })) {
-                    player_WallJump.Invoke(player, new object[] { 1 });
+
+                if (player.WallJumpCheck(-1)) {
+                    player.WallJump(1);
                     return Player.StNormal;
                 }
 
-                if ((bool) player_WallJumpCheck.Invoke(player, new object[] { 1 })) {
-                    player_WallJump.Invoke(player, new object[] { -1 });
+                if (player.WallJumpCheck(1)) {
+                    player.WallJump(-1);
                     return Player.StNormal;
                 }
             }

@@ -1,13 +1,68 @@
-﻿using FrostHelper.Entities.Boosters;
+﻿using Celeste.Mod;
+using FrostHelper.Entities.Boosters;
+using FrostHelper.EXPERIMENTAL;
 using FrostHelper.ModIntegration;
 using MonoMod.ModInterop;
+using YamlDotNet.Serialization;
 
 namespace FrostHelper;
 
 public class FrostHelperSettings : EverestModuleSettings {
 
-    [SettingSubText("Only loads hooks once they're needed, reducing load times and debloating stack traces.\nCan cause small lag spikes on transitions.")]
+    [SettingSubText("""
+        Only loads hooks once they're needed, reducing load times and debloating stack traces.
+        Can cause small lag spikes on transitions.
+        """)]
     public bool HookLazyLoading { get; set; } = false;
+
+    [YamlIgnore]
+    private bool _wireCulling = false; 
+    
+    [SettingSubText("""
+        [EXPERIMENTAL]
+        Culls Wires, Cobwebs and Flaglines,
+        making them not render if not visible.
+        Make sure to report any issues if using this!
+        """)]
+    public bool WireCulling {
+        get => _wireCulling;
+        set {
+            switch (value) {
+                case true:
+                    FlaglineCull.Load();
+                    break;
+                case false:
+                    FlaglineCull.Unload();
+                    break;
+            }
+
+            _wireCulling = value;
+        }
+    }
+
+    [YamlIgnore]
+    private bool _fastShapeDraw = false;
+    [SettingSubText("""
+        [EXPERIMENTAL]
+        Optimises any Monocle.Draw.* functions to use a Texture2D instead of a VirtTexture.
+        This reduces the overhead of drawing shapes, improving performance.
+        Make sure to report any issues if using this!
+        """)]
+    public bool FastShapeDraw {
+        get => _fastShapeDraw;
+        set {
+            switch (value) {
+                case true:
+                    MonocleDrawShapeFixer.Load();
+                    break;
+                case false:
+                    MonocleDrawShapeFixer.Unload();
+                    break;
+            }
+
+            _fastShapeDraw = value;
+        }
+    }
 }
 
 public class FrostModule : EverestModule {

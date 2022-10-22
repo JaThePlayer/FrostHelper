@@ -22,8 +22,8 @@ public class ChronosTrigger : Trigger {
     public override void OnEnter(Player player) {
         base.OnEnter(player);
         if (!Triggered) {
-            ChronosDisplay display;
-            if ((display = player.Scene.Tracker.GetEntity<ChronosDisplay>()) != null) {
+            ChronosDisplay? display;
+            if ((display = player.Scene.Tracker.SafeGetEntity<ChronosDisplay>()) != null) {
                 display.TrackedTrigger = this;
             } else {
                 Scene.Add(new ChronosDisplay(this));
@@ -44,8 +44,8 @@ public class ChronosTrigger : Trigger {
         }
         orig(self, player);
         RemoveSelf();
-        ChronosDisplay display;
-        if ((display = player.Scene.Tracker.GetEntity<ChronosDisplay>()) != null)
+        ChronosDisplay? display;
+        if ((display = player.Scene.Tracker.SafeGetEntity<ChronosDisplay>()) != null)
             display.RemoveSelf();
     }
 

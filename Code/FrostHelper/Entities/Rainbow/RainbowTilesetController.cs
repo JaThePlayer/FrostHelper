@@ -40,7 +40,7 @@ public class RainbowTilesetController : Entity {
             return;
         }
 
-        var controller = self.Scene.Tracker.GetEntity<RainbowTilesetController>();
+        var controller = self.Scene.Tracker.SafeGetEntity<RainbowTilesetController>();
         if (controller is null || self.Alpha <= 0f) {
             orig(self, position);
             return;

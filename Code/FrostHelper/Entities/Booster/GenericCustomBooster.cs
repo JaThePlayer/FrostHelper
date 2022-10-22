@@ -439,14 +439,6 @@ namespace FrostHelper.Entities.Boosters {
         public SoundSource loopingSfx;
 
         #region RedBoostState
-        public static MethodInfo Player_CallDashEvents = typeof(Player).GetMethod("CallDashEvents", BindingFlags.NonPublic | BindingFlags.Instance);
-        public static MethodInfo Player_DashAssistInit = typeof(Player).GetMethod("DashAssistInit", BindingFlags.NonPublic | BindingFlags.Instance);
-        public static MethodInfo Player_CorrectDashPrecision = typeof(Player).GetMethod("CorrectDashPrecision", BindingFlags.NonPublic | BindingFlags.Instance);
-        public static MethodInfo Player_SuperJump = typeof(Player).GetMethod("SuperJump", BindingFlags.NonPublic | BindingFlags.Instance);
-        public static MethodInfo Player_SuperWallJump = typeof(Player).GetMethod("SuperWallJump", BindingFlags.NonPublic | BindingFlags.Instance);
-        public static MethodInfo Player_ClimbJump = typeof(Player).GetMethod("ClimbJump", BindingFlags.NonPublic | BindingFlags.Instance);
-        public static MethodInfo player_WallJump = typeof(Player).GetMethod("WallJump", BindingFlags.Instance | BindingFlags.NonPublic);
-        public static MethodInfo player_WallJumpCheck = typeof(Player).GetMethod("WallJumpCheck", BindingFlags.Instance | BindingFlags.NonPublic);
 
         public static int CustomRedBoostState = int.MaxValue;
         public static void RedDashBegin(Entity e) {
@@ -469,7 +461,7 @@ namespace FrostHelper.Entities.Boosters {
                 player.Ducking = false;
             }
 
-            Player_DashAssistInit.Invoke(player, new object[] { });
+            player.DashAssistInit();
         }
 
         public static void RedDashEnd(Entity e) {
@@ -499,36 +491,36 @@ namespace FrostHelper.Entities.Boosters {
                     }
                 }
                 if (player.CanUnDuck && Input.Jump.Pressed && data.Get<float>("jumpGraceTimer") > 0f && !ch9hub) {
-                    Player_SuperJump.Invoke(player, null);
+                    player.SuperJump();
                     return 0;
                 }
             }
             if (!ch9hub) {
                 if (data.Get<bool>("SuperWallJumpAngleCheck")) {
                     if (Input.Jump.Pressed && player.CanUnDuck) {
-                        if ((bool) player_WallJumpCheck.Invoke(player, new object[] { 1 })) {
-                            Player_SuperWallJump.Invoke(player, new object[] { -1 });
+                        if (player.WallJumpCheck(1)) {
+                            player.SuperWallJump(-1);
                             return 0;
                         }
-                        if ((bool) player_WallJumpCheck.Invoke(player, new object[] { -1 })) {
-                            Player_SuperWallJump.Invoke(player, new object[] { 1 });
+                        if (player.WallJumpCheck(-1)) {
+                            player.SuperWallJump(1);
                             return 0;
                         }
                     }
                 } else if (Input.Jump.Pressed && player.CanUnDuck) {
-                    if ((bool) player_WallJumpCheck.Invoke(player, new object[] { 1 })) {
+                    if (player.WallJumpCheck(1)) {
                         if (player.Facing == Facings.Right && Input.Grab.Check && player.Stamina > 0f && player.Holding == null && !ClimbBlocker.Check(player.Scene, player, player.Position + Vector2.UnitX * 3f)) {
-                            Player_ClimbJump.Invoke(player, null);
+                            player.ClimbJump();
                         } else {
-                            player_WallJump.Invoke(player, new object[] { -1 });
+                            player.WallJump(-1);
                         }
                         return 0;
                     }
-                    if ((bool) player_WallJumpCheck.Invoke(player, new object[] { -1 })) {
+                    if (player.WallJumpCheck(-1)) {
                         if (player.Facing == Facings.Left && Input.Grab.Check && player.Stamina > 0f && player.Holding == null && !ClimbBlocker.Check(player.Scene, player, player.Position + Vector2.UnitX * -3f)) {
-                            Player_ClimbJump.Invoke(player, null);
+                            player.ClimbJump();
                         } else {
-                            player_WallJump.Invoke(player, new object[] { 1 });
+                            player.WallJump(1);
                         }
                         return 0;
                     }
@@ -539,16 +531,15 @@ namespace FrostHelper.Entities.Boosters {
 
         public static IEnumerator RedDashCoroutine(Entity e) {
             Player player = (e as Player)!;
-            DynData<Player> data = new DynData<Player>(player);
 
             yield return null;
-            player.Speed = (Vector2) Player_CorrectDashPrecision.Invoke(player, new object[] { data.Get<Vector2>("lastAim") }) * ChangeDashSpeedOnce.GetDashSpeed(240f);
-            data["gliderBoostDir"] = player.DashDir = data.Get<Vector2>("lastAim");
+            player.Speed = player.CorrectDashPrecision(player.lastAim) * ChangeDashSpeedOnce.GetDashSpeed(240f);
+            player.gliderBoostDir = player.DashDir = player.lastAim;
             player.SceneAs<Level>().DirectionalShake(player.DashDir, 0.2f);
             if (player.DashDir.X != 0f) {
                 player.Facing = (Facings) Math.Sign(player.DashDir.X);
             }
-            Player_CallDashEvents.Invoke(player, null);
+            player.CallDashEvents();
             yield break;
         }
         #endregion

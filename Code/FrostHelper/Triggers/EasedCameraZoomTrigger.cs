@@ -71,7 +71,7 @@ public class EasedCameraZoomTrigger : Trigger {
 
     public Level Level => (Scene as Level)!;
 
-    public ZoomManager ZoomManager => Scene.Tracker.GetEntity<ZoomManager>();
+    public ZoomManager ZoomManager => Scene.Tracker.SafeGetEntity<ZoomManager>()!;
 }
 
 /// <summary>
@@ -97,7 +97,7 @@ public class ZoomManager : Entity {
     Coroutine zoomCoroutine;
 
     public static void AddToSceneIfNeeded(Scene scene) {
-        if (!_justAddedAManager && scene.Tracker.GetEntity<ZoomManager>() == null) {
+        if (!_justAddedAManager && scene.Tracker.SafeGetEntity<ZoomManager>() == null) {
             _justAddedAManager = true;
             scene.Add(new ZoomManager());
         }

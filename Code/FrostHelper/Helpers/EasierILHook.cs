@@ -263,6 +263,17 @@ public static class EasierILHook {
     public static bool SeekVirtFunctionCall<T>(this ILCursor cursor, string methodName, MoveType moveType = MoveType.After)
         => SeekVirtFunctionCall(cursor, typeof(T), methodName, moveType);
 
+    public static bool SeekCall(this ILCursor cursor, Type declaringType, string methodName, MoveType moveType = MoveType.After) {
+        while (cursor.TryGotoNext(moveType, instr => instr.MatchCall(declaringType, methodName))) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public static bool SeekCall<T>(this ILCursor cursor, string methodName, MoveType moveType = MoveType.After)
+        => SeekCall(cursor, typeof(T), methodName, moveType);
+
     public static bool SeekLoadFloat(this ILCursor cursor, float value) {
         while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdcR4(value))) {
             return true;

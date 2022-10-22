@@ -1,21 +1,22 @@
-﻿//#define FastMonocleDraw
-
-#if FastMonocleDraw
-#warning DO NOT INCLUDE IN RELEASE
-
-namespace FrostHelper.EXPERIMENTAL;
+﻿namespace FrostHelper.EXPERIMENTAL;
 
 public static class MonocleDrawShapeFixer {
 
     public static Texture2D PixelTexture;
 
-    [OnLoadContent]
+    private static List<ILHook> Hooks;
+    private static bool _hooksLoaded;
     public static void Load() {
+        if (_hooksLoaded)
+            return;
+        _hooksLoaded = true;
+
         PixelTexture = Draw.Pixel.Texture.Texture_Safe;
+        Hooks = new();
 
         foreach (var method in typeof(Draw).GetMethods()) {
             if (method.GetMethodBody() is { })
-                FrostModule.RegisterILHook(new(method, ChangePixelGetter));
+                Hooks.Add(new(method, ChangePixelGetter));
         }
     }
 
@@ -34,11 +35,14 @@ public static class MonocleDrawShapeFixer {
 
     [OnUnload]
     public static void Unload() {
+        if (!_hooksLoaded)
+            return;
+        _hooksLoaded = false;
+
         PixelTexture = null!;
+
+        foreach (var item in Hooks) {
+            item.Dispose();
+        }
     }
-
-
-
-
 }
-#endif

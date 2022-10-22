@@ -110,7 +110,7 @@ public class OxygenManager : Entity {
     }
 
     private static bool Player_UseRefill(On.Celeste.Player.orig_UseRefill orig, Player self, bool twoDashes) {
-        var oxy = self.Scene.Tracker.GetEntity<OxygenManager>();
+        var oxy = self.Scene.Tracker.SafeGetEntity<OxygenManager>();
         if (oxy is { } && oxy.Oxygen < oxy.MaxOxygen) { // todo: special handling for two-dash refills?
             self.Dashes = 0; // force the orig function to recover dashes
         }

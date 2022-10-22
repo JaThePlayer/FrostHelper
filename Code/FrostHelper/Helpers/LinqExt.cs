@@ -1,4 +1,7 @@
-﻿namespace FrostHelper;
+﻿using FMOD;
+using System.Collections.Generic;
+
+namespace FrostHelper;
 
 internal static class LinqExt {
     /// <summary>
@@ -18,6 +21,40 @@ internal static class LinqExt {
     public static void Foreach<T>(this IEnumerable<T> source, Action<T> action) {
         foreach (var item in source) {
             action(item);
+        }
+    }
+
+    /// <summary>
+    /// A more efficient implementation of Max, as the .net framework implementation is literally just source.Select(selector).Max()...
+    /// </summary>
+    public static int Max<T>(this IEnumerable<T> source, Func<T, int> selector) {
+        int value = 0;
+
+        switch (source) {
+            case T[] arr:
+                foreach (var item in arr) {
+                    var x = selector(item);
+                    if (x > value) {
+                        value = x;
+                    }
+                }
+                return value;
+            case List<T> list:
+                foreach (var item in list) {
+                    var x = selector(item);
+                    if (x > value) {
+                        value = x;
+                    }
+                }
+                return value;
+            default:
+                foreach (var item in source) {
+                    var x = selector(item);
+                    if (x > value) {
+                        value = x;
+                    }
+                }
+                return value;
         }
     }
 }

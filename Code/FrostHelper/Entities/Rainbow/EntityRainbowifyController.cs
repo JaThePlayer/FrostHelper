@@ -15,7 +15,7 @@ public class EntityRainbowifyController : Entity {
         _hooksLoaded = true;
 
         levelRenderManipulator = AllowColorChange((object self) => {
-            var controller = (self as Level)!.Tracker?.GetEntity<EntityRainbowifyController>();
+            var controller = (self as Level)!.Tracker?.SafeGetEntity<EntityRainbowifyController>();
             return controller != null && controller.all;
         }, (object self) => {
             return Vector2.Zero;

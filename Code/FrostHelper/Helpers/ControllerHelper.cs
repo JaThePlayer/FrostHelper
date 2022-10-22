@@ -3,7 +3,7 @@
 public static class ControllerHelper<T> where T : Entity, new() {
     private static T? _justAddedController;
     public static T AddToSceneIfNeeded(Scene scene) {
-        var tracked = scene.Tracker.GetEntity<T>();
+        var tracked = scene.Tracker.SafeGetEntity<T>();
         if (tracked is null && _justAddedController is null) {
             scene.Add(_justAddedController = new T());
 

@@ -52,7 +52,7 @@ public class CustomLightningRenderer : Entity {
     /// To be called in entity.Added(Scene scene)
     /// </summary>
     public static CustomLightningRenderer AddToSceneIfNeeded(Scene scene) {
-        var tracked = scene.Tracker.GetEntity<CustomLightningRenderer>();
+        var tracked = scene.Tracker.SafeGetEntity<CustomLightningRenderer>();
         if (tracked is null && justAddedRenderer is null) {
             scene.Add(justAddedRenderer = new CustomLightningRenderer());
             return justAddedRenderer;
@@ -62,7 +62,7 @@ public class CustomLightningRenderer : Entity {
     }
 
     public static CustomLightningRenderer Get(Scene scene) {
-        return scene.Tracker.GetEntity<CustomLightningRenderer>() ?? justAddedRenderer!;
+        return scene.Tracker.SafeGetEntity<CustomLightningRenderer>() ?? justAddedRenderer!;
     }
 
     public void SetColors(Color[] colors) {
