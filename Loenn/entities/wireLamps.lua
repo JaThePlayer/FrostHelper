@@ -24,7 +24,8 @@ jautils.createPlacementsPreserveOrder(wireLamps, "default", {
     { "lightEndFade", 16, "integer" },
     { "lampSprite", "objects/FrostHelper/wireLamp" },
     { "frameDelay", 0.5 },
-    { "wobbliness", 1.0 }
+    { "wobbliness", 1.0 },
+    { "attached", false }
 })
 
 function wireLamps.sprite(room, entity)

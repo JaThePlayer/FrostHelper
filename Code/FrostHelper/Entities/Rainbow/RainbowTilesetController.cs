@@ -1,26 +1,55 @@
-﻿using FrostHelper.ModIntegration;
-
-namespace FrostHelper;
+﻿namespace FrostHelper;
 
 [CustomEntity("FrostHelper/RainbowTilesetController")]
 [Tracked]
 public class RainbowTilesetController : Entity {
     #region Hooks
     private static bool _loadedHooks;
-  
+
     public static void LoadHooksIfNeeded() {
         if (_loadedHooks)
             return;
         _loadedHooks = true;
 
-        On.Monocle.TileGrid.RenderAt += TileGrid_RenderAt1;
-#if TILEGRID_SHADER
-        On.Monocle.TileGrid.RenderAt += TileGrid_RenderAt2;
-#endif
+        IL.Monocle.TileGrid.RenderAt += TileGrid_RenderAt;
     }
 
-    private static void TileGrid_RenderAt2(On.Monocle.TileGrid.orig_RenderAt orig, TileGrid self, Vector2 position) {
-        ShaderHelperIntegration.DrawWithEffect("trippyv2", () => orig(self, position), true);
+    private static byte GetFirstLocalId(ILCursor cursor, string typeName) {
+        return (byte) cursor.Body.Variables.First(v => v.VariableType.Name.Contains(typeName)).Index;
+    }
+
+    private static void TileGrid_RenderAt(ILContext il) {
+        ILCursor cursor = new ILCursor(il);
+
+        var positionId = GetFirstLocalId(cursor, "Vector2");
+        var mTextureId = GetFirstLocalId(cursor, "MTexture");
+
+        VariableDefinition controllerId = new VariableDefinition(il.Import(typeof(RainbowTilesetController)));
+        il.Body.Variables.Add(controllerId);
+
+        cursor.EmitCall(getController);
+        cursor.Emit(OpCodes.Stloc, controllerId);
+
+        if (cursor.TryGotoNext(MoveType.After, instr => instr.MatchCallvirt<SpriteBatch>("Draw"))) {
+            cursor.Index--; // go back to the last step, which is when the color is loaded
+            cursor.Emit(OpCodes.Ldloc_S, positionId); // pos
+            cursor.Emit(OpCodes.Ldloc_S, mTextureId); // mTexture
+            cursor.Emit(OpCodes.Ldarg_0); // this
+            cursor.Emit(OpCodes.Ldloc, controllerId);
+            cursor.EmitCall(getColor);
+        }
+    }
+
+    private static RainbowTilesetController getController() {
+        return Engine.Scene.Tracker.SafeGetEntity<RainbowTilesetController>()!;
+    }
+
+    private static Color getColor(Color col, Vector2 position, MTexture texture, TileGrid self, RainbowTilesetController controller) {
+        if (controller is { } && contains(controller.TilesetTextures, texture.Parent)) {
+            return ColorHelper.GetHue(Engine.Scene, position) * self.Alpha;
+        }
+
+        return col;
     }
 
     private static bool contains(MTexture[] arr, MTexture check) {
@@ -35,6 +64,7 @@ public class RainbowTilesetController : Entity {
         return false;
     }
 
+    // OLD
     private static void TileGrid_RenderAt1(On.Monocle.TileGrid.orig_RenderAt orig, TileGrid self, Vector2 position) {
         if (self.Scene is null) {
             return;
@@ -79,32 +109,8 @@ public class RainbowTilesetController : Entity {
         _loadedHooks = false;
 
         On.Monocle.TileGrid.RenderAt -= TileGrid_RenderAt1;
-        On.Monocle.TileGrid.RenderAt -= TileGrid_RenderAt2;
+        IL.Monocle.TileGrid.RenderAt -= TileGrid_RenderAt;
     }
-
-    /*
-    private static void TileGrid_RenderAt(ILContext il) {
-        ILCursor cursor = new ILCursor(il);
-        while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchCallvirt<MTexture>("Draw"))) {
-            cursor.Index--; // go back to the last step, which is when the color is loaded
-            cursor.Emit(OpCodes.Ldloc_3); // x
-            cursor.Emit(OpCodes.Ldloc_S, (byte) 4); // y
-            cursor.Emit(OpCodes.Ldarg_0); // this
-            //cursor.Emit(OpCodes.Ldloc_S, (byte)5); // controller
-            cursor.EmitDelegate((Color c, int x, int y, TileGrid self) => {
-                var controllers = self.Scene.Tracker.GetEntities<RainbowTilesetController>();
-                foreach (var e in controllers) {
-                    if (e is RainbowTilesetController controller && controller.TilesetTextures.Contains(self.Tiles[x, y].Parent)) {
-                        var rainbowColor = ColorHelper.GetHue(Engine.Scene, new Vector2(x * self.TileWidth + self.Position.X + self.Entity.Position.X, y * self.TileWidth + self.Position.Y + self.Entity.Position.Y));
-                        rainbowColor *= self.Alpha;
-                        return rainbowColor;
-                    }
-                }
-                return c;
-            });
-            return;
-        }
-    }*/
     #endregion
 
     public MTexture[] TilesetTextures;

@@ -50,10 +50,15 @@ public class DecalContainerMaker : Trigger {
         int newContainers = 0;
         DecalContainer? lastContainer = null;
         foreach (var ent in entities) {
-            if (ent is not Decal item || item.parallax)
+            if (ent is not Decal item)
                 continue;
-            var d = item.Depth;
-            var r = renderers[d];
+
+            var r = renderers[item.Depth];
+
+            if (item.parallax) {
+                r.Parallax.AddDecal(item);
+                continue;
+            }
 
             total++;
 
@@ -107,8 +112,46 @@ public class DecalContainerMaker : Trigger {
     }
 }
 
+public class ParallaxDecalRenderer {
+    internal List<DecalInfo> Decals = new();
+
+    public void AddDecal(Decal d) {
+        Decals.Add(DecalContainerHelpers.CreateInfo(d));
+        d.RemoveSelf();
+    }
+
+    public void Render() {
+        var level = FrostModule.GetCurrentLevel();
+        var cam = level.Camera.Position;
+        var camOffset = cam + new Vector2(160f, 90f);
+
+        var paused = level.Paused;
+
+        foreach (var d in Decals) {
+            var dec = d.decal;
+            if (dec.Scene is null)
+                DecalContainerHelpers.SetScene(dec, level);
+
+            var prevPos = dec.Position;
+            var realPos = prevPos + ((prevPos - camOffset) * dec.parallaxAmount);
+
+            dec.Position = realPos;
+            var visible = DecalContainerHelpers.IsInside(cam, d);
+            dec.Position = prevPos;
+
+            if (visible) {
+                if (!paused && dec.Active)
+                    dec.Update();
+                dec.Render();
+            }
+        }
+
+    }
+}
+
 public class DecalContainerRenderer : Entity {
     public List<DecalContainer> Containers = new();
+    public ParallaxDecalRenderer Parallax = new();
 
     public override void Awake(Scene scene) {
         foreach (var c in Containers)             
@@ -121,17 +164,52 @@ public class DecalContainerRenderer : Entity {
         var scene = Scene as Level;
         foreach (var c in Containers)             
             c.Render(scene!);
+        Parallax.Render();
 
         base.Render();
     }
 }
 
-public class DecalContainer {
-    internal class DecalInfo {
-        public Decal decal;
-        public float HalfWidth, HalfHeight;
+internal static class DecalContainerHelpers {
+    internal static DecalInfo CreateInfo(Decal item) {
+        var t = item.textures[0];
+        var w = t.Width * Math.Abs(item.Scale.X);
+        var h = t.Height * Math.Abs(item.Scale.Y);
+
+        return new() { decal = item, HalfWidth = w / 2f, HalfHeight = h / 2f };
     }
 
+    internal static bool IsInside(Vector2 cam, DecalInfo decal) {
+        var item = decal.decal;
+
+        var hw = decal.HalfWidth;
+        var hh = decal.HalfHeight;
+
+        var x = item.Position.X;
+        var y = item.Position.Y;
+
+        float lenienceX = hw;
+        float lenienceY = hh;
+
+        return x + hw >= cam.X - lenienceX
+            && x - hw <= cam.X + 320f + lenienceX
+            && y + hh >= cam.Y - lenienceY
+            && y - hh <= cam.Y + 180f + lenienceY;
+    }
+
+    internal static void SetScene(Decal item, Scene scene) {
+        item.Scene = scene;
+        foreach (var c in item)
+            c.Entity = item;
+    }
+}
+
+internal class DecalInfo {
+    public Decal decal;
+    public float HalfWidth, HalfHeight;
+}
+
+public class DecalContainer {
     internal DecalContainerRenderer Renderer;
     internal List<DecalInfo> Decals = new();
     internal Hitbox collider;
@@ -152,11 +230,11 @@ public class DecalContainer {
     public void AddDecal(Decal item) {
         hasSetScene = false;
 
-        var t = item.textures[0];
-        var w = t.Width * Math.Abs(item.Scale.X);
-        var h = t.Height * Math.Abs(item.Scale.Y);
+        var info = DecalContainerHelpers.CreateInfo(item);
+        var w = info.HalfWidth * 2;
+        var h = info.HalfHeight * 2;
 
-        Decals.Add(new() { decal = item, HalfWidth = w / 2f, HalfHeight = h / 2f });
+        Decals.Add(info);
 
         maxW = (int)Math.Max(maxW, w);
         maxH = (int)Math.Max(maxH, h);
@@ -191,24 +269,6 @@ public class DecalContainer {
         Position.Y -= maxH / 2;
     }
 
-    private static bool IsInside(Vector2 cam, DecalInfo decal) {
-        var item = decal.decal;
-
-        var hw = decal.HalfWidth;
-        var hh = decal.HalfHeight;
-
-        var x = item.Position.X;
-        var y = item.Position.Y;
-
-        float lenienceX = hw;
-        float lenienceY = hh;
-
-        return x + hw >= cam.X - lenienceX
-            && x - hw <= cam.X + 320f + lenienceX
-            && y + hh >= cam.Y - lenienceY
-            && y - hh <= cam.Y + 180f + lenienceY;
-    }
-
     private bool IsInside(Vector2 cam) {
         var x = Position.X;
         var y = Position.Y;
@@ -227,12 +287,6 @@ public class DecalContainer {
             && y <= camY + 180f + lenience;
     }
 
-    public void SetScene(Decal item, Scene scene) {
-        item.Scene = scene;
-        foreach (var c in item)
-            c.Entity = item;
-    }
-
     public void Render(Level level) {
         var cam = level.Camera.Position;
 
@@ -245,21 +299,21 @@ public class DecalContainer {
             foreach (var d in Decals) {
                 var item = d.decal;
                 if (item.Scene is null)
-                    SetScene(item, level);
+                    DecalContainerHelpers.SetScene(item, level);
             }
         }
 
         if (level.Paused) {
             foreach (var d in Decals) {
                 var item = d.decal;
-                if (item.Visible && IsInside(cam, d)) {
+                if (item.Visible && DecalContainerHelpers.IsInside(cam, d)) {
                     item.Render();
                 }
             }
         } else {
             foreach (var d in Decals) {
                 var item = d.decal;
-                if (item.Visible && IsInside(cam, d)) {
+                if (item.Visible && DecalContainerHelpers.IsInside(cam, d)) {
                     if (item.Active)
                         item.Update();
                     item.Render();

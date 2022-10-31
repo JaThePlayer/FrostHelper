@@ -10,6 +10,14 @@ public class WireLamps : Entity {
 
     public float Wobbliness;
 
+    private bool BeginNodeBroken;
+    private float BeginNodeYSpeed;
+    private bool EndNodeBroken;
+    private float EndNodeYSpeed;
+
+    // whether .Update was called
+    private bool _updated;
+
     public WireLamps(EntityData data, Vector2 offset) : base(data.Position + offset) {
         Vector2 to = data.Nodes[0] + offset;
         Curve = new SimpleCurve(Position, to, Vector2.Zero);
@@ -26,9 +34,9 @@ public class WireLamps : Entity {
         var lightAlpha = data.Float("lightAlpha", 1f);
         var lightStartFade = data.Int("lightStartFade", 8);
         var lightEndFade = data.Int("lightEndFade", 16);
-
         var spritePath = data.Attr("lampSprite", "objects/FrostHelper/wireLamp");
         var animated = !GFX.Game.Has(spritePath);
+        var attached = data.Bool("attached", false);
 
         if (animated)
             Sprites = new Sprite[lights.Length];
@@ -50,6 +58,45 @@ public class WireLamps : Entity {
                 Add(Sprites![i] = sprite);
             }
         }
+
+        if (attached) {
+            var moveBegin = (Vector2 pos) => {
+                Curve.Begin += pos;
+            };
+            var moveEnd = (Vector2 pos) => {
+                Curve.End += pos;
+            };
+
+            StaticMover s1 = null!;
+            Add(s1 = new StaticMover() {
+                SolidChecker = (s) => s.CollideRect(Utils.CreateRect(Curve.Begin.X, Curve.Begin.Y, 1f, 1f)),
+                OnMove = moveBegin,
+                OnShake = moveBegin,
+                OnDestroy = () => {
+                    BeginNodeBroken = true;
+                    s1.Platform.Collidable = false;
+
+                    if (!_updated)
+                        Raycast(ref Curve.Begin, ref BeginNodeYSpeed, ref BeginNodeBroken);
+                },
+                OnDisable = () => { }
+            });
+
+            StaticMover s2 = null!;
+            Add(s2 = new StaticMover() {
+                SolidChecker = (s) => s.CollideRect(Utils.CreateRect(Curve.End.X, Curve.End.Y, 1f, 1f)),
+                OnMove = moveEnd,
+                OnShake = moveEnd,
+                OnDestroy = () => {
+                    EndNodeBroken = true;
+                    s2.Platform.Collidable = false;
+
+                    if (!_updated)
+                        Raycast(ref Curve.End, ref EndNodeYSpeed, ref EndNodeBroken);
+                },
+                OnDisable = () => { }
+            });
+        }
     }
 
     static Color[] defaultColors = new Color[]
@@ -60,6 +107,51 @@ public class WireLamps : Entity {
         Color.Green,
         Color.Orange
     };
+
+    public override void Update() {
+        _updated = true;
+        base.Update();
+
+        var bounds = (Scene as Level)!.Bounds;
+
+        if (BeginNodeBroken) {
+            HandleNodeMove(ref Curve.Begin, ref BeginNodeYSpeed, ref BeginNodeBroken, bounds);
+        }
+        if (EndNodeBroken) {
+            HandleNodeMove(ref Curve.End, ref EndNodeYSpeed, ref EndNodeBroken, bounds);
+        }
+    }
+
+    /// <summary>
+    /// Returns whether a collision occured.
+    /// </summary>
+    /// <returns></returns>
+    private bool HandleNodeMove(ref Vector2 pos, ref float speed, ref bool stateRet, Rectangle bounds) {
+        var s = (Scene as Level)!;
+
+        speed = Calc.Approach(speed, 160f, 500f * Engine.DeltaTime);
+
+        if (s.CollideFirst<Solid>(pos) is { } solid) {
+            if (solid is SolidTiles) {
+                stateRet = false;
+            }
+            return true;
+        } else {
+            pos.Y += speed * Engine.DeltaTime;
+        }
+
+        if (pos.Y > bounds.Bottom + 16) {
+            stateRet = false;
+            return true;
+        }
+
+        return false;
+    }
+
+    private void Raycast(ref Vector2 pos, ref float speed, ref bool ret) {
+        var bounds = (Scene as Level)!.Bounds;
+        while (!HandleNodeMove(ref pos, ref speed, ref ret, bounds)) {}
+    }
 
     public override void Render() {
         var level = SceneAs<Level>();

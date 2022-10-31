@@ -9,7 +9,7 @@ namespace FrostHelper;
 [CustomEntity("FrostHelper/IceSpinner", "FrostHelperExt/CustomBloomSpinner")]
 [Tracked(false)]
 public class CustomSpinner : Entity {
-    // Hooks
+    #region Hooks
     private static bool _hooksLoaded;
 
     [HookPreload]
@@ -61,7 +61,7 @@ public class CustomSpinner : Entity {
         }
         orig(self, player);
     }
-
+    #endregion
 
     public string bgDirectory;
     public string fgDirectory;
@@ -79,7 +79,6 @@ public class CustomSpinner : Entity {
     public int DestroyDebrisCount;
 
     public bool RegisteredToRenderers = false;
-    public PlayerCollider PlayerCollider;
     public bool SingleFGImage;
     public int AttachGroup;
 
@@ -87,41 +86,28 @@ public class CustomSpinner : Entity {
         iceModeNext = coreMode == Session.CoreModes.Cold;
     }
 
-    private void CheckModeChange() {
-        if (iceModeNext != iceMode) {
-            iceMode = iceModeNext;
-            ToggleSprite();
-        }
-    }
-
-    private void ToggleSprite() {
-        UpdateDirectoryFields(iceMode);
-        ClearSprites();
-        CreateSprites();
-        expanded = false;
-        base.Awake(Scene);
-        if (InView()) {
-            CreateSprites();
-        }
-    }
-
     public CustomSpinner(EntityData data, Vector2 offset) : this(data, offset, data.Bool("attachToSolid", false), data.Attr("directory", "danger/FrostHelper/icecrystal"), data.Attr("destroyColor", "639bff"), data.Bool("isCore", false), data.Attr("tint", "ffffff")) { }
 
     public CustomSpinner(EntityData data, Vector2 position, bool attachToSolid, string directory, string destroyColor, bool isCore, string tint) : base(data.Position + position) {
         LoadIfNeeded();
+        ID = data.ID;
 
         Rainbow = data.Bool("rainbow", false);
         RenderBorder = data.Bool("drawOutline", true);
         DestroyDebrisCount = data.Int("debrisCount", 8);
-        ID = data.ID;
         DashThrough = data.Bool("dashThrough", false);
         Tint = ColorHelper.GetColor(tint);
         BorderColor = ColorHelper.GetColor(data.Attr("borderColor", "000000"));
-        this.directory = directory;
-
         // for VivHelper compatibility
         SpritePathSuffix = data.Attr("spritePathSuffix", "");
 
+        // Always use a single FG image, which can cause parts of the texture to clip out of solids.
+        // Much better for performance.
+        // Note that frost helper spinners will attempt to consolidate the sprites anyway,
+        // so this is useless for spinners that are not near a solid. 
+        SingleFGImage = data.Bool("singleFGImage", false);
+
+        this.directory = directory;
         UpdateDirectoryFields(false);
         moveWithWind = data.Bool("moveWithWind", false);
 
@@ -140,14 +126,12 @@ public class CustomSpinner : Entity {
 
         HasCollider = data.Bool("collidable", true);
         if (HasCollider) {
-            Collider = new ColliderList(new Collider[]
-                        {
-            new Circle(6f, 0f, 0f),
-            new Hitbox(16f, 4f, -8f, -3f)
-                        });
-            PlayerCollider = new PlayerCollider(new Action<Player>(OnPlayer), null, null);
-            Add(PlayerCollider);
-            Add(new HoldableCollider(new Action<Holdable>(OnHoldable), null));
+            Collider = new ColliderList(new Collider[] {
+                new Circle(6f, 0f, 0f),
+                new Hitbox(16f, 4f, -8f, -3f)
+            });
+            Add(new PlayerCollider(OnPlayer, null, null));
+            Add(new HoldableCollider(OnHoldable, null));
             Add(new LedgeBlocker(null));
         } else {
             Collidable = false;
@@ -171,7 +155,7 @@ public class CustomSpinner : Entity {
 
         randomSeed = Calc.Random.Next();
         if (isCore) {
-            Add(new CoreModeListener(new Action<Session.CoreModes>(OnChangeMode)));
+            Add(new CoreModeListener(OnChangeMode));
         }
         float bloomAlpha = data.Float("bloomAlpha", 0.0f);
         if (bloomAlpha != 0.0f)
@@ -211,7 +195,7 @@ public class CustomSpinner : Entity {
     public override void Awake(Scene scene) {
         ConnectorRendererJustAdded = false;
         if (isCore) {
-            Add(new CoreModeListener(new Action<Session.CoreModes>(OnChangeMode)));
+            Add(new CoreModeListener(OnChangeMode));
             if ((scene as Level)!.CoreMode == Session.CoreModes.Cold) {
                 UpdateDirectoryFields(false);
             } else {
@@ -345,35 +329,9 @@ public class CustomSpinner : Entity {
             Calc.PushRandom(randomSeed);
             Image image;
 
-            List<MTexture> atlasSubtextures = GFX.Game.GetAtlasSubtextures(fgDirectory);
-            MTexture mtexture = Calc.Random.Choose(atlasSubtextures);
-            int imgCount = 0;
-            bool topLeft, topRight, bottomLeft, bottomRight = false;
-            topLeft = false;
-            topRight = false;
-            bottomLeft = false;
+            List<MTexture> fgSubtextures = GFX.Game.GetAtlasSubtextures(fgDirectory);
+            MTexture fgTexture = Calc.Random.Choose(fgSubtextures);
 
-            if (!SolidCheck(new Vector2(X - 4f, Y - 4f))) {
-                topLeft = true;
-                imgCount++;
-            }
-            if (!SolidCheck(new Vector2(X + 4f, Y - 4f))) {
-                topRight = true;
-                imgCount++;
-            }
-            if (!SolidCheck(new Vector2(X + 4f, Y + 4f))) {
-                bottomLeft = true;
-                imgCount++;
-            }
-            if (!SolidCheck(new Vector2(X - 4f, Y + 4f))) {
-                bottomRight = true;
-                imgCount++;
-            }
-            // technically this solution is twice as fast! Unfortunately it has side-effects that make this not usable
-            /*
-            image = new Image(mtexture).CenterOrigin();
-            image.Color = Calc.HexToColor(tint);
-            Add(image); */
             foreach (Entity entity in Scene.Tracker.SafeGetEntities<CustomSpinner>()) {
                 CustomSpinner crystalStaticSpinner = (CustomSpinner) entity;
                 if (crystalStaticSpinner.ID > ID && crystalStaticSpinner.AttachGroup == AttachGroup && crystalStaticSpinner.AttachToSolid == AttachToSolid && (crystalStaticSpinner.Position - Position).LengthSquared() < 24f * 24f) {
@@ -381,23 +339,47 @@ public class CustomSpinner : Entity {
                     //crystalStaticSpinner.AddSprite((Position + crystalStaticSpinner.Position) / 2f - crystalStaticSpinner.Position);
                 }
             }
+
+            #region FG image(s)
+            int imgCount = 0;
+            bool topLeft = false, topRight = false, bottomLeft = false, bottomRight = false;
+            if (SingleFGImage) {
+                imgCount = 4;
+            } else {
+                if (!SolidCheck(new Vector2(X - 4f, Y - 4f))) {
+                    topLeft = true;
+                    imgCount++;
+                }
+                if (!SolidCheck(new Vector2(X + 4f, Y - 4f))) {
+                    topRight = true;
+                    imgCount++;
+                }
+                if (!SolidCheck(new Vector2(X + 4f, Y + 4f))) {
+                    bottomLeft = true;
+                    imgCount++;
+                }
+                if (!SolidCheck(new Vector2(X - 4f, Y + 4f))) {
+                    bottomRight = true;
+                    imgCount++;
+                }
+            }
+
             if (imgCount == 4) {
-                image = new Image(mtexture).CenterOrigin();
+                image = new Image(fgTexture).CenterOrigin();
                 image.Color = Tint;
                 Add(image);
                 image.Active = false;
-                SingleFGImage = true;
             } else {
                 // only spawn quarter images if it's needed to avoid edge cases
-                AddCornerImages(mtexture, topLeft, topRight, bottomLeft, bottomRight);
-                //Scene.Add(border = new Border(null, filler, this));
+                AddCornerImages(fgTexture, topLeft, topRight, bottomLeft, bottomRight);
             }
+            #endregion
+
             if (HasDeco) {
-                if (deco is null) {
-                    deco = new Entity(Position);
-                }
+                deco ??= new Entity(Position);
+
                 var decoAtlasSubtextures = GFX.Game.GetAtlasSubtextures(fgDirectory + "Deco");
-                Image decoImage = new Image(decoAtlasSubtextures[atlasSubtextures.IndexOf(mtexture)]) {
+                Image decoImage = new Image(decoAtlasSubtextures[fgSubtextures.IndexOf(fgTexture)]) {
                     Color = Tint,
                     Active = false
                 };
@@ -405,14 +387,12 @@ public class CustomSpinner : Entity {
                 deco.Add(decoImage);
             }
 
-
             expanded = true;
             Calc.PopRandom();
         }
     }
 
     private void AddCornerImages(MTexture mtexture, bool topLeft, bool topRight, bool bottomLeft, bool bottomRight) {
-
         Image image;
 
         if (topLeft && topRight) {
@@ -531,21 +511,6 @@ public class CustomSpinner : Entity {
             }
         }
         return false;
-    }
-
-    private void ClearSprites() {
-        if (filler != null) {
-            filler.RemoveSelf();
-
-            filler = null;
-        }
-
-        foreach (Image image in Components.GetAll<Image>()) {
-            image.RemoveSelf();
-        }
-        expanded = false;
-
-        UnregisterFromRenderers();
     }
 
     private void OnShake(Vector2 amount) {

@@ -70,6 +70,10 @@ public static class CameraCullHelper {
         return IsRectVisible(cam, left, top, right - left, bottom - top + heightIncrease);
     }
 
+    /// <summary>
+    /// Checks whether the <paramref name="sprite"/> is visible, taking account Scale and Origin.
+    /// TODO: Justify, Rotation
+    /// </summary>
     public static bool IsVisible(Vector2 cam, Sprite sprite) {
         var s = sprite.Scale;
         int w = (int)(sprite.Width * s.X);

@@ -25,7 +25,8 @@ jautils.createPlacementsPreserveOrder(spinner, "custom_spinner", {
     { "bloomAlpha", 0.0 },
     { "bloomRadius", 0.0 },
     { "debrisCount", 8, "integer" },
-    { "attachGroup", -1, "FrostHelper.attachGroup" }
+    { "attachGroup", -1, "FrostHelper.attachGroup" },
+    { "singleFGImage", false }
 })
 
 jautils.addPlacement(spinner, "rainbowTexture", {

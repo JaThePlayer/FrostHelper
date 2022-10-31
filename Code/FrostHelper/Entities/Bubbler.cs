@@ -35,7 +35,7 @@ public class Bubbler : Entity {
                 previewSprite.CenterOrigin();
                 previewSprite.Play("idle", false, false);
                 previewSprite.Position = nodes.Last() - new Vector2(0f, 10f);
-                previewSprite.SetColor(new Color(color.R, color.G, color.B, 128f) * 0.3f);
+                previewSprite.Color = new Color(color.R, color.G, color.B, 1) * 0.3f;
             }
         }
     }

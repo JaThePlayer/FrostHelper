@@ -41,8 +41,9 @@ public static class MonocleDrawShapeFixer {
 
         PixelTexture = null!;
 
-        foreach (var item in Hooks) {
-            item.Dispose();
+        if (Hooks is { } h)
+        foreach (var item in h) {
+            item?.Dispose();
         }
     }
 }

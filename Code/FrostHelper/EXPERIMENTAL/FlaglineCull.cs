@@ -8,8 +8,8 @@ public static class FlaglineCull {
             return;
         _hooksLoaded = true;
         IL.Celeste.Flagline.Render += Flagline_Render_Culling;
-        IL.Celeste.Wire.Render += Wire_Render_Culling;
-        IL.Celeste.Cobweb.DrawCobweb += Cobweb_DrawCobweb;
+        IL.Celeste.Wire.Render += Wire_Render_Culling; // soon in everest pr
+        IL.Celeste.Cobweb.DrawCobweb += Cobweb_DrawCobweb; // soon in everest pr
     }
 
     [OnUnload]

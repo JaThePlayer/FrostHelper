@@ -87,6 +87,7 @@ entities.FrostHelper/IceSpinner.attributes.description.collidable=Whether it's p
 entities.FrostHelper/IceSpinner.attributes.description.renderOutline=Whether this spinner should render its outline.
 entities.FrostHelper/IceSpinner.attributes.description.attachGroup=The group that this entity is in. All entities with the same attach group will be attached to the same solid.
 entities.FrostHelper/IceSpinner.attributes.description.debrisCount=The amount of debris created when this spinner is destroyed\nHigh values can cause huge lag!
+entities.FrostHelper/IceSpinner.attributes.description.singleFGImage=Use a single FG image, even if the spinner is partially in a wall. Improves performance, but can cause visual differences.
 
 # Custom Spring
 entities.FrostHelper/SpringLeft.placements.name.normal=Custom Spring (Right)
@@ -318,6 +319,7 @@ entities.FrostHelper/WireLamps.attributes.description.lightStartFade=the Start F
 entities.FrostHelper/WireLamps.attributes.description.lightEndFade=the End Fade value for the lights.
 entities.FrostHelper/WireLamps.attributes.description.lampSprite=The sprite used for lamps.
 entities.FrostHelper/WireLamps.attributes.description.wobbliness=The wobbliness of the wire.
+entities.FrostHelper/WireLamps.attributes.description.attached=Whether the wire attaches to solids.
 
 entities.FrostHelper/DirectionalPuffer.placements.name.none=Directional Puffer (None)
 entities.FrostHelper/DirectionalPuffer.placements.name.left=Directional Puffer (Left)
@@ -390,6 +392,8 @@ entities.FrostHelper/BloomPoint.placements.name.default=Bloom Point
 entities.FrostHelper/DecalContainer.placements.name.default=Decal Container
 entities.FrostHelper/DecalContainer.placements.description.default=Groups decals into smaller chunks, which are then culled in an efficient way. Used for optimising huge rooms with hundreds of decals.
 entities.FrostHelper/DecalContainer.attributes.description.chunkSizeInTiles=How big each chunk is, in tiles. Lower numbers might improve performance, but numbers too low are wasteful.
+
+entities.FrostHelper/DashBlockDestroyAttached.placements.name.default=Dash Block (Destroy Attached)
 
 # -- Mod Names --
 # mods.modName.*

@@ -515,7 +515,8 @@ end
 function jautils.multColor(color, alpha)
     local c = jautils.getColor(color)
 
-    return {c[1] * alpha, c[2] * alpha, c[3] * alpha, (c[4] or 1) * alpha }
+    --return {c[1] * alpha, c[2] * alpha, c[3] * alpha, (c[4] or 1) * alpha }
+    return {c[1], c[2], c[3], (c[4] or 1) * alpha }
 end
 
 return jautils
