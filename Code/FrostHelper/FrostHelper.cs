@@ -429,4 +429,11 @@ public class FrostModule : EverestModule {
              .Select(p => $"{p.Key}{new string(' ', longestType - p.Key.Length)} {p.Value}")
              .Foreach(Console.WriteLine);
     }
+
+    [Command("shader_info", "[Frost Helper] Prints out information about a shader")]
+    public static void CmdShaderInfo(string shaderName) {
+        var shader = ShaderHelperIntegration.GetEffect(shaderName);
+
+        Console.WriteLine($"{shaderName}:\n{shader.Parameters.Aggregate("Parameters:", (string p1, EffectParameter p2) => $"{p1}\n{p2.Name}: {p2.ParameterType}")}");
+    }
 }

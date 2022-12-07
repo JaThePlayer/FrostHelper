@@ -1,11 +1,10 @@
-﻿using Celeste.Mod.Entities;
-using FrostHelper.ModIntegration;
+﻿using FrostHelper.ModIntegration;
 
 namespace FrostHelper.ShaderImplementations;
 
 public static class FunkyBloomShaderImpl {
     public static void Apply(RenderTarget2D colorMap, RenderTarget2D shatterMap, RenderTarget2D target, string effectName) {
-        var eff = ShaderHelperIntegration.GetEffect(effectName) ?? throw new ShaderHelperIntegration.MissingShaderException(effectName);
+        var eff = ShaderHelperIntegration.GetEffect(effectName);
         ShaderHelperIntegration.ApplyStandardParameters(eff);
 
         // apply the shader

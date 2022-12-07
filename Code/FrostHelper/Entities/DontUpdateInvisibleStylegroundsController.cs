@@ -29,8 +29,7 @@ public class DontUpdateInvisibleStylegroundsController : Entity {
         for (int i = backdrops.Count - 1; i >= 0; i--) {
             Backdrop? backdrop = backdrops[i];
             if (AffectedTypes.Contains(backdrop.GetType())) {
-                backdrops.RemoveAt(i);
-                backdrops.Add(new Wrapper(backdrop));
+                backdrops[i] = new Wrapper(backdrop);
             }
         }
     }
@@ -49,6 +48,7 @@ public class DontUpdateInvisibleStylegroundsController : Entity {
             OnlyIn = inner.OnlyIn;
             InstantIn = inner.InstantIn;
             InstantOut = inner.InstantOut;
+            Tags = inner.Tags;
         }
 
         public override void Update(Scene scene) {

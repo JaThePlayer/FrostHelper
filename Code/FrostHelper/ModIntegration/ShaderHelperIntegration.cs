@@ -1,5 +1,7 @@
 ﻿//#define USE_SHADER_HELPER
 
+using FrostHelper.Helpers;
+
 namespace FrostHelper.ModIntegration;
 
 public static class ShaderHelperIntegration {
@@ -91,6 +93,8 @@ public static class ShaderHelperIntegration {
 #endif
 
     public static Effect GetEffect(string id) {
+        id = id.Replace('\\', '/');
+
         if (GetShaderHelperEffects().TryGetValue(id, out var eff)) {
             return eff;
         }
@@ -107,7 +111,9 @@ public static class ShaderHelperIntegration {
             }
         }
 
-        throw new MissingShaderException(id);
+        //throw new MissingShaderException(id);
+        NotificationHelper.Notify($"Shader not found: {id}");
+        return GFX.FxTexture;
     }
 
     public static Effect BeginGameplayRenderWithEffect(string id, bool endBatch) {
@@ -166,13 +172,13 @@ public static class ShaderHelperIntegration {
 
     public static void ApplyStandardParameters(Effect effect) {
         var level = FrostModule.GetCurrentLevel() ?? throw new Exception("Not in a level when applying shader parameters! How did you...");
-        var viewport = Engine.Graphics.GraphicsDevice.Viewport;
+        var parameters = effect.Parameters;
 
-        effect.Parameters["DeltaTime"]?.SetValue(Engine.DeltaTime);
-        effect.Parameters["Time"]?.SetValue(Engine.Scene.TimeActive);
-        effect.Parameters["Dimensions"]?.SetValue(new Vector2(viewport.Width, viewport.Height));
-        effect.Parameters["CamPos"]?.SetValue(level.Camera.Position);
-        effect.Parameters["ColdCoreMode"]?.SetValue(level.CoreMode == Session.CoreModes.Cold);
+        parameters["DeltaTime"]?.SetValue(Engine.DeltaTime);
+        parameters["Time"]?.SetValue(Engine.Scene.TimeActive);
+        parameters["Dimensions"]?.SetValue(new Vector2(320, 180) * HDlesteCompat.Scale);
+        parameters["CamPos"]?.SetValue(level.Camera.Position);
+        parameters["ColdCoreMode"]?.SetValue(level.CoreMode == Session.CoreModes.Cold);
     }
 
     public static void ApplyParametersFrom(this Effect shader, Dictionary<string, string> parameters) {

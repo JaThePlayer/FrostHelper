@@ -468,6 +468,8 @@ triggers.FrostHelper/BloomColorPulseTrigger.placements.name.default=Bloom Color 
 triggers.FrostHelper/ScreenwideShaderTrigger.placements.name.default=Screenwide Shader
 triggers.FrostHelper/ScreenwideShaderTrigger.attributes.description.effects=A comma-seperated list of effect names that will be activated by this trigger. Effect names provided here should not start with "Effects/"
 
+triggers.FrostHelper/EasedCameraZoomTrigger.placements.name.default=Eased Camera Zoom
+
 # other
 ui.fh.attachGroup.tooltip=Assigns this entity a new group that's not yet used in this room
 ui.fh.attachGroup.name=Auto

@@ -1,9 +1,6 @@
-﻿using Celeste.Mod.Entities;
+﻿namespace FrostHelper;
 
-namespace FrostHelper;
-
-[CustomEntity("CCH/EasedCameraZoomTrigger",
-              "FrostHelper/EasedCameraZoomTrigger")]
+[CustomEntity("CCH/EasedCameraZoomTrigger", "FrostHelper/EasedCameraZoomTrigger")]
 public class EasedCameraZoomTrigger : Trigger {
     // Properties set in Ahorn
     public Ease.Easer Easer;
@@ -38,23 +35,20 @@ public class EasedCameraZoomTrigger : Trigger {
 
     bool GetOnlyY() => !FocusOnPlayer;
 
-    public override void Added(Scene scene) {
-        base.Added(scene);
-        ZoomManager.AddToSceneIfNeeded(scene);
-    }
-
     public override void OnEnter(Player player) {
+        var manager = ZoomManager;
+
         initialZoom = RevertMode switch {
             ZoomTriggerRevertMode.RevertToNoZoom => 1f,
-            ZoomTriggerRevertMode.RevertToPreviousZoom => ZoomManager.TargetZoom,
+            ZoomTriggerRevertMode.RevertToPreviousZoom => manager.TargetZoom,
             _ => throw new NotImplementedException()
         };
 
-        prevFocusPoint = ZoomManager.FocusPoint;
-        prevFocusOnPlayer = ZoomManager.FocusZoomOnPlayer;
-        ZoomManager.FocusZoomOnPlayer = FocusOnPlayer;
+        prevFocusPoint = manager.FocusPoint;
+        prevFocusOnPlayer = manager.FocusZoomOnPlayer;
+        manager.FocusZoomOnPlayer = FocusOnPlayer;
         if (!(DisableInPhotosensitiveMode && Settings.Instance.DisableFlashes)) {
-            ZoomManager.DoZoom(Easer, TargetZoom, EaseDuration, GetFocusPoint(), GetOnlyY());
+            manager.DoZoom(Easer, TargetZoom, EaseDuration, GetFocusPoint(), GetOnlyY());
         }
     }
 
@@ -71,7 +65,7 @@ public class EasedCameraZoomTrigger : Trigger {
 
     public Level Level => (Scene as Level)!;
 
-    public ZoomManager ZoomManager => Scene.Tracker.SafeGetEntity<ZoomManager>()!;
+    public ZoomManager ZoomManager => ControllerHelper<ZoomManager>.AddToSceneIfNeeded(Scene);// Scene.Tracker.SafeGetEntity<ZoomManager>()!;
 }
 
 /// <summary>
@@ -79,16 +73,10 @@ public class EasedCameraZoomTrigger : Trigger {
 /// </summary>
 [Tracked]
 public class ZoomManager : Entity {
-    private ZoomManager() {
+    public ZoomManager() {
         Depth = Depths.Top; // Make sure that this is one of the last entities to get updated, to make sure that the camera focuses on the actual player position
     }
 
-    /// <summary>
-    /// A temporary value used to make sure only one <see cref="ZoomManager"/> is added to the scene at once.
-    /// This is needed because <see cref="Scene.Add(Entity)"/> doesn't immediately add the entity to the tracker.
-    /// Used exclusively by <see cref="AddToSceneIfNeeded(Scene)"/>, and gets reset by <see cref="Awake(Scene)"/>.
-    /// </summary>
-    static bool _justAddedAManager;
     public float TargetZoom = 1f;
     public bool FocusZoomOnPlayer;
     public Vector2? FocusPoint;
@@ -96,16 +84,8 @@ public class ZoomManager : Entity {
 
     Coroutine zoomCoroutine;
 
-    public static void AddToSceneIfNeeded(Scene scene) {
-        if (!_justAddedAManager && scene.Tracker.SafeGetEntity<ZoomManager>() == null) {
-            _justAddedAManager = true;
-            scene.Add(new ZoomManager());
-        }
-    }
-
     public override void Awake(Scene scene) {
         base.Awake(scene);
-        _justAddedAManager = false;
         Level.ResetZoom();
     }
 

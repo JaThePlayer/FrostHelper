@@ -102,12 +102,13 @@ public class EntityBatcher : Entity {
 
     public override void Update() {
         base.Update();
+        /*
         for (int i = AffectedEntities.Count - 1; i > -1; i--) {
             var item = AffectedEntities[i];
             if (item.Scene is null) {
                 //AffectedEntities.Remove(item);
             }
-        }
+        }*/
 
         Visible = IsEnabled();
         if (MakeEntitiesInvisible) {
@@ -188,7 +189,21 @@ public class EntityBatcher : Entity {
     }
 
     private static Effect GetMaskShader(Dictionary<string, object> shaderParameters) {
-        var shader = ShaderHelperIntegration.GetEffect(shaderParameters["maskShader"] as string ?? throw new Exception("Mask shaders need a 'maskShader' parameter!"));
+        Effect? shader = null;
+
+        switch (shaderParameters["maskShader"]) {
+            case string str:
+                shader = ShaderHelperIntegration.GetEffect(str);
+                shaderParameters["maskShader"] = shader;
+                break;
+            case Effect effect:
+                shader = effect;
+                break;
+            default:
+                throw new Exception("Mask shaders need a 'maskShader' parameter!");
+                break;
+        }
+
         shader.ApplyParametersFrom(shaderParameters, false);
         return shader;
     }
@@ -228,7 +243,7 @@ public class EntityBatcher : Entity {
         GameplayRenderer.Begin();
     }
 
-    public static void Apply(List<Entity> AffectedEntities, string Shader, Dictionary<string, object> ShaderParameters, int? requiredDepth, bool consumeStylegrounds) {
+    public static void Apply(List<Entity> AffectedEntities, string Shader, Dictionary<string, object> ShaderParameters, int? requiredDepth, bool consumeStylegrounds, bool makeEntitiesInvisible) {
         Draw.SpriteBatch.End();
 
         if (temp is null || temp.Width != GameplayBuffers.Gameplay.Width) {
@@ -246,7 +261,9 @@ public class EntityBatcher : Entity {
         GameplayRenderer.Begin();
 
         foreach (var item in AffectedEntities) {
-            if (item is not null && item.Scene is not null && (requiredDepth is null || item.Depth == requiredDepth)) {
+            if (item is not null && item.Scene is not null 
+                && (requiredDepth is null || item.Depth == requiredDepth) 
+                && (makeEntitiesInvisible || item.Visible)) {
                 var v = item.Visible;
                 item.Visible = true;
                 item.Render();
@@ -283,9 +300,9 @@ public class EntityBatcher : Entity {
         }
 
         if (DynamicDepthPossibleDepths is not null) {
-            Apply(AffectedEntities, Shader, ShaderParameters, Depth, ConsumeStylegrounds);
+            Apply(AffectedEntities, Shader, ShaderParameters, Depth, ConsumeStylegrounds, MakeEntitiesInvisible);
         } else {
-            Apply(AffectedEntities, Shader, ShaderParameters, null, ConsumeStylegrounds);
+            Apply(AffectedEntities, Shader, ShaderParameters, null, ConsumeStylegrounds, MakeEntitiesInvisible);
         }
 
     }

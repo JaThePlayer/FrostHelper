@@ -254,6 +254,12 @@ public class DecalContainer {
                     Renderer.Add(new BloomPoint(b.Position + item.Position, b.Alpha, b.Radius));
                     break;
 
+                case StaticMover m:
+                    m.OnDestroy += () => {
+                        Decals.Remove(info);
+                    };
+                    break;
+
                 default:
                     break;
             }

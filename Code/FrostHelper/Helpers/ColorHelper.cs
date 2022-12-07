@@ -1,4 +1,6 @@
-﻿namespace FrostHelper;
+﻿using FrostHelper.Helpers;
+
+namespace FrostHelper;
 
 public static class ColorHelper {
     static Dictionary<string, Color> cache = new Dictionary<string, Color>(StringComparer.OrdinalIgnoreCase);
@@ -39,6 +41,7 @@ public static class ColorHelper {
             return val;
         } catch {
             //cache[color] = Color.Transparent;
+            NotificationHelper.Notify(new(LogLevel.Error, $"Invalid color: {color}"));
         }
 
         return Color.Transparent;

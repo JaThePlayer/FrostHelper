@@ -1,7 +1,9 @@
 local shaderWrapper = {
     name = "FrostHelper/ShaderWrapper",
-    wrappedTag = "",
-    shader = "",
+    defaultData = {
+        wrappedTag = "",
+        shader = "",
+    }
 }
 
 return shaderWrapper

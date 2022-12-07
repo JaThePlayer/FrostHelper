@@ -1,4 +1,5 @@
 ﻿using Celeste.Mod.Helpers;
+using FrostHelper.Helpers;
 
 namespace FrostHelper;
 
@@ -24,7 +25,14 @@ public static class TypeHelper {
     }
 
     public static Type EntityNameToType(string entityName) {
-        return EntityNameToTypeSafe(entityName) ?? throw new Exception($"Unknown entity name: {entityName}.");
+        var type = EntityNameToTypeSafe(entityName);
+        if (type is { }) {
+            return type;
+        }
+        NotificationHelper.Notify($"Unknown Entity Name: {entityName}");
+        return typeof(TypeHelper);
+
+        //return EntityNameToTypeSafe(entityName) ?? throw new Exception($"Unknown entity name: {entityName}.");
     }
 
     public static Type? EntityNameToTypeSafe(string entityName) {
