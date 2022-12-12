@@ -464,6 +464,8 @@ triggers.FrostHelper/BloomColorFadeTrigger.placements.name.default=Bloom Color F
 triggers.FrostHelper/RainbowBloomTrigger.placements.name.default=Rainbow Bloom
 
 triggers.FrostHelper/BloomColorPulseTrigger.placements.name.default=Bloom Color Pulse
+triggers.FrostHelper/BloomColorPulseTrigger.attributes.name.bloomAddFrom=Pulse From
+triggers.FrostHelper/BloomColorPulseTrigger.attributes.name.bloomAddTo=Pulse To
 
 triggers.FrostHelper/ScreenwideShaderTrigger.placements.name.default=Screenwide Shader
 triggers.FrostHelper/ScreenwideShaderTrigger.attributes.description.effects=A comma-seperated list of effect names that will be activated by this trigger. Effect names provided here should not start with "Effects/"

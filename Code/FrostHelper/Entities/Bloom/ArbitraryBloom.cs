@@ -57,8 +57,10 @@ public class ArbitraryBloomRenderer : Entity {
         // todo: cache?
         foreach (var bloom in Blooms) {
             var alpha = bloom.Alpha;
-            foreach (var vert in bloom.Fill) {
-                NextVertex(ref index, vert, alpha);
+            if (bloom.Visible && bloom.Alpha > 0) {
+                foreach (var vert in bloom.Fill) {
+                    NextVertex(ref index, vert, alpha);
+                }
             }
         }
         var cam = SceneAs<Level>().Camera.Matrix;

@@ -50,7 +50,7 @@ public class BloomColorPulseTrigger : Trigger {
         To = data.GetColor("bloomAddTo", "ff00ff");
         Duration = data.Float("duration", 0.4f);
         Easer = data.Easing("easing", Ease.Linear);
-        TweenMode = data.TweenMode("tweenMode", Tween.TweenMode.YoyoOneshot); // Editor default should be Tween.TweenMode.Oneshot!!!
+        TweenMode = data.TweenMode("tweenMode", Tween.TweenMode.YoyoOneshot);
     }
 
     public override void OnEnter(Player player) {
@@ -58,12 +58,12 @@ public class BloomColorPulseTrigger : Trigger {
 
         var tween = Tween.Create(TweenMode, Easer, Duration);
         tween.OnUpdate = (t) => {
-            var lerped = Color.Lerp(From, To, MathHelper.Clamp(t.Percent, 0f, 1f));
+            var lerped = Color.Lerp(From, To, MathHelper.Clamp(t.Eased, 0f, 1f));
 
             API.API.SetBloomColor(lerped);
         };
         tween.OnComplete = (t) => {
-            API.API.SetBloomColor(To);
+            //API.API.SetBloomColor(To);
         };
         tween.Start();
         Add(tween);

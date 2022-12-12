@@ -60,7 +60,7 @@ return {
                 bloomAddTo = "ff00ff",
                 duration = 0.4,
                 easing = "Linear",
-                tweenMode = "Oneshot",
+                tweenMode = "YoyoOneshot",
             }
         },
         fieldInformation = {
