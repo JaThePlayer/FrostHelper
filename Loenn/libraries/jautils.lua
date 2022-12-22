@@ -164,6 +164,7 @@ end
 --[[
     SPRITES
 ]]
+
 ---@type color
 jautils.colorWhite = utils.getColor("ffffff")
 jautils.colorBlack = {0, 0, 0, 1}
@@ -517,6 +518,48 @@ function jautils.multColor(color, alpha)
 
     --return {c[1] * alpha, c[2] * alpha, c[3] * alpha, (c[4] or 1) * alpha }
     return {c[1], c[2], c[3], (c[4] or 1) * alpha }
+end
+
+--[[
+    Strings
+]]
+
+---Rounds a number to given amount of digits, and returns it as a string. If digits is not provided, it defaults to 3
+---@param number number
+---@param digits number|nil
+---@return string
+function jautils.roundedToString(number, digits)
+    if not digits then
+        return string.format("%.3f", number)
+    end
+
+    return string.format("%." .. tostring(digits) .. "f", number)
+end
+
+---Formats a flag for displaying, converting an inverted flag to !flagName
+---@param flagName string
+---@param inverted boolean
+---@return string
+function jautils.formatFlag(flagName, inverted)
+    if inverted then
+        return "!" .. flagName
+    else
+        return flagName
+    end
+end
+
+--[[
+    Lönn Extended support
+]]
+
+---Adds extended text support for the given trigger. Returns the handler itself
+---@param triggerHandler table
+---@param getter function<table>
+---@return table triggerHandler
+function jautils.addExtendedText(triggerHandler, getter)
+    triggerHandler._lonnExt_extendedText = getter
+
+    return triggerHandler
 end
 
 return jautils

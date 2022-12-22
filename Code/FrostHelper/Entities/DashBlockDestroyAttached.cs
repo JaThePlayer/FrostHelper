@@ -4,6 +4,8 @@
 /// A dash block that destoys attached entities when broken.
 /// </summary>
 [CustomEntity("FrostHelper/DashBlockDestroyAttached")]
+[Tracked(false)]
+[TrackedAs(typeof(DashBlock))]
 public class DashBlockDestroyAttached : DashBlock {
     #region Hooks
     private static bool _hooksLoaded;

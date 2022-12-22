@@ -420,14 +420,21 @@ public class FrostModule : EverestModule {
 
     [Command("detailed_count", "[Frost Helper] Lists all entities by type")]
     public static void CmdDetailedCount() {
-        var types = Engine.Scene.Entities.Select(e => e.GetType());
-        var longestType = types.Max(t => t.FullName.Length);
+        Console.WriteLine("Components:");
+        print(Engine.Scene.Entities.SelectMany(s => s));
+        Console.WriteLine("Entities:");
+        print(Engine.Scene.Entities);
 
-        types.Distinct()
-             .ToDictionary(t => t.FullName, t => types.Count(t2 => t2 == t))
-             .OrderBy(p => p.Value) // while OrderByDescending might make more sense, this ordering makes it easier to read in the console
-             .Select(p => $"{p.Key}{new string(' ', longestType - p.Key.Length)} {p.Value}")
-             .Foreach(Console.WriteLine);
+        void print(IEnumerable<object> obj) {
+            var types = obj.Select(e => e.GetType());
+            var longestType = types.Max(t => t.FullName.Length);
+
+            types.Distinct()
+                 .ToDictionary(t => t.FullName, t => types.Count(t2 => t2 == t))
+                 .OrderBy(p => p.Value) // while OrderByDescending might make more sense, this ordering makes it easier to read in the console
+                 .Select(p => $"{p.Key}{new string(' ', longestType - p.Key.Length)} {p.Value}")
+                 .Foreach(Console.WriteLine);
+        }
     }
 
     [Command("shader_info", "[Frost Helper] Prints out information about a shader")]

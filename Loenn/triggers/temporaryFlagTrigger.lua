@@ -1,4 +1,6 @@
-return {
+local jautils = require("mods").requireFromPlugin("libraries.jautils")
+
+local temporaryFlag = {
     name = "FrostHelper/TemporaryFlagTrigger",
     placements = {
         name = "default",
@@ -7,3 +9,9 @@ return {
         }
     }
 }
+
+jautils.addExtendedText(temporaryFlag, function (trigger)
+    return trigger.flag
+end)
+
+return temporaryFlag

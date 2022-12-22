@@ -230,6 +230,9 @@ public class ToggleSwapBlock : Solid {
     }
 
     private void DrawBlockStyle(Vector2 pos, float width, float height, MTexture[,] ninSlice, Sprite? middle, Color color) {
+        if (!CameraCullHelper.IsRectangleVisible(pos.X, pos.Y, width, height))
+            return;
+
         int num = (int) (width / 8f);
         int num2 = (int) (height / 8f);
         ninSlice[0, 0].Draw(pos + new Vector2(0f, 0f), Vector2.Zero, color);
@@ -320,6 +323,9 @@ public class ToggleSwapBlock : Solid {
         }
 
         public override void Render() {
+            if (!CameraCullHelper.IsRectangleVisible(block.moveRect))
+                return;
+
             for (int i = block.moveRect.Left; i < block.moveRect.Right; i += pathTexture.Width) {
                 for (int j = block.moveRect.Top; j < block.moveRect.Bottom; j += pathTexture.Height) {
                     pathTexture.GetSubtexture(0, 0, Math.Min(pathTexture.Width, block.moveRect.Right - i), Math.Min(pathTexture.Height, block.moveRect.Bottom - j), clipTexture);

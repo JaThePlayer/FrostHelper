@@ -29,8 +29,8 @@ public class NoDashArea : Entity {
     public NoDashArea(EntityData data, Vector2 offset) : base(data.Position + offset) {
         fastMoving = data.Bool("fastMoving", false);
         Collider = new Hitbox(data.Width, data.Height);
-        Add(pc = new PlayerCollider(new Action<Player>(OnPlayer), null, null));
-        Add(new DisplacementRenderHook(new Action(RenderDisplacement)));
+        Add(pc = new PlayerCollider(OnPlayer, null, null));
+        Add(new DisplacementRenderHook(RenderDisplacement));
         float num = 0;
         particles = new List<Vector2>();
         while (num < Width * Height / 16f) {
@@ -41,15 +41,15 @@ public class NoDashArea : Entity {
         if (Node != null) {
             Vector2 start = Position;
             Vector2 end = Node.Value;
-            float num2 = Vector2.Distance(start, end) / 12f;
-            bool flag2 = fastMoving;
-            if (flag2) {
-                num2 /= 3f;
+            float duration = Vector2.Distance(start, end) / 12f;
+
+            if (fastMoving) {
+                duration /= 3f;
             }
-            Tween tween = Tween.Create(Tween.TweenMode.YoyoLooping, Ease.SineInOut, num2, true);
+            Tween tween = Tween.Create(Tween.TweenMode.YoyoLooping, Ease.SineInOut, duration, true);
             tween.OnUpdate = delegate (Tween t) {
-                bool collidable = Collidable;
-                if (collidable) {
+
+                if (Collidable) {
                     Position = Vector2.Lerp(start, end, t.Eased);
                 } else {
                     Position = Vector2.Lerp(start, end, t.Eased);
@@ -68,10 +68,8 @@ public class NoDashArea : Entity {
     }
 
     public void OnPlayer(Player player) {
-        Player_dashCooldownTimer.SetValue(player, Engine.DeltaTime + 0.1f);
+        player.dashCooldownTimer = Engine.DeltaTime + 0.000001f;
     }
-
-    private FieldInfo Player_dashCooldownTimer = typeof(Player).GetField("dashCooldownTimer", BindingFlags.NonPublic | BindingFlags.Instance);
 
     public override void Update() {
         base.Update();
@@ -82,12 +80,20 @@ public class NoDashArea : Entity {
             Solidify = 1f;
             Flash = 1f;
         }
-        bool flag3 = Solidify > 0f;
-        if (flag3) {
+
+        if (Solidify > 0f) {
             Solidify = Calc.Approach(Solidify, 0f, Engine.DeltaTime);
         }
         if (Flashing)
             Flash = Calc.Approach(Flash, 0f, Engine.DeltaTime * 4f);
+
+        UpdateParticles();
+    }
+
+    private void UpdateParticles() {
+        if (!CameraCullHelper.IsRectangleVisible(X, Y, Width, Height))
+            return;
+
         int num = speeds.Length;
         float height = Height;
         int i = 0;
@@ -98,10 +104,12 @@ public class NoDashArea : Entity {
             particles[i] = value;
             i++;
         }
-
     }
 
     public override void Render() {
+        if (!CameraCullHelper.IsRectangleVisible(X, Y, Width, Height))
+            return;
+
         Color color = Color.White * 0.5f;
         Draw.Rect(Collider, Color.Red * 0.25f);
         foreach (Vector2 value in particles) {

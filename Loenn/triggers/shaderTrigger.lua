@@ -1,4 +1,6 @@
-return {
+local jautils = require("mods").requireFromPlugin("libraries.jautils")
+
+local shaderTrigger = {
     name = "FrostHelper/ScreenwideShaderTrigger",
     placements = {
         name = "default",
@@ -8,3 +10,9 @@ return {
         }
     }
 }
+
+jautils.addExtendedText(shaderTrigger, function (trigger)
+    return trigger.effects
+end)
+
+return shaderTrigger

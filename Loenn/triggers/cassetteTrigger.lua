@@ -1,3 +1,5 @@
+local jautils = require("mods").requireFromPlugin("libraries.jautils")
+
 local fHCassetteTempoTrigger = {}
 fHCassetteTempoTrigger.name = "FrostHelper/CassetteTempoTrigger"
 fHCassetteTempoTrigger.placements = {
@@ -7,5 +9,9 @@ fHCassetteTempoTrigger.placements = {
         ResetOnLeave = false,
     }
 }
+
+jautils.addExtendedText(fHCassetteTempoTrigger, function (trigger)
+    return jautils.roundedToString(trigger.Tempo)
+end)
 
 return fHCassetteTempoTrigger

@@ -15,7 +15,8 @@ public static class DrawTracker {
         On.Monocle.EntityList.RenderExcept += EntityList_RenderExcept;
         On.Monocle.EntityList.RenderOnly += EntityList_RenderOnly;
         On.Celeste.BackdropRenderer.Render += BackdropRenderer_Render;
-        On.Celeste.BackdropRenderer.BeforeRender += BackdropRenderer_BeforeRender;
+        //On.Celeste.BackdropRenderer.BeforeRender += BackdropRenderer_BeforeRender;
+        IL.Celeste.BackdropRenderer.BeforeRender += BackdropRenderer_BeforeRender1;
 
         DrawAmts = new();
         Hooks = new();
@@ -37,6 +38,7 @@ public static class DrawTracker {
 
             On.Celeste.BackdropRenderer.Render -= BackdropRenderer_Render;
             On.Celeste.BackdropRenderer.BeforeRender -= BackdropRenderer_BeforeRender;
+            IL.Celeste.BackdropRenderer.BeforeRender -= BackdropRenderer_BeforeRender1;
             On.Monocle.EntityList.RenderExcept -= EntityList_RenderExcept;
             On.Monocle.EntityList.RenderOnly -= EntityList_RenderOnly;
 
@@ -53,6 +55,18 @@ public static class DrawTracker {
 
             Console.WriteLine(DrawAmts.Sum(p => p.Value * 6));
         };
+    }
+
+    private static void BackdropRenderer_BeforeRender1(ILContext il) {
+        var cursor = new ILCursor(il);
+
+        cursor.TryGotoNext(MoveType.Before, instr => instr.MatchCallvirt<Backdrop>("BeforeRender"));
+        cursor.Index -= 1;
+        cursor.Emit(OpCodes.Dup);
+        //cursor.Emit(OpCodes.Ldloc, il.Body.Variables.First(v => v.VariableType.Name.Contains("Backdrop")));
+        cursor.EmitDelegate<Action<Backdrop>>((Backdrop b) => _currentObj = b);
+        cursor.Index += 2;
+        cursor.EmitDelegate<Action>(() => _currentObj = null);
     }
 
     private static void BackdropRenderer_BeforeRender(On.Celeste.BackdropRenderer.orig_BeforeRender orig, BackdropRenderer self, Scene scene) {

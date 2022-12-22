@@ -23,6 +23,20 @@ public static class CameraCullHelper {
             && y <= camY + 180f + lenience;
     }
 
+    public static bool IsRectangleVisible(float x, float y, float w, float h, float lenience = 4f, Camera? camera = null) {
+        camera ??= (Engine.Scene as Level)?.Camera;
+        return camera is null || (
+            x + w >= camera.Left - lenience 
+         && x <= camera.Right + lenience 
+         && y + h >= camera.Top - lenience 
+         && y <= camera.Bottom + lenience
+        );
+    }
+
+    public static bool IsRectangleVisible(Rectangle rectangle, float lenience = 4f, Camera? camera = null) {
+        return IsRectangleVisible(rectangle.X, rectangle.Y, rectangle.Width, rectangle.Height, lenience, camera);
+    }
+
     /// <summary>
     /// Checks whether the rectangle represented by (x,y,w,h) is visible inside of the camera at a given camera position
     /// </summary>
