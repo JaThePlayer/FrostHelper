@@ -4,6 +4,8 @@ namespace FrostHelper;
 
 [CustomEntity("FrostHelper/StylegroundMoveTrigger")]
 internal class StylegroundMoveTrigger : Trigger {
+    internal class TweenHolder : Entity { }
+
     public string TargetTag;
     public Vector2 Movement;
     public Ease.Easer Easer;
@@ -32,8 +34,11 @@ internal class StylegroundMoveTrigger : Trigger {
         base.OnEnter(player);
 
         var lvl = FrostModule.GetCurrentLevel();
-        HandleRenderer(lvl.Background);
-        HandleRenderer(lvl.Foreground);
+
+        // If we're one use, the RemoveSelf call below would break all tweens if they were attached to this trigger. We'll use a helper entity for those cases.
+        Entity tweenHolder = Once ? ControllerHelper<TweenHolder>.AddToSceneIfNeeded(lvl) : this;
+        HandleRenderer(lvl.Background, tweenHolder);
+        HandleRenderer(lvl.Foreground, tweenHolder);
 
         if (Once)
             RemoveSelf();
@@ -44,7 +49,7 @@ internal class StylegroundMoveTrigger : Trigger {
             backdrop.GetAttached<BackdropHelper.OrigPositionData>().Pos ??= backdrop.Position;
     }
 
-    private void HandleRenderer(BackdropRenderer renderer) {
+    private void HandleRenderer(BackdropRenderer renderer, Entity tweenHolder) {
         var duration = Duration;
 
         if (duration == 0f) {
@@ -64,7 +69,7 @@ internal class StylegroundMoveTrigger : Trigger {
                 continue;
 
             var tween = Tween.Create(Tween.TweenMode.Oneshot, Easer, duration, true);
-            Add(tween);
+            tweenHolder.Add(tween);
 
             var startPos = backdrop.Position;
             var lastEased = tween.Eased;
