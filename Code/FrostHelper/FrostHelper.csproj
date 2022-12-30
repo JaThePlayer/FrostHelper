@@ -39,6 +39,12 @@
     <PackageReference Include="YamlDotNet" PrivateAssets="all" Version="11.2.1">
       <IncludeAssets>compile</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="KeraLua" Version="1.0.22" >
+      <IncludeAssets>compile</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="NLua" Version="1.4.25" >
+      <IncludeAssets>compile</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
 
   <!-- Dependencies -->

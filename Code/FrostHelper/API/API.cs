@@ -1,7 +1,6 @@
 ﻿using FrostHelper.Colliders;
 using FrostHelper.Entities.Boosters;
 using MonoMod.ModInterop;
-using static FrostHelper.CustomSpring;
 
 namespace FrostHelper.API;
 
@@ -194,7 +193,7 @@ public static class API {
     /// <summary>
     /// Checks whether the given spring is a <see cref="CustomSpring"/> with Orientation set to <see cref="CustomOrientations.Ceiling"/>
     /// </summary>
-    public static bool IsCeilingSpring(Spring spring) => spring is CustomSpring { Orientation: CustomOrientations.Ceiling };
+    public static bool IsCeilingSpring(Spring spring) => spring is CustomSpring { Orientation: CustomSpring.CustomOrientations.Ceiling };
 
     /// <summary>
     /// Gets the speed multiplier for a given spring. For vanilla springs, this will return <see cref="Vector2.One"/>

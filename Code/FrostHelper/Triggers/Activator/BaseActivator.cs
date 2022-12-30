@@ -1,4 +1,6 @@
-﻿namespace FrostHelper.Triggers.Activator;
+﻿using System.Configuration;
+
+namespace FrostHelper.Triggers.Activator;
 internal class BaseActivator : Trigger {
     public Vector2[] Nodes;
     public readonly bool OnlyOnce;
@@ -6,10 +8,20 @@ internal class BaseActivator : Trigger {
 
     internal List<Trigger>? ToActivate;
 
+    public ActivationModes ActivationMode;
+    private int _cycleModeIdx;
+
+    public enum ActivationModes {
+        All, // all triggers get activated at once
+        Cycle, // each time this activator gets triggered, the next trigger gets activated, wrapping over to the first one once all other ones have been triggered.
+        Random, // a random (seeded) trigger will be chosen.
+    }
+
     public BaseActivator(EntityData data, Vector2 offset) : base(data, offset) {
         Nodes = data.NodesOffset(offset);
         OnlyOnce = data.Bool("once");
         Delay = data.Float("delay", 0f);
+        ActivationMode = data.Enum("activationMode", ActivationModes.All);
     }
 
     public override void Awake(Scene scene) {
@@ -19,7 +31,7 @@ internal class BaseActivator : Trigger {
 
     public void ActivateAll(Player player) {
         if (Delay == 0) {
-            DoActivateAll(player);
+            InstantActivateAll(player);
         } else {
             Add(new Coroutine(DelayedActivateAll(player)));
         }
@@ -30,21 +42,41 @@ internal class BaseActivator : Trigger {
 
     private IEnumerator DelayedActivateAll(Player player) {
         yield return Delay;
-        DoActivateAll(player);
+        InstantActivateAll(player);
     }
 
-    private void DoActivateAll(Player player) {
+    public void InstantActivateAll(Player player) {
         ToActivate ??= FastCollideAll<Trigger>();
 
-        foreach (var trigger in ToActivate) {
-            if (trigger.Scene is not { })
-                continue;
+        if (ToActivate.Count == 0)
+            return;
 
-            if (trigger.PlayerIsInside) {
-                trigger.OnLeave(player);
-            }
-            trigger.OnEnter(player);
+        switch (ActivationMode) {
+            case ActivationModes.All:
+                foreach (var trigger in ToActivate) {
+                    Activate(player, trigger);
+                }
+                break;
+            case ActivationModes.Cycle:
+                Activate(player, ToActivate[_cycleModeIdx]);
+                _cycleModeIdx = (_cycleModeIdx + 1) % ToActivate.Count;
+                break;
+            case ActivationModes.Random:
+                Activate(player, ToActivate[Calc.Random.Next(0, ToActivate.Count)]);
+                break;
+            default:
+                break;
         }
+    }
+
+    private void Activate(Player player, Trigger trigger) {
+        if (trigger.Scene is null)
+            return;
+
+        if (trigger.PlayerIsInside) {
+            trigger.OnLeave(player);
+        }
+        trigger.OnEnter(player);
     }
 
     private List<T> FastCollideAll<T>() where T : Trigger {

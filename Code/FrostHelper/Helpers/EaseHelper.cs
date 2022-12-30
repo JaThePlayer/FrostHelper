@@ -1,14 +1,55 @@
-﻿namespace FrostHelper;
+﻿using FrostHelper.Helpers;
+
+namespace FrostHelper;
 
 public static class EaseHelper {
+    private static void PrintStack(KeraLua.Lua state) {
+        Console.WriteLine("Stack:");
+        for (int i = 1; i <= state.GetTop(); i++) {
+            Console.WriteLine($"[{i}]: {state.ToString(i)}");
+        }
+    }
+
     /// <returns>An easer of the name specified by <paramref name="name"/>, defaulting to <paramref name="defaultValue"/> or <see cref="Ease.Linear"/> if <paramref name="defaultValue"/> is null </returns>
     public static Ease.Easer GetEase(string name, Ease.Easer? defaultValue = null) {
-        foreach (var propertyInfo in easeProps) {
-            if (name.Equals(propertyInfo.Name, StringComparison.OrdinalIgnoreCase)) {
-                return (Ease.Easer) propertyInfo.GetValue(default(Ease));
-            }
+        Easers.TryGetValue(name, out var ease);
+
+        if (ease == null) {
+            ease = TryLoadLuaEaser(name, ease);
+
+            Easers[name] = ease;
         }
-        return defaultValue ?? Ease.Linear;
+
+        return ease ?? defaultValue ?? Ease.Linear;
+    }
+
+    private static Ease.Easer? TryLoadLuaEaser(string name, Ease.Easer? ease) {
+        var code = $"return function(p){(name.Contains("return") ? "" : " return")} {name} end";
+        try {
+            // repeated calls to LuaFunction.Call eventually crash with a stack overflow....
+            //LuaFunction f = (Everest.LuaLoader.Run(code, code)[0] as LuaFunction)!;
+            // Time to do this ourselves, though this prevents access to c# stuff :(
+            KeraLua.Lua lua = new();
+            if (!lua.DoString(code)) {
+                // no error - lua.DoString's return value is inverted compared to what you might think
+                ease = (p) => {
+                    lua.PushCopy(1);
+                    lua.PushNumber(p);
+                    lua.Call(1, 1);
+                    var ret = lua.ToNumber(2);
+                    lua.Pop(1);
+
+                    return (float) ret;
+                };
+            }
+        } catch (Exception e) {
+            e.LogDetailed();
+        }
+
+        if (ease is null)
+            NotificationHelper.Notify($"Failed to load lua easer '{name}' (generated code: {code}):");
+
+        return ease;
     }
 
     /// <summary>Calls <see cref="GetEaser(string, Ease.Easer)"/> on the <paramref name="data"/>'s attribute <paramref name="key"/>, using <paramref name="defaultValue"/> if it's not a valid easing type/is empty</summary>
@@ -30,5 +71,8 @@ public static class EaseHelper {
         };
     }
 
-    private static readonly FieldInfo[] easeProps = typeof(Ease).GetFields(BindingFlags.Static | BindingFlags.Public);
+    private static readonly Dictionary<string, Ease.Easer?> Easers =
+        typeof(Ease).GetFields(BindingFlags.Static | BindingFlags.Public)
+        .Where(f => f.FieldType == typeof(Ease.Easer))
+        .ToDictionary(f => f.Name, f => (Ease.Easer?)f.GetValue(null), StringComparer.OrdinalIgnoreCase);
 }

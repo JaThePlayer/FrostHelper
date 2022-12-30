@@ -13,11 +13,12 @@ customFireBarrier.depth = -8500
 jautils.createPlacementsPreserveOrder(customFireBarrier, "normal", {
     { "width", 16 },
     { "height", 16 },
-    { "isIce", false },
     { "surfaceColor", "ff8933", "color" },
     { "edgeColor", "f25e29", "color" },
     { "centerColor", "d01c01", "color" },
+    { "silentFlag", "" },
     { "silent", false },
+    { "isIce", false },
     { "ignoreCoreMode", false },
 })
 

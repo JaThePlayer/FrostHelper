@@ -1,5 +1,8 @@
 ﻿namespace FrostHelper.Triggers.Activator;
 
+/// <summary>
+/// Activates triggers when a flag changes, using flag listeners for performance.
+/// </summary>
 [CustomEntity("FrostHelper/OnFlagActivator")]
 internal class OnFlagActivator : BaseActivator {
     public readonly bool TargetValue;
@@ -7,7 +10,7 @@ internal class OnFlagActivator : BaseActivator {
     public OnFlagActivator(EntityData data, Vector2 offset) : base(data, offset) {
         Collidable = false;
 
-        Add(new FlagListener(data.Attr("flag"), OnFlag, data.Bool("mustChange", false)));
+        Add(new FlagListener(data.Attr("flag"), OnFlag, data.Bool("mustChange", false), data.Bool("triggerOnRoomBegin", false)));
         TargetValue = data.Bool("targetState", true);
     }
 

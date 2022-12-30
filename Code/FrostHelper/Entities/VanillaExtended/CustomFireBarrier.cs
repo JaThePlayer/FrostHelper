@@ -13,10 +13,10 @@ public class CustomFireBarrier : Entity {
         Collider = new Hitbox(width, height, 0f, 0f);
         IgnoreCoreMode = data.Bool("ignoreCoreMode", false);
 
-        Add(new PlayerCollider(new Action<Player>(OnPlayer), null, null));
+        Add(new PlayerCollider(OnPlayer, null, null));
 
         if (!IgnoreCoreMode) {
-            Add(new CoreModeListener(new Action<Session.CoreModes>(OnChangeMode)));
+            Add(new CoreModeListener(OnChangeMode));
         }
 
         Lava = new LavaRect(width, height, IsIce ? 2 : 4);
@@ -35,11 +35,32 @@ public class CustomFireBarrier : Entity {
 
         lavaRect = new Rectangle((int) (data.Position + offset).X, (int) (data.Position + offset).Y, (int) width, (int) height);
         Depth = -8500;
-        if (!IsIce && !data.Bool("silent", false)) {
-            Add(idleSfx = new SoundSource());
-            idleSfx.Position = new Vector2(Width, Height) / 2f;
-        }
 
+        var silentFlag = data.Attr("silentFlag");
+        if (!string.IsNullOrWhiteSpace(silentFlag)) {
+            idleSfx = new SoundSource();
+            Add(new FlagListener(silentFlag, onSilentFlagChange, true, true));
+        } else if (!IsIce && !data.Bool("silent", false)) {
+            SetupIdleSfx();
+        }
+    }
+
+    private void onSilentFlagChange(bool value) {
+        // we need to delay adding/removing the sfx, because this func will be called in flagListener.EntityAwake, and the game will crash if something is added at that time :/
+        Scene.OnEndOfFrame += () => {
+            if (value) {
+                SetupIdleSfx();
+            } else {
+                Remove(idleSfx);
+            }
+        };
+    }
+
+    private void SetupIdleSfx() {
+        Add(idleSfx ??= new SoundSource());
+        idleSfx.Position = new Vector2(Width, Height) / 2f;
+        if (idleSfx.EventName is { })
+            idleSfx.Play(idleSfx.EventName);
     }
 
     public void SetCollidable() {

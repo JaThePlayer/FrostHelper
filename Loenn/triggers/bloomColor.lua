@@ -63,35 +63,16 @@ end)
 
 local bloomColorPulse = {
     name = "FrostHelper/BloomColorPulseTrigger",
-    placements = {
-        name = "default",
-        data = {
-            bloomAddFrom = "ffffff",
-            bloomAddTo = "ff00ff",
-            duration = 0.4,
-            easing = "Linear",
-            tweenMode = "YoyoOneshot",
-        }
-    },
-    fieldInformation = {
-        bloomAddFrom = {
-            fieldType = "color",
-            allowXNAColors = true,
-        },
-        bloomAddTo = {
-            fieldType = "color",
-            allowXNAColors = true,
-        },
-        easing = {
-            options = jautils.easings,
-            editable = false
-        },
-        tweenMode = {
-            options = jautils.tweenModes,
-            editable = false,
-        }
-    },
 }
+
+jautils.createPlacementsPreserveOrder(bloomColorPulse, "default", {
+    { "width", 16 }, { "height", 16 },
+    { "bloomAddFrom", "ffffff", "color" },
+    { "bloomAddTo", "ff00ff", "color" },
+    { "tweenMode", "YoyoOneshot", jautils.tweenModes },
+    { "easing", "Linear", jautils.easings },
+    { "duration", 0.4 },
+})
 
 jautils.addExtendedText(bloomColorPulse, function (trigger)
     return string.format("%s -> %s", trigger.bloomAddFrom, trigger.bloomAddTo)

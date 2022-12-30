@@ -27,7 +27,7 @@ entities.FrostHelper/CoreBerry.attributes.description.order=Manually determine w
 entities.FrostHelper/CustomDreamBlock.placements.name.custom_dream_block=Custom Dream Block
 entities.FrostHelper/CustomDreamBlock.attributes.description.old=Reverts the physics to how they used to be in older versions of Frost Helper. Exists for backwards compatibility reasons, not recommended.
 entities.FrostHelper/CustomDreamBlock.attributes.description.moveSpeedMult=The multiplier to use for the speed the block moves at. Fast Moving blocks use 3.0
-entities.FrostHelper/CustomDreamBlock.attributes.description.moveEase=The Easing type to use for the movement of the block.
+entities.FrostHelper/CustomDreamBlock.attributes.description.moveEase=The Easing type used for the movement. You can either pick one of the presets, or write lua code that returns a number (typically between 0.0 and 1.0).\nYour input will be converted to:\nreturn function(p){(name.Contains("return") ? "" : " return")} {name} end\nwhere 'p' is tween.Percent - a number between (0.0, 1.0), which is the percent/100 of the move time elapsed.
 entities.FrostHelper/CustomDreamBlock.attributes.description.speed=The speed the player moves with inside of the block.
 entities.FrostHelper/CustomDreamBlock.attributes.description.fastMoving=Triples the speed the block moves with. For backwards compatibility reasons.
 entities.FrostHelper/CustomDreamBlock.attributes.description.allowRedirects=Whether the player should be able to change the movement direction inside of the block if they have an extra dash.
@@ -159,7 +159,7 @@ entities.FrostHelper/EntityMover.placements.name.normal=Entity Mover
 entities.FrostHelper/EntityMover.attributes.description.mustCollide=Whether the mover should only move entities that are inside of it. If this is false, then all entities in the room which match the whitelist/blacklist will get moved.
 entities.FrostHelper/EntityMover.attributes.description.blacklist=Whether the "types" list is a blacklist or whitelist.
 entities.FrostHelper/EntityMover.attributes.description.types=Comma-seperated list of types that should/shouldn't get moved (depending on the "blacklist" setting). Types should be code type names, including the namespace (use a decompiler to find these). In most cases, this can be left empty with the "blacklist" setting set to "false". 
-entities.FrostHelper/EntityMover.attributes.description.easing=Easing method used for entity movement
+entities.FrostHelper/EntityMover.attributes.description.easing=The Easing type used for the movement. You can either pick one of the presets, or write lua code that returns a number (typically between 0.0 and 1.0).\nYour input will be converted to:\nreturn function(p){(name.Contains("return") ? "" : " return")} {name} end\nwhere 'p' is tween.Percent - a number between (0.0, 1.0), which is the percent/100 of the move time elapsed.
 entities.FrostHelper/EntityMover.attributes.description.moveDuration=How long (in seconds) it takes for this mover to move to its destination
 entities.FrostHelper/EntityMover.attributes.description.relativeMovementMode=If true, entities within the mover get moved the distance from the mover's start position and its destination, instead of moving directly to the destination
 entities.FrostHelper/EntityMover.attributes.description.pauseTimeLength=How long (in seconds) to wait after reaching the destination before moving again
@@ -274,7 +274,7 @@ entities.FrostHelper/StaticBumper.attributes.description.sprite=Name of the spri
 entities.FrostHelper/StaticBumper.attributes.description.respawnTime=Time it takes the bumper to respawn after boosting you
 entities.FrostHelper/StaticBumper.attributes.description.notCoreMode=If set, the bumper will always be blue regardless of core mode
 entities.FrostHelper/StaticBumper.attributes.description.wobble=Whether the bumper should wobble like vanilla ones.
-entities.FrostHelper/StaticBumper.attributes.description.easing=Easing method used for movement
+entities.FrostHelper/StaticBumper.attributes.description.easing=The Easing type used for the movement. You can either pick one of the presets, or write lua code that returns a number (typically between 0.0 and 1.0).\nYour input will be converted to:\nreturn function(p){(name.Contains("return") ? "" : " return")} {name} end\nwhere 'p' is tween.Percent - a number between (0.0, 1.0), which is the percent/100 of the move time elapsed.
 entities.FrostHelper/StaticBumper.attributes.description.moveTime=How long (in seconds) it takes for this bumper to move to its destination
 
 # Skateboard
@@ -455,7 +455,7 @@ triggers.FrostHelper/DoorDisableTrigger.placements.name.default=Disable Door
 triggers.FrostHelper/FlagIfVisibleTrigger.placements.name.default=Flag If Visible
 
 triggers.FrostHelper/TemporaryFlagTrigger.placements.name.default=Temporary Flag
-triggers.FrostHelper/TemporaryFlagTrigger.attributes.description.default=Sets a flag which will get reset automatically when you die
+triggers.FrostHelper/TemporaryFlagTrigger.placements.description.default=Sets a flag which will get reset automatically when you die
 
 triggers.FrostHelper/BloomColorTrigger.placements.name.default=Bloom Color
 
@@ -466,11 +466,74 @@ triggers.FrostHelper/RainbowBloomTrigger.placements.name.default=Rainbow Bloom
 triggers.FrostHelper/BloomColorPulseTrigger.placements.name.default=Bloom Color Pulse
 triggers.FrostHelper/BloomColorPulseTrigger.attributes.name.bloomAddFrom=Pulse From
 triggers.FrostHelper/BloomColorPulseTrigger.attributes.name.bloomAddTo=Pulse To
+triggers.FrostHelper/BloomColorPulseTrigger.attributes.description.easing=The Easing type used for the movement. You can either pick one of the presets, or write lua code that returns a number (typically between 0.0 and 1.0).\nYour input will be converted to:\nreturn function(p){(name.Contains("return") ? "" : " return")} {name} end\nwhere 'p' is tween.Percent - a number between (0.0, 1.0), which is the percent/100 of the move time elapsed.
 
 triggers.FrostHelper/ScreenwideShaderTrigger.placements.name.default=Screenwide Shader
 triggers.FrostHelper/ScreenwideShaderTrigger.attributes.description.effects=A comma-seperated list of effect names that will be activated by this trigger. Effect names provided here should not start with "Effects/"
 
 triggers.FrostHelper/EasedCameraZoomTrigger.placements.name.default=Eased Camera Zoom
+triggers.FrostHelper/EasedCameraZoomTrigger.attributes.description.easing=The Easing type used for the movement. You can either pick one of the presets, or write lua code that returns a number (typically between 0.0 and 1.0).\nYour input will be converted to:\nreturn function(p){(name.Contains("return") ? "" : " return")} {name} end\nwhere 'p' is tween.Percent - a number between (0.0, 1.0), which is the percent/100 of the move time elapsed.
+
+triggers.FrostHelper/StylegroundMoveTrigger.placements.name.default=Styleground Move Trigger
+triggers.FrostHelper/StylegroundMoveTrigger.attributes.description.tag=Only stylegrounds with this tag will be affected.
+triggers.FrostHelper/StylegroundMoveTrigger.attributes.description.easing=The Easing type used for the movement. You can either pick one of the presets, or write lua code that returns a number (typically between 0.0 and 1.0).\nYour input will be converted to:\nreturn function(p){(name.Contains("return") ? "" : " return")} {name} end\nwhere 'p' is tween.Percent - a number between (0.0, 1.0), which is the percent/100 of the move time elapsed.
+triggers.FrostHelper/StylegroundMoveTrigger.attributes.description.duration=How long the movement time is.
+triggers.FrostHelper/StylegroundMoveTrigger.attributes.description.moveByX=How far to move in on the x axis (in pixels).
+triggers.FrostHelper/StylegroundMoveTrigger.attributes.description.moveByY=How far to move in on the y axis (in pixels).
+triggers.FrostHelper/StylegroundMoveTrigger.attributes.description.once=Whether this trigger should only activate once, and then get deleted.
+triggers.FrostHelper/StylegroundMoveTrigger.attributes.description.afterDeath=Determines how the trigger behaves after the player dies and the level reloads.\nReset: Resets the stylegrounds to the position before any movement.\nStay: Makes the styleground stay at the location it was before death, even if it didn't finish moving yet.\nSnapToEnd: Makes the styleground snap to the end position after death. Potentially buggy if you have multiple triggers moving the same stylegrounds...
+
+# Activators
+
+# Delay
+triggers.FrostHelper/DelayActivator.placements.name.default=Activator (Delay)
+triggers.FrostHelper/DelayActivator.placements.description.default=Activates triggers which intersect with the nodes of this trigger, after a given delay.\nNOT COLLIDABLE, requires another Activator to activate this!\nUseful for more complicated systems.
+triggers.FrostHelper/DelayActivator.attributes.description.once=Whether this trigger should only activate once, and then get deleted.
+triggers.FrostHelper/DelayActivator.attributes.description.delay=How long to wait (in seconds) before actually activating the triggers.
+triggers.FrostHelper/DelayActivator.attributes.description.activationMode=How the activation should work:\nAll: All triggers get activated at once.\nCycle: When this trigger activates for the n-th time, the n-th trigger will be chosen.\nRandom: A random (seeded) trigger will be chosen.
+
+# Loop
+triggers.FrostHelper/LoopActivator.placements.name.default=Activator (Loop)
+triggers.FrostHelper/LoopActivator.placements.description.default=Activates triggers which intersect with the nodes of this trigger, once every a given delay.\nNOT COLLIDABLE by the player.
+triggers.FrostHelper/LoopActivator.attributes.description.once=Whether this trigger should only activate once, and then get deleted.
+triggers.FrostHelper/LoopActivator.attributes.description.delay=How long to wait (in seconds) before the first iteration of the loop. After the first iteration, loopTime will be used instead.
+triggers.FrostHelper/LoopActivator.attributes.description.loopTime=How long to wait (in seconds) before each iteration of the loop.
+triggers.FrostHelper/LoopActivator.attributes.description.activationMode=How the activation should work:\nAll: All triggers get activated at once.\nCycle: When this trigger activates for the n-th time, the n-th trigger will be chosen.\nRandom: A random (seeded) trigger will be chosen.
+triggers.FrostHelper/LoopActivator.attributes.description.condition=The flag that needs to be set in order for this to trigger anything. Write a ! at the beginning of the flag name to invert this logic.
+triggers.FrostHelper/LoopActivator.attributes.description.requireActivation=Whether this activator needs to be activated by some other source before starting the loop. If off, the loop will begin as soon as the level begins.
+
+# If
+triggers.FrostHelper/IfActivator.placements.name.default=Activator (If)
+triggers.FrostHelper/IfActivator.placements.description.default=Activates triggers which intersect with the nodes of this trigger, if a condition is met when this trigger gets triggered.\nNOT COLLIDABLE, requires another Activator to activate this!\nUseful for more complicated systems.
+triggers.FrostHelper/IfActivator.attributes.description.once=Whether this trigger should only activate once, and then get deleted.
+triggers.FrostHelper/IfActivator.attributes.description.delay=How long to wait (in seconds) before actually activating the triggers.
+triggers.FrostHelper/IfActivator.attributes.description.activationMode=How the activation should work:\nAll: All triggers get activated at once.\nCycle: When this trigger activates for the n-th time, the n-th trigger will be chosen.\nRandom: A random (seeded) trigger will be chosen.
+triggers.FrostHelper/IfActivator.attributes.description.condition=The flag that needs to be set in order for this to trigger anything. Write a ! at the beginning of the flag name to invert this logic.
+
+# FrostHelper/OnPlayerEnterActivator
+triggers.FrostHelper/OnPlayerEnterActivator.placements.name.default=Activator (On Player Enter)
+triggers.FrostHelper/OnPlayerEnterActivator.placements.description.default=When a player enters this, activates triggers which intersect with the nodes of this trigger, optionally after a given delay.
+triggers.FrostHelper/OnPlayerEnterActivator.attributes.description.once=Whether this trigger should only activate once, and then get deleted.
+triggers.FrostHelper/OnPlayerEnterActivator.attributes.description.delay=How long to wait (in seconds) before actually activating the triggers.
+triggers.FrostHelper/OnPlayerEnterActivator.attributes.description.activationMode=How the activation should work:\nAll: All triggers get activated at once.\nCycle: When this trigger activates for the n-th time, the n-th trigger will be chosen.\nRandom: A random (seeded) trigger will be chosen.
+
+# FrostHelper/OnSpawnActivator
+triggers.FrostHelper/OnSpawnActivator.placements.name.default=Activator (On Spawn)
+triggers.FrostHelper/OnSpawnActivator.placements.description.default=When you load into the room, activates triggers which intersect with the nodes of this trigger, optionally after a given delay.
+triggers.FrostHelper/OnSpawnActivator.attributes.description.once=Whether this trigger should only activate once, and then get deleted.
+triggers.FrostHelper/OnSpawnActivator.attributes.description.delay=How long to wait (in seconds) before actually activating the triggers.
+triggers.FrostHelper/OnSpawnActivator.attributes.description.activationMode=How the activation should work:\nAll: All triggers get activated at once.\nCycle: When this trigger activates for the n-th time, the n-th trigger will be chosen.\nRandom: A random (seeded) trigger will be chosen.
+
+# FrostHelper/OnFlagActivator
+triggers.FrostHelper/OnFlagActivator.placements.name.default=Activator (On Flag)
+triggers.FrostHelper/OnFlagActivator.placements.description.default=As soon as the chosen flag is set, activates triggers which intersect with the nodes of this trigger, optionally after a given delay.\nWorks by listening to calls to Session.SetFlag.
+triggers.FrostHelper/OnFlagActivator.attributes.description.once=Whether this trigger should only activate once, and then get deleted.
+triggers.FrostHelper/OnFlagActivator.attributes.description.delay=How long to wait (in seconds) before actually activating the triggers.
+triggers.FrostHelper/OnFlagActivator.attributes.description.activationMode=How the activation should work:\nAll: All triggers get activated at once.\nCycle: When this trigger activates for the n-th time, the n-th trigger will be chosen.\nRandom: A random (seeded) trigger will be chosen.
+triggers.FrostHelper/OnFlagActivator.attributes.description.flag=Which flag to listen to.
+triggers.FrostHelper/OnFlagActivator.attributes.description.targetState=The state the flag has to be set to for this to activate triggers.
+triggers.FrostHelper/OnFlagActivator.attributes.description.mustChange=Whether the state of the flag must be changed for this to activate triggers.\nFor example if your flag is ON, then a trigger sets it to ON again, if this setting is disabled, then the activator will still trigger.\nHowever, if this setting is enabled, it will not trigger, because the value of this flag didn't change.
+triggers.FrostHelper/OnFlagActivator.attributes.description.triggerOnRoomBegin=Whether this activator should also immediately activate upon loading the room, if the flag is in the correct state.
 
 # other
 ui.fh.attachGroup.tooltip=Assigns this entity a new group that's not yet used in this room

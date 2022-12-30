@@ -11,7 +11,7 @@ local rainbowHelper = require("mods").requireFromPlugin("libraries.rainbowHelper
 
 local jautils = {}
 
-jautils.easings = require("mods").requireFromPlugin("libraries.easings")
+jautils.easings = "FrostHelper.easing"
 jautils.tweenModes = require("mods").requireFromPlugin("libraries.tweenModes")
 --[[
     UTILS
@@ -119,7 +119,7 @@ function jautils.createPlacementsPreserveOrder(handler, placementName, placement
                 -- otherwise just use it normally
                 local typ = type(fieldType)
                 if typ == "table" then
-                    if fieldType[fieldType] then
+                    if fieldType["fieldType"] then
                         -- we have a full field definition here, don't do anything about it
                         fieldInformation[fieldName] = fieldType
                     else
@@ -127,6 +127,7 @@ function jautils.createPlacementsPreserveOrder(handler, placementName, placement
                         fieldInformation[fieldName] = jautils.fieldTypeOverrides.dropdown(fieldType)
                     end
                 else
+                    -- if you just pass a string, treat it as the field type
                     fieldInformation[fieldName] = { fieldType = fieldType }
                 end
             end

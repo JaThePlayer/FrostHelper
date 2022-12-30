@@ -18,6 +18,7 @@ public static class NotificationHelper {
             notification.Time = DateTime.Now;
             notification.Alpha += 0.25f * Notifications.Count;
             Notifications.Add(notification);
+            Logger.Log(notification.Level, "FrostHelper/Notifications", notification.Message);
         }
 
         public NotificationController() : base() {
