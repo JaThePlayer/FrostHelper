@@ -48,7 +48,7 @@ internal class BaseActivator : Trigger {
     public void InstantActivateAll(Player player) {
         ToActivate ??= FastCollideAll<Trigger>();
 
-        if (ToActivate.Count == 0)
+        if (ToActivate.Count == 0 || player is null || player.Scene is null)
             return;
 
         switch (ActivationMode) {

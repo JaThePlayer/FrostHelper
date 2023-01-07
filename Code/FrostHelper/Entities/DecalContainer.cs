@@ -50,7 +50,7 @@ public class DecalContainerMaker : Trigger {
         int newContainers = 0;
         DecalContainer? lastContainer = null;
         foreach (var ent in entities) {
-            if (ent is not Decal item)
+            if (ent is not Decal item || item.Get<MirrorSurface>() is { }) // todo: get rid of this special case maybe maybe
                 continue;
 
             var r = renderers[item.Depth];
