@@ -77,6 +77,9 @@ internal class BaseActivator : Trigger {
             trigger.OnLeave(player);
         }
         trigger.OnEnter(player);
+        // Some triggers only do their thing in OnStay, so let's call that as well
+#warning TODO: Add setting to call this each frame...
+        trigger.OnStay(player);
     }
 
     /// <summary>

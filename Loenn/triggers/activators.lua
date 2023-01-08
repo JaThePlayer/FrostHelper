@@ -40,6 +40,13 @@ return {
             onlyWhenJustLanded = true,
         }
     }),
+    makeActivator("FrostHelper/OnPlayerDashingActivator", {
+        name = "default",
+        data = {
+            onlyWhenJustDashed = true,
+            hasToBeInside = false,
+        }
+    }),
     makeActivator("FrostHelper/OnSpawnActivator", {
         name = "default",
         data = {
