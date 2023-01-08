@@ -34,6 +34,12 @@ return {
         data = {
         }
     }),
+    makeActivator("FrostHelper/OnPlayerOnGroundActivator", {
+        name = "default",
+        data = {
+            onlyWhenJustLanded = true,
+        }
+    }),
     makeActivator("FrostHelper/OnSpawnActivator", {
         name = "default",
         data = {
@@ -78,4 +84,5 @@ return {
     },function (trigger)
         return string.format("%.3f", trigger.loopTime or 0)
     end),
+
 }

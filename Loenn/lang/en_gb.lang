@@ -517,6 +517,14 @@ triggers.FrostHelper/OnPlayerEnterActivator.attributes.description.once=Whether 
 triggers.FrostHelper/OnPlayerEnterActivator.attributes.description.delay=How long to wait (in seconds) before actually activating the triggers.
 triggers.FrostHelper/OnPlayerEnterActivator.attributes.description.activationMode=How the activation should work:\nAll: All triggers get activated at once.\nCycle: When this trigger activates for the n-th time, the n-th trigger will be chosen.\nRandom: A random (seeded) trigger will be chosen.
 
+# FrostHelper/OnPlayerOnGroundActivator
+triggers.FrostHelper/OnPlayerOnGroundActivator.placements.name.default=Activator (On Player On Ground)
+triggers.FrostHelper/OnPlayerOnGroundActivator.placements.description.default=While a player is on the ground while inside of this trigger, activates triggers which intersect with the nodes of this trigger, optionally after a given delay.
+triggers.FrostHelper/OnPlayerOnGroundActivator.attributes.description.once=Whether this trigger should only activate once, and then get deleted.
+triggers.FrostHelper/OnPlayerOnGroundActivator.attributes.description.delay=How long to wait (in seconds) before actually activating the triggers.
+triggers.FrostHelper/OnPlayerOnGroundActivator.attributes.description.activationMode=How the activation should work:\nAll: All triggers get activated at once.\nCycle: When this trigger activates for the n-th time, the n-th trigger will be chosen.\nRandom: A random (seeded) trigger will be chosen.
+triggers.FrostHelper/OnPlayerOnGroundActivator.attributes.description.onlyWhenJustLanded=If enabled, then the trigger will only activate if the player has just landed this frame. Otherwise, it'll activate the triggers each frame the player is on the ground. (If disabled, you should probably make this one use)
+
 # FrostHelper/OnSpawnActivator
 triggers.FrostHelper/OnSpawnActivator.placements.name.default=Activator (On Spawn)
 triggers.FrostHelper/OnSpawnActivator.placements.description.default=When you load into the room, activates triggers which intersect with the nodes of this trigger, optionally after a given delay.

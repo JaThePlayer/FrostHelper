@@ -79,8 +79,27 @@ internal class BaseActivator : Trigger {
         trigger.OnEnter(player);
     }
 
+    /// <summary>
+    /// Struct containing a <typeparamref name="T"/> and an int index. Used because value tuples don't exist in framework :(
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    private struct Indexed<T> {
+        public T Value;
+        public int Index;
+    }
+
     private List<T> FastCollideAll<T>() where T : Trigger {
-        var into = new List<T>();
+        // When we're cycling, the order of triggered triggers should be decided by node order, so that it's manipulatable easily.
+        // In all other modes, order is not important, so we don't sort at all for better performance
+        // Since the index is unnecessary on non-cycle modes, we'll create a List<T> directly, instead of going through Indexed<T> to then re-allocate it into List<T>.
+        // TODO: maybe rewrite into storing the indexes separately, in a stack-allocated buffer??
+        List<T>? into = null;
+        List<Indexed<T>>? intoWithIndexes = null;
+        if (ActivationMode == ActivationModes.Cycle) {
+            intoWithIndexes = new();
+        } else {
+            into = new();
+        }
         var nodes = Nodes;
 
         foreach (T entity in Scene.Tracker.GetEntities<T>()) {
@@ -90,17 +109,37 @@ internal class BaseActivator : Trigger {
             var eRight = ePos.X + eCol.Width;
             var eBottom = ePos.Y + eCol.Height;
 
-            foreach (var node in nodes) {
+            for (int i = 0; i < nodes.Length; i++) {
+                Vector2 node = nodes[i];
                 if (node.X < eRight
                  && node.X > ePos.X
                  && node.Y < eBottom
                  && node.Y > ePos.Y) {
-                    into.Add(entity);
+                    if (into is { })
+                        into.Add(entity);
+                    else
+                        intoWithIndexes!.Add(new() {
+                            Value = entity,
+                            Index = i,
+                        });
                     break;
                 }
             }
-
         }
-        return into;
+
+        // If we have kept track of indexes, then we need to sort
+        if (intoWithIndexes is { }) {
+            intoWithIndexes.Sort((p1, p2) => p2.Index - p1.Index);
+
+            // Now, convert our list to just a List<T>.
+            // Done manually for performance and less allocations.
+            into = new(intoWithIndexes.Count);
+            foreach (var item in intoWithIndexes) {
+                into.Add(item.Value);
+            }
+        }
+        
+
+        return into!;
     }
 }
