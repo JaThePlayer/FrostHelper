@@ -1,6 +1,5 @@
-﻿using System.Configuration;
+﻿namespace FrostHelper.Triggers.Activator;
 
-namespace FrostHelper.Triggers.Activator;
 internal class BaseActivator : Trigger {
     public Vector2[] Nodes;
     public readonly bool OnlyOnce;
@@ -46,6 +45,7 @@ internal class BaseActivator : Trigger {
     }
 
     public void InstantActivateAll(Player player) {
+        // There's a chance for an activator to get triggered *before* Awake.
         ToActivate ??= FastCollideAll<Trigger>();
 
         if (ToActivate.Count == 0 || player is null || player.Scene is null)
@@ -107,7 +107,7 @@ internal class BaseActivator : Trigger {
 
         foreach (T entity in Scene.Tracker.GetEntities<T>()) {
             var ePos = entity.Position;
-            var eCol = (Hitbox)entity.Collider;
+            var eCol = (Hitbox) entity.Collider;
 
             var eRight = ePos.X + eCol.Width;
             var eBottom = ePos.Y + eCol.Height;
@@ -141,7 +141,7 @@ internal class BaseActivator : Trigger {
                 into.Add(item.Value);
             }
         }
-        
+
 
         return into!;
     }

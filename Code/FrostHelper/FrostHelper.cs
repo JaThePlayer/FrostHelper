@@ -16,31 +16,6 @@ public class FrostHelperSettings : EverestModuleSettings {
     public bool HookLazyLoading { get; set; } = false;
 
     [YamlIgnore]
-    private bool _wireCulling = false; 
-    
-    [SettingSubText("""
-        [EXPERIMENTAL]
-        Culls Wires, Cobwebs and Flaglines,
-        making them not render if not visible.
-        Make sure to report any issues if using this!
-        """)]
-    public bool WireCulling {
-        get => _wireCulling;
-        set {
-            switch (value) {
-                case true:
-                    FlaglineCull.Load();
-                    break;
-                case false:
-                    FlaglineCull.Unload();
-                    break;
-            }
-
-            _wireCulling = value;
-        }
-    }
-
-    [YamlIgnore]
     private bool _fastShapeDraw = false;
     [SettingSubText("""
         [EXPERIMENTAL]
@@ -61,6 +36,31 @@ public class FrostHelperSettings : EverestModuleSettings {
             }
 
             _fastShapeDraw = value;
+        }
+    }
+
+    [YamlIgnore]
+    private bool _noRespawnGC = false;
+    [SettingSubText("""
+        [EXPERIMENTAL]
+        Removes the aggressive GC call in Level.Reload.
+        In some cases, this can massively reduce load times.
+        Make sure to report any new lag spikes if using this!
+        """)]
+    [SettingName("No Respawn GC")]
+    public bool NoRespawnGC {
+        get => _noRespawnGC;
+        set {
+            switch (value) {
+                case true:
+                    ReloadGCEdit.Load();
+                    break;
+                case false:
+                    ReloadGCEdit.Unload();
+                    break;
+            }
+
+            _noRespawnGC = value;
         }
     }
 }

@@ -13,6 +13,8 @@ public class CustomZipMover : Solid {
         Core,
         Custom
     }
+
+    // TODO: this is absolutely awful, fix this!!!
     string innercogstr;
     string cogstr;
     string blockstr;
@@ -143,7 +145,7 @@ public class CustomZipMover : Solid {
                 throw new ArgumentOutOfRangeException("color", data.Enum("color", LineColor.Normal), null);
         }
         if (isCore) {
-            Add(new CoreModeListener(new Action<Session.CoreModes>(OnChangeMode)));
+            Add(new CoreModeListener(OnChangeMode));
         }
         ropeColor = ColorHelper.GetColor(hexcolor);
         ropeLightColor = ColorHelper.GetColor(hexlightcolor);
@@ -251,6 +253,9 @@ public class CustomZipMover : Solid {
 
     bool FillMiddle;
     public override void Render() {
+        if (!CameraCullHelper.IsRectangleVisible(Collider.Bounds))
+            return;
+
         Vector2 position = Position;
         Position += Shake;
         if (FillMiddle)
@@ -409,6 +414,9 @@ public class CustomZipMover : Solid {
         }
 
         public override void Render() {
+            if (!CameraCullHelper.IsRectVisible(FrostModule.GetCurrentLevel().Camera.Position, from, to))
+                return;
+
             cog = GFX.Game[CustomZipMover.cogstr];
             //if (CustomZipMover.iceMode & CustomZipMover.isCore)
             //{

@@ -62,7 +62,6 @@ public class DecalContainerMaker : Trigger {
 
             total++;
 
-#if NEW_IMPL
             DecalContainer? newContainer = null;
             var containers = r.Containers;
             for (int i = containers.Count - 1; i >= 0; i--) {
@@ -93,15 +92,6 @@ public class DecalContainerMaker : Trigger {
             if (newContainer is { }) {
                 r.Containers.Add(newContainer);
             }
-#else
-            // causes decal render order changes
-            foreach (var c in r.Containers) {
-                if (c.IsDecalValid(item)) {
-                    c.AddDecal(item);
-                    break;
-                }
-            }
-#endif
         }
 
 #if DEBUG_DISPLAY

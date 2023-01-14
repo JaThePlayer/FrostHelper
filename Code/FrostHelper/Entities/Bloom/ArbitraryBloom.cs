@@ -63,6 +63,11 @@ public class ArbitraryBloomRenderer : Entity {
                 }
             }
         }
+
+        if (index < 3) {
+            return;
+        }
+
         var cam = SceneAs<Level>().Camera.Matrix;
 
         Draw.SpriteBatch.End();

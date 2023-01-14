@@ -395,6 +395,10 @@ entities.FrostHelper/DecalContainer.attributes.description.chunkSizeInTiles=How 
 
 entities.FrostHelper/DashBlockDestroyAttached.placements.name.default=Dash Block (Destroy Attached)
 
+entities.FrostHelper/CustomInvisibleBarrier.placements.name.default=Custom Invisible Barrier
+entities.FrostHelper/CustomInvisibleBarrier.attributes.description.blockClimbing=Whether this barrier should block climbing on it.
+entities.FrostHelper/CustomInvisibleBarrier.attributes.description.soundIndex=The sound used when the player is interacting with this barrier.
+
 # -- Mod Names --
 # mods.modName.*
 mods.FrostHelper.name=Frost Helper
@@ -552,6 +556,15 @@ triggers.FrostHelper/OnFlagActivator.attributes.description.flag=Which flag to l
 triggers.FrostHelper/OnFlagActivator.attributes.description.targetState=The state the flag has to be set to for this to activate triggers.
 triggers.FrostHelper/OnFlagActivator.attributes.description.mustChange=Whether the state of the flag must be changed for this to activate triggers.\nFor example if your flag is ON, then a trigger sets it to ON again, if this setting is disabled, then the activator will still trigger.\nHowever, if this setting is enabled, it will not trigger, because the value of this flag didn't change.
 triggers.FrostHelper/OnFlagActivator.attributes.description.triggerOnRoomBegin=Whether this activator should also immediately activate upon loading the room, if the flag is in the correct state.
+
+# FrostHelper/NoMovementTrigger
+triggers.FrostHelper/NoMovementTrigger.placements.name.default=No Movement
+triggers.FrostHelper/NoMovementTrigger.placements.description.default=Disables walking.
+
+# effects
+style.effects.FrostHelper/ShaderWrapper.name=Shader Wrapper
+style.effects.FrostHelper/ShaderWrapper.description.wrappedTag=The tag which will be affected by this wrapper.
+style.effects.FrostHelper/ShaderWrapper.description.shader=The path to the shader to use with this backdrop, relative to the Effects/ folder
 
 # other
 ui.fh.attachGroup.tooltip=Assigns this entity a new group that's not yet used in this room
