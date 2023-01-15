@@ -396,7 +396,7 @@ entities.FrostHelper/DecalContainer.attributes.description.chunkSizeInTiles=How 
 entities.FrostHelper/DashBlockDestroyAttached.placements.name.default=Dash Block (Destroy Attached)
 
 entities.FrostHelper/CustomInvisibleBarrier.placements.name.default=Custom Invisible Barrier
-entities.FrostHelper/CustomInvisibleBarrier.attributes.description.blockClimbing=Whether this barrier should block climbing on it.
+entities.FrostHelper/CustomInvisibleBarrier.attributes.description.canClimb=Whether you can climb on this barrier.
 entities.FrostHelper/CustomInvisibleBarrier.attributes.description.soundIndex=The sound used when the player is interacting with this barrier.
 
 # -- Mod Names --

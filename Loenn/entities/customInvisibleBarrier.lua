@@ -8,7 +8,7 @@ local barrier = {
 }
 
 jautils.createPlacementsPreserveOrder(barrier, "default", {
-    { "blockClimbing", true },
+    { "canClimb", false },
     { "soundIndex", 33, "editableDropdown", celesteEnums.tileset_sound_ids },
 }, true)
 
