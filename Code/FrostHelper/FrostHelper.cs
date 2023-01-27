@@ -406,6 +406,15 @@ public class FrostModule : EverestModule {
         };
     }
 
+    public static Level? TryGetCurrentLevel() {
+        return Engine.Scene switch {
+            Level level => level,
+            LevelLoader loader => loader.Level,
+            AssetReloadHelper => (Level) AssetReloadHelper.ReturnToScene,
+            _ => null
+        };
+    }
+
     [Command("gc", "[Frost Helper] Forces an aggresive GC run")]
     public static void CmdGC() {
         for (int i = 0; i < 5; i++) {

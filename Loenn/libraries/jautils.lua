@@ -563,4 +563,54 @@ function jautils.addExtendedText(triggerHandler, getter)
     return triggerHandler
 end
 
+--[[
+    Rotations
+]]
+
+local function indexof(keyvaluetable, toFind)
+    for key, val in pairs(keyvaluetable) do
+        if val == toFind then
+            return key
+        end
+    end
+end
+
+---Returns a handler function to implement entity.rotate(room, entity, direction), where the entity's _name field will get changed according to the rotations table
+---@param rotations table { [0] = "upName", [1] = "rightName", [2] = "downName", [3] = "leftName" }
+---@return function
+function jautils.getNameRotationHandler(rotations)
+    return function (room, entity, direction)
+        local startIndex = indexof(rotations, entity._name)
+
+        local realIndex = (startIndex + direction) % 4
+
+        entity._name = rotations[realIndex]
+
+        return true
+    end
+end
+
+---Returns a handler function to implement entity.flip(room, entity, horizontal, vertical), where the entity's _name field will get changed according to the rotations table
+---@param rotations table { [0] = "upName", [1] = "rightName", [2] = "downName", [3] = "leftName" }
+---@return function
+function jautils.getNameFlipHandler(rotations)
+    return function (room, entity, horizontal, vertical)
+        local startIndex = indexof(rotations, entity._name)
+
+        if vertical then
+            if startIndex == 0 or startIndex == 2 then
+                entity._name = rotations[(startIndex + 2) % 4]
+                return true
+            end
+        else
+            if startIndex == 1 or startIndex == 3 then
+                entity._name = rotations[(startIndex + 2) % 4]
+                return true
+            end
+        end
+
+        return false
+    end
+end
+
 return jautils

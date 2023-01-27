@@ -49,6 +49,23 @@ jautils.addPlacement(directionalPuffer, "spiky", {
     { "eyeColor", "c6845e" },
 })
 
+function directionalPuffer.flip(room, entity, horizontal, vertical)
+    if vertical then
+        return false
+    end
+
+    entity.right = not entity.right
+    if entity.explodeDirection == "Left" then
+        entity.explodeDirection = "Right"
+        entity.right = true
+    elseif entity.explodeDirection == "Right" then
+        entity.explodeDirection = "Left"
+        entity.right = false
+    end
+
+    return true
+end
+
 function directionalPuffer.sprite(room, entity)
     local sprites = jautils.getOutlinedSpriteFromPath(entity, (entity.directory or "objects/puffer/") .. "idle00", entity.color, nil, entity.right and 1 or -1)
 

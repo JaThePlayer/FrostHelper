@@ -30,7 +30,7 @@ public class ShaderWrapperBackdrop : Backdrop {
         var prevBlendState = gd.BlendState;
         var tempBuffer = RenderTargetHelper<ShaderWrapperBackdrop>.Get();
         var eff = ShaderHelperIntegration.GetEffect(ShaderName);
-        ShaderHelperIntegration.ApplyStandardParameters(eff);
+        ShaderHelperIntegration.ApplyStandardParameters(eff, camera: null);
 
         Renderer.EndSpritebatch();
         gd.SetRenderTarget(tempBuffer);

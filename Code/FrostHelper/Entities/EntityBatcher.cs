@@ -201,7 +201,6 @@ public class EntityBatcher : Entity {
                 break;
             default:
                 throw new Exception("Mask shaders need a 'maskShader' parameter!");
-                break;
         }
 
         shader.ApplyParametersFrom(shaderParameters, false);

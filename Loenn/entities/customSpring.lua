@@ -4,6 +4,13 @@ local jautils = require("mods").requireFromPlugin("libraries.jautils")
 local springDepth = -8501
 local springTexture = "objects/spring/00"
 
+local rotations = {
+    [0] = "FrostHelper/SpringFloor",
+    [1] = "FrostHelper/SpringLeft",
+    [2] = "FrostHelper/SpringCeiling",
+    [3] = "FrostHelper/SpringRight",
+}
+
 local function getSprite(entity)
     local sprite = drawableSpriteStruct.fromTexture((entity.directory .. "00") or springTexture, entity)
 
@@ -17,19 +24,6 @@ end
 local function createSpringHandler(name, spriteRotation, speedAsVector)
     local handler = {
         name = name,
-        --[[
-        placements = {
-            name = "normal",
-            data = {
-                playerCanUse = true,
-                directory = "objects/spring/",
-                speedMult = speedAsVector and "1.0" or 1.0,
-                oneUse = false,
-                renderOutline = true,
-
-            }
-        },
-        ]]
 
         depth = springDepth,
         sprite = function (room, entity)
@@ -56,6 +50,8 @@ local function createSpringHandler(name, spriteRotation, speedAsVector)
             sprite.rotation = spriteRotation
             return sprite:getRectangle()
         end,
+        rotate = jautils.getNameRotationHandler(rotations),
+        flip = jautils.getNameFlipHandler(rotations)
     }
 
     jautils.createPlacementsPreserveOrder(handler, "normal", {
@@ -71,9 +67,9 @@ local function createSpringHandler(name, spriteRotation, speedAsVector)
     return handler
 end
 
-local springUp = createSpringHandler("FrostHelper/SpringFloor", 0)
-local springCeiling = createSpringHandler("FrostHelper/SpringCeiling", math.pi)
+local springUp = createSpringHandler("FrostHelper/SpringFloor", 0, false)
 local springRight = createSpringHandler("FrostHelper/SpringRight", -math.pi / 2, true)
+local springCeiling = createSpringHandler("FrostHelper/SpringCeiling", math.pi, false)
 local springLeft = createSpringHandler("FrostHelper/SpringLeft", math.pi / 2, true)
 
 return {

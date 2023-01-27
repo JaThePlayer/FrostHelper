@@ -44,6 +44,8 @@ public static class ShaderHelperIntegration {
                     }
 
                     Logger.Log(LogLevel.Info, "FrostHelper.ShaderHelper", $"Reloaded {effectName}");
+                }, () => {
+                    FrostModule.TryGetCurrentLevel()?.Reload();
                 });
 
             } catch (Exception e) {
@@ -92,7 +94,7 @@ public static class ShaderHelperIntegration {
         FallbackEffectDict;
 #endif
 
-    public static Effect GetEffect(string id) {
+    public static Effect? TryGetEffect(string id) {
         id = id.Replace('\\', '/');
 
         if (GetShaderHelperEffects().TryGetValue(id, out var eff)) {
@@ -111,21 +113,28 @@ public static class ShaderHelperIntegration {
             }
         }
 
-        //throw new MissingShaderException(id);
+        return null;
+    }
+
+    public static Effect GetEffect(string id) {
+        if (TryGetEffect(id) is { } s)
+            return s;
+
         NotificationHelper.Notify($"Shader not found: {id}");
         return GFX.FxTexture;
     }
 
     public static Effect BeginGameplayRenderWithEffect(string id, bool endBatch) {
         Effect effect = GetEffect(id);
+        var cam = GameplayRenderer.instance.Camera;
 
-        ApplyStandardParameters(effect);
+        ApplyStandardParameters(effect, cam);
 
         if (endBatch) {
             Draw.SpriteBatch.End();
         }
 
-        Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointWrap, DepthStencilState.None, RasterizerState.CullNone, effect, FrostModule.GetCurrentLevel().Camera.Matrix);
+        Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointWrap, DepthStencilState.None, RasterizerState.CullNone, effect, cam.Matrix);
 
         return effect;
     }
@@ -156,8 +165,7 @@ public static class ShaderHelperIntegration {
         GameplayRenderer.End();
 
         Effect eff = GetEffect(id);
-        eff.Parameters["Time"].SetValue(Engine.Scene.TimeActive);
-        eff.Parameters["camPos"].SetValue(c.Position);
+        ApplyStandardParameters(eff, camera: null);
 
         Engine.Instance.GraphicsDevice.SetRenderTarget(GameplayBuffers.Gameplay);
 
@@ -170,7 +178,7 @@ public static class ShaderHelperIntegration {
         GameplayRenderer.Begin();
     }
 
-    public static void ApplyStandardParameters(Effect effect) {
+    public static Effect ApplyStandardParameters(this Effect effect, Camera? camera) {
         var level = FrostModule.GetCurrentLevel() ?? throw new Exception("Not in a level when applying shader parameters! How did you...");
         var parameters = effect.Parameters;
 
@@ -179,6 +187,17 @@ public static class ShaderHelperIntegration {
         parameters["Dimensions"]?.SetValue(new Vector2(320, 180) * HDlesteCompat.Scale);
         parameters["CamPos"]?.SetValue(level.Camera.Position);
         parameters["ColdCoreMode"]?.SetValue(level.CoreMode == Session.CoreModes.Cold);
+
+        Viewport viewport = Engine.Graphics.GraphicsDevice.Viewport;
+
+        Matrix projection = Matrix.CreateOrthographicOffCenter(0, viewport.Width, viewport.Height, 0, 0, 1);
+        Matrix halfPixelOffset = Matrix.Identity;
+
+        parameters["TransformMatrix"]?.SetValue(halfPixelOffset * projection);
+
+        parameters["ViewMatrix"]?.SetValue(camera?.Matrix ?? Matrix.Identity);
+
+        return effect;
     }
 
     public static void ApplyParametersFrom(this Effect shader, Dictionary<string, string> parameters) {
