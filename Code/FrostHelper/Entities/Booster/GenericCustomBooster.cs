@@ -1,4 +1,5 @@
 ﻿using Celeste.Mod.Meta;
+using FrostHelper.Helpers;
 using FrostHelper.ModIntegration;
 
 #if PLAYERSTATEHELPER
@@ -64,8 +65,8 @@ namespace FrostHelper.Entities.Boosters {
                 cursor.EmitDelegate((Player self) => {
                     if (GetBoosterThatIsBoostingPlayer(self) is { BoostingPlayer: true }) {
                         FrostModule.player_calledDashEvents.SetValue(self, false);
-                        // new
-                        new DynData<Player>(self).Set<GenericCustomBooster>("fh.customBooster", null!);
+
+                        self.SetAttached<GenericCustomBooster>(null!);
                         return false;
                     }
 
@@ -118,6 +119,7 @@ namespace FrostHelper.Entities.Boosters {
         public string endSfx;
         public float BoostTime;
         public Color ParticleColor;
+        public Color OutlineColor;
         public bool Red;
         public float RespawnTime;
         public bool PreserveSpeed;
@@ -148,16 +150,16 @@ namespace FrostHelper.Entities.Boosters {
             sprite.Play("loop", false);
             Add(sprite);
 
-            Add(new PlayerCollider(new Action<Player>(OnPlayer), null, null));
+            Add(new PlayerCollider(OnPlayer, null, null));
             Add(light = new VertexLight(Color.White, 1f, 16, 32));
             Add(bloom = new BloomPoint(0.1f, 16f));
-            Add(wiggler = Wiggler.Create(0.5f, 4f, delegate (float f) {
+            Add(wiggler = Wiggler.Create(0.5f, 4f, f => {
                 sprite.Scale = Vector2.One * (1f + f * 0.25f);
             }, false, false));
             Add(dashRoutine = new Coroutine(false));
 
             Add(dashListener = new DashListener());
-            dashListener.OnDash = new Action<Vector2>(OnPlayerDashed);
+            dashListener.OnDash = OnPlayerDashed;
 
             Add(new MirrorReflection());
             Add(loopingSfx = new SoundSource());
@@ -174,6 +176,7 @@ namespace FrostHelper.Entities.Boosters {
             endSfx = data.Attr("releaseSfx", "event:/game/04_cliffside/greenbooster_end");
             DashRecovery = data.Int("dashes", -1);
             PreserveSpeed = data.Bool("preserveSpeed", false);
+            OutlineColor = data.GetColor("outlineColor", "000000");
         }
 
         public override void Added(Scene scene) {
@@ -227,7 +230,7 @@ namespace FrostHelper.Entities.Boosters {
             EnterSpeed = player.Speed;
             player.Speed = Vector2.Zero;
             player.boostRed = Red;
-            FrostModule.player_boostTarget.SetValue(player, Center);
+            player.boostTarget = Center;
             StartedBoosting = true;
         }
 
@@ -342,8 +345,8 @@ namespace FrostHelper.Entities.Boosters {
                 //sprite.Position = player.Center + Booster.playerOffset - Position;
 
                 // if the player is far away, render the outline because clearly the bubble got moved
-                if (Vector2.DistanceSquared(Position, player.Center) > 16f * 16f)
-                    outline.Visible = true;
+                //if (Vector2.DistanceSquared(Position, player.Center) > 16f * 16f)
+                //    outline.Visible = true;
             }
 
             if (sprite.CurrentAnimationID == "inside" && !BoostingPlayer && (player is null || !CollideCheck(player))) {
@@ -354,12 +357,16 @@ namespace FrostHelper.Entities.Boosters {
         public override void Render() {
             Vector2 position = sprite.Position;
             sprite.Position = position.Floor();
+            var lastOutlineVisible = outline.Visible;
 
-            if (sprite.CurrentAnimationID != "pop" && sprite.Visible) {
-                sprite.DrawOutline(1);
+            if (sprite.Visible && sprite.CurrentAnimationID != "pop") {
+                if (OutlineColor.A > 0)
+                    sprite.DrawOutline(OutlineColor, 1);
+                outline.Visible = false;
             }
             base.Render();
             sprite.Position = position;
+            outline.Visible = lastOutlineVisible;
         }
 
         public virtual void HandleDashRefill(Player player) {
@@ -469,11 +476,11 @@ namespace FrostHelper.Entities.Boosters {
 
         public static int RedDashUpdate(Entity e) {
             Player player = (e as Player)!;
-            DynData<Player> data = new DynData<Player>(player);
 
-            data["StartedDashing"] = false;
+            player.StartedDashing = false;
             bool ch9hub = false;//this.LastBooster != null && this.LastBooster.Ch9HubTransition;
-            data["gliderBoostTimer"] = 0.05f;
+            player.gliderBoostTimer = 0.05f;
+
             if (player.CanDash) {
                 foreach (GenericCustomBooster b in player.Scene.Tracker.SafeGetEntities<GenericCustomBooster>()) {
                     if (b.BoostingPlayer) {
@@ -483,6 +490,7 @@ namespace FrostHelper.Entities.Boosters {
                 }
                 return player.StartDash();
             }
+
             if (player.DashDir.Y == 0f) {
                 foreach (Entity entity in player.Scene.Tracker.SafeGetEntities<JumpThru>()) {
                     JumpThru jumpThru = (JumpThru) entity;
@@ -490,13 +498,14 @@ namespace FrostHelper.Entities.Boosters {
                         player.MoveVExact((int) (jumpThru.Top - player.Bottom), null, null);
                     }
                 }
-                if (player.CanUnDuck && Input.Jump.Pressed && data.Get<float>("jumpGraceTimer") > 0f && !ch9hub) {
+                if (player.CanUnDuck && Input.Jump.Pressed && player.jumpGraceTimer > 0f && !ch9hub) {
                     player.SuperJump();
                     return 0;
                 }
             }
+
             if (!ch9hub) {
-                if (data.Get<bool>("SuperWallJumpAngleCheck")) {
+                if (player.SuperWallJumpAngleCheck) {
                     if (Input.Jump.Pressed && player.CanUnDuck) {
                         if (player.WallJumpCheck(1)) {
                             player.SuperWallJump(-1);
@@ -562,14 +571,14 @@ namespace FrostHelper.Entities.Boosters {
 
         public static void BoostBegin(Entity e) {
             Player player = (e as Player)!;
-            GetBoosterThatIsBoostingPlayer(player).HandleBoostBegin(player);
+            GetBoosterThatIsBoostingPlayer(player)?.HandleBoostBegin(player);
         }
 
         public static int BoostUpdate(Entity e) {
             Player player = (e as Player)!;
             var booster = GetBoosterThatIsBoostingPlayer(player);
 
-            Vector2 boostTarget = GravityHelperIntegration.InvertIfPlayerInverted( (Vector2) FrostModule.player_boostTarget.GetValue(player));
+            Vector2 boostTarget = GravityHelperIntegration.InvertIfPlayerInverted(player.boostTarget);
             Vector2 value = Input.Aim.Value * 3f;
             Vector2 vector = Calc.Approach(player.ExactPosition, boostTarget - player.Collider.Center + value, 80f * Engine.DeltaTime);
             player.MoveToX(vector.X, null);
@@ -592,19 +601,18 @@ namespace FrostHelper.Entities.Boosters {
             player.MoveToX(vector.X, null);
             player.MoveToY(vector.Y, null);
 
-            GetBoosterThatIsBoostingPlayer(player).OnBoostEnd(player);
-            //new DynData<Player>(player).Set<GenericCustomBooster>("fh.customBooster", null!);
+            GetBoosterThatIsBoostingPlayer(player)?.OnBoostEnd(player);
         }
 
         public static IEnumerator BoostCoroutine(Entity e) {
             Player player = (e as Player)!;
-            GenericCustomBooster booster = GetBoosterThatIsBoostingPlayer(player);
+            var booster = GetBoosterThatIsBoostingPlayer(player) ?? throw new NullReferenceException("booster");
 
             return booster.HandleBoostCoroutine(player);
         }
 
-        public static GenericCustomBooster GetBoosterThatIsBoostingPlayer(Player e) {
-            return (GenericCustomBooster)new DynData<Player>(e)["fh.customBooster"];
+        public static GenericCustomBooster? GetBoosterThatIsBoostingPlayer(Player e) {
+            return e.TryGetAttached<GenericCustomBooster>();
         }
 
         #endregion

@@ -661,12 +661,10 @@ public class CustomDreamBlock : Solid {
 
     private static void Player_OnCollideH(On.Celeste.Player.orig_OnCollideH orig, Player self, CollisionData data) {
         if (self.StateMachine.State == Player.StDash || self.StateMachine.State == Player.StRedDash) {
-            bool flag14 = DreamDashCheck(self, Vector2.UnitX * Math.Sign(self.Speed.X));
-            if (flag14) {
+            if (DreamDashCheck(self, Vector2.UnitX * Math.Sign(self.Speed.X))) {
                 self.StateMachine.State = FrostModule.CustomDreamDashState;
-                DynData<Player> ddata = new DynData<Player>(self);
-                ddata.Set("dashAttackTimer", 0f);
-                ddata.Set("gliderBoostTimer", 0f);
+                self.dashAttackTimer = 0f;
+                self.gliderBoostTimer = 0f;
                 return;
             }
         }

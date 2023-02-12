@@ -3,7 +3,7 @@
 namespace FrostHelper.Triggers.Activator;
 
 [CustomEntity("FrostHelper/LoopActivator")]
-internal class LoopActivator : BaseActivator {
+internal sealed class LoopActivator : BaseActivator {
     public Condition Condition;
 
     // Whether this activator needs to be activated by some other source before starting the loop.
@@ -11,13 +11,15 @@ internal class LoopActivator : BaseActivator {
 
     public float LoopTime;
 
+    private Coroutine? Coroutine;
+
     public LoopActivator(EntityData data, Vector2 offset) : base(data, offset) {
         Condition = data.GetCondition("condition");
         RequireActivation = data.Bool("requireActivation");
         LoopTime = data.Float("loopTime");
 
         if (!RequireActivation)
-            Add(new Coroutine(LoopingRoutine()));
+            StartLoopIfNeeded();
         Collidable = false;
     }
 
@@ -25,7 +27,18 @@ internal class LoopActivator : BaseActivator {
         base.OnEnter(player);
 
         if (RequireActivation)
-            Add(new Coroutine(LoopingRoutine()));
+            StartLoopIfNeeded();
+    }
+
+    private void StartLoopIfNeeded() {
+        Coroutine ??= new Coroutine(LoopingRoutine());
+    }
+
+    public override void Update() {
+        if (Coroutine is { } c) {
+            c.Update();
+            CallOnStay();
+        }
     }
 
     public IEnumerator LoopingRoutine() {

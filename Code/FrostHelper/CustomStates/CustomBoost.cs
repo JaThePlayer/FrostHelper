@@ -41,7 +41,7 @@ namespace FrostHelper.CustomStates
             Vector2 vector = (boostTarget - Player.Collider.Center).Floor();
             Player.MoveToX(vector.X, null);
             Player.MoveToY(vector.Y, null);
-            new DynData<Player>(Player).Set<GenericCustomBooster>("fh.customBooster", null);
+            Player.SetAttached<GenericCustomBooster>(null!);
         }
 
         public override string GetCelesteStudioDisplayName() => "Custom Boost";

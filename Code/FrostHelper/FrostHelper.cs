@@ -388,6 +388,22 @@ public class FrostModule : EverestModule {
         return parsed;
     }
 
+    /// <summary>
+    /// Returns a hash set of types from a comma-separated string of types
+    /// </summary>
+    public static HashSet<Type> GetTypesAsHashSet(string typeString) {
+        if (typeString == string.Empty) {
+            return new();
+        }
+
+        string[] split = typeString.Trim().Split(',');
+        var parsed = new HashSet<Type>();
+        for (int i = 0; i < split.Length; i++) {
+            parsed.Add(TypeHelper.EntityNameToType(split[i].Trim()));
+        }
+        return parsed;
+    }
+
     public static char[] GetCharArrayFromCommaSeparatedList(string list) {
         string[] split = list.Trim().Split(',');
         char[] ret = new char[split.Length];

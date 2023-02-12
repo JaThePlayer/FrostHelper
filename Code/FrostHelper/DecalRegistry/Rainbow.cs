@@ -1,4 +1,5 @@
-﻿using System.Xml;
+﻿using FrostHelper.Helpers;
+using System.Xml;
 
 namespace FrostHelper.DecalRegistry;
 
@@ -6,14 +7,18 @@ public static class Rainbow {
     [OnLoad]
     public static void Load() {
         Celeste.Mod.DecalRegistry.AddPropertyHandler("frosthelper.rainbow", (Decal decal, XmlAttributeCollection attrs) => {
-            decal.Add(new DecalRainbowifier());
+            decal.GetOrCreateAttached<RainbowDecalMarker>();
         });
     }
 }
 
-public class DecalRainbowifier : Component {
+file sealed class RainbowDecalMarker {
+    internal RainbowDecalMarker() {
+        LoadHooksIfNeeded();
+    }
+
     private static bool _loaded;
-    public static void LoadHooks() {
+    public static void LoadHooksIfNeeded() {
         if (!_loaded) {
             _loaded = true;
             IL.Celeste.Decal.Banner.Render += AllowColorChange;
@@ -45,14 +50,10 @@ public class DecalRainbowifier : Component {
     }
 
     private static Color GetColor(Color orig, Component self) {
-        if (self.Entity.Get<DecalRainbowifier>() != null) {
+        if (self.Entity.TryGetAttached<RainbowDecalMarker>() != null) {
             return ColorHelper.GetHue(self.Scene, self.Entity.Position);
         } else {
             return orig;
         }
-    }
-
-    public DecalRainbowifier() : base(false, false) {
-        LoadHooks();
     }
 }

@@ -4,7 +4,7 @@
 /// Activates triggers on room load
 /// </summary>
 [CustomEntity("FrostHelper/OnSpawnActivator")]
-internal class OnSpawnActivator : BaseActivator {
+internal sealed class OnSpawnActivator : BaseActivator {
     public OnSpawnActivator(EntityData data, Vector2 offset) : base(data, offset) {
         Collidable = false;
     }

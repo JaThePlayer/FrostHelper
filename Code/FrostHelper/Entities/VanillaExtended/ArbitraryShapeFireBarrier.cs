@@ -47,7 +47,7 @@ public class ArbitraryShapeFireBarrier : Entity {
         Edges[Edges.Length - 1] = new ThunderRenderer.Edge(this, nodes[nodes.Length - 1] - Position, Vector2.Zero);*/
 
         Collider = new ShapeHitbox(input);
-        Add(new PlayerCollider(new Action<Player>(OnPlayer), Collider, null));
+        Add(new PlayerCollider(OnPlayer, Collider, null));
     }
 
     public void OnPlayer(Player player) {

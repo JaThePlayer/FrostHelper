@@ -26,7 +26,7 @@ public class DontUpdateInvisibleStylegroundsController : Entity {
         IL.Celeste.Parallax.Update += Parallax_Update1;
     }
 
-    private static bool ShouldUpdate(Parallax self) => self.Visible || !self.GetAttached<ParallaxWrapInfo>().Wrapped;// !self.GetAttached<ParallaxWrapInfo>().Wrapped || self.Visible;
+    private static bool ShouldUpdate(Parallax self) => self.Visible || !self.GetOrCreateAttached<ParallaxWrapInfo>().Wrapped;// !self.GetAttached<ParallaxWrapInfo>().Wrapped || self.Visible;
 
     private static void Parallax_Update1(ILContext il) {
         var cursor = new ILCursor(il);
@@ -81,7 +81,7 @@ public class DontUpdateInvisibleStylegroundsController : Entity {
             if (AffectedTypes.ContainsReference(backdrop.GetType())) {
                 if (backdrop is Parallax p) {
                     LoadParallaxHooksIfNeeded();
-                    p.GetAttached<ParallaxWrapInfo>().Wrapped = true;
+                    p.GetOrCreateAttached<ParallaxWrapInfo>().Wrapped = true;
                 } else {
                     backdrops[i] = new Wrapper(backdrop);
                 }

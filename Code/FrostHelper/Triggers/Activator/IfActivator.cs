@@ -7,7 +7,7 @@ namespace FrostHelper.Triggers.Activator;
 /// Only activates others if a flag is enabled
 /// </summary>
 [CustomEntity("FrostHelper/IfActivator")]
-internal class IfActivator : BaseActivator {
+internal sealed class IfActivator : BaseActivator {
     Condition condition;
 
     public IfActivator(EntityData data, Vector2 offset) : base(data, offset) {

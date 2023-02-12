@@ -6,7 +6,7 @@ public class CustomFeather : Entity {
     #region Hooks
     private static bool _hooksLoaded;
 
-    [HookPreload]
+    [OnLoad] // TODO: hooks in this class are also used in red custom boosters, split!
     public static void LoadIfNeeded() {
         if (_hooksLoaded)
             return;
@@ -63,6 +63,7 @@ public class CustomFeather : Entity {
             cursor.EmitCall(FrostModule.GetFeatherState);
         }
         cursor.Index = 0;
+        #warning Move to GenericCustomBooster.cs
         while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdcI4(Player.StRedDash) && instr.Previous.MatchCallvirt<StateMachine>("get_State"))) {
             cursor.Emit(OpCodes.Ldarg_0); // this
             cursor.EmitCall(FrostModule.GetRedDashState);

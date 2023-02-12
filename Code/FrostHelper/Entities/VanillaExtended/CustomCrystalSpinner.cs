@@ -86,10 +86,11 @@ public class CustomSpinner : Entity {
 
         Rainbow = data.Bool("rainbow", false);
         RenderBorder = data.Bool("drawOutline", true);
+        BorderColor = RenderBorder ? ColorHelper.GetColor(data.Attr("borderColor", "000000")) : Color.Transparent;
+
         DestroyDebrisCount = data.Int("debrisCount", 8);
         DashThrough = data.Bool("dashThrough", false);
         Tint = ColorHelper.GetColor(tint);
-        BorderColor = ColorHelper.GetColor(data.Attr("borderColor", "000000"));
         // for VivHelper compatibility
         SpritePathSuffix = data.Attr("spritePathSuffix", "");
 
@@ -200,6 +201,16 @@ public class CustomSpinner : Entity {
         }
 
         controller = ControllerHelper<CustomSpinnerController>.AddToSceneIfNeeded(scene);
+        if (BorderColor != Color.Black)
+            controller.CanUseBlackOutlineRenderTargetOpt = false;
+
+        var c = controller;
+        if (c.FirstBorderColor == null) {
+            c.FirstBorderColor = BorderColor;
+            c.CanUseRenderTargetRender = true;
+        } else if (c.CanUseRenderTargetRender && (c.FirstBorderColor != BorderColor)) {
+            c.CanUseRenderTargetRender = false;
+        }
     }
 
     public void UpdateHue() {
@@ -268,6 +279,14 @@ public class CustomSpinner : Entity {
                     Collider.Position.X += num;
             }
         }
+    }
+
+    public override void Render() {
+        // if we're using the black outline optimisation, then the border renderer will handle rendering the normal spinner sprites anyway
+        if (controller.CanUseBlackOutlineRenderTargetOpt && controller.CanUseRenderTargetRender)
+            return;
+
+        base.Render();
     }
 
     private void DoCycle() {
@@ -590,6 +609,12 @@ public class SpinnerConnectorRenderer : Entity {
     }
 
     public override void Render() {
+        if (Spinners.Count == 0)
+            return;
+
+        if (Spinners[0].controller is { } b && b.CanUseBlackOutlineRenderTargetOpt && b.CanUseRenderTargetRender)
+            return;
+
         ForceRender();
     }
 
@@ -676,17 +701,7 @@ public class SpinnerDecoRenderer : Entity {
 public class SpinnerBorderRenderer : Entity {
     public List<CustomSpinner> Spinners = new();
 
-    private Color? _firstBorderColor = null;
-    internal bool CanUseRenderTargetRender;
-
     public void Add(CustomSpinner item) {
-        if (_firstBorderColor == null) {
-            _firstBorderColor = item.BorderColor;
-            CanUseRenderTargetRender = true;
-        } else if (CanUseRenderTargetRender && (_firstBorderColor != item.BorderColor)) {
-            CanUseRenderTargetRender = false;
-        }
-
         Spinners.Add(item);
     }
 
@@ -704,12 +719,14 @@ public class SpinnerBorderRenderer : Entity {
         if (Spinners.Count == 0)
             return;
 
-        if (Spinners[0].controller.OutlineShader is { } outlineShader) {
+        var controller = Spinners[0].controller;
+
+        if (controller.OutlineShader is { } outlineShader) {
             var cam = GameplayRenderer.instance.Camera;
             var eff = outlineShader.ApplyStandardParameters(cam);
 
-            if (CanUseRenderTargetRender) {
-                RenderTargetRender(eff);
+            if (controller.CanUseRenderTargetRender) {
+                RenderTargetRender(controller, eff);
                 return;
             }
 
@@ -724,8 +741,8 @@ public class SpinnerBorderRenderer : Entity {
         }
 
 
-        if (CanUseRenderTargetRender) {
-            RenderTargetRender(null);
+        if (controller.CanUseRenderTargetRender) {
+            RenderTargetRender(controller, null);
 
             // might as well render everything now
             // since the outlines are now rendered in black, this won't work anymore
@@ -738,25 +755,38 @@ public class SpinnerBorderRenderer : Entity {
         NormalRender();
     }
 
-    private void RenderTargetRender(Effect? effect) {
+    private void RenderTargetRender(CustomSpinnerController controller, Effect? effect) {
+        // Renders all spinners into a render target, then renders that target 4 times, massively reducing the amount of sprites drawn.
+
         var target = RenderTargetHelper<SpinnerBorderRenderer>.Get(true, true);
         var connectorRenderer = Scene.Tracker.SafeGetEntity<SpinnerConnectorRenderer>();
         var batch = Draw.SpriteBatch;
-        var borderColor = _firstBorderColor!.Value;
+        var borderColor = controller.FirstBorderColor!.Value;
 
-        var useShader = effect is { };
+        // For black outlines, we can first render all sprites into the target using their normal tint,
+        // then simply tint the target black afterwards.
+        // Thanks to this, we can bypass the ConnectorRenderer - rendering the target without tinting will render the spinners properly.
+        var blackOutlineOpt = controller.CanUseBlackOutlineRenderTargetOpt;
+
+        // whether to use normal tints on the sprites, or use the border color
+        // While using a border shader, we need to use normal tints, as we'll need to then tint the render target in the border color, so that the shader knows what that color is.
+        var useImageColor = effect is { } || blackOutlineOpt;
 
         GameplayRenderer.End();
         Engine.Instance.GraphicsDevice.SetRenderTarget(target);
         Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
 
         GameplayRenderer.Begin();
-        connectorRenderer?.ForceRenderWithColor(borderColor);
+
+        if (useImageColor)
+            connectorRenderer?.ForceRender();
+        else
+            connectorRenderer?.ForceRenderWithColor(borderColor);
         foreach (var spinner in Scene.Tracker.SafeGetEntities<CustomSpinner>()) {
             if (spinner.Visible)
                 foreach (var component in spinner.Components.components) {
                     if (component is Image img) {
-                        if (useShader) {
+                        if (useImageColor) {
                             img.Render();
                         } else {
                             var c = img.Color;
@@ -781,7 +811,7 @@ public class SpinnerBorderRenderer : Entity {
 
         // border
         var renderPos = cam.Position.Floor();
-        var finalColor = useShader ? borderColor : Color.White;
+        var finalColor = useImageColor ? borderColor : Color.White;
 
         float scale = 1f / HDlesteCompat.Scale;
         batch.Draw(target, renderPos - Vector2.UnitY, null, finalColor, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
@@ -792,6 +822,10 @@ public class SpinnerBorderRenderer : Entity {
         if (effect is { }) {
             GameplayRenderer.End();
             GameplayRenderer.Begin();
+        }
+
+        if (blackOutlineOpt) {
+            batch.Draw(target, renderPos, null, Color.White, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
         }
     }
 

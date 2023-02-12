@@ -1,5 +1,6 @@
 ﻿using FrostHelper.Colliders;
 using FrostHelper.Entities.Boosters;
+using FrostHelper.Helpers;
 using MonoMod.ModInterop;
 
 namespace FrostHelper.API;
@@ -9,7 +10,7 @@ public static class API {
     public static int Version => 1;
 
     public static void SetCustomBoostState(Player player, GenericCustomBooster booster) {
-        new DynData<Player>(player).Set("fh.customBooster", booster);
+        player.SetAttached(booster);
         player.StateMachine.State = GenericCustomBooster.CustomBoostState;
     }
 
@@ -42,6 +43,10 @@ public static class API {
     /// <inheritdoc cref="GetTypes(string)"/>
     public static List<Type> GetTypesAsList(string typeString)
         => FrostModule.GetTypesAsList(typeString);
+
+    /// <inheritdoc cref="GetTypes(string)"/>
+    public static HashSet<Type> GetTypesAsHashSet(string typeString)
+        => FrostModule.GetTypesAsHashSet(typeString);
 
     public static string? EntityNameFromType(Type entityType) => TypeHelper.TypeToEntityName(entityType);
     public static string? EntityNameFromTypeName(string entityTypeName) => TypeHelper.TypeNameToEntityName(entityTypeName);

@@ -551,6 +551,15 @@ triggers.FrostHelper/OnSpawnActivator.attributes.description.once=Whether this t
 triggers.FrostHelper/OnSpawnActivator.attributes.description.delay=How long to wait (in seconds) before actually activating the triggers.
 triggers.FrostHelper/OnSpawnActivator.attributes.description.activationMode=How the activation should work:\nAll: All triggers get activated at once.\nCycle: When this trigger activates for the n-th time, the n-th trigger will be chosen.\nRandom: A random (seeded) trigger will be chosen.
 
+# FrostHelper/OnEntityEnterActivator
+triggers.FrostHelper/OnEntityEnterActivator.placements.name.default=Activator (On Entity Enter)
+triggers.FrostHelper/OnEntityEnterActivator.placements.description.default=When an entity enters this trigger, activates triggers which intersect with the nodes of this trigger, optionally after a given delay.
+triggers.FrostHelper/OnEntityEnterActivator.attributes.description.once=Whether this trigger should only activate once, and then get deleted.
+triggers.FrostHelper/OnEntityEnterActivator.attributes.description.delay=How long to wait (in seconds) before actually activating the triggers.
+triggers.FrostHelper/OnEntityEnterActivator.attributes.description.activationMode=How the activation should work:\nAll: All triggers get activated at once.\nCycle: When this trigger activates for the n-th time, the n-th trigger will be chosen.\nRandom: A random (seeded) trigger will be chosen.
+triggers.FrostHelper/OnEntityEnterActivator.attributes.description.types=A comma-seperated list of SID's (preferred) or C# type names that should be affected by this activator.\nWhen left blank, the activator will DO NOTHING!
+triggers.FrostHelper/OnEntityEnterActivator.attributes.description.cache=Whether to cache the list of possible entities that match the `types` list.\nDisabling this is horrible for performance, but will allow detecting entities that get added to the scene after loading.
+
 # FrostHelper/OnFlagActivator
 triggers.FrostHelper/OnFlagActivator.placements.name.default=Activator (On Flag)
 triggers.FrostHelper/OnFlagActivator.placements.description.default=As soon as the chosen flag is set, activates triggers which intersect with the nodes of this trigger, optionally after a given delay.\nWorks by listening to calls to Session.SetFlag.

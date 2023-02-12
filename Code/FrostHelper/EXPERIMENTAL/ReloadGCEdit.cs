@@ -11,11 +11,12 @@ internal static class ReloadGCEdit {
     private static void Level_Reload(ILContext il) {
         var cursor = new ILCursor(il);
 
-        cursor.SeekCall(typeof(GC), "Collect", MoveType.Before);
-        // Remove this overly aggressive gc run:
-        // GC.Collect();
-        // GC.WaitForPendingFinalizers();
-        cursor.Remove(); 
-        cursor.Remove();
+        if (cursor.SeekCall(typeof(GC), "Collect", MoveType.Before)) {
+            // Remove this overly aggressive gc run:
+            // GC.Collect();
+            // GC.WaitForPendingFinalizers();
+            cursor.Remove();
+            cursor.Remove();
+        }
     }
 }

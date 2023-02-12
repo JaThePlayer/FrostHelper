@@ -4,7 +4,7 @@
 /// Activates triggers when a flag changes, using flag listeners for performance.
 /// </summary>
 [CustomEntity("FrostHelper/OnFlagActivator")]
-internal class OnFlagActivator : BaseActivator {
+internal sealed class OnFlagActivator : BaseActivator {
     public readonly bool TargetValue;
 
     public OnFlagActivator(EntityData data, Vector2 offset) : base(data, offset) {
@@ -17,6 +17,8 @@ internal class OnFlagActivator : BaseActivator {
     public void OnFlag(bool value) {
         if (value == TargetValue) {
             ActivateAll(Scene.Tracker.GetEntity<Player>());
+        } else {
+            CallOnLeave();
         }
     }
 
@@ -24,5 +26,9 @@ internal class OnFlagActivator : BaseActivator {
         base.OnEnter(player);
 
         ActivateAll(player);
+    }
+
+    public override void Update() {
+        CallOnStay();
     }
 }

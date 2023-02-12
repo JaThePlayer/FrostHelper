@@ -4,7 +4,7 @@
 /// Activates if the player is dashing while in the trigger
 /// </summary>
 [CustomEntity("FrostHelper/OnPlayerDashingActivator")]
-internal class OnPlayerDashing : BaseActivator {
+internal sealed class OnPlayerDashing : BaseActivator {
     public bool OnlyWhenJustDashed;
     public readonly bool HasToBeInside;
 

@@ -143,11 +143,11 @@ public class CustomSpring : Spring {
         base.Orientation = CustomToRegularOrientation[orientation];
         this.playerCanUse = playerCanUse;
         Remove(Get<PlayerCollider>());
-        Add(new PlayerCollider(new Action<Player>(NewOnCollide), null, null));
+        Add(new PlayerCollider(NewOnCollide, null, null));
         Remove(Get<HoldableCollider>());
-        Add(new HoldableCollider(new Action<Holdable>(NewOnHoldable), null));
+        Add(new HoldableCollider(NewOnHoldable, null));
         Remove(Get<PufferCollider>());
-        PufferCollider pufferCollider = new PufferCollider(new Action<Puffer>(NewOnPuffer), null);
+        PufferCollider pufferCollider = new PufferCollider(NewOnPuffer, null);
         Add(pufferCollider);
         DynData<Spring> dyndata = new DynData<Spring>(this);
 

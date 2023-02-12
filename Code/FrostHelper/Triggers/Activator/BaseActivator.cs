@@ -7,6 +7,10 @@ internal class BaseActivator : Trigger {
 
     internal List<Trigger>? ToActivate;
 
+    // used by Random and Cycle modes to keep track of which trigger to call OnStay for.
+    // For the 'all' setting, all triggers get activated instead (though this value is still used to keep track of whether anything got activated or not)
+    private Trigger? lastActivatedTrigger;
+
     public ActivationModes ActivationMode;
     private int _cycleModeIdx;
 
@@ -39,6 +43,63 @@ internal class BaseActivator : Trigger {
             RemoveSelf();
     }
 
+    /// <summary>
+    /// Calls the OnStay method on all just activated triggers.
+    /// </summary>
+    /// <param name="player"></param>
+    public void CallOnStay(Player? player = null) {
+        return; // see comment in OnEntityEnterActivator.Update
+
+        if (lastActivatedTrigger is { } tr) {
+            if (tr.Scene != Scene) {
+                lastActivatedTrigger = null;
+                return;
+            }
+
+            player ??= Scene.Tracker.GetEntity<Player>();
+            if (player is null)
+                return;
+
+            if (ActivationMode == ActivationModes.All) {
+                foreach (var trigger in ToActivate!) {
+                    trigger.OnStay(player);
+                }
+            } else {
+                tr.OnStay(player);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Calls the OnLeave method on all just activated triggers.
+    /// Then, forgets which triggers were activated
+    /// </summary>
+    /// <param name="player"></param>
+    public void CallOnLeave(Player? player = null) {
+        return; // see comment in OnEntityEnterActivator.Update
+
+        if (lastActivatedTrigger is { } tr) {
+            if (tr.Scene != Scene) {
+                lastActivatedTrigger = null;
+                return;
+            }
+
+            player ??= Scene.Tracker.GetEntity<Player>();
+            if (player is null)
+                return;
+
+            if (ActivationMode == ActivationModes.All) {
+                foreach (var trigger in ToActivate!) {
+                    trigger.OnLeave(player);
+                }
+            } else {
+                tr.OnLeave(player);
+            }
+        }
+
+        lastActivatedTrigger = null;
+    }
+
     private IEnumerator DelayedActivateAll(Player player) {
         yield return Delay;
         InstantActivateAll(player);
@@ -51,6 +112,7 @@ internal class BaseActivator : Trigger {
         if (ToActivate.Count == 0 || player is null || player.Scene is null)
             return;
 
+        CallOnLeave(player);
         switch (ActivationMode) {
             case ActivationModes.All:
                 foreach (var trigger in ToActivate) {
@@ -80,6 +142,8 @@ internal class BaseActivator : Trigger {
         // Some triggers only do their thing in OnStay, so let's call that as well
 #warning TODO: Add setting to call this each frame...
         trigger.OnStay(player);
+
+        lastActivatedTrigger = trigger;
     }
 
     /// <summary>

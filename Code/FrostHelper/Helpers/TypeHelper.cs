@@ -5,7 +5,6 @@ namespace FrostHelper;
 
 public static class TypeHelper {
     private static Dictionary<string, Type>? entityNameToType = null;
-    private static Dictionary<string, Type> entityNameToType2 = new();
 
     [OnLoad]
     public static void Load() {
@@ -21,7 +20,6 @@ public static class TypeHelper {
     private static void Loader_LoadModAssembly(On.Celeste.Mod.Everest.Loader.orig_LoadModAssembly orig, EverestModuleMetadata meta, Assembly asm) {
         orig(meta, asm);
         entityNameToType = null!;
-        entityNameToType2.Clear();
     }
 
     public static Type EntityNameToType(string entityName) {
@@ -36,20 +34,18 @@ public static class TypeHelper {
     }
 
     public static Type? EntityNameToTypeSafe(string entityName) {
-        // see if this is just a type name
-        Type ret = FakeAssembly.GetFakeEntryAssembly().GetType(entityName, false, true);
-        if (ret != null)
-            return ret;
-
         if (entityNameToType is null) {
             CreateCache();
         }
 
-        if (entityNameToType2.TryGetValue(entityName, out ret))
+        if (entityNameToType!.TryGetValue(entityName, out var ret))
             return ret;
 
-        if (entityNameToType!.TryGetValue(entityName, out ret))
-            return ret;
+        // see if this is a C# type name
+        if (FakeAssembly.GetFakeEntryAssembly().GetType(entityName, false, true) is { } csType) {
+            entityNameToType[entityName] = csType;
+            return csType;
+        }
 
         return null;
     }
@@ -57,6 +53,7 @@ public static class TypeHelper {
     private static string? TryFindTypeToEntityName(Dictionary<string, Type>? dict, Type targetType) {
         if (dict is null)
             return null;
+
         foreach (var item in dict) {
             if (ReferenceEquals(item.Value, targetType))
                 return item.Key;
@@ -66,8 +63,7 @@ public static class TypeHelper {
     }
 
     public static string? TypeToEntityName(Type entityType) {
-        return TryFindTypeToEntityName(entityNameToType2, entityType)
-                ?? TryFindTypeToEntityName(entityNameToType, entityType);
+        return TryFindTypeToEntityName(entityNameToType, entityType);
     }
 
     public static string? TypeNameToEntityName(string typeName) {
@@ -76,7 +72,7 @@ public static class TypeHelper {
     }
 
     private static void CreateCache() {
-        entityNameToType = new Dictionary<string, Type>() {
+        entityNameToType = new(StringComparer.Ordinal) {
             ["checkpoint"] = typeof(Checkpoint),
             ["jumpThru"] = typeof(JumpthruPlatform),
             ["refill"] = typeof(Refill),
@@ -290,13 +286,10 @@ public static class TypeHelper {
                     }
 
                     string IDTrim = id.Trim();
-                    if (!entityNameToType!.ContainsKey(IDTrim)) {
-                        entityNameToType.Add(IDTrim, type);
-                    } else {
-                        if (!entityNameToType2.ContainsKey(IDTrim))
-                            entityNameToType2.Add(IDTrim, type);
-                        Logger.Log(LogLevel.Error, "FrostHelper.TypeHelper", $"Found duplicate entity ID {IDTrim} - {type.FullName} vs {entityNameToType[IDTrim].FullName}");
+                    if (entityNameToType!.TryGetValue(IDTrim, out var duplicateType)) {
+                        Logger.Log(LogLevel.Error, "FrostHelper.TypeHelper", $"Found duplicate entity ID {IDTrim} - {type.FullName} vs {duplicateType.FullName}");
                     }
+                    entityNameToType[IDTrim] = type;
                 }
             }
         }

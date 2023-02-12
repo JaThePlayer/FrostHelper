@@ -26,12 +26,9 @@ public class CustomRisingLava : Entity {
         On.Celeste.Mod.Entities.LavaBlockerTrigger.OnLeave -= LavaBlockerTrigger_OnLeave;
     }
 
-    // thanks
-    private static readonly FieldInfo LavaBlockerTrigger_enabled = typeof(LavaBlockerTrigger).GetField("enabled", BindingFlags.Instance | BindingFlags.NonPublic);
-
     private static void LavaBlockerTrigger_OnLeave(On.Celeste.Mod.Entities.LavaBlockerTrigger.orig_OnLeave orig, Celeste.Mod.Entities.LavaBlockerTrigger self, Player player) {
-        if ((bool) LavaBlockerTrigger_enabled.GetValue(self))
-            foreach (CustomRisingLava lava in self.Scene.Tracker.SafeGetEntities<CustomRisingLava>())
+        if (self.enabled && self.Scene is { } scene)
+            foreach (CustomRisingLava lava in scene.Tracker.SafeGetEntities<CustomRisingLava>())
                 if (lava != null)
                     lava.waiting = false;
 
@@ -39,10 +36,11 @@ public class CustomRisingLava : Entity {
     }
 
     private static void LavaBlockerTrigger_OnStay(On.Celeste.Mod.Entities.LavaBlockerTrigger.orig_OnStay orig, Celeste.Mod.Entities.LavaBlockerTrigger self, Player player) {
-        if ((bool) LavaBlockerTrigger_enabled.GetValue(self))
-            foreach (CustomRisingLava lava in self.Scene.Tracker.SafeGetEntities<CustomRisingLava>())
+        if (self.enabled && self.Scene is { } scene)
+            foreach (CustomRisingLava lava in scene.Tracker.SafeGetEntities<CustomRisingLava>())
                 if (lava != null)
                     lava.waiting = true;
+
         orig(self, player);
     }
 

@@ -4,7 +4,7 @@ local activationModes = {
     "Random"
 }
 
-local function makeActivator(name, placement, extTextCallback)
+local function makeActivator(name, placement, extTextCallback, extra)
     local h = {
         name = name,
         nodeLimits = {1, -1},
@@ -21,7 +21,12 @@ local function makeActivator(name, placement, extTextCallback)
         }
     }
 
-    h.placements[1].data.once = false
+    extra = extra or {}
+
+    if extra.disableOnce ~= true then
+        h.placements[1].data.once = false
+    end
+
     h.placements[1].data.delay = 0.0
     h.placements[1].data.activationMode = "All"
 
@@ -82,14 +87,28 @@ return {
     },function (trigger)
         return string.format("%.3f", trigger.delay)
     end),
-    makeActivator("FrostHelper/LoopActivator", {
-        name = "default",
-        data = {
-            requireActivation = false,
-            loopTime = 1.0
+    makeActivator("FrostHelper/LoopActivator",
+        {
+            name = "default",
+            data = {
+                requireActivation = false,
+                loopTime = 1.0
+            },
+        },
+        function (trigger)
+            return string.format("%.3f", trigger.loopTime or 0)
+        end,
+        {
+            disableOnce = true,
         }
-    },function (trigger)
-        return string.format("%.3f", trigger.loopTime or 0)
-    end),
-
+    ),
+    makeActivator("FrostHelper/OnEntityEnterActivator",
+        {
+            name = "default",
+            data = {
+                cache = true,
+                types = "",
+            },
+        }
+    )
 }

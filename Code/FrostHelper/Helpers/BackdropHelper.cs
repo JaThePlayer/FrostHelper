@@ -30,7 +30,7 @@ internal static class BackdropHelper {
 
         static void ResetPos(BackdropRenderer renderer) {
             foreach (var item in renderer.Backdrops) {
-                if (item.GetAttached<OrigPositionData>().Pos is { } origPos) {
+                if (item.GetOrCreateAttached<OrigPositionData>().Pos is { } origPos) {
                     item.Position = origPos;
                 }
             }

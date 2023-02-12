@@ -1,9 +1,11 @@
 ﻿namespace FrostHelper.Triggers.Activator;
 
 [CustomEntity("FrostHelper/OnPlayerOnGroundActivator")]
-internal class OnPlayerOnGround : BaseActivator {
+internal sealed class OnPlayerOnGround : BaseActivator {
     public bool OnlyWhenJustLanded;
     //public bool HasToBeInside;
+
+    private bool wasActivated = false;
 
     public OnPlayerOnGround(EntityData data, Vector2 offset) : base(data, offset) {
         OnlyWhenJustLanded = data.Bool("onlyWhenJustLanded", true);
@@ -20,18 +22,31 @@ internal class OnPlayerOnGround : BaseActivator {
             TryActivate(player);
     }
 
+    public override void OnLeave(Player player) {
+        base.OnLeave(player);
+
+        //if (HasToBeInside)
+            CallOnLeave(player);
+    }
+
     public override void Update() {
         base.Update();
 
         //if (!HasToBeInside) {
-        //    Console.WriteLine("H");
         //    TryActivate(Scene.Tracker.GetEntity<Player>());
         //}
     }
 
     private void TryActivate(Player player) {
-        if (player is { } && player.onGround && (!OnlyWhenJustLanded || !player.wasOnGround)) {
+        if (player is null)
+            return;
+
+        if (player.onGround && (!OnlyWhenJustLanded || !player.wasOnGround)) {
+            wasActivated = true;
             ActivateAll(player);
+        } else if (wasActivated) {
+            wasActivated = false;
+            CallOnLeave(player);
         }
     }
 }
