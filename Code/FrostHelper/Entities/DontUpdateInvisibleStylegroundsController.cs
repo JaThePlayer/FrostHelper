@@ -11,7 +11,7 @@ public class DontUpdateInvisibleStylegroundsController : Entity {
         il.Emit(OpCodes.Ret);
     });
 
-    private class ParallaxWrapInfo {
+    internal class ParallaxWrapInfo {
         public bool Wrapped;
     }
 

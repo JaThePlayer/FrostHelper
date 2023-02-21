@@ -7,8 +7,6 @@ feather.name = "FrostHelper/CustomFeather"
 feather.depth = 0
 
 jautils.createPlacementsPreserveOrder(feather, "normal", {
-    { "shielded", false },
-    { "singleUse", false },
     { "flyColor", "ffd65c", "color" },
     { "spriteColor", "ffffff", "color" },
     { "flyTime", 2.0 },
@@ -17,6 +15,10 @@ jautils.createPlacementsPreserveOrder(feather, "normal", {
     { "lowSpeed", 140.0 },
     { "neutralSpeed", 91.0 },
     { "spritePath", "objects/flyFeather/" },
+    { "shielded", false },
+    { "singleUse", false },
+    { "refillStamina", true },
+    { "refillDashes", true },
 })
 
 function feather.draw(room, entity)

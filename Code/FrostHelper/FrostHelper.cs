@@ -1,6 +1,7 @@
 ﻿using Celeste.Mod;
 using FrostHelper.Entities.Boosters;
 using FrostHelper.EXPERIMENTAL;
+using FrostHelper.Helpers;
 using FrostHelper.ModIntegration;
 using MonoMod.ModInterop;
 using YamlDotNet.Serialization;
@@ -467,5 +468,14 @@ public class FrostModule : EverestModule {
         var shader = ShaderHelperIntegration.GetEffect(shaderName);
 
         Console.WriteLine($"{shaderName}:\n{shader.Parameters.Aggregate("Parameters:", (string p1, EffectParameter p2) => $"{p1}\n{p2.Name}: {p2.ParameterType}")}");
+    }
+
+    [Command("fh_attached", "[Frost Helper] Prints out information about all data attached to entities by Frost Helper")]
+    public static void CmdListAttached() {
+        Console.WriteLine("Attached Data:");
+        foreach (var item in Engine.Scene.Entities.entities.Cast<object>().Concat(GetCurrentLevel().Foreground.Backdrops).Concat(GetCurrentLevel().Background.Backdrops)) {
+            if (AttachedDataHelper.GetAllData(item) is { } data)
+                Console.WriteLine($"{item} -> {string.Join(",", data)}");
+        }
     }
 }

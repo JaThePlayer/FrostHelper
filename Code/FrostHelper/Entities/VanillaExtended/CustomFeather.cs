@@ -146,10 +146,14 @@ public class CustomFeather : Entity {
         player.SceneAs<Level>().Displacement.AddBurst(player.Center, 0.25f, 8f, 32f, 1f, null, null);
         player.starFlyTransforming = false;
         player.starFlyTimer = feather.FlyTime;
-        player.RefillDash();
-        player.RefillStamina();
 
-        Vector2 dir = Input.Aim.Value;
+        if (feather.RefillDashes)
+            player.RefillDash();
+
+        if (feather.RefillStamina)
+            player.RefillStamina();
+
+        Vector2 dir = Input.Feather.Value;
         if (dir == Vector2.Zero) {
             dir = Vector2.UnitX * (float) player.Facing;
         }
@@ -170,23 +174,22 @@ public class CustomFeather : Entity {
     public static int StarFlyUpdate(Entity e) {
         Player player = (e as Player)!;
         Level level = player.SceneAs<Level>();
-        var data = DynamicData.For(player);
-        BloomPoint bloomPoint = data.Get<BloomPoint>("starFlyBloom");
-        CustomFeather feather = data.Get<CustomFeather>("fh.customFeather");
+        BloomPoint bloomPoint = player.starFlyBloom;
+        CustomFeather feather = DynamicData.For(player).Get<CustomFeather>("fh.customFeather");
 
         float StarFlyTime = feather.FlyTime;
         bloomPoint.Alpha = Calc.Approach(bloomPoint.Alpha, 0.7f, Engine.DeltaTime * StarFlyTime);
-        data.Set("starFlyBloom", bloomPoint);
+        player.starFlyBloom = bloomPoint;
         Input.Rumble(RumbleStrength.Climb, RumbleLength.Short);
 
-        if (data.Get<bool>("starFlyTransforming")) {
+        if (player.starFlyTransforming) {
             player.Speed = Calc.Approach(player.Speed, Vector2.Zero, 1000f * Engine.DeltaTime);
         } else {
-            Vector2 aimValue = Input.Aim.Value;
+            Vector2 aimValue = Input.Feather.Value;
             bool notAiming = false;
             if (aimValue == Vector2.Zero) {
                 notAiming = true;
-                aimValue = data.Get<Vector2>("starFlyLastDir");
+                aimValue = player.starFlyLastDir;
             }
             Vector2 lastSpeed = player.Speed.SafeNormalize(Vector2.Zero);
 
@@ -195,23 +198,23 @@ public class CustomFeather : Entity {
             } else {
                 lastSpeed = lastSpeed.RotateTowards(aimValue.Angle(), 5.58505344f * Engine.DeltaTime);
             }
-            data.Set("starFlyLastDir", lastSpeed);
+            player.starFlyLastDir = lastSpeed;
             float target;
             if (notAiming) {
-                data.Set("starFlySpeedLerp", 0f);
+                player.starFlySpeedLerp = 0f;
                 target = feather.NeutralSpeed; // was 91f
             } else {
                 if (lastSpeed != Vector2.Zero && Vector2.Dot(lastSpeed, aimValue) >= 0.45f) {
-                    data.Set("starFlySpeedLerp", Calc.Approach(data.Get<float>("starFlySpeedLerp"), 1f, Engine.DeltaTime / 1f));
-                    target = MathHelper.Lerp(feather.LowSpeed, feather.MaxSpeed, data.Get<float>("starFlySpeedLerp"));
+                    player.starFlySpeedLerp = Calc.Approach(player.starFlySpeedLerp, 1f, Engine.DeltaTime / 1f);
+                    target = MathHelper.Lerp(feather.LowSpeed, feather.MaxSpeed, player.starFlySpeedLerp);
                 } else {
-                    data.Set("starFlySpeedLerp", 0f);
+                    player.starFlySpeedLerp = 0f;
                     target = 140f;
                 }
             }
-            SoundSource ss = data.Get<SoundSource>("starFlyLoopSfx");
+
+            SoundSource ss = player.starFlyLoopSfx;
             ss.Param("feather_speed", notAiming ? 0 : 1);
-            data.Set("starFlyLoopSfx", ss);
 
             float speed = player.Speed.Length();
             speed = Calc.Approach(speed, target, 1000f * Engine.DeltaTime);
@@ -267,20 +270,18 @@ public class CustomFeather : Entity {
                 return player.StartDash();
             }
 
-            float starFlyTimer = data.Get<float>("starFlyTimer");
-            starFlyTimer -= Engine.DeltaTime;
-            data.Set("starFlyTimer", starFlyTimer);
+            player.starFlyTimer -= Engine.DeltaTime;
 
-            if (starFlyTimer <= 0f) {
+            if (player.starFlyTimer <= 0f) {
                 if (Input.MoveY.Value == -1) {
                     player.Speed.Y = -100f;
                 }
 
                 if (Input.MoveY.Value < 1) {
-                    data.Set("varJumpSpeed", player.Speed.Y);
+                    player.varJumpSpeed = player.Speed.Y;
                     player.AutoJump = true;
                     player.AutoJumpTimer = 0f;
-                    data.Set("varJumpTimer", 0.2f);
+                    player.varJumpTimer = 0.2f;
                 }
 
                 if (player.Speed.Y > 0f) {
@@ -295,7 +296,7 @@ public class CustomFeather : Entity {
                 return Player.StNormal;
             }
 
-            if (starFlyTimer < 0.5f && player.Scene.OnInterval(0.05f)) {
+            if (player.starFlyTimer < 0.5f && player.Scene.OnInterval(0.05f)) {
                 Color starFlyColor = feather.FlyColor;
                 if (player.Sprite.Color == starFlyColor) {
                     player.Sprite.Color = Player.NormalHairColor;
@@ -323,6 +324,8 @@ public class CustomFeather : Entity {
     /// </summary>
     public float NeutralSpeed;
 
+    bool RefillStamina, RefillDashes;
+
     public CustomFeather(EntityData data, Vector2 offset) : base(data.Position + offset) {
         LoadIfNeeded();
 
@@ -335,7 +338,7 @@ public class CustomFeather : Entity {
         LowSpeed = data.Float("lowSpeed", 140f);
         NeutralSpeed = data.Float("neutralSpeed", 91f);
         Collider = new Hitbox(20f, 20f, -10f, -10f);
-        Add(new PlayerCollider(new Action<Player>(OnPlayer), null, null));
+        Add(new PlayerCollider(OnPlayer, null, null));
         string path = data.Attr("spritePath", "objects/flyFeather/").Replace('\\', '/');
         if (path[path.Length - 1] != '/') {
             path += '/';
@@ -379,6 +382,9 @@ public class CustomFeather : Entity {
             ColorMode = ParticleType.ColorModes.Static,
             Color = FlyColor
         };
+
+        RefillStamina = data.Bool("refillStamina", true);
+        RefillDashes = data.Bool("refillDashes", true);
     }
 
     public override void Added(Scene scene) {
@@ -460,23 +466,24 @@ public class CustomFeather : Entity {
     public float FlyTime;
 
     public bool StartStarFly(Player player) {
-        var data = DynamicData.For(player);
-        player.RefillStamina();
-        bool result;
+        if (RefillStamina)
+            player.RefillStamina();
+
         if (player.StateMachine.State == Player.StReflectionFall) {
-            result = false;
-        } else {
-            data.Set("fh.customFeather", this);
-            if (player.StateMachine.State == CustomFeatherState) {
-                data.Set("starFlyTimer", FlyTime);
-                player.Sprite.Color = FlyColor;
-                Input.Rumble(RumbleStrength.Medium, RumbleLength.Medium);
-            } else {
-                player.StateMachine.State = CustomFeatherState;
-            }
-            result = true;
+            return false;
         }
-        return result;
+
+        var data = DynamicData.For(player);
+        data.Set("fh.customFeather", this);
+        if (player.StateMachine.State == CustomFeatherState) {
+            player.starFlyTimer = FlyTime;
+            player.Sprite.Color = FlyColor;
+            Input.Rumble(RumbleStrength.Medium, RumbleLength.Medium);
+        } else {
+            player.StateMachine.State = CustomFeatherState;
+        }
+
+        return true;
     }
 
     private IEnumerator CollectRoutine(Player player, Vector2 playerSpeed) {

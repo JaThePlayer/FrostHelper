@@ -29,7 +29,7 @@ internal class BaseActivator : Trigger {
 
     public override void Awake(Scene scene) {
         base.Awake(scene);
-        ToActivate = FastCollideAll<Trigger>();
+        ToActivate ??= FastCollideAll<Trigger>();
     }
 
     public void ActivateAll(Player player) {

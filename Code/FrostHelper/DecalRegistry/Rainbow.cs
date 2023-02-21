@@ -12,8 +12,8 @@ public static class Rainbow {
     }
 }
 
-file sealed class RainbowDecalMarker {
-    internal RainbowDecalMarker() {
+sealed class RainbowDecalMarker {
+    public RainbowDecalMarker() {
         LoadHooksIfNeeded();
     }
 
