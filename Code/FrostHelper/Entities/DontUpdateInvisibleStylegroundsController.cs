@@ -48,7 +48,7 @@ public class DontUpdateInvisibleStylegroundsController : Entity {
             return;
         _hooksLoaded = false;
 
-        IL.Celeste.Parallax.Update += Parallax_Update1;
+        IL.Celeste.Parallax.Update -= Parallax_Update1;
     }
     #endregion
 

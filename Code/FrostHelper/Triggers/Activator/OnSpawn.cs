@@ -5,6 +5,7 @@
 /// </summary>
 [CustomEntity("FrostHelper/OnSpawnActivator")]
 internal sealed class OnSpawnActivator : BaseActivator {
+
     public OnSpawnActivator(EntityData data, Vector2 offset) : base(data, offset) {
         Collidable = false;
     }
@@ -12,12 +13,11 @@ internal sealed class OnSpawnActivator : BaseActivator {
     public override void Awake(Scene scene) {
         base.Awake(scene);
 
-        ActivateAll(scene.Tracker.GetEntity<Player>());
+        Activate(scene);
     }
 
-    public override void OnEnter(Player player) {
-        base.OnEnter(player);
-
-        ActivateAll(player);
+    private void Activate(Scene scene) {
+        ActivateAll(scene.Tracker.GetEntity<Player>());
+        RemoveSelf();
     }
 }

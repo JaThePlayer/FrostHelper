@@ -110,5 +110,11 @@ return {
                 types = "",
             },
         }
-    )
+    ),
+    makeActivator("FrostHelper/OnDeathActivator",
+    {
+        name = "default",
+        data = {
+        }
+    }),
 }

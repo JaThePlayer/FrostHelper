@@ -189,15 +189,21 @@ entities.FrostHelper/ToggleSwapBlock.attributes.description.moveEndSFX=SFX to pl
 
 # Boosters
 entities.FrostHelper/GrayBooster.placements.name.normal=Gray Booster
+entities.FrostHelper/GrayBooster.placements.description.normal=A booster that doesn't allow for fastbubbling.\nBy default, it boosts you immediately upon enter, but boost time can be changed.
 entities.FrostHelper/GrayBooster.placements.name.red=Gray Booster (Red)
+entities.FrostHelper/GrayBooster.placements.description.red=A booster that doesn't allow for fastbubbling.\nBy default, it boosts you immediately upon enter, but boost time can be changed.\nActs like a red booster.
 entities.FrostHelper/BlueBooster.placements.name.normal=Blue Booster
+entities.FrostHelper/BlueBooster.placements.description.normal=A booster that doesn't refill your dash upon entering it.
 entities.FrostHelper/YellowBooster.placements.name.normal=Yellow Booster
+entities.FrostHelper/YellowBooster.placements.description.normal=A booster that kills you if you don't fastbubble.
 entities.FrostHelper/IncrementBooster.placements.name.normal=Dash Increment Booster
+entities.FrostHelper/IncrementBooster.placements.description.normal=A booster that increases the amount of dashes you have, instead of refiling them.
 entities.FrostHelper/IncrementBooster.placements.name.red=Dash Increment Booster (Red)
+entities.FrostHelper/IncrementBooster.placements.description.red=A booster that increases the amount of dashes you have, instead of refiling them.\nActs like a red booster.
 
 entities.FrostHelper/GrayBooster.attributes.description.directory=The directory from which the sprites are taken, relative to Atlases/Gameplay/
 entities.FrostHelper/GrayBooster.attributes.description.respawnTime=Time (in seconds) it takes the booster to respawn after being used
-entities.FrostHelper/GrayBooster.attributes.description.boostTime=Time (in seconds) it takes the booster to release the player after they enter it. Can be skipped by fastbubbling
+entities.FrostHelper/GrayBooster.attributes.description.boostTime=Time (in seconds) it takes the booster to release the player after they enter it. Cannot be skipped by fastbubbling.
 entities.FrostHelper/GrayBooster.attributes.description.particleColor=Hex color to use for this booster's particles
 entities.FrostHelper/GrayBooster.attributes.description.releaseSfx=SFX to play when the boosters releases the player
 entities.FrostHelper/GrayBooster.attributes.description.enterSfx=SFX to play when the player enters the bubble
@@ -242,9 +248,11 @@ entities.FrostHelper/IncrementBooster.attributes.description.refillBeforeIncreme
 
 # Ice Key
 entities.FrostHelper/KeyIce.placements.name.normal=Ice Key
+entities.FrostHelper/KeyIce.placements.description.normal=A key that dissolves when the player dashes, respawning in its original location.
 
 # Temporary Key
 entities.FrostHelper/TemporaryKey.placements.name.normal=Temporary Key
+entities.FrostHelper/TemporaryKey.placements.description.normal=A key that respawns after death, even after being used.\nIntended to be used together with Temporary Key Doors, can cause key duplication otherwise!
 entities.FrostHelper/TemporaryKey.attributes.description.directory=The directory from which the sprites are taken, relative to Atlases/Gameplay/
 
 # Plus One Refill
@@ -270,6 +278,7 @@ entities.FrostHelper/SlowCrushBlock.attributes.description.axes=Which axes can b
 
 # Custom Bumper
 entities.FrostHelper/StaticBumper.placements.name.normal=Static Bumper
+entities.FrostHelper/StaticBumper.placements.description.normal=A Bumper that doesn't wobble.\nAllows for more customisation as well.
 entities.FrostHelper/StaticBumper.attributes.description.sprite=Name of the sprite's entry in your Sprites.xml file. A {sprite}_evil entry is required as well for when the core mode is set to Hot
 entities.FrostHelper/StaticBumper.attributes.description.respawnTime=Time it takes the bumper to respawn after boosting you
 entities.FrostHelper/StaticBumper.attributes.description.notCoreMode=If set, the bumper will always be blue regardless of core mode
@@ -550,6 +559,13 @@ triggers.FrostHelper/OnSpawnActivator.placements.description.default=When you lo
 triggers.FrostHelper/OnSpawnActivator.attributes.description.once=Whether this trigger should only activate once, and then get deleted.
 triggers.FrostHelper/OnSpawnActivator.attributes.description.delay=How long to wait (in seconds) before actually activating the triggers.
 triggers.FrostHelper/OnSpawnActivator.attributes.description.activationMode=How the activation should work:\nAll: All triggers get activated at once.\nCycle: When this trigger activates for the n-th time, the n-th trigger will be chosen.\nRandom: A random (seeded) trigger will be chosen.
+
+# FrostHelper/OnDeathActivator
+triggers.FrostHelper/OnDeathActivator.placements.name.default=Activator (On Death)
+triggers.FrostHelper/OnDeathActivator.placements.description.default=When a player dies, activates triggers which intersect with the nodes of this trigger, optionally after a given delay.
+triggers.FrostHelper/OnDeathActivator.attributes.description.once=Whether this trigger should only activate once, and then get deleted.
+triggers.FrostHelper/OnDeathActivator.attributes.description.delay=How long to wait (in seconds) before actually activating the triggers.
+triggers.FrostHelper/OnDeathActivator.attributes.description.activationMode=How the activation should work:\nAll: All triggers get activated at once.\nCycle: When this trigger activates for the n-th time, the n-th trigger will be chosen.\nRandom: A random (seeded) trigger will be chosen.
 
 # FrostHelper/OnEntityEnterActivator
 triggers.FrostHelper/OnEntityEnterActivator.placements.name.default=Activator (On Entity Enter)

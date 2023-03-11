@@ -3,13 +3,54 @@
 namespace FrostHelper;
 
 [CustomEntity("FrostHelper/Bubbler")]
+[Tracked]
 public class Bubbler : Entity {
+    #region Hooks
+    private static bool HooksLoaded;
+
+    public static void LoadHooksIfNeeded() {
+        if (HooksLoaded) {
+            return;
+        }
+        HooksLoaded = true;
+
+        On.Celeste.Player.NormalBegin += Player_NormalBegin;
+    }
+
+    [OnUnload]
+    public static void Unload() {
+        if (!HooksLoaded)
+            return;
+        HooksLoaded = false;
+
+        On.Celeste.Player.NormalBegin -= Player_NormalBegin;
+    }
+
+    private static void Player_NormalBegin(On.Celeste.Player.orig_NormalBegin orig, Player self) {
+        orig(self);
+
+        if (self.Scene?.Tracker.SafeGetEntities<Bubbler>() is { } bubblers) {
+#pragma warning disable IDE0220 // Add explicit cast
+            foreach (Bubbler bubbler in bubblers) {
+#pragma warning restore IDE0220 // Add explicit cast
+                if (bubbler.InBubbler) {
+                    bubbler.OnBubbleFinish();
+                }
+            }
+        }
+    }
+    #endregion
+
     private Vector2[] nodes;
     private Sprite? sprite;
     private Sprite? previewSprite;
     private SineWave? sine;
 
+    private bool InBubbler;
+
     public Bubbler(EntityData data, Vector2 offset) : base(data.Position + offset) {
+        LoadHooksIfNeeded();
+
         Collider = new Hitbox(14f, 14f, 0f, 0f);
         Collider.CenterOrigin();
         Add(new PlayerCollider(OnPlayer));
@@ -72,20 +113,16 @@ public class Bubbler : Entity {
             Audio.Play("event:/game/general/cassette_bubblereturn", SceneAs<Level>().Camera.Position + new Vector2(160f, 90f));
             player.Dashes = Math.Max(player.Dashes, player.MaxDashes);
             player.StartCassetteFly(nodes[1], nodes[0]);
-            // Cursed on linux? D:
-            //On.Celeste.Player.CassetteFlyEnd += Player_CassetteFlyEnd;
 
-            On.Celeste.Player.NormalBegin += Player_NormalBegin;
+            InBubbler = true;
         }
+
         yield break;
     }
 
-    private void Player_NormalBegin(On.Celeste.Player.orig_NormalBegin orig, Player self) {
-        orig(self);
-
+    private void OnBubbleFinish() {
+        InBubbler = false;
         previewSprite?.RemoveSelf();
         previewSprite = null;
-
-        On.Celeste.Player.NormalBegin -= Player_NormalBegin;
     }
 }

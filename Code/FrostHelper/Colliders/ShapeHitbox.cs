@@ -2,11 +2,14 @@
 
 public class ShapeHitbox : Collider {
     static bool loaded;
-    //[OnLoad]
+
     public static void Load() {
         if (!loaded) {
             loaded = true;
-            On.Monocle.Collider.Collide_Collider += Collider_Collide_Collider;
+            using (DetourContext ctx = new() { Before = new() { "*" } }) {
+                On.Monocle.Collider.Collide_Collider += Collider_Collide_Collider;
+
+            }
         }
     }
 
@@ -25,7 +28,11 @@ public class ShapeHitbox : Collider {
 
     [OnUnload]
     public static void Unload() {
-        On.Monocle.Collider.Collide_Collider -= Collider_Collide_Collider;
+        if (loaded) {
+            Logger.Log(LogLevel.Warn, "FrostHelper.ShapeHitbox", "Not unloading the Collider.Collide(Collider) hook, as they were used this session!");
+            return;
+        }
+        //On.Monocle.Collider.Collide_Collider -= Collider_Collide_Collider;
     }
 
     public Vector2[] Points;

@@ -14,8 +14,8 @@ public static class MonocleDrawShapeFixer {
         PixelTexture = Draw.Pixel.Texture.Texture_Safe;
         Hooks = new();
 
-        foreach (var method in typeof(Draw).GetMethods()) {
-            if (method.GetMethodBody() is { })
+        foreach (var method in typeof(Draw).GetMethods(BindingFlags.DeclaredOnly | BindingFlags.Static | BindingFlags.Public)) {
+            if (!method.Name.Contains("get_") && method.GetMethodBody() is { })
                 Hooks.Add(new(method, ChangePixelGetter));
         }
     }
