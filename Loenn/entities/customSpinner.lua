@@ -37,17 +37,20 @@ jautils.addPlacement(spinner, "rainbowTexture", {
 local function createConnectorsForSpinner(room, entity, baseBGSprite)
     local sprites = {}
 
-    for i = 1, #room.entities, 1 do
-        local e2 = room.entities[i]
+    local name = entity._name
+    local attachGroup = entity.attachGroup
+    local attachToSolid = entity.attachToSolid
+    local x, y = entity.x, entity.y
 
+    for _, e2 in ipairs(room.entities) do
         if e2 == entity then break end
 
-        if e2._name == entity._name and e2.attachGroup == entity.attachGroup and e2.attachToSolid == entity.attachToSolid and jautils.distanceSquared(entity.x, entity.y, e2.x, e2.y) < 576 then
+        if e2._name == name and e2.attachGroup == attachGroup and e2.attachToSolid == attachToSolid and jautils.distanceSquared(x, y, e2.x, e2.y) < 576 then
             local connector = jautils.copyTexture(baseBGSprite,
-                math.floor((entity.x + e2.x) / 2),
-                math.floor((entity.y + e2.y) / 2),
+                math.floor((x + e2.x) / 2),
+                math.floor((y + e2.y) / 2),
                 false)
-            connector.depth = -8499 --  1---8499
+            connector.depth = -8499
             table.insert(sprites, connector)
         end
     end
@@ -68,12 +71,12 @@ function spinner.sprite(room, entity)
         jautils.rainbowifyAll(room, sprites)
     end
 
-    local drawBorder = frostSettings.spinnerBorder() and (entity.drawOutline == nil and true or entity.drawOutline)
+    local drawBorder = frostSettings.spinnerBorder() and (entity.drawOutline ~= false)
     if drawBorder then
         sprites = jautils.getBordersForAll(sprites, entity.borderColor)
     end
 
-    if entity.bloomAlpha and entity.bloomAlpha > 0 and frostSettings.spinnerBloom() then
+    if frostSettings.spinnerBloom() and entity.bloomAlpha and entity.bloomAlpha > 0 then
         table.insert(sprites, bloomSprite.getSprite(entity, entity.bloomAlpha, entity.bloomRadius or 1))
     end
 

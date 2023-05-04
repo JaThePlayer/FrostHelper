@@ -23,7 +23,7 @@ jautils.addPlacement(jumpStar, "dash", {
 })
 
 function jumpStar.texture(room, entity)
-    return string.format("%s/%s/%sstar00", entity.directory or defaultDirectory, entity.mode, tostring(entity.strength or 0))
+    return string.format("%s/%s/%istar00", entity.directory or defaultDirectory, entity.mode, tostring(entity.strength or 0))
 end
 
 return jumpStar

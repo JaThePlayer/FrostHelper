@@ -1,7 +1,12 @@
 local frostSettings = {}
 local mods = require("mods")
+local compat = require("mods").requireFromPlugin("libraries.compat")
 
 function frostSettings.get(settingName, default)
+    if not compat.inLonn and not compat.inRysy then
+        return default
+    end
+
     local settings = mods.getModSettings()
     if not settingName then
         return settings
@@ -21,7 +26,7 @@ function frostSettings.spinnersConnect()
 end
 
 function frostSettings.spinnerBorder()
-    return frostSettings.get("graphics_spinners_createOutlines", true)
+    return frostSettings.get("graphics_spinners_createOutlines", false)
 end
 
 function frostSettings.spinnerBloom()
@@ -33,7 +38,7 @@ function frostSettings.rainbowsUseControllers()
 end
 
 function frostSettings.fancyDreamBlocks()
-    return frostSettings.get("graphics_dreamBlocks_fancy", true)
+    return frostSettings.get("graphics_dreamBlocks_fancy", false)
 end
 
 function frostSettings.useDebugRC()

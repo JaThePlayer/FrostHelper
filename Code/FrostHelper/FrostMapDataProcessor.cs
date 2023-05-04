@@ -1,4 +1,6 @@
-﻿namespace FrostHelper; 
+﻿#if MAP_PROCESSOR
+
+namespace FrostHelper; 
 
 public class FrostMapDataProcessor : EverestMapDataProcessor {
     public struct SpeedChallengeInfo {
@@ -55,3 +57,4 @@ public class FrostMapDataProcessor : EverestMapDataProcessor {
     public override void End() {
     }
 }
+#endif

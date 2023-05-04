@@ -4,6 +4,7 @@
 *.bat
 *.exe
 Starforge/
+Rysy/
 Audio/
 Graphics/
 .vscode/

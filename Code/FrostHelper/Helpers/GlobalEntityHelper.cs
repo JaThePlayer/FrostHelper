@@ -41,6 +41,7 @@ public static class GlobalEntityHelper {
     }
 
     private static void AddGlobals(Level self) {
+#if MAP_PROCESSOR
         // load global entities
         if (FrostMapDataProcessor.GlobalEntityMarkers.TryGetValue(self.Session.Area.SID, out var globalEntities)) {
             // prevent global entity duplication
@@ -56,6 +57,7 @@ public static class GlobalEntityHelper {
                 AddFromMarker(self, item, globalRooms);
             }
         }
+#endif
     }
 
     private static void AddFromMarker(Level self, KeyValuePair<string, BinaryPacker.Element> globalEntity, List<string> allGlobalRooms) {

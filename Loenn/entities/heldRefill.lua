@@ -6,7 +6,7 @@ local utils = require("utils")
 local heldRefill = {}
 heldRefill.name = "FrostHelper/HeldRefill"
 heldRefill.depth = -100
-heldRefill.nodeLimits = { 1, 999 }
+heldRefill.nodeLimits = { 1, math.huge }
 heldRefill.nodeLineRenderType = "line"
 
 jautils.createPlacementsPreserveOrder(heldRefill, "normal", {

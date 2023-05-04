@@ -1,7 +1,6 @@
 local utils = require("utils")
 local frostSettings = require("mods").requireFromPlugin("libraries.settings")
-local celesteRender = require("celeste_render")
-local loadedState = require("loaded_state")
+local compat = require("mods").requireFromPlugin("libraries.compat")
 
 local cachedControllers = { }
 
@@ -106,7 +105,7 @@ local function getColorFromController(room, x, y, controller)
 end
 
 function rainbowHelper.getRainbowHue(room, x, y, width, height)
-    if frostSettings.rainbowsUseControllers() then
+    if compat.inLonn and frostSettings.rainbowsUseControllers() then
         width, height = width or 16, height or 16
         local selfRect = utils.rectangle(x - width / 2, y - height / 2, width, height)
         local entities = cachedControllers[room.name] or room.entities
@@ -130,28 +129,33 @@ function rainbowHelper.getRainbowHue(room, x, y, width, height)
     return vanillaRainbow(room, x, y)
 end
 
--- HOOK - cache the controllers whenever the room cache gets invalidated, that way we don't iterate through all entities several times per redraw
--- this can be removed if a tracker gets added to lonn
-local _orig_invalidateRoomCache = celesteRender.invalidateRoomCache
+if compat.inLonn then
+    local celesteRender = require("celeste_render")
+    -- HOOK - cache the controllers whenever the room cache gets invalidated, that way we don't iterate through all entities several times per redraw
+    -- this can be removed if a tracker gets added to lonn
+    local _orig_invalidateRoomCache = celesteRender.invalidateRoomCache
 
-local function filterPredicate(entity)
-    local name = entity._name
+    local function filterPredicate(entity)
+        local name = entity._name
 
-    return name == "MaxHelpingHand/RainbowSpinnerColorController"
-        or name == "MaxHelpingHand/FlagRainbowSpinnerColorController"
-        or name == "MaxHelpingHand/RainbowSpinnerColorAreaController"
-        or name == "MaxHelpingHand/FlagRainbowSpinnerColorAreaController"
-end
-
-function celesteRender.getEntityBatch(room, entities, viewport, registeredEntities, forceRedraw)
-    if room and frostSettings.rainbowsUseControllers() then
-        --local room = utils.typeof(roomName) == "room" and roomName or loadedState.getRoomByName(roomName)
-
-        cachedControllers[room.name] = utils.filter(filterPredicate, room.entities)
+        return name == "MaxHelpingHand/RainbowSpinnerColorController"
+            or name == "MaxHelpingHand/FlagRainbowSpinnerColorController"
+            or name == "MaxHelpingHand/RainbowSpinnerColorAreaController"
+            or name == "MaxHelpingHand/FlagRainbowSpinnerColorAreaController"
     end
 
+    function celesteRender.getEntityBatch(room, entities, viewport, registeredEntities, forceRedraw)
+        if room and frostSettings.rainbowsUseControllers() then
+            --local room = utils.typeof(roomName) == "room" and roomName or loadedState.getRoomByName(roomName)
 
-    return _orig_invalidateRoomCache(room, entities, viewport, registeredEntities, forceRedraw)
+            cachedControllers[room.name] = utils.filter(filterPredicate, room.entities)
+        end
+
+
+        return _orig_invalidateRoomCache(room, entities, viewport, registeredEntities, forceRedraw)
+    end
 end
+
+
 
 return rainbowHelper

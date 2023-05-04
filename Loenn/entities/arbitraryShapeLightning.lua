@@ -11,7 +11,7 @@ jautils.createPlacementsPreserveOrder(lightning, "default", {
     { "fill", true },
 })
 
-lightning.sprite = arbitraryShapeEntity.getSpriteFunc("ffffff", "fcf579", "fcf57919")
+lightning.sprite = arbitraryShapeEntity.getSpriteFunc("ffffff", "fcf579", "fcf57919", "ff0000")
 lightning.nodeSprite = arbitraryShapeEntity.nodeSprite
 lightning.selection = arbitraryShapeEntity.selection
 

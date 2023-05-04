@@ -2,7 +2,7 @@ local jautils = require("mods").requireFromPlugin("libraries.jautils", "FrostHel
 local drawableLineStruct = require("structs.drawable_line")
 local drawableFunction = require("structs.drawable_function")
 local utils = require("utils")
-local drawing = require("utils.drawing")
+local drawing = jautils.inLonn and require("utils.drawing") or nil
 
 local helper = {}
 
@@ -21,15 +21,17 @@ local function drawFilledPolygon(pt, fillColor)
     end)
 end
 
-function helper.getSpriteFunc(nodeColor, lineColor, fillColor)
+function helper.getSpriteFunc(nodeColor, lineColor, fillColor, mainNodeColor)
     nodeColor = jautils.getColor(nodeColor or "ffffff")
     lineColor = jautils.getColor(lineColor or "fcf579")
     fillColor = jautils.getColor(fillColor or "fcf57919")
 
+    mainNodeColor = mainNodeColor or nodeColor
+
     return function(room, entity)
         if entity.nodes then
             local points = { entity.x, entity.y }
-            local nodeSprites = { point(entity, nodeColor)}
+            local nodeSprites = { point(entity, mainNodeColor)}
             for _, value in ipairs(entity.nodes) do
                 table.insert(points, value.x)
                 table.insert(points, value.y)
@@ -45,12 +47,12 @@ function helper.getSpriteFunc(nodeColor, lineColor, fillColor)
             end
 
             return jautils.union(
-                filled and drawableFunction.fromFunction(drawFilledPolygon, points, fillColor),
+                (filled and jautils.inLonn) and drawableFunction.fromFunction(drawFilledPolygon, points, fillColor),
                 drawableLineStruct.fromPoints(points, lineColor, 1),
                 nodeSprites
             )
         end
-        return jautils.getPixelSprite(entity.x, entity.y, nodeColor)
+        return jautils.getPixelSprite(entity.x, entity.y, mainNodeColor)
     end
 end
 

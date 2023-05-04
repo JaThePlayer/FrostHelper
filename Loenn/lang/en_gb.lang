@@ -142,6 +142,8 @@ entities.FrostHelper/CustomZipMover.placements.name.slow=Custom Zip Mover (Slow)
 entities.FrostHelper/CustomZipMover.placements.name.fast=Custom Zip Mover (Fast)
 entities.FrostHelper/CustomZipMover.attributes.description.directory=The directory from which the sprites are taken, relative to Atlases/Gameplay/
 entities.FrostHelper/CustomZipMover.attributes.description.percentage=The % of vanilla zip mover's speed that this zipper should use
+entities.FrostHelper/CustomZipMover.attributes.description.speedMultiplier=The multiplier to use for the zip mover's speed.\nReplaces the old "percentage" setting.
+entities.FrostHelper/CustomZipMover.attributes.description.coldSpeedMultiplier=If this is a core-mode zipper, this is the multiplier to use for the zip mover's speed in the cold core mode.\nThis used to be 1/4 of the zipper's regular speed.
 entities.FrostHelper/CustomZipMover.attributes.description.lineColor=Hex color used for drawing the zipper's path
 entities.FrostHelper/CustomZipMover.attributes.description.lineLightColor=Hex color used for drawing the light parts of the zipper's path
 entities.FrostHelper/CustomZipMover.attributes.description.isCore=Whether this zipper reacts to core mode
@@ -413,6 +415,14 @@ entities.FrostHelper/CustomSpinnerController.placements.description.default=Chan
 entities.FrostHelper/CustomSpinnerController.attributes.description.cycles=Toggles Spinner Cycles. Disabling this fixes exploits like spinner stun, and slightly improves performance.
 entities.FrostHelper/CustomSpinnerController.attributes.description.outlineShader=Shader used for rendering outlines. Leave blank for default rendering.\nspinnerSolidBorder: Makes borders a solid color (based on the Border Color property), instead of tinting the sprite, which is better for non-black outlines.
 
+entities.FrostHelper/GrowBlock.placements.name.default=Grow Block
+entities.FrostHelper/GrowBlock.placements.description.default=A block that expands after a flag gets activated, then goes back to its original location after some time.
+entities.FrostHelper/GrowBlock.attributes.description.flag=The flag this block reacts to. When the flag is set, the block starts growing (unless its already moving). When the flag is disabled, the blocks immediately vanish.
+entities.FrostHelper/GrowBlock.attributes.description.texture=The path to the texture to be used for the block. It can be any size.
+entities.FrostHelper/GrowBlock.attributes.description.blockGrowTime=How long (in seconds) it takes each block to grow.
+entities.FrostHelper/GrowBlock.attributes.description.vanishTime=How long (in seconds) it takes for the blocks to vanish after the entire chain has grown.
+entities.FrostHelper/GrowBlock.attributes.description.giveLiftBoost=Whether the blocks should give a lift boost to actors/the player while they're moving.
+
 # -- Mod Names --
 # mods.modName.*
 mods.FrostHelper.name=Frost Helper
@@ -590,6 +600,14 @@ triggers.FrostHelper/OnFlagActivator.attributes.description.triggerOnRoomBegin=W
 # FrostHelper/NoMovementTrigger
 triggers.FrostHelper/NoMovementTrigger.placements.name.default=No Movement
 triggers.FrostHelper/NoMovementTrigger.placements.description.default=Disables walking.
+
+triggers.FrostHelper/Timer.placements.name.default=Timer
+triggers.FrostHelper/Timer.placements.description.default=Creates a visible timer, which sets a flag once it expires.
+triggers.FrostHelper/Timer.attributes.description.flag=The flag to set once the timer expires. This flag will get disabled when the room loads automatically.
+triggers.FrostHelper/Timer.attributes.description.time=How long the timer is.
+triggers.FrostHelper/Timer.attributes.description.textColor=The color to use for the text.
+triggers.FrostHelper/Timer.attributes.description.iconColor=The color to use to tint the icon.
+triggers.FrostHelper/Timer.attributes.description.icon=The path to the icon to use for this timer, relative to Graphics/Atlases/Gameplay. Leave blank for no icon.
 
 # effects
 style.effects.FrostHelper/ShaderWrapper.name=Shader Wrapper

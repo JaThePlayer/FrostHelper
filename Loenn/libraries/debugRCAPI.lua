@@ -1,8 +1,12 @@
 -- provides friendly wrappers over Frost Helper's DebugRC API
 local utils = require("utils")
-local tasks = require("utils.tasks")
+local jautils = require("mods").requireFromPlugin("libraries.jautils")
 local frostSettings = require("mods").requireFromPlugin("libraries.settings")
-local hasRequest, request = utils.tryrequire("lib.luajit-request.luajit-request")
+
+local hasRequest, request = false, nil
+if jautils.inLonn then
+    hasRequest, request = utils.tryrequire("lib.luajit-request.luajit-request")
+end
 
 local port = 32270
 

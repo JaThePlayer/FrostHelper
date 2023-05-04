@@ -1,5 +1,6 @@
 ﻿using Celeste.Mod.Helpers;
 using FrostHelper.Helpers;
+using System.Diagnostics;
 
 namespace FrostHelper;
 
@@ -268,7 +269,7 @@ public static class TypeHelper {
             ["FrostHelper/CustomDreamBlock"] = typeof(CustomDreamBlockV2),
         };
 
-        foreach (var type in FakeAssembly.GetFakeEntryAssembly().GetTypesSafe()) {
+        foreach (var type in FakeAssembly.GetFakeEntryAssembly().GetTypes()) {
             checkType(type);
         }
 

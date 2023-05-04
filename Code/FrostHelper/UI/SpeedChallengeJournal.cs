@@ -1,5 +1,5 @@
 ﻿namespace FrostHelper;
-
+#if MAP_PROCESSOR
 public class SpeedChallengePage : CustomJournalPage {
     public SpeedChallengePage(CustomJournal journal, string[] challenges) : base(journal) {
         PageTexture = "page";
@@ -504,3 +504,4 @@ public class CustomJournal : Entity {
 
     private float rightArrowEase;
 }
+#endif

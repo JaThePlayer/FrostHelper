@@ -2,7 +2,7 @@ local utils = require("utils")
 local mods = require("mods")
 local jautils = mods.requireFromPlugin("libraries.jautils")
 local fhDebugRC = mods.requireFromPlugin("libraries.debugRCAPI")
-local entities = require("entities")
+local entities = jautils.inLonn and require("entities") or nil
 
 local entityMover = {}
 
@@ -146,7 +146,10 @@ function entityMover.sprite(room, entity, viewport)
 
     -- node
     jautils.addAll(sprites, jautils.getBorderedRectangleSprites(utils.rectangle(node.x, node.y, entity.width, entity.height), nodeFillColor, nodeOutlineColor))
-    addSpritesOfMovedEntities(sprites, entity, room, viewport, node)
+
+    if jautils.inLonn then
+        addSpritesOfMovedEntities(sprites, entity, room, viewport, node)
+    end
 
     return sprites
 end

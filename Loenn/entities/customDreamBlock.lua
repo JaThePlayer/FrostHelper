@@ -8,7 +8,8 @@ local particleColors = { jautils.getColor("FFEF11"), jautils.getColor("FF00D0"),
                          jautils.getColor("5fcde4"), jautils.getColor("7fb25e"), jautils.getColor("E0564C"),
                          jautils.getColor("5b6ee1"), jautils.getColor("CC3B3B"), jautils.getColor("7daa64"), }
 
-local particleSizes = { 1, 4, 6}
+--local particleSizes = { 1, 3, 5 }
+local particleXPoses = { 0, 7, 7, 14 }
 
 local dreamBlock = {}
 
@@ -37,12 +38,13 @@ jautils.createPlacementsPreserveOrder(dreamBlock, "custom_dream_block", {
 
 local function addParticles(sprites, entity)
     utils.setSimpleCoordinateSeed(entity.x, entity.y)
-    local baseParticle = drawableSprite.fromTexture(particlePath, entity)
+    --local baseParticle = drawableSprite.fromTexture(particlePath, entity)
     for i = 1, entity.width / 8 * (entity.height / 8) * 0.7, 1 do
-        local particle = drawableSprite.fromMeta(baseParticle.meta, entity)
-        local particleIndex = math.random(0,2)
-        local particleSize = particleSizes[particleIndex + 1]
-        particle:useRelativeQuad(particleIndex * 6, 0, particleSize, particleSize)
+        local particle = drawableSprite.fromTexture(particlePath, entity)--drawableSprite.fromMeta(baseParticle.meta, entity)
+        local particleIndex = math.random(0,3)
+        local particleSize = 7
+
+        particle:useRelativeQuad(particleXPoses[particleIndex + 1], 0, particleSize, particleSize)
         particle:setJustification(0.0, 0.0)
         particle:setColor(particleColors[math.random(1, 9)])
         particle:setPosition(entity.x + math.random(0, entity.width - particleSize - 3), entity.y + math.random(0, entity.height - particleSize - 3))

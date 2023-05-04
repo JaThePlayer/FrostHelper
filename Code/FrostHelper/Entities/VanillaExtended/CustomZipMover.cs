@@ -23,12 +23,12 @@ public class CustomZipMover : Solid {
     bool isCore = false;
     bool iceModeNext = false;
     bool iceMode = false;
-    string hexcolor = "0";
-    string hexlightcolor = "0";
-    string coldhexcolor = "0";
-    string coldhexlightcolor = "0";
-    string hothexcolor = "0";
-    string hothexlightcolor = "0";
+
+    Color ColdLineColor;
+    Color ColdLightLineColor;
+    Color HotLineColor;
+    Color HotLightLineColor;
+
     bool drawLine;
     Color tint = Color.White;
 
@@ -45,22 +45,21 @@ public class CustomZipMover : Solid {
 
     private void ToggleSprite() {
         if (iceMode) {
-            hexcolor = coldhexcolor;
-            hexlightcolor = coldhexlightcolor;
+            ropeColor = ColdLineColor;
+            ropeLightColor = ColdLightLineColor;
             innercogstr = directory + "/cold/innercog";
             cogstr = directory + "/cold/cog";
             blockstr = directory + "/cold/block";
-            percentage /= 4;
+            SpeedMult = SpeedMultIce;
         } else {
-            hexcolor = hothexcolor;
-            hexlightcolor = hothexlightcolor;
+            ropeColor = HotLineColor;
+            ropeLightColor = HotLightLineColor;
             innercogstr = directory + "/innercog";
             cogstr = directory + "/cog";
             blockstr = directory + "/block";
-            percentage *= 4;
+            SpeedMult = SpeedMultNormal;
         }
-        ropeColor = ColorHelper.GetColor(hexcolor);
-        ropeLightColor = ColorHelper.GetColor(hexlightcolor);
+
         innerCogs = GFX.Game.GetAtlasSubtextures(innercogstr);
 
         CreateSprites();
@@ -76,6 +75,8 @@ public class CustomZipMover : Solid {
         lightstr = innercogstr;
         cogstr = innercogstr;
         blockstr = innercogstr;
+
+        string hexcolor, hexlightcolor;
         switch (data.Enum("color", LineColor.Custom)) // legacy support
         {
             case LineColor.Red:
@@ -113,10 +114,10 @@ public class CustomZipMover : Solid {
             case LineColor.Core:
                 hexcolor = "e62e00"; // 230 46 0
                 hexlightcolor = "ff5c33";
-                coldhexcolor = "006bb3";
-                coldhexlightcolor = "0099ff";
-                hothexcolor = hexcolor;
-                hothexlightcolor = hexlightcolor;
+                ColdLineColor = ColorHelper.GetColor("006bb3");
+                ColdLightLineColor = ColorHelper.GetColor("0099ff");
+                HotLineColor = ColorHelper.GetColor(hexcolor);
+                HotLightLineColor = ColorHelper.GetColor(hexlightcolor);
                 innercogstr += "redcog/innercog";
                 cogstr += "redcog/cog";
                 blockstr += "redcog/block";
@@ -127,10 +128,10 @@ public class CustomZipMover : Solid {
             case LineColor.Custom:
                 hexcolor = data.Attr("lineColor", "663931");
                 hexlightcolor = data.Attr("lineLightColor", "ff5c33");
-                coldhexcolor = data.Attr("coldLineColor", "663931");
-                coldhexlightcolor = data.Attr("coldLineLightColor", "663931");
-                hothexcolor = data.Attr("lineColor", "663931");
-                hothexlightcolor = data.Attr("lineLightColor", "ff5c33");
+                ColdLineColor = data.GetColor("coldLineColor", "663931");
+                ColdLightLineColor = data.GetColor("coldLineLightColor", "663931");
+                HotLineColor = data.GetColor("lineColor", "663931");
+                HotLightLineColor = data.GetColor("lineLightColor", "ff5c33");
                 directory = data.Attr("directory", "objects/zipmover");
                 // legacy support - bluecog was moved to redcog/cold to make core mode work correctly with them without hardcoding. We need this to make maps using the old directory still work. Ahorn doesn't have this however, so that new users won't accidentaly use this.
                 if (directory == "objects/FrostHelper/customZipMover/bluecog")
@@ -177,7 +178,17 @@ public class CustomZipMover : Solid {
         sfx.Position = new Vector2(Width, Height) / 2f;
         Add(sfx);
 
-        percentage = data.Float("percentage", 100f);
+        //percentage = data.Float("percentage", 100f);
+        if (data.Has("percentage")) {
+            SpeedMultNormal = data.Float("percentage", 100f) / 100f;
+            SpeedMultIce = SpeedMultNormal / 4;
+        } else {
+            SpeedMultNormal = data.Float("speedMultiplier", 1f);
+            SpeedMultIce = data.Float("coldSpeedMultiplier", 0.25f);
+        }
+
+        SpeedMult = SpeedMultNormal;
+
         FillMiddle = data.Bool("fillMiddle", true);
     }
 
@@ -330,7 +341,7 @@ public class CustomZipMover : Solid {
                 float at = 0f;
                 while (at < 1f) {
                     yield return null;
-                    at = Calc.Approach(at, 1f, 2f * Engine.DeltaTime * (percentage / 100f));
+                    at = Calc.Approach(at, 1f, 2f * Engine.DeltaTime * (SpeedMult));
                     percent = Ease.SineIn(at);
                     Vector2 vector = Vector2.Lerp(start, target, percent);
                     //this.ScrapeParticlesCheck(vector);
@@ -368,7 +379,9 @@ public class CustomZipMover : Solid {
         return (x % m + m) % m;
     }
 
-    public float percentage;
+    public float SpeedMult, SpeedMultNormal, SpeedMultIce;
+
+    //public float percentage;
     public static ParticleType P_Scrape;
     public static ParticleType P_Sparks;
     private MTexture[,] edges;

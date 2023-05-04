@@ -7,7 +7,8 @@ local jautils = require("mods").requireFromPlugin("libraries.jautils")
 local wireLamps = {
     name = "FrostHelper/WireLamps",
     nodeLimits = {1, 1},
-    nodeLineRenderType = "none"
+    nodeLineRenderType = "none",
+    nodeVisibility = "never",
 }
 
 function wireLamps.depth(room, entity)

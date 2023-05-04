@@ -1,4 +1,4 @@
-﻿#if SPEEDCHALLENGES
+﻿#if MAP_PROCESSOR
 
 namespace FrostHelper;
 

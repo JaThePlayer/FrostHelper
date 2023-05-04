@@ -5,11 +5,20 @@ local drawableLineStruct = require("structs.drawable_line")
 local utils = require("utils")
 local xnaColors = require("consts.xna_colors")
 local rainbowHelper = require("mods").requireFromPlugin("libraries.rainbowHelper")
+local compat = require("mods").requireFromPlugin("libraries.compat")
 
 ---@alias color string | table<integer, number>
 ---@alias sprite table
 
 local jautils = {}
+
+--[[
+    Compatibility
+]]
+-- whether we're currently running in Lönn
+jautils.inLonn = compat.inLonn
+-- whether we're currently running in Rysy
+jautils.inRysy = compat.inRysy
 
 jautils.easings = "FrostHelper.easing"
 jautils.tweenModes = require("mods").requireFromPlugin("libraries.tweenModes")
@@ -49,6 +58,36 @@ function jautils.addAll(addTo, toAddTable, insertLoc)
 
 
     return addTo
+end
+
+--[[
+    RYSY-accelerated
+]]
+
+-- returns an iterator that returns all entities of a certain SID in the room
+-- accelerated in Rysy
+function jautils.entitiesWithSID(room, typeName)
+    if RYSY then
+        return ipairs(RYSY.entitiesWithSID(room, typeName))
+    end
+
+    local function iter(tbl, i)
+        ::start::
+        i = i + 1
+        local v = tbl[i]
+        if v==nil then
+            return
+        end
+
+        if v._name ~= typeName then
+            goto start
+        end
+
+        return i, v
+    end
+
+    -- return iterator function, table, and starting point
+    return iter, room.entities, 0
 end
 
 --[[
@@ -228,6 +267,8 @@ function jautils.getCustomSpritePath(entity, spritePropertyName, spritePostfix, 
     local path = entity[spritePropertyName]
     if path then
         local fullPath = path .. (spritePostfix or "")
+        fullPath = string.gsub(fullPath, "//", "/")
+
         sprite = drawableSpriteStruct.fromTexture(fullPath, entity)
         if sprite then
             return fullPath, sprite
@@ -380,6 +421,40 @@ end
 --[[
     MATH
 ]]
+
+-- checks if two vectors are equal
+function jautils.equalVec(ax, ay, bx, by)
+    return ax == bx and ay == by
+end
+
+function jautils.lengthVec(x, y)
+    return math.sqrt(x * x + y * y);
+end
+
+-- reimplementation of Calc.Approach(Vector2, Vector2, float)
+function jautils.approachVec(fromX, fromY, targetX, targetY, maxMove)
+    if (maxMove == 0 or (fromX == targetX and fromY == targetY)) then
+        return fromX, fromY
+    end
+
+    local diffX, diffY = targetX - fromX, targetY - fromY
+    if (jautils.lengthVec(diffX, diffY) < maxMove) then
+        return targetX, targetY
+    end
+
+    local angleX, angleY = jautils.normalize(diffX, diffY)
+
+    return fromX + (angleX * maxMove), fromY + (angleY * maxMove)
+end
+
+-- reimplementation of Calc.Approach(float, float, float)
+function jautils.approach(from, to, maxMove)
+    if from <= to then
+        return math.min(from + maxMove, to)
+    end
+
+    return math.max(from - maxMove, to)
+end
 
 function jautils.map(val, min, max, newMin, newMax)
     return (val - min) / (max - min) * (newMax - newMin) + newMin
