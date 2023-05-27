@@ -111,4 +111,11 @@ public static class Extensions {
 
         return component;
     }
+
+    /// <summary>
+    /// Forcibly removes this entity from the scene, even if it was added this frame
+    /// </summary>
+    public static void ForceRemoveSelf(this Entity e) {
+        e.Scene?.Entities.toRemove.Add(e);
+    }
 }

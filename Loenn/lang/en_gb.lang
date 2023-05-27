@@ -422,6 +422,7 @@ entities.FrostHelper/GrowBlock.attributes.description.texture=The path to the te
 entities.FrostHelper/GrowBlock.attributes.description.blockGrowTime=How long (in seconds) it takes each block to grow.
 entities.FrostHelper/GrowBlock.attributes.description.vanishTime=How long (in seconds) it takes for the blocks to vanish after the entire chain has grown.
 entities.FrostHelper/GrowBlock.attributes.description.giveLiftBoost=Whether the blocks should give a lift boost to actors/the player while they're moving.
+entities.FrostHelper/GrowBlock.attributes.description.vanishOnFlagUnset=Whether the blocks should immediately vanish when the flag gets turned off.
 
 # -- Mod Names --
 # mods.modName.*
@@ -608,6 +609,9 @@ triggers.FrostHelper/Timer.attributes.description.time=How long the timer is.
 triggers.FrostHelper/Timer.attributes.description.textColor=The color to use for the text.
 triggers.FrostHelper/Timer.attributes.description.iconColor=The color to use to tint the icon.
 triggers.FrostHelper/Timer.attributes.description.icon=The path to the icon to use for this timer, relative to Graphics/Atlases/Gameplay. Leave blank for no icon.
+
+triggers.FrostHelper/LightningBaseColorTrigger.placements.name.default=Darkness Base Color
+triggers.FrostHelper/LightningBaseColorTrigger.attributes.description.color=The new color to use.
 
 # effects
 style.effects.FrostHelper/ShaderWrapper.name=Shader Wrapper

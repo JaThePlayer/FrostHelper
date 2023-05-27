@@ -16,11 +16,14 @@ public sealed class GrowBlock : Entity {
     public float CollapseTime;
     public int MaxBlocks;
     public readonly Color Tint;
+    public readonly bool VanishOnFlagUnset;
 
     Vector2[] Nodes;
     List<Vector2> BlockPositions;
     List<Block> Blocks;
     Coroutine? GrowCoroutine;
+
+    private int Version;
 
     public GrowBlock(EntityData data, Vector2 offset) : base(data.Position + offset) {
         string texturePath = data.Attr("texture", "objects/FrostHelper/growBlock/green");
@@ -39,11 +42,15 @@ public sealed class GrowBlock : Entity {
             MaxBlocks = int.MaxValue;
         }
 
+        VanishOnFlagUnset = data.Bool("vanishOnFlagUnset", false);
+
+        Version = data.Int("version", 0);
+
         Add(new FlagListener(flag, OnFlag, false, false));
 
         Blocks = new();
 
-        CalculateTargetBlockPositions();
+        //CalculateTargetBlockPositions();
     }
 
     private void CalculateTargetBlockPositions() {
@@ -70,20 +77,23 @@ public sealed class GrowBlock : Entity {
                 GrowCoroutine = new Coroutine(GrowRoutine());
                 Add(GrowCoroutine);
             }
-        } else {
-            // flag just got unset - remove all blocks
-            //GrowCoroutine?.RemoveSelf();
-            //GrowCoroutine = null;
+            return;
+        }
 
-            //CollapseAllBlocks();
+        if (VanishOnFlagUnset) {
+            GrowCoroutine?.RemoveSelf();
+            GrowCoroutine = null;
+
+            CollapseAllBlocks();
         }
     }
 
-    public IEnumerator GrowRoutine() {
+    private IEnumerator GrowRoutine_Ver0() {
+        var startPos = Position;
         var i = 0;
 
-        var startPos = Position;
         while (i < BlockPositions.Count) {
+            var time = BlockGrowTime;
             var blockPos = BlockPositions[i];
 
             if (Blocks.Count < MaxBlocks) {
@@ -93,14 +103,62 @@ public sealed class GrowBlock : Entity {
                 for (int j = 0; j < Blocks.Count; j++) {
                     var block = Blocks[j];
 
-                    block.AddMoveTween(block.Position, BlockPositions[j + i - MaxBlocks + 1], BlockGrowTime, GiveLiftBoost);
+                    block.AddMoveTween(block.Position, BlockPositions[j + i - MaxBlocks + 1], time, GiveLiftBoost);
                 }
             }
 
-            yield return BlockGrowTime;
+
+            yield return time;
 
             i++;
             startPos = blockPos;
+        }
+    }
+
+    // version 1: fixed drastic speed changes depending on game speed
+    private IEnumerator GrowRoutine_Ver1() {
+        var startPos = Position;
+        var i = 0;
+        float remainingTime = Engine.DeltaTime;
+
+        while (i < BlockPositions.Count) {
+            var time = BlockGrowTime;
+            var goalPos = BlockPositions[i];
+
+            AddBlock(startPos, startPos, allowStaticMovers: false);
+            while (time > 0f) {
+                var delta = Math.Min(time, Math.Min(remainingTime, BlockGrowTime));
+                time -= delta;
+                remainingTime -= delta;
+
+                var percent = 1f - (Math.Max(0f, time) / BlockGrowTime);
+
+                var nextPos = Vector2.Lerp(startPos, goalPos, percent).Floor();
+                Blocks[0].Move(nextPos, GiveLiftBoost, (goalPos - startPos) / BlockGrowTime / Engine.DeltaTime);
+
+                if (remainingTime <= 0f) {
+                    yield return null;
+                    remainingTime = Engine.DeltaTime;
+                }
+            }
+
+            i++;
+            startPos = goalPos;
+        }
+
+        Blocks[0].Move(BlockPositions.Last(), GiveLiftBoost, (BlockPositions.Last() - BlockPositions[BlockPositions.Count - 2]) / BlockGrowTime / Engine.DeltaTime);
+    }
+
+    public IEnumerator GrowRoutine() {
+        CalculateTargetBlockPositions();
+
+        switch (Version) {
+            case 0:
+                yield return new SwapImmediately(GrowRoutine_Ver0());
+                break;
+            case 1:
+                yield return new SwapImmediately(GrowRoutine_Ver1());
+                break;
         }
 
         float collapseTime = CollapseTime;
@@ -141,7 +199,7 @@ public sealed class GrowBlock : Entity {
         var startBlock = Blocks[0];
 
         for (int i = 1; i < Blocks.Count; i++) {
-            Blocks[i].RemoveSelf();
+            Blocks[i].ForceRemoveSelf();
         }
 
         Blocks.Clear();
@@ -149,7 +207,7 @@ public sealed class GrowBlock : Entity {
         startBlock.Reset(Position);
     }
 
-    public void AddBlock(Vector2 startPos, Vector2 goalPos, bool allowStaticMovers) {
+    public Block AddBlock(Vector2 startPos, Vector2 goalPos, bool allowStaticMovers) {
         var block = new Block(startPos.Floor(), BaseTexture, BlockSize, Tint);
         block.AllowStaticMovers = allowStaticMovers;
 
@@ -157,6 +215,7 @@ public sealed class GrowBlock : Entity {
 
         Blocks.Add(block);
         Scene.Add(block);
+        return block;
     }
 
     public class Block : Solid {
@@ -172,6 +231,16 @@ public sealed class GrowBlock : Entity {
         public void Reset(Vector2 pos) {
             MoveToNaive(pos);
             Image.Color = Color.White;
+
+            Components.RemoveAll<Tween>();
+        }
+
+        public void Move(Vector2 nextPos, bool liftBoost, Vector2 lift) {
+            if (liftBoost) {
+                MoveTo(nextPos, lift);
+            } else {
+                MoveTo(nextPos, liftSpeed: default);
+            }
         }
 
         public Tween? AddMoveTween(Vector2 startPos, Vector2 goalPos, float time, bool liftBoost) {

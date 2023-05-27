@@ -472,6 +472,11 @@ public class CustomSpinner : Entity {
         return renderer;
     }
 
+    private static void FixPos(Image image) {
+        Vector2 vector = image.Origin.Rotate(image.Rotation.ToRad());
+        image.Position = image.Position.Round() + vector - vector.Round();
+    }
+
     public void AddSprite(Vector2 offset) {
         offset = offset.Floor();
 
@@ -491,6 +496,7 @@ public class CustomSpinner : Entity {
         image.CenterOrigin();
         if (Rainbow)
             image.Color = ColorHelper.GetHue(Scene, Position + offset);
+        FixPos(image);
         filler.Add(image);
 
         if (HasDeco) {
@@ -620,6 +626,9 @@ public class SpinnerConnectorRenderer : Entity {
 
     public void ForceRender() {
         foreach (var spinner in Spinners) {
+            if (spinner.filler != null) {
+                spinner.filler.Position = spinner.Position;
+            }
             //item.filler?.Render();
             // Entity.Render is hooked by some mods, and has a lot of indirection, let's just do this manually...
             if (spinner.Visible && spinner.filler is { } filler) {

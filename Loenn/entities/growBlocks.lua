@@ -27,8 +27,12 @@ jautils.createPlacementsPreserveOrder(growBlock, "default", {
     { "vanishTime", 1.0 },
     { "giveLiftBoost", true },
 	{ "tint", "ffffff", "color" },
+    { "vanishOnFlagUnset", false },
+    { "version", 1, "integer" }
     -- { "maxBlocks", 0 },
 })
+
+growBlock.ignoredFields = { "version" }
 
 function growBlock.nodeSprite() end
 

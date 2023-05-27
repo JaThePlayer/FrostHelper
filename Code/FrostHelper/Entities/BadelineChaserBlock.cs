@@ -49,8 +49,8 @@ public class BadelineChaserBlock : Solid {
         if (Pressed != state) {
             //Emblem.Play(Pressed ^ Reversed ? "solid" : "pressed");
             Pressed = state;
-            ShiftSize(state ^ Reversed ? 1 : -1);
-
+            // ShiftSize(state ^ Reversed ? 1 : -1);
+            ShiftSize(-1);
 
             justChangedState = true;
         }
@@ -76,6 +76,13 @@ public class BadelineChaserBlock : Solid {
     }
 
     public override void Update() {
+        if (justChangedState) {
+
+            //ShiftSize(Pressed ^ Reversed ? -1 : 1);
+            ShiftSize(1);
+            justChangedState = false;
+        }
+
         Player entity = Scene.Tracker.GetEntity<Player>();
         bool lastCollidable = Collidable;
         Collidable = true;
@@ -120,11 +127,6 @@ public class BadelineChaserBlock : Solid {
         base.Render();
         Emblem.Play(Collidable ? "solid" : "pressed");
         DrawBlock(Position, Width, Height, !Collidable ? nineSlicePressed : nineSliceSolid, Emblem, Color.White);
-        if (justChangedState) {
-
-            ShiftSize(Pressed ^ Reversed ? 1 : -1);
-            justChangedState = false;
-        }
     }
 
     // stolen from SwapBlock

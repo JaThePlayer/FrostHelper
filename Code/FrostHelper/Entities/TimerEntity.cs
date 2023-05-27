@@ -64,6 +64,7 @@ public class TimerEntity : Trigger {
             TimeLeft -= Engine.DeltaTime;
 
             if (TimeLeft <= 0) {
+                TimeLeft = 0;
                 SceneAs<Level>()?.Session.SetFlag(Flag, true);
 
                 var tween = Tween.Create(Tween.TweenMode.Oneshot, Ease.Linear, duration: 1f, start: true);

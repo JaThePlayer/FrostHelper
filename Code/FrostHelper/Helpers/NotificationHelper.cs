@@ -5,7 +5,7 @@ public static class NotificationHelper {
     }
 
     public static void Notify(Notification notification) {
-        var controller = ControllerHelper<NotificationController>.AddToSceneIfNeeded(FrostModule.GetCurrentLevel());
+        var controller = ControllerHelper<NotificationController>.AddToSceneIfNeeded(FrostModule.TryGetCurrentLevel() ?? Engine.Scene);
 
         controller.Push(notification);
     }

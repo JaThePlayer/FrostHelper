@@ -20,6 +20,7 @@ public static class BackdropLoader {
         return child.Name switch {
             "FrostHelper/EntityBackdrop" => new EntityBackdrop(child),
             "FrostHelper/ShaderWrapper" => new ShaderWrapperBackdrop(child),
+            "FrostHelper/ShaderFolder" => new ShaderFolder(map, child),
             _ => orig(map, child, above),
         };
     }

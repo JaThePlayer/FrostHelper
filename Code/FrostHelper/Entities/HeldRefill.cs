@@ -27,7 +27,7 @@ public class HeldRefill : Entity {
         }
 
 
-        SpeedMult = data.Float("speed", 6f);
+        SpeedMult = Math.Max(data.Float("speed", 6f), 0);
 
         Add(Sprite = new Sprite(GFX.Game, "objects/refill/idle"));
         Sprite.AddLoop("idle", "", 0.1f);
