@@ -212,7 +212,7 @@ entities.FrostHelper/GrayBooster.attributes.description.enterSfx=SFX to play whe
 entities.FrostHelper/GrayBooster.attributes.description.reappearSfx=SFX to play when the booster respawns
 entities.FrostHelper/GrayBooster.attributes.description.boostSfx=SFX to play when the booster starts boosting the player
 entities.FrostHelper/GrayBooster.attributes.description.red=Whether this booster should act like a red one, that has an unlimited range.
-entities.FrostHelper/GrayBooster.dashes=How many dashes the player will have after leaving the booster. Set to -1 to simply refill dashes according to the current maximum dash count.
+entities.FrostHelper/GrayBooster.attributes.description.dashes=How many dashes the player will have after leaving the booster.\nSet to -1 to simply refill dashes according to the current maximum dash count.\nSet to -2 to not change dash count in any way.\nOther positive values will set the dash count to the specified amount.\nOther negative values crash.
 
 entities.FrostHelper/BlueBooster.attributes.description.directory=The directory from which the sprites are taken, relative to Atlases/Gameplay/
 entities.FrostHelper/BlueBooster.attributes.description.respawnTime=Time (in seconds) it takes the booster to respawn after being used
@@ -233,7 +233,7 @@ entities.FrostHelper/YellowBooster.attributes.description.enterSfx=SFX to play w
 entities.FrostHelper/YellowBooster.attributes.description.reappearSfx=SFX to play when the booster respawns
 entities.FrostHelper/YellowBooster.attributes.description.boostSfx=SFX to play when the booster starts boosting the player
 entities.FrostHelper/YellowBooster.attributes.description.flashTint=The hex color to use when the booster flashes due to time running out
-entities.FrostHelper/YellowBooster.dashes=How many dashes the player will have after leaving the booster. Set to -1 to simply refill dashes according to the current maximum dash count.
+entities.FrostHelper/YellowBooster.attributes.description.dashes=How many dashes the player will have after leaving the booster.\nSet to -1 to simply refill dashes according to the current maximum dash count.\nSet to -2 to not change dash count in any way.\nOther positive values will set the dash count to the specified amount.\nOther negative values crash.
 
 entities.FrostHelper/IncrementBooster.attributes.description.directory=The directory from which the sprites are taken, relative to Atlases/Gameplay/
 entities.FrostHelper/IncrementBooster.attributes.description.respawnTime=Time (in seconds) it takes the booster to respawn after being used

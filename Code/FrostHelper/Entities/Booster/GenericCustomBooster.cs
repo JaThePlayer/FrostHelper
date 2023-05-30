@@ -125,6 +125,7 @@ namespace FrostHelper.Entities.Boosters {
         public bool PreserveSpeed;
         /// <summary>
         /// Set to -1 to refill dashes to dash cap (default)
+        /// Set to -2 to not touch dash count at all
         /// </summary>
         public int DashRecovery;
 
@@ -370,10 +371,19 @@ namespace FrostHelper.Entities.Boosters {
         }
 
         public virtual void HandleDashRefill(Player player) {
-            if (DashRecovery == -1) {
-                player.RefillDash();
-            } else {
-                player.Dashes = DashRecovery;
+            switch (DashRecovery) {
+                case -1:
+                    player.RefillDash();
+                    break;
+                case -2:
+                    // no recovery
+                    break;
+                case < -2:
+                    NotificationHelper.Notify($"Invalid value for the 'dashes' property: {DashRecovery}.\nExpected a value >= -2.\nReport this to the mapmaker!");
+                    break;
+                default:
+                    player.Dashes = DashRecovery;
+                    break;
             }
         }
 

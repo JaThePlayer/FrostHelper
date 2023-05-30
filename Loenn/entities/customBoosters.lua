@@ -3,6 +3,15 @@ local utils = require("utils")
 
 local fallback = "objects/FrostHelper/dashIncrementBooster/booster00"
 
+local dashesOptions = {
+    fieldType = "integer",
+    options = {
+        ["-1 (Refill)"] = -1,
+        ["-2 (No Change)"] = -2,
+    },
+    minimumValue = -2
+}
+
 local function getSpriteForBooster(room, entity)
     return jautils.getCustomSprite(entity, "directory", "/booster00", fallback)
 end
@@ -66,7 +75,7 @@ local grayBooster = createCustomBoosterHandler("FrostHelper/GrayBooster", {
     { "boostSfx", "event:/game/04_cliffside/greenbooster_dash" },
     { "releaseSfx", "event:/game/04_cliffside/greenbooster_end" },
     { "red", false },
-    { "dashes", -1 },
+    { "dashes", -1, dashesOptions },
     { "preserveSpeed", false },
 },
 {
@@ -103,7 +112,7 @@ local yellowBooster = createCustomBoosterHandler("FrostHelper/YellowBooster", {
     { "enterSfx", "event:/game/04_cliffside/greenbooster_enter" },
     { "boostSfx", "event:/game/04_cliffside/greenbooster_dash" },
     { "releaseSfx", "event:/game/04_cliffside/greenbooster_end" },
-    { "dashes", -1 },
+    { "dashes", -1, dashesOptions },
 })
 
 return {

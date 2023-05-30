@@ -2,9 +2,9 @@ local tagHelper = {}
 
 local function _findAllTagsScan(into, styles)
     for _, style in ipairs(styles) do
-        -- tags can be split by ','
         local tagStr = style.tag
         if tagStr then
+            -- tags can be split by ','
             local tags = style.tag:split(',')()
             for _, tag in ipairs(tags) do
                 into[tag] = true
