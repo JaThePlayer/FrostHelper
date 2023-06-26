@@ -598,6 +598,14 @@ triggers.FrostHelper/OnFlagActivator.attributes.description.targetState=The stat
 triggers.FrostHelper/OnFlagActivator.attributes.description.mustChange=Whether the state of the flag must be changed for this to activate triggers.\nFor example if your flag is ON, then a trigger sets it to ON again, if this setting is disabled, then the activator will still trigger.\nHowever, if this setting is enabled, it will not trigger, because the value of this flag didn't change.
 triggers.FrostHelper/OnFlagActivator.attributes.description.triggerOnRoomBegin=Whether this activator should also immediately activate upon loading the room, if the flag is in the correct state.
 
+# FrostHelper/OnCassetteSwapActivator
+triggers.FrostHelper/OnCassetteSwapActivator.placements.name.default=Activator (On Cassette Block Swap)
+triggers.FrostHelper/OnCassetteSwapActivator.placements.description.default=When the cassette blocks swap, activates triggers which intersect with the nodes of this trigger, optionally after a given delay.
+triggers.FrostHelper/OnCassetteSwapActivator.attributes.description.once=Whether this trigger should only activate once, and then get deleted.
+triggers.FrostHelper/OnCassetteSwapActivator.attributes.description.delay=How long to wait (in seconds) before actually activating the triggers.
+triggers.FrostHelper/OnCassetteSwapActivator.attributes.description.activationMode=How the activation should work:\nAll: All triggers get activated at once.\nCycle: When this trigger activates for the n-th time, the n-th trigger will be chosen.\nRandom: A random (seeded) trigger will be chosen.
+triggers.FrostHelper/OnCassetteSwapActivator.attributes.description.targetIndex=The cassette index to react to. Leave at -1 to trigger on every swap
+
 # FrostHelper/NoMovementTrigger
 triggers.FrostHelper/NoMovementTrigger.placements.name.default=No Movement
 triggers.FrostHelper/NoMovementTrigger.placements.description.default=Disables walking.
@@ -621,3 +629,5 @@ style.effects.FrostHelper/ShaderWrapper.description.shader=The path to the shade
 # other
 ui.fh.attachGroup.tooltip=Assigns this entity a new group that's not yet used in this room
 ui.fh.attachGroup.name=Auto
+
+ui.menubar.fh_showSpinnerConnectors=Show Spinner Connectors [Frost Helper]

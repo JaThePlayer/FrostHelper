@@ -26,18 +26,32 @@ function frostSettings.spinnersConnect()
 end
 
 function frostSettings.spinnerBorder()
+    if compat.inLonn then
+        return false
+    end
+
     return frostSettings.get("graphics_spinners_createOutlines", false)
 end
 
 function frostSettings.spinnerBloom()
+    if compat.inLonn then
+        return false
+    end
+
     return frostSettings.get("graphics_spinners_renderBloom", false)
 end
 
 function frostSettings.rainbowsUseControllers()
-    return frostSettings.get("graphics_rainbows_useMaxHelpingHandControllers", true)
+    return false -- way too laggy
+
+    --return frostSettings.get("graphics_rainbows_useMaxHelpingHandControllers", true)
 end
 
 function frostSettings.fancyDreamBlocks()
+    if compat.inLonn then
+        return false
+    end
+
     return frostSettings.get("graphics_dreamBlocks_fancy", false)
 end
 

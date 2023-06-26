@@ -4,6 +4,22 @@ local activationModes = {
     "Random"
 }
 
+local cassetteSwapActivatorOptions = {
+    ["Any"] = -1,
+    ["Blue"] = 0,
+    ["Rose"] = 1,
+    ["Bright Sun"] = 2,
+    ["Malachite"] = 3,
+}
+
+local cassetteSwapActivatorOptionsInv = {
+    [-1] = "Any",
+    [0] = "Blue",
+    [1] = "Rose",
+    [2] = "Bright Sun",
+    [3] = "Malachite",
+}
+
 local function makeActivator(name, placement, extTextCallback, extra)
     local h = {
         name = name,
@@ -25,6 +41,12 @@ local function makeActivator(name, placement, extTextCallback, extra)
 
     if extra.disableOnce ~= true then
         h.placements[1].data.once = false
+    end
+
+    if extra.fieldInformation then
+        for key, value in pairs(extra.fieldInformation) do
+            h.fieldInformation[key] = value
+        end
     end
 
     h.placements[1].data.delay = 0.0
@@ -117,4 +139,24 @@ return {
         data = {
         }
     }),
+    makeActivator("FrostHelper/OnCassetteSwapActivator",
+        {
+            name = "default",
+            data = {
+                targetIndex = -1,
+            }
+        },
+        function (trigger)
+            return cassetteSwapActivatorOptionsInv[trigger.targetIndex] or tostring(trigger.targetIndex)
+        end,
+        {
+            fieldInformation = {
+                targetIndex = {
+                    fieldType = "integer",
+                    options = cassetteSwapActivatorOptions,
+                    editable = false
+                }
+            }
+        }
+    ),
 }

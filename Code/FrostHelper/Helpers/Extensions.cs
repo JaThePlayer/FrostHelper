@@ -84,6 +84,14 @@ public static class Extensions {
         return SafeGetEntities(t, typeof(T));
     }
 
+    public static List<Component> SafeGetComponents<T>(this Tracker t) where T : Component {
+        if (t.Components.TryGetValue(typeof(T), out var components)) {
+            return components;
+        }
+
+        return _emptyListComponent;
+    }
+
     public static T? SafeGetEntity<T>(this Tracker t) where T : Entity {
         var type = typeof(T);
         if (!t.Entities.TryGetValue(type, out var list) || list.Count == 0) {
@@ -102,6 +110,7 @@ public static class Extensions {
     }
 
     private static List<Entity> _emptyListEntity = new();
+    private static List<Component> _emptyListComponent = new();
 
     /// <summary>
     /// Calls <see cref="Entity.Add(Component)"/> with the given component, and then returns that component

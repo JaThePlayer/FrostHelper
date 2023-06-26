@@ -42,6 +42,13 @@ sealed class RainbowDecalMarker {
     private static void AllowColorChange(ILContext il) {
         ILCursor cursor = new ILCursor(il);
 
+        // newer everest versions added a new "Color" field
+        while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdfld<Decal>("Color"))) {
+            cursor.Emit(OpCodes.Ldarg_0); // this
+            cursor.EmitCall(GetColor);
+            return;
+        }
+
         while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchCall<Color>("get_White"))) {
             cursor.Emit(OpCodes.Ldarg_0); // this
             cursor.EmitCall(GetColor);

@@ -133,7 +133,7 @@ if compat.inLonn then
     local celesteRender = require("celeste_render")
     -- HOOK - cache the controllers whenever the room cache gets invalidated, that way we don't iterate through all entities several times per redraw
     -- this can be removed if a tracker gets added to lonn
-    local _orig_invalidateRoomCache = celesteRender.invalidateRoomCache
+    local _orig_invalidateRoomCache = celesteRender.getEntityBatch
 
     local function filterPredicate(entity)
         local name = entity._name

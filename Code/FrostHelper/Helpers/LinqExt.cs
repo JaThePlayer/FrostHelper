@@ -18,6 +18,31 @@ internal static class LinqExt {
         return default;
     }
 
+    /// <summary>
+    /// Finds the first element in the <paramref name="source"/> enumerable that is of the type <typeparamref name="TTarget"/>
+    /// </summary>
+    public static TTarget? FirstOfTypeOrDefault<TSource, TTarget>(this IEnumerable<TSource> source)
+        where TTarget : TSource {
+        if (source is List<TSource> list) {
+            // fast path
+            foreach (var item in list) {
+                if (item is TTarget target) {
+                    return target;
+                }
+            }
+
+            return default;
+        }
+
+        foreach (var item in source) {
+            if (item is TTarget target) {
+                return target;
+            }
+        }
+
+        return default;
+    }
+
     public static void Foreach<T>(this IEnumerable<T> source, Action<T> action) {
         foreach (var item in source) {
             action(item);

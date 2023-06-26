@@ -2,6 +2,7 @@ local utils = require("utils")
 local jautils = require("mods").requireFromPlugin("libraries.jautils")
 local frostSettings = require("mods").requireFromPlugin("libraries.settings")
 local bloomSprite = require("mods").requireFromPlugin("libraries.bloomSprite")
+local drawableSpriteStruct = require("structs.drawable_sprite")
 
 local fallback = "danger/FrostHelper/icecrystal/fg03"
 local fallbackbg = "danger/FrostHelper/icecrystal/bg"
@@ -39,33 +40,69 @@ local function createConnectorsForSpinner(room, entity, baseBGSprite)
 
     local name = entity._name
     local attachGroup = entity.attachGroup
-    local attachToSolid = entity.attachToSolid
+    local attachToSolid = entity.attachToSolid or false
     local x, y = entity.x, entity.y
 
     for _, e2 in ipairs(room.entities) do
         if e2 == entity then break end
 
-        if e2._name == name and e2.attachGroup == attachGroup and e2.attachToSolid == attachToSolid and jautils.distanceSquared(x, y, e2.x, e2.y) < 576 then
-            local connector = jautils.copyTexture(baseBGSprite,
-                math.floor((x + e2.x) / 2),
-                math.floor((y + e2.y) / 2),
+        if e2._name == name and e2.attachGroup == attachGroup and e2.attachToSolid == attachToSolid then
+            local e2x, e2y = e2.x, e2.y
+
+            if jautils.distanceSquared(x, y, e2x, e2y) < 576 then
+                local connector = jautils.copyTexture(baseBGSprite,
+                    math.floor((x + e2x) / 2),
+                    math.floor((y + e2y) / 2),
                 false)
-            connector.depth = -8499
-            table.insert(sprites, connector)
+
+                connector.depth = -8499
+                table.insert(sprites, connector)
+            end
         end
     end
 
     return sprites
 end
 
+local pathCache = {}
+
 function spinner.sprite(room, entity)
     local pathSuffix = entity.spritePathSuffix or ""
+    local color = utils.getColor(entity.tint or "ffffff")
 
-    local sprites = frostSettings.spinnersConnect()
-        and createConnectorsForSpinner(room, entity, jautils.getCustomSprite(entity, "directory", "/bg" .. pathSuffix, fallbackbg))
-        or {}
+    local d = entity.directory or ""
+    if not pathCache[d] then
+        pathCache[d] = {}
+    end
 
-    table.insert(sprites, jautils.getCustomSprite(entity, "directory", "/fg" .. pathSuffix .. "03", fallback))
+    local cache = pathCache[d][pathSuffix]
+    if not cache then
+        cache = {
+            jautils.getCustomSpritePath(entity, "directory", "/fg" .. pathSuffix .. "03", fallback),
+            jautils.getCustomSpritePath(entity, "directory", "/bg" .. pathSuffix, fallbackbg)
+        }
+
+        pathCache[d][pathSuffix] = cache
+    end
+
+    local sprites
+    if frostSettings.spinnersConnect() then
+        local baseSprite = drawableSpriteStruct.fromTexture(cache[2], entity)
+        baseSprite:setColor(color)
+        sprites = createConnectorsForSpinner(room, entity, baseSprite)
+    else
+        sprites = {}
+    end
+
+    local fgSprite = drawableSpriteStruct.fromTexture(cache[1], entity)
+    fgSprite:setColor(color)
+    table.insert(sprites, fgSprite)
+
+    --local sprites = frostSettings.spinnersConnect()
+    --    and createConnectorsForSpinner(room, entity, jautils.getCustomSprite(entity, "directory", "/bg" .. pathSuffix, fallbackbg))
+    --    or {}
+
+    --table.insert(sprites, jautils.getCustomSprite(entity, "directory", "/fg" .. pathSuffix .. "03", fallback))
 
     if entity.rainbow then
         jautils.rainbowifyAll(room, sprites)

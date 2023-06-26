@@ -14,8 +14,12 @@ function easingField.getElement(name, value, options)
     -- Add extra options and pass it onto the string field
     options.displayTransformer = tostring
     options.validator = function(v)
-        if easingDict[v] then
+        if not v then
             return true
+        end
+
+        if easingDict[v] ~= nil then
+            return easingDict[v]
         end
 
         -- Frost Helper allows using Lua functions for easings, we're in lua so we can check the syntax
@@ -27,6 +31,7 @@ function easingField.getElement(name, value, options)
             return true
         else
             print(errorMsg)
+            easingDict[v] = false
         end
 
         return false

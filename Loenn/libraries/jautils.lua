@@ -261,23 +261,34 @@ function jautils.copyTexture(baseTexture, x, y, relative)
     return texture
 end
 
+local spritePathCache = {}
 function jautils.getCustomSpritePath(entity, spritePropertyName, spritePostfix, fallback)
     local sprite = nil
 
     local path = entity[spritePropertyName]
     if path then
         local fullPath = path .. (spritePostfix or "")
+
+        local cacheKey = fullPath
+        local cached = spritePathCache[cacheKey]
+        if cached then
+            return cached, drawableSpriteStruct.fromTexture(cached, entity)
+        end
+
         fullPath = string.gsub(fullPath, "//", "/")
 
         sprite = drawableSpriteStruct.fromTexture(fullPath, entity)
         if sprite then
+            spritePathCache[cacheKey] = fullPath
             return fullPath, sprite
         end
 
         -- Celeste will also try appending 00, let's try that
-        sprite = drawableSpriteStruct.fromTexture(fullPath .. "00", entity)
+        fullPath = fullPath .. "00"
+        sprite = drawableSpriteStruct.fromTexture(fullPath, entity)
         if sprite then
-            return fullPath .. "00", sprite
+            spritePathCache[cacheKey] = fullPath
+            return fullPath, sprite
         end
     end
 
