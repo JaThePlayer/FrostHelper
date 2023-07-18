@@ -47,7 +47,7 @@ internal sealed class LoopActivator : BaseActivator {
         if (Delay != 0f)
             yield return Delay;
 
-        while (player is { Scene: { } }) {
+        while (player is { Scene: { } } || ActivateAfterDeath) {
             if (Condition.Check()) {
                 InstantActivateAll(player);
             }

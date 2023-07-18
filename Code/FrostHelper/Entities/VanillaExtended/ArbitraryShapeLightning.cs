@@ -11,21 +11,11 @@ public class ArbitraryShapeLightning : Entity {
 
     public ArbitraryShapeLightning(EntityData data, Vector2 offset) : base(data.Position + offset) {
         var nodes = data.NodesOffset(offset);
-        Vector2[] input = new Vector2[nodes.Length + 1];
-        input[0] = Position;
-        for (int i = 1; i < input.Length; i++) {
-            input[i] = nodes[i - 1];
-        }
 
         Fill = data.Bool("fill", true);
 
         if (Fill) {
-            Triangulator.Triangulator.Triangulate(input, WindingOrder.CounterClockwise, out var verts, out var indices);
-
-            Vertices = new Vector3[indices.Length];
-            for (int i = 0; i < indices.Length; i++) {
-                Vertices[i] = new Vector3(verts[indices[i]], 0f);
-            }
+            Vertices = ArbitraryShapeEntityHelper.GetFillFromNodes(data, offset);
         }
 
         Edges = new CustomLightningRenderer.Edge[nodes.Length + (Fill ? 1 : 0)];
@@ -36,7 +26,7 @@ public class ArbitraryShapeLightning : Entity {
         if (Fill)
             Edges[Edges.Length - 1] = new CustomLightningRenderer.Edge(this, nodes[nodes.Length - 1] - Position, Vector2.Zero);
 
-        Collider = new ShapeHitbox(input) { Fill = Fill };
+        Collider = new ShapeHitbox(data.GetNodesWithOffsetWithPositionPrepended(offset)) { Fill = Fill };
         Add(new PlayerCollider(OnPlayer, Collider, null));
     }
 

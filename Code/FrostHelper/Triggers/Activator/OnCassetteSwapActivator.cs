@@ -12,8 +12,15 @@ internal class OnCassetteSwapActivator : BaseActivator {
         Add(Listener = new CassetteListener(index));
 
         Listener.OnActivated = () => {
-            if (Scene?.Tracker.GetEntity<Player>() is { } player)
-                ActivateAll(player);
+            var player = Scene?.Tracker.GetEntity<Player>();
+            if (player is { } || ActivateAfterDeath)
+                ActivateAll(player!);
+        };
+
+        Listener.OnSilentUpdate = (correctIndex) => {
+            var player = Scene?.Tracker.GetEntity<Player>();
+            if (correctIndex && (player is { } || ActivateAfterDeath))
+                ActivateAll(player!);
         };
 
         Active = Visible = false;

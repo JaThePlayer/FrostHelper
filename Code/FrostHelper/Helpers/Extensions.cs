@@ -48,6 +48,28 @@ public static class Extensions {
         };
     }
 
+    public static Vector2[] GetNodesWithOffsetWithPositionPrepended(this EntityData data, Vector2 offset) {
+        var nodes = new Vector2[data.Nodes.Length + 1];
+        var i = 0;
+        nodes[i++] = data.Position + offset;
+        foreach (var item in data.Nodes) {
+            nodes[i++] = item + offset;
+        }
+
+        return nodes;
+    }
+
+    public static Vector2[] GetNodesWithOffsetWithPositionAppended(this EntityData data, Vector2 offset) {
+        var nodes = new Vector2[data.Nodes.Length + 1];
+        var i = 0;
+        foreach (var item in data.Nodes) {
+            nodes[i++] = item + offset;
+        }
+        nodes[i++] = data.Position + offset;
+
+        return nodes;
+    }
+
 
     public static bool ContainsReference(this Type[] self, Type type) {
         foreach (var item in self) {
@@ -127,4 +149,6 @@ public static class Extensions {
     public static void ForceRemoveSelf(this Entity e) {
         e.Scene?.Entities.toRemove.Add(e);
     }
+
+    public static Point ToPoint(this Vector2 v) => new((int) v.X, (int)v.Y);
 }

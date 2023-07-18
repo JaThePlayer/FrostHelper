@@ -1,5 +1,7 @@
 ﻿//#define CULL_RECT_RENDER
 
+using FrostHelper.Helpers;
+
 namespace FrostHelper; 
 public static class CameraCullHelper {
     /// <summary>
@@ -95,5 +97,36 @@ public static class CameraCullHelper {
         var j = sprite.Origin;
 
         return IsRectVisible(cam, new((int)sprite.RenderPosition.X - (int)j.X / 2, (int) sprite.RenderPosition.Y - (int) j.Y / 2, w, h));
+    }
+
+    public static Rectangle GetRectangle(this Image image) {
+        var renderPos = image.RenderPosition;
+        var scale = image.Scale;
+        var size = new Vector2(image.Width, image.Height) * scale;
+        Vector2 pos;
+        if (image.Rotation == 0f) {
+            pos = renderPos - image.Origin * scale + image.Texture.DrawOffset;
+
+            return new Rectangle((int) pos.X, (int) pos.Y, (int) size.X, (int) size.Y);
+        }
+
+        // rotate our points, by rotating the offset
+        var off = -image.Origin;
+
+        var p1 = off.Rotate(image.Rotation);
+        var p2 = (off + new Vector2(size.X, 0)).Rotate(image.Rotation);
+        var p3 = (off + new Vector2(0, size.Y)).Rotate(image.Rotation);
+        var p4 = (off + size).Rotate(image.Rotation);
+
+        var r1 = renderPos + new Vector2(
+            Math.Min(p4.X, Math.Min(p3.X, Math.Min(p1.X, p2.X))),
+            Math.Min(p4.Y, Math.Min(p3.Y, Math.Min(p1.Y, p2.Y)))
+        ) + image.Texture.DrawOffset.Rotate(image.Rotation);
+        var r2 = renderPos + new Vector2(
+            Math.Max(p4.X, Math.Max(p3.X, Math.Max(p1.X, p2.X))),
+            Math.Max(p4.Y, Math.Max(p3.Y, Math.Max(p1.Y, p2.Y)))
+        ) + image.Texture.DrawOffset.Rotate(image.Rotation);
+
+        return RectangleExt.FromPoints(r1.ToPoint(), r2.ToPoint());
     }
 }

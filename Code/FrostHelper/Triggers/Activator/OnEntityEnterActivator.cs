@@ -33,7 +33,7 @@ internal sealed class OnEntityEnterActivator : BaseActivator {
         var hitbox = ((Hitbox) Collider)!;
         var player = Scene.Tracker.SafeGetEntity<Player>();
 
-        if (player is null)
+        if (player is null && !ActivateAfterDeath)
             return;
 
         /*
@@ -70,14 +70,14 @@ internal sealed class OnEntityEnterActivator : BaseActivator {
 
     private bool IsValid(Entity e) => AllowedTypes.ContainsReference(e.GetType());
 
-    private bool HandleEntity(Hitbox hitbox, Entity entity, Player player) {
+    private bool HandleEntity(Hitbox hitbox, Entity entity, Player? player) {
         var ret = false;
     
         if (entity is { Collidable: true, Collider: { } c }) {
             var collided = hitbox.Collide(c);
             if (collided) {
                 if (lastCollided.Add(entity))
-                    ActivateAll(player);
+                    ActivateAll(player!);
             } else {
                 if (lastCollided.Remove(entity)) {
 

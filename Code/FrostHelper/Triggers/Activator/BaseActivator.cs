@@ -4,6 +4,8 @@ internal class BaseActivator : Trigger {
     public Vector2[] Nodes;
     public readonly bool OnlyOnce;
     public readonly float Delay;
+    public bool ActivateAfterDeath;
+
 
     internal List<Trigger>? ToActivate;
 
@@ -25,6 +27,7 @@ internal class BaseActivator : Trigger {
         OnlyOnce = data.Bool("once");
         Delay = data.Float("delay", 0f);
         ActivationMode = data.Enum("activationMode", ActivationModes.All);
+        ActivateAfterDeath = data.Bool("activateAfterDeath", false);
     }
 
     public override void Awake(Scene scene) {
@@ -109,22 +112,22 @@ internal class BaseActivator : Trigger {
         // There's a chance for an activator to get triggered *before* Awake.
         ToActivate ??= FastCollideAll<Trigger>();
 
-        if (ToActivate.Count == 0 || player is null || player.Scene is null)
+        if (ToActivate.Count == 0 || ((player is null || player.Scene is null) && !ActivateAfterDeath))
             return;
 
         CallOnLeave(player);
         switch (ActivationMode) {
             case ActivationModes.All:
                 foreach (var trigger in ToActivate) {
-                    Activate(player, trigger);
+                    Activate(player!, trigger);
                 }
                 break;
             case ActivationModes.Cycle:
-                Activate(player, ToActivate[_cycleModeIdx]);
+                Activate(player!, ToActivate[_cycleModeIdx]);
                 _cycleModeIdx = (_cycleModeIdx + 1) % ToActivate.Count;
                 break;
             case ActivationModes.Random:
-                Activate(player, ToActivate[Calc.Random.Next(0, ToActivate.Count)]);
+                Activate(player!, ToActivate[Calc.Random.Next(0, ToActivate.Count)]);
                 break;
             default:
                 break;

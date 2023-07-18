@@ -424,6 +424,14 @@ entities.FrostHelper/GrowBlock.attributes.description.vanishTime=How long (in se
 entities.FrostHelper/GrowBlock.attributes.description.giveLiftBoost=Whether the blocks should give a lift boost to actors/the player while they're moving.
 entities.FrostHelper/GrowBlock.attributes.description.vanishOnFlagUnset=Whether the blocks should immediately vanish when the flag gets turned off.
 
+entities.FrostHelper/ArbitraryShapeCloud.placements.name.default=Arbitrary Shape Cloud
+entities.FrostHelper/ArbitraryShapeCloud.placements.description.default=Auto-generates a cloud of a given shape using the provided sprites and a polygon, optionally with parallax.
+entities.FrostHelper/ArbitraryShapeCloud.attributes.description.color=The color to tint the cloud with.
+entities.FrostHelper/ArbitraryShapeCloud.attributes.description.parallax=The parallax value to use for the cloud.
+entities.FrostHelper/ArbitraryShapeCloud.attributes.description.depth=The depth to render this cloud at.
+entities.FrostHelper/ArbitraryShapeCloud.attributes.description.textures=A comma-seperated list of textures to use for the edges of the cloud.
+entities.FrostHelper/ArbitraryShapeCloud.attributes.description.cache=Determines how this cloud should cache itself for performance.\nAuto - Let Frost Helper automatically choose the best caching method. Recommended.\nNever - Never cache the cloud, could cause lag. (Uses camera culling instead)\nRenderTarget - Render the whole cloud once into a render target. Makes clouds not lag the game at all, at the cost of using more VRAM.
+
 # -- Mod Names --
 # mods.modName.*
 mods.FrostHelper.name=Frost Helper
@@ -530,6 +538,7 @@ triggers.FrostHelper/LoopActivator.attributes.description.loopTime=How long to w
 triggers.FrostHelper/LoopActivator.attributes.description.activationMode=How the activation should work:\nAll: All triggers get activated at once.\nCycle: When this trigger activates for the n-th time, the n-th trigger will be chosen.\nRandom: A random (seeded) trigger will be chosen.
 triggers.FrostHelper/LoopActivator.attributes.description.condition=The flag that needs to be set in order for this to trigger anything. Write a ! at the beginning of the flag name to invert this logic.
 triggers.FrostHelper/LoopActivator.attributes.description.requireActivation=Whether this activator needs to be activated by some other source before starting the loop. If off, the loop will begin as soon as the level begins.
+triggers.FrostHelper/LoopActivator.attributes.description.activateAfterDeath=Whether this activator can activate triggers even after the player dies.\nThis might cause crashes when used with certain triggers which assume the player is still alive.
 
 # If
 triggers.FrostHelper/IfActivator.placements.name.default=Activator (If)
@@ -586,6 +595,7 @@ triggers.FrostHelper/OnEntityEnterActivator.attributes.description.delay=How lon
 triggers.FrostHelper/OnEntityEnterActivator.attributes.description.activationMode=How the activation should work:\nAll: All triggers get activated at once.\nCycle: When this trigger activates for the n-th time, the n-th trigger will be chosen.\nRandom: A random (seeded) trigger will be chosen.
 triggers.FrostHelper/OnEntityEnterActivator.attributes.description.types=A comma-seperated list of SID's (preferred) or C# type names that should be affected by this activator.\nWhen left blank, the activator will DO NOTHING!
 triggers.FrostHelper/OnEntityEnterActivator.attributes.description.cache=Whether to cache the list of possible entities that match the `types` list.\nDisabling this is horrible for performance, but will allow detecting entities that get added to the scene after loading.
+triggers.FrostHelper/OnEntityEnterActivator.attributes.description.activateAfterDeath=Whether this activator can activate triggers even after the player dies.\nThis might cause crashes when used with certain triggers which assume the player is still alive.
 
 # FrostHelper/OnFlagActivator
 triggers.FrostHelper/OnFlagActivator.placements.name.default=Activator (On Flag)
@@ -597,6 +607,7 @@ triggers.FrostHelper/OnFlagActivator.attributes.description.flag=Which flag to l
 triggers.FrostHelper/OnFlagActivator.attributes.description.targetState=The state the flag has to be set to for this to activate triggers.
 triggers.FrostHelper/OnFlagActivator.attributes.description.mustChange=Whether the state of the flag must be changed for this to activate triggers.\nFor example if your flag is ON, then a trigger sets it to ON again, if this setting is disabled, then the activator will still trigger.\nHowever, if this setting is enabled, it will not trigger, because the value of this flag didn't change.
 triggers.FrostHelper/OnFlagActivator.attributes.description.triggerOnRoomBegin=Whether this activator should also immediately activate upon loading the room, if the flag is in the correct state.
+triggers.FrostHelper/OnFlagActivator.attributes.description.activateAfterDeath=Whether this activator can activate triggers even after the player dies.\nThis might cause crashes when used with certain triggers which assume the player is still alive.
 
 # FrostHelper/OnCassetteSwapActivator
 triggers.FrostHelper/OnCassetteSwapActivator.placements.name.default=Activator (On Cassette Block Swap)
@@ -605,6 +616,7 @@ triggers.FrostHelper/OnCassetteSwapActivator.attributes.description.once=Whether
 triggers.FrostHelper/OnCassetteSwapActivator.attributes.description.delay=How long to wait (in seconds) before actually activating the triggers.
 triggers.FrostHelper/OnCassetteSwapActivator.attributes.description.activationMode=How the activation should work:\nAll: All triggers get activated at once.\nCycle: When this trigger activates for the n-th time, the n-th trigger will be chosen.\nRandom: A random (seeded) trigger will be chosen.
 triggers.FrostHelper/OnCassetteSwapActivator.attributes.description.targetIndex=The cassette index to react to. Leave at -1 to trigger on every swap
+triggers.FrostHelper/OnCassetteSwapActivator.attributes.description.activateAfterDeath=Whether this activator can activate triggers even after the player dies.\nThis might cause crashes when used with certain triggers which assume the player is still alive.
 
 # FrostHelper/NoMovementTrigger
 triggers.FrostHelper/NoMovementTrigger.placements.name.default=No Movement

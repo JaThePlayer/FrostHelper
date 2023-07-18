@@ -5,11 +5,11 @@ local activationModes = {
 }
 
 local cassetteSwapActivatorOptions = {
-    ["Any"] = -1,
-    ["Blue"] = 0,
-    ["Rose"] = 1,
-    ["Bright Sun"] = 2,
-    ["Malachite"] = 3,
+    ["-1: Any"] = -1,
+    ["0: Blue"] = 0,
+    ["1: Rose"] = 1,
+    ["2: Bright Sun"] = 2,
+    ["3: Malachite"] = 3,
 }
 
 local cassetteSwapActivatorOptionsInv = {
@@ -86,6 +86,7 @@ return {
             targetState = true,
             mustChange = false,
             triggerOnRoomBegin = true,
+            activateAfterDeath = false,
         }
     }, function (trigger)
         if trigger.targetState then
@@ -114,7 +115,8 @@ return {
             name = "default",
             data = {
                 requireActivation = false,
-                loopTime = 1.0
+                loopTime = 1.0,
+                activateAfterDeath = false,
             },
         },
         function (trigger)
@@ -130,6 +132,7 @@ return {
             data = {
                 cache = true,
                 types = "",
+                activateAfterDeath = false,
             },
         }
     ),
@@ -144,6 +147,7 @@ return {
             name = "default",
             data = {
                 targetIndex = -1,
+                activateAfterDeath = false,
             }
         },
         function (trigger)

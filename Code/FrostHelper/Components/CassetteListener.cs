@@ -113,7 +113,7 @@ internal class CassetteListener : Component {
             return;
 
         foreach (CassetteListener component in self.Scene.Tracker.SafeGetComponents<CassetteListener>()) {
-            component.OnSilentUpdate?.Invoke(component.Index == self.currentIndex);
+            component.OnSilentUpdate?.Invoke(component.Index == -1 || component.Index == self.currentIndex);
         }
     }
 

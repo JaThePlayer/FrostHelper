@@ -146,7 +146,14 @@ public sealed class GrowBlock : Entity {
             startPos = goalPos;
         }
 
-        Blocks[0].Move(BlockPositions.Last(), GiveLiftBoost, (BlockPositions.Last() - BlockPositions[BlockPositions.Count - 2]) / BlockGrowTime / Engine.DeltaTime);
+        var blocks = BlockPositions;
+        var lastBlock = blocks.Last();
+        var secondToLastBlock = blocks[(blocks.Count - 2) switch {
+            < 0 => 0,
+            var other => other,
+        }];
+
+        Blocks[0].Move(BlockPositions.Last(), GiveLiftBoost, (lastBlock - secondToLastBlock) / BlockGrowTime / Engine.DeltaTime);
     }
 
     public IEnumerator GrowRoutine() {

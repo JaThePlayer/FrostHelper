@@ -12,11 +12,16 @@ internal sealed class OnFlagActivator : BaseActivator {
 
         Add(new FlagListener(data.Attr("flag"), OnFlag, data.Bool("mustChange", false), data.Bool("triggerOnRoomBegin", false)));
         TargetValue = data.Bool("targetState", true);
+
+        // reparse with different default value to replicate old behaviour
+        ActivateAfterDeath = data.Bool("activateAfterDeath", true);
     }
 
     public void OnFlag(bool value) {
         if (value == TargetValue) {
-            ActivateAll(Scene.Tracker.GetEntity<Player>());
+            var player = Scene?.Tracker.GetEntity<Player>();
+            if (player != null || ActivateAfterDeath)
+                ActivateAll(player!);
         } else {
             CallOnLeave();
         }

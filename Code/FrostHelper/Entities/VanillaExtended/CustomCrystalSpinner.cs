@@ -201,6 +201,10 @@ public class CustomSpinner : Entity {
         }
 
         controller = ControllerHelper<CustomSpinnerController>.AddToSceneIfNeeded(scene);
+        UpdateController();
+    }
+
+    private void UpdateController() {
         if (BorderColor != Color.Black)
             controller.CanUseBlackOutlineRenderTargetOpt = false;
 
@@ -228,6 +232,39 @@ public class CustomSpinner : Entity {
             }
         }
     }
+
+    // exposed via the API
+    internal void SetColor(Color color) {
+        if (Tint == color)
+            return;
+
+        Tint = color;
+
+        foreach (Component component in Components) {
+            if (component is Image image) {
+                image.Color = color;
+            }
+        }
+
+        if (filler != null) {
+            foreach (Component component2 in filler.Components) {
+                if (component2 is Image image2) {
+                    image2.Color = color;
+                }
+            }
+        }
+    }
+
+    // exposed via the API
+    internal void SetBorderColor(Color color) {
+        if (BorderColor != color) {
+            BorderColor = color;
+
+            // since border color is used for optimisations, we need to re-check whether they're valid or not
+            UpdateController();
+        }
+    }
+
 
     public void ForceInstantiate() {
         CreateSprites();

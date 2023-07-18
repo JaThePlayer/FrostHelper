@@ -24,11 +24,12 @@ end
 function helper.getSpriteFunc(nodeColor, lineColor, fillColor, mainNodeColor)
     nodeColor = jautils.getColor(nodeColor or "ffffff")
     lineColor = jautils.getColor(lineColor or "fcf579")
-    fillColor = jautils.getColor(fillColor or "fcf57919")
 
     mainNodeColor = mainNodeColor or nodeColor
 
     return function(room, entity)
+        local fillColor = jautils.getColor(fillColor and utils.callIfFunction(fillColor, entity) or "fcf57919")
+        
         if entity.nodes then
             local points = { entity.x, entity.y }
             local nodeSprites = { point(entity, mainNodeColor)}

@@ -25,9 +25,18 @@ public static class API {
 
     /// <summary>
     /// Converts an entity name to a Type.
+    /// Returns a dummy type if the name doesn't correspond to any entity.
     /// </summary>
     public static Type EntityNameToType(string entityName) {
         return TypeHelper.EntityNameToType(entityName);
+    }
+
+    /// <summary>
+    /// Converts an entity name to a Type.
+    /// Returns null if the name doesn't correspond to any entity.
+    /// </summary>
+    public static Type? EntityNameToTypeOrNull(string entityName) {
+        return TypeHelper.EntityNameToTypeSafe(entityName);
     }
 
     /// <summary>
@@ -134,6 +143,26 @@ public static class API {
                 sp.Destroy(boss);
                 break;
         };
+    }
+
+    /// <summary>
+    /// Sets the tint of a given custom spinner.
+    /// Note: while this function accepts any entity, it will only change entities of type CustomSpinner
+    /// </summary>
+    public static void SetCustomSpinnerColor(Entity spinner, Color color) {
+        if (spinner is CustomSpinner cs) {
+            cs.SetColor(color);
+        }
+    }
+
+    /// <summary>
+    /// Sets the border color of a given custom spinner.
+    /// Note: while this function accepts any entity, it will only change entities of type CustomSpinner
+    /// </summary>
+    public static void SetCustomSpinnerBorderColor(Entity spinner, Color color) {
+        if (spinner is CustomSpinner cs) {
+            cs.SetBorderColor(color);
+        }
     }
 
     public static Collider CreateShapeCollider(Vector2[] points) {

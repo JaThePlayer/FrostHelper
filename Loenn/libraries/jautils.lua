@@ -7,6 +7,35 @@ local xnaColors = require("consts.xna_colors")
 local rainbowHelper = require("mods").requireFromPlugin("libraries.rainbowHelper")
 local compat = require("mods").requireFromPlugin("libraries.compat")
 
+local celesteDepths = --require("consts.object_depths")
+{
+    ["BG Terrain (10000)"] = 10000,
+    ["BG Mirrors (9500)"] = 9500,
+    ["BG Decals (9000)"] = 9000,
+    ["BG Particles (8000)"] = 8000,
+    ["Solids Below (5000)"] = 5000,
+    ["Below (2000)"] = 2000,
+    ["NPCs (1000)"] = 1000,
+    ["Theo Crystal (100)"] = 100,
+    ["Player (0)"] = 0,
+    ["Dust (-50)"] = -50,
+    ["Pickups (-100)"] = -100,
+    ["Seeker (-200)"] = -200,
+    ["Particles (-8000)"] = -8000,
+    ["Above (-8500)"] = -8500,
+    ["Solids (-9000)"] = -9000,
+    ["FG Terrain (-10000)"] = -10000,
+    ["FG Decals (-10500)"] = -10500,
+    ["Dream Blocks (-11000)"] = -11000,
+    ["Crystal Spinners (-11500)"] = -11500,
+    ["Player Dream Dashing (-12000)"] = -12000,
+    ["Enemy (-12500)"] = -12500,
+    ["Fake Walls (-13000)"] = -13000,
+    ["FG Particles (-50000)"] = -50000,
+    ["Top (-1000000)"] = -1000000,
+    ["Formation Sequences (-2000000)"] = -2000000,
+}
+
 ---@alias color string | table<integer, number>
 ---@alias sprite table
 
@@ -109,6 +138,13 @@ jautils.fieldTypeOverrides = {
         return {
             options = data,
             editable = false
+        }
+    end,
+    depth = function (data)
+        return {
+            options = celesteDepths,
+            editable = true,
+            fieldType = "integer",
         }
     end,
     path = function (data)

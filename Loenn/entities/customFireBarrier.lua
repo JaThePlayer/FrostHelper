@@ -49,7 +49,7 @@ function customFireBarrier.sprite(room, entity)
 
     utils.setSimpleCoordinateSeed(entity.x, entity.y)
     for i = 0, (entity.width * entity.height * 0.005), 1 do
-        particleData.x, particleData.y = entity.x + math.random(3, entity.width - 7), entity.y + math.random(3, entity.height - 7)
+        particleData.x, particleData.y = entity.x + math.random(3, math.max(3,entity.width - 7)), entity.y + math.random(3, math.max(3, entity.height - 7))
         local particle = drawableSpriteStruct.fromTexture(particlePath, particleData)
 
         table.insert(sprites, particle)
