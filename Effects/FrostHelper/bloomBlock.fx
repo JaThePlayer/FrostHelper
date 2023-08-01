@@ -20,7 +20,7 @@ float4 PS_TestEffect(float2 uv : TEXCOORD0, float4 color : COLOR0) : COLOR
     float4 textColor = SAMPLE_TEXTURE(text, uv);
     float4 prevColor = SAMPLE_TEXTURE(prev, uv);
 
-    return textColor.a > 0 ? (0) : (prevColor);
+    return textColor.a > 0 ? (prevColor) : (0);
 }
 
 technique TestEffect

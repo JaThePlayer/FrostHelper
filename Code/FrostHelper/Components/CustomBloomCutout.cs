@@ -171,9 +171,9 @@ public class CustomBloomBlocker : Component {
     internal static BlendState ReverseCutoutState = new BlendState {
         ColorSourceBlend = Blend.Zero,
         ColorDestinationBlend = Blend.Zero,
+        ColorBlendFunction = BlendFunction.Add,
         AlphaSourceBlend = Blend.Zero,
         AlphaDestinationBlend = Blend.InverseSourceAlpha,
-        ColorBlendFunction = BlendFunction.Max,
-        AlphaBlendFunction = BlendFunction.Min,
+        AlphaBlendFunction = BlendFunction.Add, //BlendFunction.Min,
     };
 }

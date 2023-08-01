@@ -1,8 +1,9 @@
 uniform float4x4 World;
 
-float4 PS_TestEffect(float2 uv : TEXCOORD0, float4 color : COLOR0) : COLOR0
+
+float4 PS_TestEffect(float4 color : COLOR0) : COLOR0
 {
-    return 1. - color.a;
+    return color.a;
 }
 
 void SpriteVertexShader(inout float4 color    : COLOR0,
@@ -15,7 +16,7 @@ technique TestEffect
 {
     pass pass0
     {
-        VertexShader = compile vs_3_0 SpriteVertexShader();
-        PixelShader = compile ps_3_0 PS_TestEffect();
+        VertexShader = compile vs_2_0 SpriteVertexShader();
+        PixelShader = compile ps_2_0 PS_TestEffect();
     }
 }

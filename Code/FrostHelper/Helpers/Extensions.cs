@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using FrostHelper.Helpers;
+using System.Globalization;
 
 namespace FrostHelper;
 
@@ -80,7 +81,6 @@ public static class Extensions {
             // defaults based on AlphaBlend
             AlphaBlendFunction = data.Enum("alphaBlendFunction", BlendFunction.Add),
             ColorBlendFunction = data.Enum("colorBlendFunction", BlendFunction.Add),
-
             ColorSourceBlend = data.Enum("colorSourceBlend", Blend.One),
             ColorDestinationBlend = data.Enum("colorDestinationBlend", Blend.InverseSourceAlpha),
             AlphaSourceBlend = data.Enum("alphaSourceBlend", Blend.One),
@@ -89,6 +89,17 @@ public static class Extensions {
 
             ColorWriteChannels = data.Enum("colorWriteChannels", ColorWriteChannels.All),
         };
+
+        // xna sanity checks
+        // todo: remove once Core is stable
+        if ((state.AlphaBlendFunction is BlendFunction.Min or BlendFunction.Max) && (state.AlphaSourceBlend is not Blend.One || state.AlphaDestinationBlend is not Blend.One)) {
+            NotificationHelper.Notify($"AlphaSourceBlend and AlphaDestinationBlend MUST be One when using AlphaBlendFunction Min or Max,\nor XNA will crash!");
+        }
+
+        if ((state.ColorBlendFunction is BlendFunction.Min or BlendFunction.Max) && (state.ColorSourceBlend is not Blend.One || state.ColorDestinationBlend is not Blend.One)) {
+            NotificationHelper.Notify($"ColorSourceBlend and ColorDestinationBlend MUST be One when using ColorBlendFunction Min or Max,\nor XNA will crash!");
+        }
+
 
         data.Values[cacheKey] = state;
         return state;
