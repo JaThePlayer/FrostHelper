@@ -72,17 +72,26 @@ internal class StylegroundMoveTrigger : Trigger {
             tweenHolder.Add(tween);
 
             var startPos = backdrop.Position;
-            var lastEased = tween.Eased;
+            //var lastEased = tween.Eased;
+            var lastMovement = Vector2.Zero;
             if (AfterDeath is AfterDeathBehaviours.SnapToEnd) // since everything else uses null coalescence, this will work even if other triggers are using the Reset settings
                 backdrop.GetOrCreateAttached<BackdropHelper.OrigPositionData>().Pos = backdrop.Position + Movement;
             else 
                 StoreOrigPosition(backdrop);
 
             tween.OnUpdate = (t) => {
-                var eased = t.Eased;
-                backdrop.Position += Movement * (eased - lastEased);
+                var eased = t.Easer(Math.Min(1f, t.Percent));
+                var move = (Movement * eased);
 
-                lastEased = eased;
+                backdrop.Position += move - lastMovement;
+                lastMovement = move;
+                //backdrop.Position += Movement * (eased - lastEased);
+
+                //lastEased = eased;
+            };
+
+            tween.OnComplete = (t) => {
+                backdrop.Position = startPos + Movement;
             };
         }
     }

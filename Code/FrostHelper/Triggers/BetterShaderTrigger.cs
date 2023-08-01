@@ -47,7 +47,7 @@ public class BetterShaderTrigger : Trigger {
     }
 
     public static void Apply(VirtualRenderTarget source, VirtualRenderTarget target, Effect eff, bool clear = false) {
-        ShaderHelperIntegration.ApplyStandardParameters(eff, camera: null);
+        ShaderHelperIntegration.ApplyStandardParameters(eff);
         VirtualRenderTarget tempA = GameplayBuffers.TempA;
 
         Engine.Instance.GraphicsDevice.SetRenderTarget(tempA);
@@ -73,7 +73,7 @@ public class BetterShaderTrigger : Trigger {
     }
 
     public static void SimpleApply(RenderTarget2D source, VirtualRenderTarget target, Effect eff) {
-        ShaderHelperIntegration.ApplyStandardParameters(eff, camera: null);
+        ShaderHelperIntegration.ApplyStandardParameters(eff);
 
         Engine.Instance.GraphicsDevice.SetRenderTarget(target);
 
@@ -84,7 +84,7 @@ public class BetterShaderTrigger : Trigger {
     }
 
     public static void SimpleApply(RenderTarget2D source, RenderTargetBinding[] targets, Effect eff) {
-        ShaderHelperIntegration.ApplyStandardParameters(eff, camera: null);
+        ShaderHelperIntegration.ApplyStandardParameters(eff);
 
         Engine.Instance.GraphicsDevice.SetRenderTargets(targets);
 

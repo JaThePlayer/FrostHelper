@@ -10,11 +10,11 @@ public static class GravityHelperIntegration {
         if (IsLoaded) {
             RegisterModSupportBlacklist!("FrostHelper");
 
-            GravitySpring_InvertedSuperBounce =
+            GravitySpring_InvertedSuperBounce = new(() =>
                 TypeHelper.EntityNameToTypeSafe("GravityHelper/GravitySpringFloor")
                 ?.GetMethod("InvertedSuperBounce")
                 ?.CreateDelegate<Action<Player, float>>()
-                ?? throw new Exception("GravityHelper is loaded, but couldn't find GravitySpring.InvertedSuperBounce!");
+                ?? throw new Exception("GravityHelper is loaded, but couldn't find GravitySpring.InvertedSuperBounce!"));
         }
     }
 
@@ -36,12 +36,12 @@ public static class GravityHelperIntegration {
     }
 
     //NON-API
-    private static Action<Player, float> GravitySpring_InvertedSuperBounce;
+    private static Lazy<Action<Player, float>> GravitySpring_InvertedSuperBounce;
 
     //NON-API
     public static void InvertedSuperBounce(Player player, float fromY) {
         if (IsLoaded) {
-            GravitySpring_InvertedSuperBounce(player, fromY);
+            GravitySpring_InvertedSuperBounce.Value(player, fromY);
         }
     }
 

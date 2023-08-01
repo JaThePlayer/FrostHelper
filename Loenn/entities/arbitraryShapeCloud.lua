@@ -22,7 +22,8 @@ jautils.createPlacementsPreserveOrder(cloud, "default", {
     { "parallax", 0.0 },
     { "depth", -10500, "depth" },
     { "textures", defaultTextures },
-    { "cache", "Auto", cacheOptions }
+    { "cache", "Auto", cacheOptions },
+    { "blockBloom", false },
 })
 
 cloud.sprite = arbitraryShapeEntity.getSpriteFunc("00ff00", "fcf579", function (entity)

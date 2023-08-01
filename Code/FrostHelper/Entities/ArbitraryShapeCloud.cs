@@ -1,4 +1,6 @@
-﻿using FrostHelper.Helpers;
+﻿using FrostHelper.Components;
+using FrostHelper.Helpers;
+using FrostHelper.ModIntegration;
 using System.Diagnostics;
 
 namespace FrostHelper.Entities;
@@ -57,6 +59,12 @@ internal sealed class ArbitraryShapeCloud : Entity {
         }
 
         Active = false;
+
+        if (data.Bool("blockBloom", false)) {
+            Add(new CustomBloomBlocker() {
+                OnRender = () => DoRender(true)
+            });
+        }
     }
 
     private void HandleRenderTargetStrategy() {
@@ -74,11 +82,14 @@ internal sealed class ArbitraryShapeCloud : Entity {
     }
 
     private Rectangle CalcBounds() {
+        var oldPos = Position;
+        Position = default;
         var allPoses = Nodes.Concat(Components.OfType<Image>().SelectMany(i => {
             var r = i.GetRectangle();
 
             return new[] { r.Location.ToVector2(), new(r.Right, r.Bottom) };
         })).ToList();
+        Position = oldPos;
 
         var left = allPoses.Min(n => n.X);
         var right = allPoses.Max(n => n.X);
@@ -152,6 +163,10 @@ internal sealed class ArbitraryShapeCloud : Entity {
     }
 
     public override void Render() {
+        DoRender(false);
+    }
+
+    private void DoRender(bool bloomBlocker) {
         if (RenderTarget is { IsDisposed: false }) {
             Draw.SpriteBatch.Draw(RenderTarget, RenderTargetRenderPos + CalcParallaxOffset(RenderTargetRenderPos), Color.White);
         } else {
@@ -159,13 +174,17 @@ internal sealed class ArbitraryShapeCloud : Entity {
             if (CachingStrategy == CachingOptions.RenderTarget) {
                 HandleRenderTargetStrategy();
             }
-            RenderNoTarget(CalcParallaxOffset(Position));
+            RenderNoTarget(CalcParallaxOffset(Position), bloomBlocker);
         }
     }
 
     public override void DebugRender(Camera camera) {
         foreach (var item in Nodes) {
             Draw.HollowRect(item + CalcParallaxOffset(item), 1, 1, Color.Red);
+        }
+
+        if (Bounds is { } bounds) {
+            Draw.HollowRect(Bounds.Value.MovedBy(CalcParallaxOffset(Position)), Color.Pink);
         }
 
         ArbitraryShapeEntityHelper.DrawDebugWireframe(Fill, Color.Red * 0.3f, (p => {
@@ -175,7 +194,7 @@ internal sealed class ArbitraryShapeCloud : Entity {
         }));
     }
 
-    void RenderNoTarget(Vector2 parallaxOffset) {
+    void RenderNoTarget(Vector2 parallaxOffset, bool bloomBlocker) {
         Bounds ??= CalcBounds();
         if (!CameraCullHelper.IsRectangleVisible(Bounds.Value.MovedBy(parallaxOffset)))
             return;
@@ -183,10 +202,19 @@ internal sealed class ArbitraryShapeCloud : Entity {
         GameplayRenderer.End();
 
         var cam = SceneAs<Level>().Camera.Matrix * Matrix.CreateTranslation(parallaxOffset.X, parallaxOffset.Y, 0f);
-        GFX.DrawVertices(cam, Fill, Fill.Length, null, BlendState.AlphaBlend);
+        GFX.DrawVertices(cam, Fill, Fill.Length,
+            bloomBlocker ? CustomBloomBlocker.BloomBlockVertsEffect : null,
+            //null,
+            bloomBlocker ? CustomBloomBlocker.ReverseCutoutState : BlendState.AlphaBlend
+        );
 
         // draw sprites
-        GameplayRenderer.Begin();
+        if (bloomBlocker) {
+            CustomBloomBlocker.BeginBloomBlockerBatch();
+        } else {
+            GameplayRenderer.Begin();
+        }
+
         var lastPos = Position;
         Position = parallaxOffset;
         foreach (var item in Components.components) {

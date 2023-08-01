@@ -70,6 +70,30 @@ public static class Extensions {
         return nodes;
     }
 
+    public static BlendState GetBlendState(this EntityData data, string cacheKey, BlendState def) {
+        if (data.Values.TryGetValue(cacheKey, out var cached))
+            return (BlendState) cached;
+
+        var state = new BlendState() {
+            Name = $"fh.blend_{data.Level.Name}:{data.ID}",
+
+            // defaults based on AlphaBlend
+            AlphaBlendFunction = data.Enum("alphaBlendFunction", BlendFunction.Add),
+            ColorBlendFunction = data.Enum("colorBlendFunction", BlendFunction.Add),
+
+            ColorSourceBlend = data.Enum("colorSourceBlend", Blend.One),
+            ColorDestinationBlend = data.Enum("colorDestinationBlend", Blend.InverseSourceAlpha),
+            AlphaSourceBlend = data.Enum("alphaSourceBlend", Blend.One),
+            AlphaDestinationBlend = data.Enum("alphaDestinationBlend", Blend.InverseSourceAlpha),
+            BlendFactor = data.GetColor("blendFactor", "ffffff"),
+
+            ColorWriteChannels = data.Enum("colorWriteChannels", ColorWriteChannels.All),
+        };
+
+        data.Values[cacheKey] = state;
+        return state;
+    }
+
 
     public static bool ContainsReference(this Type[] self, Type type) {
         foreach (var item in self) {

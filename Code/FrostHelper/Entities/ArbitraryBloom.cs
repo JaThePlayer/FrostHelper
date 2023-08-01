@@ -1,7 +1,7 @@
 ﻿namespace FrostHelper;
 
 [CustomEntity("FrostHelper/ArbitraryBloom")]
-public class ArbitraryBloom : Entity {
+internal sealed class ArbitraryBloom : Entity {
     public Vector3[] Fill;
     public float Alpha;
 
@@ -28,7 +28,7 @@ public class ArbitraryBloom : Entity {
 }
 
 [Tracked]
-public class ArbitraryBloomRenderer : Entity {
+internal sealed class ArbitraryBloomRenderer : Entity {
     private List<ArbitraryBloom> Blooms = new();
     private VertexPositionColor[] verts;
 
@@ -40,11 +40,11 @@ public class ArbitraryBloomRenderer : Entity {
     }
 
     private void NextVertex(ref int index, Vector3 pos, float alpha) {
-        if (index >= verts.Length) { 
+        if (index >= verts.Length) {
             Array.Resize(ref verts, verts.Length + 128);
         }
 
-        verts[index].Color.A = (byte)(alpha * 255f);
+        verts[index].Color.A = (byte) (alpha * 255f);
         verts[index].Position = pos;
         index++;
     }

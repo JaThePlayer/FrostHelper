@@ -429,7 +429,7 @@ public class FrostModule : EverestModule {
         return Engine.Scene switch {
             Level level => level,
             LevelLoader loader => loader.Level,
-            AssetReloadHelper => (Level) AssetReloadHelper.ReturnToScene,
+            AssetReloadHelper => AssetReloadHelper.ReturnToScene as Level,
             _ => null
         };
     }

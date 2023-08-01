@@ -38,9 +38,9 @@ public static class ShaderHelperIntegration {
                     var effectName = to.PathVirtual.Substring("Effects/".Length, to.PathVirtual.Length - ".cso".Length - "Effects/".Length);
 
                     if (FallbackEffectDict.TryGetValue(effectName, out var effect)) {
+                        FallbackEffectDict.Remove(effectName);
                         if (!effect.IsDisposed)
                             effect.Dispose();
-                        FallbackEffectDict.Remove(effectName);
                     }
 
                     Logger.Log(LogLevel.Info, "FrostHelper.ShaderHelper", $"Reloaded {effectName}");
@@ -165,7 +165,7 @@ public static class ShaderHelperIntegration {
         GameplayRenderer.End();
 
         Effect eff = GetEffect(id);
-        ApplyStandardParameters(eff, camera: null);
+        ApplyStandardParameters(eff);
 
         Engine.Instance.GraphicsDevice.SetRenderTarget(GameplayBuffers.Gameplay);
 
@@ -178,7 +178,10 @@ public static class ShaderHelperIntegration {
         GameplayRenderer.Begin();
     }
 
-    public static Effect ApplyStandardParameters(this Effect effect, Camera? camera) {
+    public static Effect ApplyStandardParameters(this Effect effect, Camera? camera = null)
+        => ApplyStandardParameters(effect, camera?.Matrix);
+
+    public static Effect ApplyStandardParameters(this Effect effect, Matrix? camera) {
         var level = FrostModule.GetCurrentLevel() ?? throw new Exception("Not in a level when applying shader parameters! How did you...");
         var parameters = effect.Parameters;
 
@@ -195,7 +198,7 @@ public static class ShaderHelperIntegration {
 
         parameters["TransformMatrix"]?.SetValue(halfPixelOffset * projection);
 
-        parameters["ViewMatrix"]?.SetValue(camera?.Matrix ?? Matrix.Identity);
+        parameters["ViewMatrix"]?.SetValue(camera ?? Matrix.Identity);
 
         return effect;
     }

@@ -52,11 +52,11 @@ public class LightningColorTrigger : Trigger {
     internal static string GetFillColorString(string prev = "f7b262") {
         LightningColorTrigger? trigger = GetFirstEnteredTrigger();
 
-        return trigger?.FillColor ?? OrDefault(FrostModule.Session.LightningFillColor, prev);
+        return trigger?.FillColor ?? OrDefault(FrostModule.Session?.LightningFillColor, prev);
     }
 
     internal static float GetLightningFillColorMultiplier(float prev = 0.1f) {
-        return GetFirstEnteredTrigger()?.FillColorMultiplier ?? FrostModule.Session.LightningFillColorMultiplier ?? prev;
+        return GetFirstEnteredTrigger()?.FillColorMultiplier ?? FrostModule.Session?.LightningFillColorMultiplier ?? prev;
     }
 
     internal static void GetColors(out Color colorA, out Color colorB) {
@@ -103,6 +103,8 @@ public class LightningColorTrigger : Trigger {
 
     private static FieldInfo? Bolt_color = null;
 
+    private int? NewDepth;
+
     bool persistent;
 
     public LightningColorTrigger(EntityData data, Vector2 offset) : base(data, offset) {
@@ -111,15 +113,15 @@ public class LightningColorTrigger : Trigger {
         Color c2 = ColorHelper.GetColor(data.Attr("color2", "8cf7e2"));
         FillColor = ColorHelper.ColorToHex(ColorHelper.GetColor(data.Attr("fillColor", "ffffff")));
         FillColorMultiplier = data.Float("fillColorMultiplier", 0.1f);
-        electricityColors = new Color[]
-        {
-                c1, c2
-        };
+        electricityColors = new Color[] { c1, c2 };
+
+        if (!string.IsNullOrWhiteSpace(data.Attr("depth")))
+            NewDepth = data.Int("depth");
     }
 
     public override void OnEnter(Player player) {
         base.OnEnter(player);
-        ChangeLightningColor(electricityColors);
+        ChangeLightningColor(electricityColors, NewDepth);
         if (persistent) {
             FrostModule.Session.LightningColorA = ColorHelper.ColorToHex(electricityColors[0]);
             FrostModule.Session.LightningColorB = ColorHelper.ColorToHex(electricityColors[1]);
@@ -128,21 +130,23 @@ public class LightningColorTrigger : Trigger {
         }
     }
 
-    public static void ChangeLightningColor(LightningRenderer? renderer, Color colorA, Color colorB) {
+    public static void ChangeLightningColor(LightningRenderer? renderer, Color colorA, Color colorB, int? newDepth = null) {
         if (renderer is null)
             return;
 
-        ChangeLightningColor(renderer, new[] { colorA, colorB });
+        ChangeLightningColor(renderer, new[] { colorA, colorB }, newDepth);
     }
 
-    public static void ChangeLightningColor(Color colorA, Color colorB) {
-        ChangeLightningColor(new[] { colorA, colorB });
+    public static void ChangeLightningColor(Color colorA, Color colorB, int? newDepth = null) {
+        ChangeLightningColor(new[] { colorA, colorB }, newDepth);
     }
 
-    public static void ChangeLightningColor(Color[] colors) {
-        ChangeLightningColor(Engine.Scene.Tracker.SafeGetEntity<LightningRenderer>(), colors);
+    public static void ChangeLightningColor(Color[] colors, int? newDepth = null) {
+        ChangeLightningColor(Engine.Scene.Tracker.SafeGetEntity<LightningRenderer>(), colors, newDepth);
 
         if (Engine.Scene.Tracker.SafeGetEntity<CustomLightningRenderer>() is { } customRenderer) {
+            if (newDepth is { } depth)
+                customRenderer.Depth = depth;
             customRenderer.ElectricityColors = colors;
             var bolts = customRenderer.Bolts;
             for (int i = 0; i < bolts.Count; i++) {
@@ -151,14 +155,18 @@ public class LightningColorTrigger : Trigger {
         }
     }
 
-    public static void ChangeLightningColor(LightningRenderer? renderer, Color[] colors) {
+    public static void ChangeLightningColor(LightningRenderer? renderer, Color[] colors, int? newDepth = null) {
         if (renderer is null)
             return;
 
-        LightningRenderer_electricityColors.SetValue(renderer, colors);
-        var bolts = LightningRenderer_bolts.GetValue(renderer);
+        if (newDepth is { } depth)
+            renderer.Depth = depth;
+
+        //LightningRenderer_electricityColors.SetValue(renderer, colors);
+        renderer.electricityColors = colors;
+        var bolts = renderer.bolts;// LightningRenderer_bolts.GetValue(renderer);
         var i = 0;
-        foreach (var bolt in (IEnumerable<object>) bolts) {
+        foreach (var bolt in bolts) {
             if (Bolt_color == null) {
                 Bolt_color = bolt.GetType().GetField("color", BindingFlags.Instance | BindingFlags.NonPublic);
             }

@@ -36,10 +36,10 @@
     <PackageReference Include="YamlDotNet" PrivateAssets="all" Version="11.2.1">
       <IncludeAssets>compile</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="KeraLua" Version="1.0.22" >
+    <PackageReference Include="KeraLua" Version="1.0.22">
       <IncludeAssets>compile</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="NLua" Version="1.4.25" >
+    <PackageReference Include="NLua" Version="1.4.25">
       <IncludeAssets>compile</IncludeAssets>
     </PackageReference>
     <PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild" Version="0.4.0">

@@ -11,10 +11,9 @@ public static class EaseHelper {
     }
 
     /// <returns>An easer of the name specified by <paramref name="name"/>, defaulting to <paramref name="defaultValue"/> or <see cref="Ease.Linear"/> if <paramref name="defaultValue"/> is null </returns>
+    // exposed via the api
     public static Ease.Easer GetEase(string name, Ease.Easer? defaultValue = null) {
-        Easers.TryGetValue(name, out var ease);
-
-        if (ease == null) {
+        if (!Easers.TryGetValue(name, out var ease)) {
             ease = TryLoadLuaEaser(name, ease);
 
             Easers[name] = ease;
@@ -57,11 +56,12 @@ public static class EaseHelper {
         return GetEase(data.Attr(key), defaultValue);
     }
 
-    // TODO: move this somewhere else lol
-    public static Tween.TweenMode TweenMode(this EntityData data, string key, Tween.TweenMode defaultValue) {
-        var attr = data.Attr(key);
+    public static Tween.TweenMode TweenMode(this EntityData data, string key, Tween.TweenMode defaultValue)
+        => GetTweenMode(data.Attr(key), defaultValue);
 
-        return attr switch {
+    // exposed via the api
+    internal static Tween.TweenMode GetTweenMode(string mode, Tween.TweenMode defaultValue) {
+        return mode switch {
             nameof(Tween.TweenMode.Persist) => Tween.TweenMode.Persist,
             nameof(Tween.TweenMode.Oneshot) => Tween.TweenMode.Oneshot,
             nameof(Tween.TweenMode.Looping) => Tween.TweenMode.Looping,

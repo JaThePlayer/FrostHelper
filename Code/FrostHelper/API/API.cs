@@ -236,4 +236,37 @@ public static class API {
         CustomSpring spr => spr.speedMult,
         _ => Vector2.One
     };
+
+
+    /// <summary>
+    /// Sets the blend state for the given backdrop
+    /// </summary>
+    public static void SetBackdropBlendState(Backdrop backdrop, BlendState blendState) {
+        CustomBackdropBlendModeHelper.SetBlendMode(backdrop, blendState);
+    }
+
+    /// <summary>
+    /// Gets the blend mode for the given backdrop.
+    /// If the backdrop is a parallax, it returns the <see cref="Parallax.BlendState"/> field.
+    /// Otherwise, it tries to get the blend state set by <see cref="SetBackdropBlendState(Backdrop, BlendState)"/>
+    /// If that function was never called on the given backdrop, null is returned.
+    /// </summary>
+    public static BlendState? GetBackdropBlendState(Backdrop backdrop) {
+        return CustomBackdropBlendModeHelper.GetBlendMode(backdrop);
+    }
+
+    /// <summary>
+    /// Returns an easer of the name specified by <paramref name="name"/>, defaulting to <paramref name="defaultValue"/> or <see cref="Ease.Linear"/> if <paramref name="defaultValue"/> is null.
+    /// Supports using lua code for the easing, where the provided code will be transformed as follows: $"return function(p){(<paramref name="name"/>.Contains("return") ? "" : " return")} {<paramref name="name"/>} end";
+    /// </summary>
+    public static Ease.Easer GetEaser(string name, Ease.Easer? defaultValue = null) {
+        return EaseHelper.GetEase(name, defaultValue);
+    }
+
+    /// <summary>
+    /// Returns a tween mode of the name specified by <paramref name="name"/>, defaulting to <paramref name="defaultValue"/> if the string was invalid. Case-sensitive.
+    /// </summary>
+    public static Tween.TweenMode GetTweenMode(string mode, Tween.TweenMode defaultValue) {
+        return EaseHelper.GetTweenMode(mode, defaultValue);
+    }
 }
