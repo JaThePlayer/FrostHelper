@@ -39,16 +39,20 @@ namespace Triangulator {
         public static void Triangulate(
             Vector2[] inputVertices,
             WindingOrder desiredWindingOrder,
+            WindingOrder? inputWindingOrder,
             out Vector2[] outputVertices,
             out int[] indices) {
 
             List<Triangle> triangles = new List<Triangle>();
 
             //make sure we have our vertices wound properly
-            if (DetermineWindingOrder(inputVertices) == WindingOrder.Clockwise)
-                outputVertices = ReverseWindingOrder(inputVertices);
-            else
-                outputVertices = (Vector2[]) inputVertices.Clone();
+            inputWindingOrder ??= DetermineWindingOrder(inputVertices);
+
+            outputVertices = inputWindingOrder switch {
+                WindingOrder.Clockwise => ReverseWindingOrder(inputVertices),
+                WindingOrder.CounterClockwise => (Vector2[]) inputVertices.Clone(),
+                _ => throw new NotImplementedException(),
+            };
 
             //clear all of the lists
             polygonVertices.Clear();

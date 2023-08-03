@@ -30,15 +30,35 @@ local function fieldCallback(self, value, prev)
     self.button.x = -font:getWidth(text) + self.minWidth + offset - 40
 end
 
+local function valueTransformer(v)
+    if v then
+        return tonumber(v)
+    end
+
+    return -1
+end
+
+local function displayTransformer(v)
+    if v then
+        return tostring(v)
+    end
+
+    return "-1"
+end
+
 function integerField.getElement(name, value, options)
     -- Add extra options and pass it onto string field
     local language = languageRegistry.getLanguage()
     local minimumValue = options.minimumValue or -math.huge
     local maximumValue = options.maximumValue or math.huge
 
-    options.valueTransformer = tonumber
-    options.displayTransformer = tostring
+    options.valueTransformer = valueTransformer
+    options.displayTransformer = displayTransformer
     options.validator = function(v)
+        if not v then
+            v = -1
+        end
+
         local number = tonumber(v)
 
         return utils.isInteger(number) and number >= minimumValue and number <= maximumValue

@@ -18,7 +18,7 @@ public class ArbitraryShapeFireBarrier : Entity {
             input[i] = nodes[i - 1];
         }
 
-        Triangulator.Triangulator.Triangulate(input, WindingOrder.CounterClockwise, out Vector2[] verts, out int[] indices);
+        Triangulator.Triangulator.Triangulate(input, WindingOrder.CounterClockwise, data.GetWindingOrder("windingOrder"), out Vector2[] verts, out int[] indices);
 
         Vertices = new Vector3[indices.Length];
         for (int i = 0; i < indices.Length; i++) {

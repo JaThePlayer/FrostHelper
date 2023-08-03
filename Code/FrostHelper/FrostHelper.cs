@@ -66,11 +66,27 @@ public class FrostHelperSettings : EverestModuleSettings {
     }
 }
 
+public enum FrameworkType {
+    FNA, XNA
+}
+
 public class FrostModule : EverestModule {
     static bool outBackHelper = false;
     public static SpriteBank SpriteBank;
     // Only one alive module instance can exist at any given time.
     public static FrostModule Instance;
+
+    /// <summary>
+    /// The framework celeste is running on - either xna or fna
+    /// </summary>
+    public static readonly FrameworkType Framework;
+
+    static FrostModule() {
+        // from communal helper - https://github.com/CommunalHelper/CommunalHelper/blob/6877bdf1e3527656adcdb56a89071da6fe4e42bf/src/Entities/Misc/Shape3DRenderer.cs#L185-L187
+        Framework = typeof(Game).Assembly.FullName.Contains("FNA")
+        ? FrameworkType.FNA
+        : FrameworkType.XNA;
+    }
 
     public FrostModule() {
         Instance = this;

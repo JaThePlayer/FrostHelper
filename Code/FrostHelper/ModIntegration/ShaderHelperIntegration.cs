@@ -194,7 +194,10 @@ public static class ShaderHelperIntegration {
         Viewport viewport = Engine.Graphics.GraphicsDevice.Viewport;
 
         Matrix projection = Matrix.CreateOrthographicOffCenter(0, viewport.Width, viewport.Height, 0, 0, 1);
-        Matrix halfPixelOffset = Matrix.Identity;
+        // from communal helper
+        Matrix halfPixelOffset = FrostModule.Framework is FrameworkType.FNA
+            ? Matrix.Identity
+            : Matrix.CreateTranslation(-0.5f, -0.5f, 0f);
 
         parameters["TransformMatrix"]?.SetValue(halfPixelOffset * projection);
 

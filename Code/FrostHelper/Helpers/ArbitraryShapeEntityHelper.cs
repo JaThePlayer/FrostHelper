@@ -1,9 +1,20 @@
-﻿using Microsoft.Xna.Framework.Graphics;
-using Triangulator;
+﻿using Triangulator;
 
 namespace FrostHelper;
 
 public static class ArbitraryShapeEntityHelper {
+    public static WindingOrder? GetWindingOrder(this EntityData data, string key) {
+        if (!data.Values.TryGetValue(key, out var windingOrder)) {
+            return null;
+        }
+
+        return windingOrder switch {
+            nameof(WindingOrder.Clockwise) => WindingOrder.Clockwise,
+            nameof(WindingOrder.CounterClockwise) => WindingOrder.CounterClockwise,
+            _ => null
+        };
+    }
+
     public static Vector3[] GetFillFromNodes(EntityData data, Vector2 offset, string cacheKey = "__cachedFillV3") {
         if (data.Values.TryGetValue(cacheKey, out var cached)) {
             return (Vector3[]) cached;
@@ -16,7 +27,7 @@ public static class ArbitraryShapeEntityHelper {
             input[i] = nodes[i - 1];
         }
 
-        Triangulator.Triangulator.Triangulate(input, WindingOrder.CounterClockwise, out var verts, out var indices);
+        Triangulator.Triangulator.Triangulate(input, WindingOrder.Clockwise, GetWindingOrder(data, "windingOrder"), out var verts, out var indices);
 
         var fill = new Vector3[indices.Length];
         for (int i = 0; i < indices.Length; i++) {
@@ -40,7 +51,7 @@ public static class ArbitraryShapeEntityHelper {
             input[i] = nodes[i - 1];
         }
 
-        Triangulator.Triangulator.Triangulate(input, WindingOrder.CounterClockwise, out var verts, out var indices);
+        Triangulator.Triangulator.Triangulate(input, WindingOrder.Clockwise, GetWindingOrder(data, "windingOrder"), out var verts, out var indices);
 
         var fill = new VertexPositionColor[indices.Length];
         for (int i = 0; i < indices.Length; i++) {

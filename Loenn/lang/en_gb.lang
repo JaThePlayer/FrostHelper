@@ -2,6 +2,18 @@
 # entities.entityName.placements.*
 # entities.entityName.description.*
 
+# Custom Dust Sprite
+entities.FrostHelper/DustSprite.placements.name.default=Custom Dust Sprite
+entities.FrostHelper/DustSprite.attributes.description.edgeColors=List of three colors to use for rendering edges.
+entities.FrostHelper/DustSprite.attributes.description.directory=The directory to use for picking sprites.\nShould have the same file structure as vanilla dust sprites, though the 'templeeyes' are unused and can be removed.
+entities.FrostHelper/DustSprite.attributes.description.tint=The color to use to tint the 'base' and 'overlay' sprites.
+entities.FrostHelper/DustSprite.attributes.description.eyeColor=The color to use to tint the eye.
+entities.FrostHelper/DustSprite.attributes.description.rainbow=Whether the base sprites should be rainbow, matching the color of rainbow spinners.
+entities.FrostHelper/DustSprite.attributes.description.rainbowEyes=Whether the eyes should have rainbow eyes, matching the color of rainbow spinners.
+entities.FrostHelper/DustSprite.attributes.description.hasEdges=Whether to render edges for this dust sprite.
+entities.FrostHelper/DustSprite.attributes.description.attachToSolid=Whether this dust sprite should attach to solids.
+entities.FrostHelper/DustSprite.attributes.description.attachGroup=The group that this entity is in. All entities with the same attach group will be attached to the same solid.
+
 # Badeline Chaser Block
 entities.FrostHelper/BadelineChaserBlock.placements.name.badeline_chaser_block=Badeline Chaser Block
 entities.FrostHelper/BadelineChaserBlock.placements.name.badeline_chaser_block_reversed=Badeline Chaser Block (Reversed)
@@ -393,8 +405,10 @@ entities.FrostHelper/StaticDoor.attributes.description.closeSfx=Overrides the sf
 entities.FrostHelper/StaticDoor.attributes.description.lightOccludeAlpha=The alpha value of the Light Occlude. Values below 1 mean that light will partially pass through the door even when it's closed.
 
 entities.FrostHelper/ArbitraryShapeLightning.placements.name.default=Arbitrary Shape Lightning
+entities.FrostHelper/ArbitraryShapeLightning.attributes.description.windingOrder=The winding order of the polygon.\nIf your shape looks broken in-game, try changing this property until it looks correctly.
 
 entities.FrostHelper/ArbitraryBloom.placements.name.default=Arbitrary Bloom
+entities.FrostHelper/ArbitraryBloom.attributes.description.windingOrder=The winding order of the polygon.\nIf your shape looks broken in-game, try changing this property until it looks correctly.
 
 entities.FrostHelper/LightOccluderEntity.placements.name.default=Light Occluder
 
@@ -431,10 +445,12 @@ entities.FrostHelper/ArbitraryShapeCloud.attributes.description.parallax=The par
 entities.FrostHelper/ArbitraryShapeCloud.attributes.description.depth=The depth to render this cloud at.
 entities.FrostHelper/ArbitraryShapeCloud.attributes.description.textures=A comma-seperated list of textures to use for the edges of the cloud.
 entities.FrostHelper/ArbitraryShapeCloud.attributes.description.cache=Determines how this cloud should cache itself for performance.\nAuto - Let Frost Helper automatically choose the best caching method. Recommended.\nNever - Never cache the cloud, could cause lag. (Uses camera culling instead)\nRenderTarget - Render the whole cloud once into a render target. Makes clouds not lag the game at all, at the cost of using more VRAM.
+entities.FrostHelper/ArbitraryShapeCloud.attributes.description.windingOrder=The winding order of the polygon.\nIf your shape looks broken in-game, try changing this property until it looks correctly.
 
 entities.FrostHelper/BloomBlocker.placements.name.default=Arbitrary Shape Bloom Blocker
 entities.FrostHelper/BloomBlocker.placements.description.default=Blocks bloom (either fully or partially) in a polygonal area defined by nodes.
 entities.FrostHelper/BloomBlocker.attributes.description.alpha=How much this blocker should block bloom.\n1 Blocks bloom fully, 0 does nothing.
+entities.FrostHelper/BloomBlocker.attributes.description.windingOrder=The winding order of the polygon.\nIf your shape looks broken in-game, try changing this property until it looks correctly.
 
 # -- Mod Names --
 # mods.modName.*

@@ -41,6 +41,10 @@ local celesteDepths = --require("consts.object_depths")
 
 local jautils = {}
 
+jautils.windingOrders = {
+    "Clockwise", "CounterClockwise", "Auto"
+}
+
 --[[
     Compatibility
 ]]

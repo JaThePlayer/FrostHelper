@@ -55,12 +55,12 @@ public class ArbitraryShapeLightning : Entity {
         if (Vertices is not null)
             renderer.Remove(Vertices);
     }
-
+    /*
     public override void DebugRender(Camera camera) {
         base.DebugRender(camera);
         if (Vertices is null)
             return;
-
+        
         Vector3 vert1, vert2;
         for (int i = 0; i < Vertices.Length - 1; i++) {
             vert1 = Vertices[i];
@@ -71,4 +71,5 @@ public class ArbitraryShapeLightning : Entity {
         vert2 = Vertices[Vertices.Length - 1];
         Draw.Line(new Vector2(vert1.X, vert1.Y), new Vector2(vert2.X, vert2.Y), Color.Pink);
     }
+    */
 }

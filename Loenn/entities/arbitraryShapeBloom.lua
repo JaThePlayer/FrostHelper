@@ -15,10 +15,12 @@ local arbitraryBloomBlocker = {
 
 jautils.createPlacementsPreserveOrder(arbitraryBloom, "default", {
     { "alpha", 1.0 },
+    { "windingOrder", "Auto", jautils.windingOrders },
 })
 
 jautils.createPlacementsPreserveOrder(arbitraryBloomBlocker, "default", {
     { "alpha", 1.0 },
+    { "windingOrder", "Auto", jautils.windingOrders },
 })
 
 arbitraryBloom.sprite = arbitraryShapeEntity.getSpriteFunc("ffffff", "ffffff", "ffffff19")

@@ -178,6 +178,7 @@ internal sealed class ArbitraryShapeCloud : Entity {
         }
     }
 
+    /*
     public override void DebugRender(Camera camera) {
         foreach (var item in Nodes) {
             Draw.HollowRect(item + CalcParallaxOffset(item), 1, 1, Color.Red);
@@ -193,6 +194,7 @@ internal sealed class ArbitraryShapeCloud : Entity {
             return v2 + CalcParallaxOffset(v2);
         }));
     }
+    */
 
     void RenderNoTarget(Vector2 parallaxOffset, bool bloomBlocker) {
         Bounds ??= CalcBounds();

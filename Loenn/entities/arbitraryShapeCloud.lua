@@ -23,6 +23,7 @@ jautils.createPlacementsPreserveOrder(cloud, "default", {
     { "depth", -10500, "depth" },
     { "textures", defaultTextures },
     { "cache", "Auto", cacheOptions },
+    { "windingOrder", "Auto", jautils.windingOrders },
     { "blockBloom", false },
 })
 

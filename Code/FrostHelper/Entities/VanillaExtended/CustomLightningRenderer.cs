@@ -266,62 +266,48 @@ public class CustomLightningRenderer : Entity {
         seed += (uint) (a.GetHashCode() + b.GetHashCode());
         a += pos;
         b += pos;
-        float num = (b - a).Length();
-        Vector2 vector = (b - a) / num;
-        Vector2 vector2 = vector.TurnRight();
-        a += vector2;
-        b += vector2;
-        Vector2 vector3 = a;
+        float len = (b - a).Length();
+        Vector2 segment = (b - a) / len;
+        Vector2 perpendicularSegment = segment.TurnRight();
+        a += perpendicularSegment;
+        b += perpendicularSegment;
+        var perpendicularSegmentTimesThickness = perpendicularSegment * thickness;
+
+        Vector2 start = a;
         int num2 = (PseudoRand(ref seed) % 2u == 0u) ? -1 : 1;
         float num3 = PseudoRandRange(ref seed, 0f, 6.28318548f);
-        float num4 = 0f;
-        float num5 = index + ((b - a).Length() / 4f + 1f) * 6f;
-        while (num5 >= verts.Length) {
+        float curLen = 0f;
+        float maxIndex = index + ((b - a).Length() / 4f + 1f) * 6f;
+        while (maxIndex >= verts.Length) {
             Array.Resize(ref verts, verts.Length * 2);
         }
-        int num6 = index;
-        while (num6 < num5) {
-            verts[num6].Color = color;
-            num6++;
+        int i = index;
+        while (i < maxIndex) {
+            verts[i].Color = color;
+            i++;
         }
         do {
-            float num7 = PseudoRandRange(ref seed, 0f, 4f);
+            float extraLen = PseudoRandRange(ref seed, 0f, 4f);
             num3 += 0.1f;
-            num4 += 4f + num7;
-            Vector2 vector4 = a + vector * num4;
-            if (num4 < num) {
-                vector4 += num2 * vector2 * num7 - vector2;
+            curLen += 4f + extraLen;
+            Vector2 end = a + segment * curLen;
+            if (curLen < len) {
+                end += num2 * perpendicularSegment * extraLen - perpendicularSegment;
             } else {
-                vector4 = b;
+                end = b;
             }
-            VertexPositionColor[] array = verts;
-            int num8 = index;
-            index = num8 + 1;
-            array[num8].Position = new Vector3(vector3 - vector2 * thickness, 0f);
-            VertexPositionColor[] array2 = verts;
-            num8 = index;
-            index = num8 + 1;
-            array2[num8].Position = new Vector3(vector4 - vector2 * thickness, 0f);
-            VertexPositionColor[] array3 = verts;
-            num8 = index;
-            index = num8 + 1;
-            array3[num8].Position = new Vector3(vector4 + vector2 * thickness, 0f);
-            VertexPositionColor[] array4 = verts;
-            num8 = index;
-            index = num8 + 1;
-            array4[num8].Position = new Vector3(vector3 - vector2 * thickness, 0f);
-            VertexPositionColor[] array5 = verts;
-            num8 = index;
-            index = num8 + 1;
-            array5[num8].Position = new Vector3(vector4 + vector2 * thickness, 0f);
-            VertexPositionColor[] array6 = verts;
-            num8 = index;
-            index = num8 + 1;
-            array6[num8].Position = new Vector3(vector3, 0f);
-            vector3 = vector4;
+
+            verts[index++].Position = new Vector3(start - perpendicularSegmentTimesThickness, 0f);
+            verts[index++].Position = new Vector3(end - perpendicularSegmentTimesThickness, 0f);
+            verts[index++].Position = new Vector3(end + perpendicularSegmentTimesThickness, 0f);
+            verts[index++].Position = new Vector3(start - perpendicularSegmentTimesThickness, 0f);
+            verts[index++].Position = new Vector3(end + perpendicularSegmentTimesThickness, 0f);
+            verts[index++].Position = new Vector3(start, 0f);
+
+            start = end;
             num2 = -num2;
         }
-        while (num4 < num);
+        while (curLen < len);
     }
 
     public static void DrawBezierLightning(ref int index, ref VertexPositionColor[] verts, uint seed, Vector2 pos, Vector2 a, Vector2 b, float anchor, int steps, Color color) {
