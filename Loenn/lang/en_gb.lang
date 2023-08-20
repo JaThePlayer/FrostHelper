@@ -2,6 +2,15 @@
 # entities.entityName.placements.*
 # entities.entityName.description.*
 
+# Lua Boss
+entities.FrostHelper/LuaBoss.placements.name.default=Lua Badeline Boss
+entities.FrostHelper/LuaBoss.attributes.description.filename=Path to the .lua file to use for this boss. Relative to the mod root folder.\nFor a path YourModFolder/Assets/mymod/luaboss.lua, put Assets/mymod/luaboss in this field.\nFor info on how to make lua bosses, check the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Lua-Badeline-Boss-Starter-Guide
+entities.FrostHelper/LuaBoss.attributes.description.sprite=Name of the sprites.xml file entry to use for this boss.\nCustom entries should have the same animations as vanilla bosses, or else the game will crash.
+entities.FrostHelper/LuaBoss.attributes.description.color=The color to use to tint the boss's sprite.
+entities.FrostHelper/LuaBoss.attributes.description.lockCamera=Whether this boss locks the camera at all.
+entities.FrostHelper/LuaBoss.attributes.description.cameraLockY=If lockCamera is enabled, whether the camera should be locked vertically, functioning similarly as a killbox.
+entities.FrostHelper/LuaBoss.attributes.description.startHit=Determines whether or not Badeline waits to attack until the first hit or upon room entry.
+
 # Custom Dust Sprite
 entities.FrostHelper/DustSprite.placements.name.default=Custom Dust Sprite
 entities.FrostHelper/DustSprite.attributes.description.edgeColors=List of three colors to use for rendering edges.

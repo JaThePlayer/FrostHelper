@@ -15,7 +15,6 @@ jautils.createPlacementsPreserveOrder(boss, "default", {
     { "color", "ffffff", "color" },
 	{ "lockCamera", true },
     { "cameraLockY", true },
-    { "cameraPastY", 120 },
     { "startHit", false },
 })
 

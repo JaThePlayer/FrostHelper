@@ -26,7 +26,7 @@ public static class LuaHelper {
     public static object[] RunLua(string filename, LuaTable? env, LuaTable? args = null, string helperFunc = "getLuaData") {
         var content = Everest.Content.TryGet(filename, out var asset) ? ReadModAsset(asset) : null;
         if (content is null) {
-            NotificationHelper.Notify($"Couldn't find asset {filename}.\nTry restarting the game.");
+            NotificationHelper.Notify($"Couldn't find asset {filename}\nTry restarting the game.");
 
             return new object[0];
         }
