@@ -42,7 +42,7 @@ public class StaticBumper : Entity {
         UpdatePosition();
         Add(hitWiggler = Wiggler.Create(1.2f, 2f, v => spriteEvil.Position = hitDir * hitWiggler!.Value * 8f, false, false));
         if (!NotCoreMode)
-            Add(new CoreModeListener(new Action<Session.CoreModes>(OnChangeMode)));
+            Add(new CoreModeListener(OnChangeMode));
 
     }
 
@@ -67,6 +67,8 @@ public class StaticBumper : Entity {
         Position = anchor;
         if (Wobbling) {
             Position += new Vector2(sine.Value * 3f, sine.ValueOverTwo * 2f);
+            // .net core desync patch, todo: test
+            //Position = new Vector2((float) ((double) anchor.X + sine.Value * 3.0), (float) ((double) anchor.Y + sine.ValueOverTwo * 2.0));
         }
     }
 
@@ -80,8 +82,8 @@ public class StaticBumper : Entity {
                 bloom.Visible = true;
                 sprite.Play("on", false, false);
                 spriteEvil.Play("on", false, false);
-                bool flag3 = !fireMode;
-                if (flag3) {
+
+                if (!fireMode) {
                     Audio.Play("event:/game/06_reflection/pinballbumper_reset", Position);
                 }
             }

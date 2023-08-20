@@ -58,9 +58,9 @@ public class CustomSpinner : Entity {
     }
     #endregion
 
-    public string bgDirectory;
-    public string fgDirectory;
-    public bool moveWithWind;
+    public string BGDirectory;
+    public string FGDirectory;
+    public bool MoveWithWind;
     public bool DashThrough;
     public string SpritePathSuffix = "";
     public Color Tint;
@@ -102,7 +102,7 @@ public class CustomSpinner : Entity {
 
         this.directory = directory;
         UpdateDirectoryFields(false);
-        moveWithWind = data.Bool("moveWithWind", false);
+        MoveWithWind = data.Bool("moveWithWind", false);
 
         // funny story time: this used to exist in older versions of Frost Helper as a leftover.
         // I tried removing it in 1.20.3, but this broke some TASes due to spinner cycles.
@@ -169,8 +169,8 @@ public class CustomSpinner : Entity {
     }
 
     private void UpdateDirectoryFields(bool hotCoreMode) {
-        bgDirectory = GetBGSpritePath(hotCoreMode);
-        fgDirectory = GetFGSpritePath(hotCoreMode);
+        BGDirectory = GetBGSpritePath(hotCoreMode);
+        FGDirectory = GetFGSpritePath(hotCoreMode);
     }
 
     public static bool ConnectorRendererJustAdded = false;
@@ -305,7 +305,7 @@ public class CustomSpinner : Entity {
             filler.Position = Position;
         }
 
-        if (moveWithWind) {
+        if (MoveWithWind) {
             float move = Calc.ClampedMap(Math.Abs((Scene as Level)!.Wind.X), 0f, 800f, 0f, 5f);
             if ((Scene as Level)!.Wind.X < 0)
                 move -= move * 2;
@@ -374,7 +374,7 @@ public class CustomSpinner : Entity {
 
             Calc.PushRandom(randomSeed);
 
-            List<MTexture> fgSubtextures = GFX.Game.GetAtlasSubtextures(fgDirectory);
+            List<MTexture> fgSubtextures = GFX.Game.GetAtlasSubtextures(FGDirectory);
             MTexture fgTexture = Calc.Random.Choose(fgSubtextures);
 
             foreach (Entity entity in Scene.Tracker.SafeGetEntities<CustomSpinner>()) {
@@ -423,7 +423,7 @@ public class CustomSpinner : Entity {
             if (HasDeco) {
                 deco ??= new Entity(Position);
 
-                var decoAtlasSubtextures = GFX.Game.GetAtlasSubtextures(fgDirectory + "Deco");
+                var decoAtlasSubtextures = GFX.Game.GetAtlasSubtextures(FGDirectory + "Deco");
                 Image decoImage = new Image(decoAtlasSubtextures[fgSubtextures.IndexOf(fgTexture)]) {
                     Color = Tint,
                     Active = false
@@ -523,7 +523,7 @@ public class CustomSpinner : Entity {
                 Active = false
             };
         }
-        List<MTexture> atlasSubtextures = GFX.Game.GetAtlasSubtextures(bgDirectory);
+        List<MTexture> atlasSubtextures = GFX.Game.GetAtlasSubtextures(BGDirectory);
         Image image = new Image(Calc.Random.Choose(atlasSubtextures)) {
             Position = offset,
             Rotation = Calc.Random.Choose(0, 1, 2, 3) * 1.57079637f,
@@ -540,7 +540,7 @@ public class CustomSpinner : Entity {
             if (deco is null) {
                 deco = new Entity(Position);
             }
-            var decoAtlasSubtextures = GFX.Game.GetAtlasSubtextures(bgDirectory + "Deco");
+            var decoAtlasSubtextures = GFX.Game.GetAtlasSubtextures(BGDirectory + "Deco");
             Image decoImage = new Image(decoAtlasSubtextures[atlasSubtextures.IndexOf(image.Texture)]) {
                 Position = offset,
                 Rotation = image.Rotation,
@@ -553,7 +553,7 @@ public class CustomSpinner : Entity {
     }
 
     private bool SolidCheck(Vector2 position) {
-        if (AttachToSolid || moveWithWind) {
+        if (AttachToSolid || MoveWithWind) {
             return false;
         }
         foreach (var a in Scene.CollideAll<Solid>(position)) {

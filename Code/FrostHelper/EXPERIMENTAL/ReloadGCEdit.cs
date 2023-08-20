@@ -8,6 +8,14 @@ internal static class ReloadGCEdit {
         IL.Celeste.Level.Reload -= Level_Reload;
     }
 
+    public static void LoadSceneTransition() {
+        IL.Monocle.Engine.OnSceneTransition += Level_Reload;
+    }
+
+    public static void UnloadSceneTransition() {
+        IL.Monocle.Engine.OnSceneTransition -= Level_Reload;
+    }
+
     private static void Level_Reload(ILContext il) {
         var cursor = new ILCursor(il);
 

@@ -166,6 +166,14 @@ public static class Extensions {
         return t.Entities[type];
     }
 
+    public static List<Entity>? GetEntitiesOrNull(this Tracker t, Type type) {
+        if (!t.Entities.ContainsKey(type)) {
+            return null;
+        }
+
+        return t.Entities[type];
+    }
+
     private static List<Entity> _emptyListEntity = new();
     private static List<Component> _emptyListComponent = new();
 

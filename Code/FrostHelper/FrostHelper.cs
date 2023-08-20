@@ -64,6 +64,55 @@ public class FrostHelperSettings : EverestModuleSettings {
             _noRespawnGC = value;
         }
     }
+
+    [YamlIgnore]
+    private bool _DebugMapCulling = false;
+    [SettingSubText("""
+        [EXPERIMENTAL]
+        Adds camera culling to the debug map,
+        massively improving performance in large maps.
+        """)]
+    [SettingName("Debug Map Culling")]
+    public bool DebugMapCulling {
+        get => _DebugMapCulling;
+        set {
+            switch (value) {
+                case true:
+                    OptimiseDebugMap.Load();
+                    break;
+                case false:
+                    OptimiseDebugMap.Unload();
+                    break;
+            }
+
+            _DebugMapCulling = value;
+        }
+    }
+    /*
+    [YamlIgnore]
+    private bool _noSceneChangeGC = false;
+    [SettingSubText("""
+        [EXPERIMENTAL]
+        Removes the aggressive GC call in Engine.OnSceneTransition.
+        This can massively reduce load times when loading a map from the debug map.
+        Make sure to report any new lag spikes if using this!
+        """)]
+    [SettingName("No Scene Change GC")]
+    public bool NoSceneChangeGC {
+        get => _noSceneChangeGC;
+        set {
+            switch (value) {
+                case true:
+                    ReloadGCEdit.LoadSceneTransition();
+                    break;
+                case false:
+                    ReloadGCEdit.UnloadSceneTransition();
+                    break;
+            }
+
+            _noSceneChangeGC = value;
+        }
+    }*/
 }
 
 public enum FrameworkType {

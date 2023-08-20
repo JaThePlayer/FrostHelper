@@ -298,7 +298,7 @@ internal sealed class CustomDustGraphic : DustGraphic {
     private static void DustEdges_Render(On.Celeste.DustEdges.orig_Render orig, DustEdges self) {
         orig(self);
 
-        if (self.hasDust) {
+        if (self.hasDust && self.Scene.Tracker.SafeGetEntity<CustomDustBunny>() is { }) {
             Vector2 position = self.FlooredCamera();
             Draw.SpriteBatch.Draw(RenderTargetHelper<CustomDustBunny>.Get(), position, Color.White);
         }

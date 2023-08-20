@@ -40,6 +40,8 @@ public static class ArbitraryShapeEntityHelper {
     }
 
     public static VertexPositionColor[] GetFillVertsFromNodes(EntityData data, Vector2 offset, Color color, string cacheKey = "__cachedFillVPC") {
+        data.Values ??= new();
+
         if (data.Values.TryGetValue(cacheKey, out var cached)) {
             return (VertexPositionColor[]) cached;
         }
