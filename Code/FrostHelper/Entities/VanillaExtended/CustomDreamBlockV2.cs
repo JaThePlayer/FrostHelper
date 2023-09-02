@@ -3,7 +3,7 @@
 /// <summary>
 /// Custom dream blocks except they extend DreamBlock
 /// </summary>
-//[CustomEntity("FrostHelper/CustomDreamBlock")]
+[CustomEntity($"FrostHelper/CustomDreamBlock = {nameof(LoadCustomDreamBlock)}")]
 [TrackedAs(typeof(DreamBlock))]
 [Tracked]
 public class CustomDreamBlockV2 : DreamBlock {
@@ -24,6 +24,16 @@ public class CustomDreamBlockV2 : DreamBlock {
     public Color DisabledLineColor;
     float moveSpeedMult;
     Ease.Easer easer;
+
+    public static Entity LoadCustomDreamBlock(Level level, LevelData levelData, Vector2 offset, EntityData entityData) {
+        if (entityData.Bool("old", false)) {
+#pragma warning disable CS0618 // Type or member is obsolete
+            return new CustomDreamBlock(entityData, offset);
+#pragma warning restore CS0618 // Type or member is obsolete
+        } else {
+            return new CustomDreamBlockV2(entityData, offset);
+        }
+    }
 
     public CustomDreamBlockV2(EntityData data, Vector2 offset) : base(data, offset) {
         LoadIfNeeded();

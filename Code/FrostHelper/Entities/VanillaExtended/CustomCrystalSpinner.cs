@@ -1,4 +1,5 @@
-﻿using FrostHelper.ModIntegration;
+﻿using FrostHelper.Colliders;
+using FrostHelper.ModIntegration;
 using System.Runtime.CompilerServices;
 
 namespace FrostHelper;
@@ -119,10 +120,8 @@ public class CustomSpinner : Entity {
 
         HasCollider = data.Bool("collidable", true);
         if (HasCollider) {
-            Collider = new ColliderList(new Collider[] {
-                new Circle(6f, 0f, 0f),
-                new Hitbox(16f, 4f, -8f, -3f)
-            });
+            Collider = new SpinnerCollider();
+
             Add(new PlayerCollider(OnPlayer, null, null));
             Add(new HoldableCollider(OnHoldable, null));
             Add(new LedgeBlocker(null));

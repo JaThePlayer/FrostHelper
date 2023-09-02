@@ -1,7 +1,5 @@
-﻿using FrostHelper.API;
-using FrostHelper.Helpers;
+﻿using FrostHelper.Helpers;
 using NLua;
-using System.CodeDom;
 
 namespace FrostHelper.Entities;
 
@@ -116,8 +114,7 @@ internal sealed class LuaBadelineBoss : FinalBoss {
         Add(Sprite = GFX.SpriteBank.Create(EntityData.Attr("sprite", "badeline_boss")));
         Sprite.Color = EntityData.GetColor("color", "ffffff");
 
-        Sprite.OnFrameChange = (string anim) =>
-        {
+        Sprite.OnFrameChange = (string anim) => {
             if (anim == "idle" && Sprite.CurrentAnimationFrame == 18) {
                 Audio.Play("event:/char/badeline/boss_idle_air", Position);
             }
@@ -377,7 +374,7 @@ public sealed class CustomBossShot : Entity {
     private void SharedInit(LuaBadelineBoss boss, LuaTable? args) {
         this.boss = boss;
         anchor = Position = boss.Center;
-        
+
         dead = hasBeenInCamera = false;
         cantKillTimer = CantKillTime;
         appearTimer = AppearTime;
@@ -515,8 +512,7 @@ public class CustomBossBeam : Entity {
     public CustomBossBeam() {
         fade = new VertexPositionColor[24];
         Add(beamSprite = GFX.SpriteBank.Create("badeline_beam"));
-        beamSprite.OnLastFrame = (string anim) =>
-        {
+        beamSprite.OnLastFrame = (string anim) => {
             if (anim == "shoot") {
                 Destroy();
             }

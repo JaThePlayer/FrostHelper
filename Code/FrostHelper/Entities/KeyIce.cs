@@ -1,14 +1,98 @@
 ﻿namespace FrostHelper;
 
-public class KeyIce : Key {
+[CustomEntity($"FrostHelper/KeyIce = {nameof(Load_ThanksCrystallineHelper_I_LOVE_WHEN_MODS_HOOK_OTHER_MODS)}")]
+[Tracked]
+public sealed class KeyIce : Key {
+    #region Hooks
+    private static bool _hooksLoaded = false;
+
+    [OnLoad]
+    public static void LoadHooksIfNeeded() {
+        if (_hooksLoaded) {
+            return;
+        }
+        _hooksLoaded = true;
+
+        On.Celeste.Level.LoadLevel += Level_LoadLevel;
+        On.Celeste.Key.RegisterUsed += Key_RegisterUsed;
+    }
+
+    private static void Key_RegisterUsed(On.Celeste.Key.orig_RegisterUsed orig, Key self) {
+        orig(self);
+
+        if (self is KeyIce iceKey) {
+            iceKey.OnRegisterUsed();
+        }
+    }
+
+    private static void Level_LoadLevel(On.Celeste.Level.orig_LoadLevel orig, Level self, Player.IntroTypes playerIntro, bool isFromLoader) {
+        orig(self, playerIntro, isFromLoader);
+
+        var dissolvedBeforeDeath = FrostModule.Session.PersistentIceKeysDissolvedThisRun;
+        foreach (var info in dissolvedBeforeDeath) {
+            if (info.RespawnPoint != self.Session.RespawnPoint || playerIntro == Player.IntroTypes.Transition) {
+                FrostModule.Session.PersistentIceKeys.RemoveWhere(k => k.ID.Key == info.ID.Key);
+                self.Session.DoNotLoad.Remove(info.ID);
+            }
+        }
+        dissolvedBeforeDeath.Clear();
+
+        if (playerIntro != Player.IntroTypes.Transition) {
+            foreach (var id in FrostModule.Session.PersistentIceKeys) {
+                self.Add(new KeyIce(self.Tracker.GetEntity<Player>(), id));
+                //self.Session.DoNotLoad.Add(id.ID);
+            }
+        }
+    }
+
+    [OnUnload]
+    public static void Unload() {
+        if (!_hooksLoaded) {
+            return;
+        }
+        _hooksLoaded = false;
+
+        On.Celeste.Level.LoadLevel -= Level_LoadLevel;
+        On.Celeste.Key.RegisterUsed -= Key_RegisterUsed;
+    }
+    #endregion
+
     public new bool Turning { get; private set; }
 
-    public KeyIce(EntityData data, Vector2 offset, EntityID id, Vector2[] nodes) : base(data.Position + offset, id, nodes) {
+    public string? OnCarryFlag { get; private set; }
+
+    public bool Persistent { get; private set; }
+
+    public bool LoadedFromPersistence { get; private set; }
+
+    public EntityData SourceData { get; private set; }
+
+    private FrostHelperSession.DissolvedIceKeyInfo? DissolveInfo { get; set; }
+
+
+    // a hook on the ctor for ice keys forces me to use a ctor that's invalid for the CustomEntity attribute :/
+    public static Entity Load_ThanksCrystallineHelper_I_LOVE_WHEN_MODS_HOOK_OTHER_MODS(Level level, LevelData levelData, Vector2 offset, EntityData entityData) {
+        return new KeyIce(entityData, offset, new(levelData.Name, entityData.ID), entityData.NodesOffset(offset));
+    }
+
+    // hooked by CrystallineHelper
+    public KeyIce(EntityData data, Vector2 offset, EntityID id, Vector2[] nodes) : this(data, offset, id) { }
+
+    public KeyIce(EntityData data, Vector2 offset, EntityID id) : base(data, offset, id) {
+        SourceData = data;
+
+        OnCarryFlag = data.Attr("onCarryFlag", "") is { } f && !string.IsNullOrWhiteSpace(f) ? f : null;
+        Persistent = data.Bool("persistent", false);
+
         sprite = Get<Sprite>();
         this.follower = Get<Follower>();
         FrostModule.SpriteBank.CreateOn(sprite, "keyice");
+
         Follower follower = this.follower;
-        follower.OnLoseLeader = (Action) Delegate.Combine(follower.OnLoseLeader, new Action(Dissolve));
+        // don't dissolve persistent keys, as that would toggle the onCarryFlag
+        if (!Persistent) {
+            follower.OnLoseLeader += Dissolve;
+        }
         this.follower.PersistentFollow = true; // was false
 
         // fix bug where dying immediately after grabbing the key would make you gain a regular key after death
@@ -16,9 +100,16 @@ public class KeyIce : Key {
         var origOnCollide = pc.OnCollide;
         pc.OnCollide = (Player p) => {
             origOnCollide(p);
+
             var session = p.SceneAs<Level>().Session;
-            session.Keys.Remove(ID);
-            session.DoNotLoad.Remove(ID);
+            RemoveFromDoNotLoad(session);
+
+            if (Persistent && DissolveInfo is { })
+                FrostModule.Session.PersistentIceKeysDissolvedThisRun.Remove(DissolveInfo);
+
+            if (OnCarryFlag is { }) {
+                session.SetFlag(OnCarryFlag);
+            }
         };
 
         Add(new DashListener {
@@ -37,16 +128,50 @@ public class KeyIce : Key {
                         alarm = null;
                     }
                     Turning = false;
+
+                    if (Visible) {
+                        sprite.Rate = 1f;
+                        sprite.Scale = Vector2.One;
+                        sprite.Play("idle", false, false);
+                        sprite.Rotation = 0f;
+                        this.follower.MoveTowardsLeader = true;
+                    }
+                    /*
                     Visible = true;
                     sprite.Visible = true;
-                    sprite.Rate = 1f;
-                    sprite.Scale = Vector2.One;
-                    sprite.Play("idle", false, false);
-                    sprite.Rotation = 0f;
-                    this.follower.MoveTowardsLeader = true;
+                    */
+
+
+                    if (Persistent && follower.HasLeader) {
+                        LoadedFromPersistence = true;
+                        Persistent = false;
+                    }
                 }
             }
         });
+
+        start = Position;
+    }
+
+    public KeyIce(Player player, FrostHelperSession.IceKeyInfo info) : this(new() { Values = info.Data }, player.Position + new Vector2((-12) * (int) player.Facing, -8f), info.ID) {
+        player.Leader.GainFollower(follower);
+        Collidable = false;
+        Depth = -1000000;
+        LoadedFromPersistence = true;
+        Persistent = false;
+
+        startLevel = info.ID.Level;
+        start = info.KeyStartPos;
+    }
+
+    private void OnRegisterUsed() {
+        if (Persistent || LoadedFromPersistence) {
+            FrostModule.Session.PersistentIceKeys.RemoveWhere(info => info.ID.Key == ID.Key);
+        }
+
+        if (OnCarryFlag is { } && SceneAs<Level>()?.Session is { } session) {
+            session.SetFlag(OnCarryFlag, false);
+        }
     }
 
     private void OnDash(Vector2 dir) {
@@ -58,8 +183,59 @@ public class KeyIce : Key {
     public override void Added(Scene scene) {
         base.Added(scene);
         if (scene is Level level) {
-            start = Position;
-            startLevel = level.Session.Level;
+            UpdateStartLocation(level, false);
+
+            if (follower.HasLeader && OnCarryFlag is { } && level.Session is { } session) {
+                session.SetFlag(OnCarryFlag);
+            }
+        }
+    }
+
+    public override void Awake(Scene scene) {
+        base.Awake(scene);
+
+        if (LoadedFromPersistence /*.Cast<KeyIce>().Any(k => k.LoadedFromPersistence && k.ID.Key == ID.Key)*/) {
+            foreach (KeyIce k in scene.Tracker.SafeGetEntities<KeyIce>()) {
+                Console.WriteLine(k.ID.Key);
+
+                if (!k.LoadedFromPersistence && k.ID.Key == ID.Key) {
+                    k.Visible = false;
+                    k.Active = false;
+                    k.RemoveSelf();
+                }
+            }
+        }
+    }
+
+    private void UpdateStartLocation(Level level, bool forceSetStartLevel) {
+        if (forceSetStartLevel)
+            startLevel = null!;
+
+        startLevel ??= level.Session.Level;
+    }
+
+    internal void RemoveFromDoNotLoad(Session session, bool dissolving = false) {
+        session.Keys.Remove(ID);
+
+        if (dissolving)
+            DissolveInfo ??= new(ID, session.RespawnPoint);
+
+        if (Persistent) {
+            FrostModule.Session.PersistentIceKeys.Add(new(ID, SourceData.Values, start));
+
+            if (dissolving)
+                FrostModule.Session.PersistentIceKeysDissolvedThisRun.Add(DissolveInfo!);
+            session.UpdateLevelStartDashes();
+
+            if (dissolving)
+                session.DoNotLoad.Remove(ID);
+        } else if (LoadedFromPersistence) {
+            if (dissolving)
+                FrostModule.Session.PersistentIceKeysDissolvedThisRun.Add(DissolveInfo!);
+            
+            session.DoNotLoad.Remove(ID);
+        } else {
+            session.DoNotLoad.Remove(ID);
         }
     }
 
@@ -73,11 +249,10 @@ public class KeyIce : Key {
 
         if (!dissolved && !IsUsed && !base.Turning) {
             if (session != null && session.Keys.Contains(ID)) {
-                session.DoNotLoad.Remove(ID);
-                session.Keys.Remove(ID);
-                session.UpdateLevelStartDashes();
+                RemoveFromDoNotLoad(session);
             }
         }
+
         base.Update();
     }
 
@@ -89,16 +264,20 @@ public class KeyIce : Key {
                 player.StrawberryCollectResetTimer = 2.5f;
                 follower.Leader.LoseFollower(follower);
             }
+
+            if (OnCarryFlag is { }) {
+                SceneAs<Level>().Session.SetFlag(OnCarryFlag, false);
+            }
+
             Add(new Coroutine(DissolveRoutine(), true));
         }
     }
 
+    // hooked by CrystallineHelper
     private IEnumerator DissolveRoutine() {
         Level level = (Scene as Level)!;
-        Session session = level.Session;
-        session.DoNotLoad.Remove(ID);
-        session.Keys.Remove(ID);
-        session.UpdateLevelStartDashes();
+        RemoveFromDoNotLoad(level.Session, true);
+
         Audio.Play("event:/game/general/seed_poof", Position);
         Collidable = false;
         sprite.Scale = Vector2.One * 0.5f;
@@ -118,6 +297,7 @@ public class KeyIce : Key {
             yield break;
         }
         yield return 0.3f;
+
         dissolved = false;
         Audio.Play("event:/game/general/seed_reappear", Position);
         Position = start;

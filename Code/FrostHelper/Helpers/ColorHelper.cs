@@ -57,7 +57,10 @@ public static class ColorHelper {
     /// <param name="hex">A hex code representation of the color, as RGB or RGBA</param>
     /// <returns></returns>
     public static Color HexToColor(string hex) {
-        if (hex.StartsWith("#")) {
+        if (hex.Length == 0)
+            return default;
+
+        if (hex[0] == '#') {
             hex = hex.Substring(1);
         }
 

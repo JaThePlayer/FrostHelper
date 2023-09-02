@@ -7,7 +7,11 @@ local iceKey = {}
 iceKey.name = "FrostHelper/KeyIce"
 iceKey.placements =
 {
-    name = "normal"
+    name = "normal",
+    data = {
+        onCarryFlag = "",
+        persistent = false,
+    }
 }
 
 iceKey.texture = "collectables/FrostHelper/keyice/idle00"

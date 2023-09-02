@@ -186,9 +186,6 @@ public class FrostModule : EverestModule {
     public override void Load() {
         typeof(API.API).ModInterop();
 
-        // Legacy entity creation (for back when we didn't have the CustomEntity attribute)
-        Everest.Events.Level.OnLoadEntity += OnLoadEntity;
-
         // Register new states
         On.Celeste.Player.ctor += Player_ctor;
 
@@ -368,9 +365,6 @@ public class FrostModule : EverestModule {
 
     // Unload the entirety of your mod's content, remove any event listeners and undo all hooks.
     public override void Unload() {
-        // Legacy entity creation (for back when we didn't have the CustomEntity attribute)
-        Everest.Events.Level.OnLoadEntity -= OnLoadEntity;
-
         // Register new states
         On.Celeste.Player.ctor -= Player_ctor;
 
@@ -395,25 +389,6 @@ public class FrostModule : EverestModule {
 
     // Optional, initialize anything after Celeste has initialized itself properly.
     public override void Initialize() {
-    }
-
-    private static bool OnLoadEntity(Level level, LevelData levelData, Vector2 offset, EntityData entityData) {
-        switch (entityData.Name) {
-            case "FrostHelper/KeyIce":
-                level.Add(new KeyIce(entityData, offset, new EntityID(levelData.Name, entityData.ID), entityData.NodesOffset(offset)));
-                return true;
-            case "FrostHelper/CustomDreamBlock":
-                if (entityData.Bool("old", false)) {
-#pragma warning disable CS0618 // Type or member is obsolete
-                    level.Add(new CustomDreamBlock(entityData, offset));
-#pragma warning restore CS0618 // Type or member is obsolete
-                } else {
-                    level.Add(new CustomDreamBlockV2(entityData, offset));
-                }
-                return true;
-            default:
-                return false;
-        }
     }
 
     public static Vector2 StringToVec2(string str) {

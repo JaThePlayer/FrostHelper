@@ -272,6 +272,7 @@ entities.FrostHelper/IncrementBooster.attributes.description.refillBeforeIncreme
 # Ice Key
 entities.FrostHelper/KeyIce.placements.name.normal=Ice Key
 entities.FrostHelper/KeyIce.placements.description.normal=A key that dissolves when the player dashes, respawning in its original location.
+entities.FrostHelper/KeyIce.attributes.description.onCarryFlag=A flag that gets set whenever this key is carried by the player.\nAs soon as the key is no longer carried (because it got dissolved or used), the flag gets turned off.
 
 # Temporary Key
 entities.FrostHelper/TemporaryKey.placements.name.normal=Temporary Key

@@ -36,7 +36,7 @@ public class FlagListener : Component {
     private static void Session_SetFlag(On.Celeste.Session.orig_SetFlag orig, Session self, string flag, bool setTo) {
         bool? prevValue = null;
 
-        foreach (FlagListener item in Engine.Scene.Tracker.GetComponents<FlagListener>()) {
+        foreach (FlagListener item in Engine.Scene.Tracker.SafeGetComponents<FlagListener>()) {
             if (flag == item.Flag) {
                 if (!item.MustChange || ((prevValue ??= self.GetFlag(flag)) != setTo))
                     item.OnSet(setTo);
