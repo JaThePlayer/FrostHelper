@@ -34,6 +34,8 @@ internal sealed class OnFlagActivator : BaseActivator {
     }
 
     public override void Update() {
+        base.Update();
+
         CallOnStay();
     }
 }
