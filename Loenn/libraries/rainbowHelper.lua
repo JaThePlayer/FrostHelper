@@ -23,7 +23,7 @@ local function vanillaRainbow(room, x, y)
     return { utils.hsvToRgb(0.4 + yoyo(posLength) * 0.4, 0.4, 0.9) }
 end
 
--- Max' Helping Hand integration
+-- Maddie' Helping Hand integration
 
 local function distance(v1, v2)
     local x = v1.x - v2.x

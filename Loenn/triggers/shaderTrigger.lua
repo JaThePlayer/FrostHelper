@@ -7,6 +7,7 @@ local shaderTrigger = {
         data = {
             effects = "",
             alwaysOn = true,
+            flag = "",
         }
     }
 }

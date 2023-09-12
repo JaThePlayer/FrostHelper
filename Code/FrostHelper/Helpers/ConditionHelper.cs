@@ -27,14 +27,14 @@ public static class ConditionHelper {
 
     public static Condition GetCondition(this EntityData data, string name, string def = "") {
         Condition condition = null!;
-        if (data.Values.TryGetValue("condition", out var cond)) {
+        if (data.Values.TryGetValue(name, out var cond)) {
             switch (cond) {
                 case Condition fullCondition:
                     condition = fullCondition;
                     break;
                 case string str:
                     condition = new(str);
-                    data.Values["condition"] = condition; // cache the parsed condition
+                    data.Values[name] = condition; // cache the parsed condition
                     break;
             }
         } else {

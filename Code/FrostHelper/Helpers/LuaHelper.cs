@@ -226,4 +226,8 @@ public class LuaRuntimeException : Exception {
     public LuaRuntimeException(string msg) : base(msg) {
 
     }
+
+    public LuaRuntimeException() {
+
+    }
 }

@@ -25,6 +25,8 @@ internal class OnDeathActivator : BaseActivator {
         if (!_hooksLoaded)
             return;
 
+        Everest.Events.Player.OnDie -= Player_OnDie;
+
         _hooksLoaded = false;
     }
 

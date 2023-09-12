@@ -159,19 +159,19 @@ public static class Extensions {
     }
 
     public static List<Entity> SafeGetEntities(this Tracker t, Type type) {
-        if (!t.Entities.ContainsKey(type)) {
-            return _emptyListEntity;
+        if (t.Entities.TryGetValue(type, out var entities)) {
+            return entities;
         }
 
-        return t.Entities[type];
+        return _emptyListEntity;
     }
 
     public static List<Entity>? GetEntitiesOrNull(this Tracker t, Type type) {
-        if (!t.Entities.ContainsKey(type)) {
-            return null;
+        if (t.Entities.TryGetValue(type, out var entities)) {
+            return entities;
         }
 
-        return t.Entities[type];
+        return null;
     }
 
     private static List<Entity> _emptyListEntity = new();

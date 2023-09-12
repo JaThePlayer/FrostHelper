@@ -49,6 +49,6 @@ Flagpole1up: Core Berry sprites
 
 RadleyMcTuneston: Badeline Chaser Block sprites
 
-Max480: some linux testing, some code snippets from Max's Helping Hand
+Maddie480: some linux testing, some code snippets from Maddie's Helping Hand
 
 Communal Helper team: some code snippets from Communal Helper

@@ -103,7 +103,7 @@ entities.FrostHelper/IceSpinner.attributes.description.dashThrough=Whether it's 
 entities.FrostHelper/IceSpinner.attributes.description.bloomAlpha=If not zero, determines the alpha value for the bloom point of this spinner
 entities.FrostHelper/IceSpinner.attributes.description.bloomRadius=The radius of the bloom point of this spinner.
 entities.FrostHelper/IceSpinner.attributes.description.spritePathSuffix=The suffix to add to the path of all sprite images. Refer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Custom-Spinners
-entities.FrostHelper/IceSpinner.attributes.description.rainbow=Whether this spinner is rainbow. Supports Max's Helping Hand's rainbow spinner controller.
+entities.FrostHelper/IceSpinner.attributes.description.rainbow=Whether this spinner is rainbow. Supports Maddie's Helping Hand's rainbow spinner controller.
 entities.FrostHelper/IceSpinner.attributes.description.collidable=Whether it's possible to collide with this spinner.
 entities.FrostHelper/IceSpinner.attributes.description.renderOutline=Whether this spinner should render its outline.
 entities.FrostHelper/IceSpinner.attributes.description.attachGroup=The group that this entity is in. All entities with the same attach group will be attached to the same solid.
@@ -175,7 +175,7 @@ entities.FrostHelper/CustomZipMover.attributes.description.showLine=Whether the 
 entities.FrostHelper/CustomZipMover.attributes.description.fillMiddle=Whether the middle of the zipper should be filled in with black
 entities.FrostHelper/CustomZipMover.attributes.description.bloomAlpha=If not zero, determines the alpha value for the bloom point of this zipper
 entities.FrostHelper/CustomZipMover.attributes.description.bloomRadius=The radius of the bloom point of this zipper.
-entities.FrostHelper/CustomZipMover.attributes.description.rainbow=Whether this zip mover should be rainbow. Supports Max's Helping Hand's rainbow spinner controller.
+entities.FrostHelper/CustomZipMover.attributes.description.rainbow=Whether this zip mover should be rainbow. Supports Maddie's Helping Hand's rainbow spinner controller.
 
 # Entity Mover
 entities.FrostHelper/EntityMover.placements.name.normal=Entity Mover
@@ -225,7 +225,7 @@ entities.FrostHelper/IncrementBooster.placements.name.red=Dash Increment Booster
 entities.FrostHelper/IncrementBooster.placements.description.red=A booster that increases the amount of dashes you have, instead of refiling them.\nActs like a red booster.
 
 entities.FrostHelper/GrayBooster.attributes.description.directory=The directory from which the sprites are taken, relative to Atlases/Gameplay/
-entities.FrostHelper/GrayBooster.attributes.description.respawnTime=Time (in seconds) it takes the booster to respawn after being used
+entities.FrostHelper/GrayBooster.attributes.description.respawnTime=Time (in seconds) it takes the booster to respawn after being used. A number <= 0 will make the booster never respawn.
 entities.FrostHelper/GrayBooster.attributes.description.boostTime=Time (in seconds) it takes the booster to release the player after they enter it. Cannot be skipped by fastbubbling.
 entities.FrostHelper/GrayBooster.attributes.description.particleColor=Hex color to use for this booster's particles
 entities.FrostHelper/GrayBooster.attributes.description.releaseSfx=SFX to play when the boosters releases the player
@@ -236,7 +236,7 @@ entities.FrostHelper/GrayBooster.attributes.description.red=Whether this booster
 entities.FrostHelper/GrayBooster.attributes.description.dashes=How many dashes the player will have after leaving the booster.\nSet to -1 to simply refill dashes according to the current maximum dash count.\nSet to -2 to not change dash count in any way.\nOther positive values will set the dash count to the specified amount.\nOther negative values crash.
 
 entities.FrostHelper/BlueBooster.attributes.description.directory=The directory from which the sprites are taken, relative to Atlases/Gameplay/
-entities.FrostHelper/BlueBooster.attributes.description.respawnTime=Time (in seconds) it takes the booster to respawn after being used
+entities.FrostHelper/BlueBooster.attributes.description.respawnTime=Time (in seconds) it takes the booster to respawn after being used. A number <= 0 will make the booster never respawn.
 entities.FrostHelper/BlueBooster.attributes.description.boostTime=Time (in seconds) it takes the booster to release the player after they enter it. Can be skipped by fastbubbling
 entities.FrostHelper/BlueBooster.attributes.description.particleColor=Hex color to use for this booster's particles
 entities.FrostHelper/BlueBooster.attributes.description.releaseSfx=SFX to play when the boosters releases the player
@@ -246,7 +246,7 @@ entities.FrostHelper/BlueBooster.attributes.description.boostSfx=SFX to play whe
 entities.FrostHelper/BlueBooster.attributes.description.red=Whether this booster should act like a red one, that has an unlimited range.
 
 entities.FrostHelper/YellowBooster.attributes.description.directory=The directory from which the sprites are taken, relative to Atlases/Gameplay/
-entities.FrostHelper/YellowBooster.attributes.description.respawnTime=Time (in seconds) it takes the booster to respawn after being used
+entities.FrostHelper/YellowBooster.attributes.description.respawnTime=Time (in seconds) it takes the booster to respawn after being used. A number <= 0 will make the booster never respawn.
 entities.FrostHelper/YellowBooster.attributes.description.boostTime=Time (in seconds) it takes the booster to release the player after they enter it. Can be skipped by fastbubbling
 entities.FrostHelper/YellowBooster.attributes.description.particleColor=Hex color to use for this booster's particles
 entities.FrostHelper/YellowBooster.attributes.description.releaseSfx=SFX to play when the boosters releases the player
@@ -257,7 +257,7 @@ entities.FrostHelper/YellowBooster.attributes.description.flashTint=The hex colo
 entities.FrostHelper/YellowBooster.attributes.description.dashes=How many dashes the player will have after leaving the booster.\nSet to -1 to simply refill dashes according to the current maximum dash count.\nSet to -2 to not change dash count in any way.\nOther positive values will set the dash count to the specified amount.\nOther negative values crash.
 
 entities.FrostHelper/IncrementBooster.attributes.description.directory=The directory from which the sprites are taken, relative to Atlases/Gameplay/
-entities.FrostHelper/IncrementBooster.attributes.description.respawnTime=Time (in seconds) it takes the booster to respawn after being used
+entities.FrostHelper/IncrementBooster.attributes.description.respawnTime=Time (in seconds) it takes the booster to respawn after being used. A number <= 0 will make the booster never respawn.
 entities.FrostHelper/IncrementBooster.attributes.description.boostTime=Time (in seconds) it takes the booster to release the player after they enter it. Can be skipped by fastbubbling
 entities.FrostHelper/IncrementBooster.attributes.description.particleColor=Hex color to use for this booster's particles
 entities.FrostHelper/IncrementBooster.attributes.description.releaseSfx=SFX to play when the boosters releases the player
@@ -538,6 +538,7 @@ triggers.FrostHelper/BloomColorPulseTrigger.attributes.description.easing=The Ea
 
 triggers.FrostHelper/ScreenwideShaderTrigger.placements.name.default=Screenwide Shader
 triggers.FrostHelper/ScreenwideShaderTrigger.attributes.description.effects=A comma-seperated list of effect names that will be activated by this trigger. Effect names provided here should not start with "Effects/"
+triggers.FrostHelper/ScreenwideShaderTrigger.attributes.description.flag=The flag that needs to be enabled for this shader to be active. Write a '!' before the flag name to invert the condition.
 
 triggers.FrostHelper/EasedCameraZoomTrigger.placements.name.default=Eased Camera Zoom
 triggers.FrostHelper/EasedCameraZoomTrigger.attributes.description.easing=The Easing type used for the movement. You can either pick one of the presets, or write lua code that returns a number (typically between 0.0 and 1.0).\nYour input will be converted to:\nreturn function(p){(name.Contains("return") ? "" : " return")} {name} end\nwhere 'p' is tween.Percent - a number between (0.0, 1.0), which is the percent/100 of the move time elapsed.

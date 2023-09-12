@@ -2,11 +2,6 @@
 using FrostHelper.Helpers;
 using FrostHelper.ModIntegration;
 
-#if PLAYERSTATEHELPER
-using Celeste.Mod.PlayerStateHelper.API;
-using FrostHelper.CustomStates;
-#endif
-
 namespace FrostHelper.Entities.Boosters {
     [Tracked(true)]
     public class GenericCustomBooster : Entity {
@@ -134,6 +129,9 @@ namespace FrostHelper.Entities.Boosters {
         /// </summary>
         public Vector2 EnterSpeed;
 
+        // respawnTime = 0 would already make the booster not respawn in earlier versions, so it will stay that way, even if it could be unintuitive
+        public bool ShouldRespawn => RespawnTime > 0f;
+
         public GenericCustomBooster(EntityData data, Vector2 offset) : base(data.Position + offset) {
             LoadIfNeeded();
 
@@ -251,7 +249,9 @@ namespace FrostHelper.Entities.Boosters {
             Tag = Tags.Persistent | Tags.TransitionUpdate;
             sprite.Play("spin", false, false);
             sprite.FlipX = player.Facing == Facings.Left;
-            outline.Visible = true;
+
+            if (ShouldRespawn)
+                outline.Visible = true;
             wiggler.Start();
             dashRoutine.Replace(BoostRoutine(player, direction));
         }
@@ -292,8 +292,20 @@ namespace FrostHelper.Entities.Boosters {
         public virtual void PlayerReleased() {
             Audio.Play(endSfx, sprite.RenderPosition);
             sprite.Play("pop", false, false);
-            cannotUseTimer = 0f;
+
+            if (!ShouldRespawn) {
+                sprite.OnLastFrame += (s) => {
+                    RemoveSelf();
+                };
+                Collidable = false;
+                bloom.Visible = false;
+                light.Visible = false;
+            }
+
             respawnTimer = RespawnTime;
+
+            cannotUseTimer = 0f;
+            
             BoostingPlayer = false;
             wiggler.Stop();
             loopingSfx.Stop(true);
@@ -324,7 +336,7 @@ namespace FrostHelper.Entities.Boosters {
                 cannotUseTimer -= Engine.DeltaTime;
             }
 
-            if (respawnTimer > 0f) {
+            if (ShouldRespawn && respawnTimer > 0f) {
                 respawnTimer -= Engine.DeltaTime;
                 if (respawnTimer <= 0f) {
                     Respawn();
@@ -333,7 +345,7 @@ namespace FrostHelper.Entities.Boosters {
 
             Player player = Scene.Tracker.GetNearestEntity<Player>(Position);
 
-            if (!dashRoutine.Active && respawnTimer <= 0f) {
+            if (!dashRoutine.Active && respawnTimer <= 0f && Collidable) {
                 Vector2 target = Vector2.Zero;
 
                 if (player != null && CollideCheck(player)) {
@@ -342,13 +354,13 @@ namespace FrostHelper.Entities.Boosters {
                 sprite.Position = Calc.Approach(sprite.Position, target, 80f * Engine.DeltaTime);
             }
 
-            if (player != null && GetBoosterThatIsBoostingPlayer(player) == this && BoostTime > 0f) {
+            //if (player != null && GetBoosterThatIsBoostingPlayer(player) == this && BoostTime > 0f) {
                 //sprite.Position = player.Center + Booster.playerOffset - Position;
 
                 // if the player is far away, render the outline because clearly the bubble got moved
                 //if (Vector2.DistanceSquared(Position, player.Center) > 16f * 16f)
                 //    outline.Visible = true;
-            }
+            //}
 
             if (sprite.CurrentAnimationID == "inside" && !BoostingPlayer && (player is null || !CollideCheck(player))) {
                 sprite.Play("loop", false, false);

@@ -43,8 +43,6 @@ end
 
 function frostSettings.rainbowsUseControllers()
     return false -- way too laggy
-
-    --return frostSettings.get("graphics_rainbows_useMaxHelpingHandControllers", true)
 end
 
 function frostSettings.fancyDreamBlocks()

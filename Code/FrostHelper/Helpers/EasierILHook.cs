@@ -228,7 +228,7 @@ public static class EasierILHook {
 
     /// <summary>
     /// 
-    /// The following method is written by max480. Thanks max!
+    /// The following method is written by Maddie480. Thanks Maddie!
     /// 
     /// Utility method to patch "coroutine" kinds of methods with IL.
     /// Those methods' code reside in a compiler-generated method, and IL.Celeste.* do not allow manipulating them directly.

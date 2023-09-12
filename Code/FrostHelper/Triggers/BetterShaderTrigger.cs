@@ -1,4 +1,5 @@
 ﻿using Celeste.Mod.Entities;
+using FrostHelper.Helpers;
 using FrostHelper.ModIntegration;
 
 namespace FrostHelper;
@@ -12,12 +13,14 @@ public class BetterShaderTrigger : Trigger {
     public string[] Effects;
     public bool Activated;
     public bool Clear;
+    public ConditionHelper.Condition Flag;
 
     public BetterShaderTrigger(EntityData data, Vector2 offset) : base(data, offset) {
         Effects = data.Attr("effects").Split(',');
 
         Activated = data.Bool("alwaysOn", true);
         Clear = data.Bool("clear", false);
+        Flag = data.GetCondition("flag", "");
     }
 
     public override void OnEnter(Player player) {
@@ -37,7 +40,7 @@ public class BetterShaderTrigger : Trigger {
     public static void Apply_HOOK(On.Celeste.Glitch.orig_Apply orig, VirtualRenderTarget source, float timer, float seed, float amplitude) {
         orig(source, timer, seed, amplitude);
         foreach (var trigger in FrostModule.GetCurrentLevel().Tracker.SafeGetEntities<BetterShaderTrigger>()) {
-            if (trigger is BetterShaderTrigger s && s.Activated)
+            if (trigger is BetterShaderTrigger s && s.Activated && s.Flag.Check())
                 foreach (var item in s.Effects) {
                     Apply(source, source, ShaderHelperIntegration.GetEffect(item), s.Clear);
 

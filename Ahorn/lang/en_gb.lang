@@ -64,7 +64,7 @@ placements.entities.FrostHelper/IceSpinner.tooltips.dashThrough=Whether it's pos
 placements.entities.FrostHelper/IceSpinner.tooltips.bloomAlpha=If not zero, determines the alpha value for the bloom point of this spinner
 placements.entities.FrostHelper/IceSpinner.tooltips.bloomRadius=The radius of the bloom point of this spinner.
 placements.entities.FrostHelper/IceSpinner.tooltips.spritePathSuffix=The suffix to add to the path of all sprite images. Refer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Custom-Spinners
-placements.entities.FrostHelper/IceSpinner.tooltips.rainbow=Whether this spinner is rainbow. Supports Max's Helping Hand's rainbow spinner controller.
+placements.entities.FrostHelper/IceSpinner.tooltips.rainbow=Whether this spinner is rainbow. Supports Maddie's Helping Hand's rainbow spinner controller.
 placements.entities.FrostHelper/IceSpinner.tooltips.collidable=Whether it's possible to collide with this spinner.
 placements.entities.FrostHelper/IceSpinner.tooltips.renderOutline=Whether this spinner should render its outline.
 
@@ -122,7 +122,7 @@ placements.entities.FrostHelper/CustomZipMover.tooltips.showLine=Whether the zip
 placements.entities.FrostHelper/CustomZipMover.tooltips.fillMiddle=Whether the middle of the zipper should be filled in with black
 placements.entities.FrostHelper/CustomZipMover.tooltips.bloomAlpha=If not zero, determines the alpha value for the bloom point of this zipper
 placements.entities.FrostHelper/CustomZipMover.tooltips.bloomRadius=The radius of the bloom point of this zipper.
-placements.entities.FrostHelper/CustomZipMover.tooltips.rainbow=Whether this zip mover should be rainbow. Supports Max's Helping Hand's rainbow spinner controller.
+placements.entities.FrostHelper/CustomZipMover.tooltips.rainbow=Whether this zip mover should be rainbow. Supports Maddie's Helping Hand's rainbow spinner controller.
 
 # Entity Mover
 placements.entities.FrostHelper/EntityMover.tooltips.mustCollide=Whether the mover should only move entities that are inside of it. If this is false, then all entities in the room which match the whitelist/blacklist will get moved.

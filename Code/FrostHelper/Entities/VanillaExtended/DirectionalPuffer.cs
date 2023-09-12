@@ -296,7 +296,7 @@ public class DirectionalPuffer : Puffer {
     private static FieldInfo Puffer_sprite = typeof(Puffer).GetField("sprite", BindingFlags.NonPublic | BindingFlags.Instance);
 
 
-    // based on Max's Helping Hand's Static Puffers
+    // based on Maddie's Helping Hand's Static Puffers
     #region StaticPuffer
     private static void IL_Puffer_Constructor(ILContext il) {
         ILCursor cursor = new(il);

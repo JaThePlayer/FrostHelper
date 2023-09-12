@@ -79,7 +79,7 @@ public static class ColorHelper {
 
     // Based on Communal Helper:
 
-    // Used to maintain compatibility with Max's Helping Hand RainbowSpinnerColorController
+    // Used to maintain compatibility with Maddie's Helping Hand RainbowSpinnerColorController
     private static CrystalStaticSpinner crystalSpinner;
 
     public static void SetGetHueScene(Scene scene) {

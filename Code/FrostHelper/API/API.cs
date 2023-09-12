@@ -91,7 +91,7 @@ public static class API {
 
     /// <summary>
     /// Returns the color a rainbow spinner would have at the given position.
-    /// Supports Max's Helping Hand rainbow spinner controllers.
+    /// Supports Maddie's Helping Hand rainbow spinner controllers.
     /// </summary>
     public static Color GetRainbowColor(Vector2 position) {
         return GetRainbowColor(Engine.Scene, position);
@@ -99,7 +99,7 @@ public static class API {
 
     /// <summary>
     /// Returns the color a rainbow spinner would have at the given position in a given scene.
-    /// Supports Max's Helping Hand rainbow spinner controllers.
+    /// Supports Maddie's Helping Hand rainbow spinner controllers.
     /// </summary>
     public static Color GetRainbowColor(Scene scene, Vector2 position) {
         return ColorHelper.GetHue(scene, position);
@@ -193,14 +193,14 @@ public static class API {
     }
 
     /// <summary>
-    /// Sets the current Lightning block colors for the current <see cref="LightingRenderer"/>
+    /// Sets the current Lightning block colors for the current <see cref="LightningRenderer"/>
     /// </summary>
     public static void SetLightningColors(Color colorA, Color colorB) {
         LightningColorTrigger.ChangeLightningColor(colorA, colorB);
     }
 
     /// <summary>
-    /// Sets the current Lightning block colors for the current <see cref="LightingRenderer"/>
+    /// Sets the current Lightning block colors for the current <see cref="LightningRenderer"/>
     /// </summary>
     public static void SetLightningColors(Color[] colors) {
         LightningColorTrigger.ChangeLightningColor(colors);
