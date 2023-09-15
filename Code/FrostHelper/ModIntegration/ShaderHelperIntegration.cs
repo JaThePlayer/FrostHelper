@@ -94,6 +94,7 @@ public static class ShaderHelperIntegration {
         FallbackEffectDict;
 #endif
 
+    // exposed via the API
     public static Effect? TryGetEffect(string id) {
         id = id.Replace('\\', '/');
 
@@ -120,8 +121,12 @@ public static class ShaderHelperIntegration {
         if (TryGetEffect(id) is { } s)
             return s;
 
-        NotificationHelper.Notify($"Shader not found: {id}");
+        NotifyAboutMissingShader(id);
         return GFX.FxTexture;
+    }
+
+    internal static void NotifyAboutMissingShader(string id) {
+        NotificationHelper.Notify($"Shader not found: {id}");
     }
 
     public static Effect BeginGameplayRenderWithEffect(string id, bool endBatch) {
@@ -181,6 +186,7 @@ public static class ShaderHelperIntegration {
     public static Effect ApplyStandardParameters(this Effect effect, Camera? camera = null)
         => ApplyStandardParameters(effect, camera?.Matrix);
 
+    // exposed via the API
     public static Effect ApplyStandardParameters(this Effect effect, Matrix? camera) {
         var level = FrostModule.GetCurrentLevel() ?? throw new Exception("Not in a level when applying shader parameters! How did you...");
         var parameters = effect.Parameters;

@@ -1,6 +1,7 @@
 ﻿using FrostHelper.Colliders;
 using FrostHelper.Entities.Boosters;
 using FrostHelper.Helpers;
+using FrostHelper.ModIntegration;
 using MonoMod.ModInterop;
 
 namespace FrostHelper.API;
@@ -268,5 +269,40 @@ public static class API {
     /// </summary>
     public static Tween.TweenMode GetTweenMode(string mode, Tween.TweenMode defaultValue) {
         return EaseHelper.GetTweenMode(mode, defaultValue);
+    }
+
+    /// <summary>
+    /// Tries to retrieve an effect/shader located at 'Effects/id', returning null if the effect can't be found.
+    /// An in-game notification will be shown whenever this returns null.
+    /// </summary>
+    public static Effect? GetEffectOrNull(string id) {
+        if (ShaderHelperIntegration.TryGetEffect(id) is { } eff)
+            return eff;
+
+        ShaderHelperIntegration.NotifyAboutMissingShader(id);
+
+        return null;
+    }
+
+    /// <summary>
+    /// Tries to retrieve an effect/shader located at 'Effects/id', returning null if the effect can't be found.
+    /// If the second argument is true, an in-game notification will be shown whenever this returns null.
+    /// </summary>
+    public static Effect? GetEffectOrNull(string id, bool notifyOnMissing) {
+        if (ShaderHelperIntegration.TryGetEffect(id) is { } eff)
+            return eff;
+
+        if (notifyOnMissing)
+            ShaderHelperIntegration.NotifyAboutMissingShader(id);
+
+        return null;
+    }
+
+    /// <summary>
+    /// Applies FrostHelper-standard parameters for the given effect. Should be called each frame the effect is used.
+    /// </summary>
+    /// <param name="viewMatrix">The shader's ViewMatrix uniform will be set to this matrix. In most cases, this should be camera.Matrix</param>
+    public static void ApplyStandardParameters(Effect effect, Matrix viewMatrix) {
+        effect.ApplyStandardParameters(viewMatrix);
     }
 }

@@ -498,6 +498,7 @@ triggers.FrostHelper/SnowballTrigger.attributes.description.ySineWaveFrequency=T
 triggers.FrostHelper/SnowballTrigger.attributes.description.spritePath=The path from Sprites.xml to get the snowball's sprites from
 triggers.FrostHelper/SnowballTrigger.attributes.description.direction=The direction the snowball should come from. Accepted values: Right, Left
 triggers.FrostHelper/SnowballTrigger.attributes.description.replaceExisting=Whether this trigger should replace an already existing custom snowball when entered.
+triggers.FrostHelper/SnowballTrigger.attributes.description.offset=The vertical offset from the player that this snowball should spawn at (in pixels).\nFor snowballs moving vertically, this is a horizontal offset instead.
 
 triggers.FrostHelper/StopCustomSnowballTrigger.placements.name.normal=Stop Custom Snowball
 

@@ -6,13 +6,14 @@ public class CustomSnowball : Entity {
     public bool DrawOutline;
     public AppearDirection appearDirection;
     public float SafeZoneSize;
+    public float Offset;
 
     private bool leaving;
 
     public CustomSnowball(string spritePath = "snowball", float speed = 200f, float resetTime = 0.8f, 
                           float sineWaveFrequency = 0.5f, bool drawOutline = true,
                           AppearDirection dir = AppearDirection.Right,
-                          float safeZoneSize = 64f) {
+                          float safeZoneSize = 64f, float offset = 0) {
         appearDirection = dir;
 
         Speed = speed;
@@ -35,6 +36,7 @@ public class CustomSnowball : Entity {
         Sprite!.Play("spin", false, false);
         Add(spawnSfx = new SoundSource());
         SafeZoneSize = safeZoneSize;
+        Offset = offset;
     }
 
     public void StartLeaving() {
@@ -65,10 +67,10 @@ public class CustomSnowball : Entity {
 
             if (IsVertical()) {
                 Y = GetResetXPosition();
-                atY = X = player.CenterX;
+                atY = X = player.CenterX + Offset;
             } else {
                 X = GetResetXPosition();
-                atY = Y = player.CenterY;
+                atY = Y = player.CenterY + Offset;
             }
 
             Sine.Reset();
