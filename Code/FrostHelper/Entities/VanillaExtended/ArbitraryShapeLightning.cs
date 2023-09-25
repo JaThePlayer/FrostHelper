@@ -5,7 +5,7 @@ namespace FrostHelper;
 
 [CustomEntity("FrostHelper/ArbitraryShapeLightning")]
 public class ArbitraryShapeLightning : Entity {
-    public Vector3[]? Vertices;
+    public CustomLightningRenderer.ArbitraryFill? Vertices;
     public CustomLightningRenderer.Edge[] Edges;
     public bool Fill;
 
@@ -15,7 +15,7 @@ public class ArbitraryShapeLightning : Entity {
         Fill = data.Bool("fill", true);
 
         if (Fill) {
-            Vertices = ArbitraryShapeEntityHelper.GetFillFromNodes(data, offset);
+            Vertices = new(ArbitraryShapeEntityHelper.GetFillFromNodes(data, offset));
         }
 
         Edges = new CustomLightningRenderer.Edge[nodes.Length + (Fill ? 1 : 0)];

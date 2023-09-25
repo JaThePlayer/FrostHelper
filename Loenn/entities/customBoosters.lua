@@ -113,6 +113,7 @@ local yellowBooster = createCustomBoosterHandler("FrostHelper/YellowBooster", {
     { "boostSfx", "event:/game/04_cliffside/greenbooster_dash" },
     { "releaseSfx", "event:/game/04_cliffside/greenbooster_end" },
     { "dashes", -1, dashesOptions },
+    { "preserveSpeed", false },
 })
 
 return {

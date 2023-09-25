@@ -1,4 +1,5 @@
-﻿using FrostHelper.ModIntegration;
+﻿using FrostHelper.Helpers;
+using FrostHelper.ModIntegration;
 
 namespace FrostHelper;
 
@@ -10,15 +11,24 @@ public class CustomLightningRenderer : Entity {
     public List<Edge> edges;
     public List<Bolt> Bolts;
     public List<Fill> fills;
-#if TRIFILL
-    private List<TriFill> triFills = new();
-#endif
-    public List<Vector3[]> arbitraryFills;
+    private List<ArbitraryFill> arbitraryFills;
     public VertexPositionColor[] edgeVerts;
-    public VertexPositionColor[] bloomVerts;
+
+    private int? CachedBloomVertsCount = null;
+    private VertexPositionColor[] BloomVerts;
+
     public Color[] ElectricityColors;
     public Color[] electricityColorsLerped;
-    public float Fade;
+
+    private float _Fade;
+    public float Fade {
+        get => _Fade;
+        set {
+            _Fade = value;
+            MarkDirty();
+        }
+    }
+
     public uint edgeSeed;
     public uint leapSeed;
     public bool UpdateSeeds;
@@ -45,7 +55,7 @@ public class CustomLightningRenderer : Entity {
         //base.Add(this.AmbientSfx = new SoundSource());
         //this.AmbientSfx.DisposeOnTransition = false;
         edgeVerts = new VertexPositionColor[1024];
-        bloomVerts = new VertexPositionColor[1024];
+        BloomVerts = new VertexPositionColor[1024];
     }
 
     /// <summary>
@@ -88,49 +98,49 @@ public class CustomLightningRenderer : Entity {
         Bolts = new();
     }
 
+    public void MarkDirty() {
+        CachedBloomVertsCount = null;
+    }
+
     public void Add(Edge edge) {
         edges.Add(edge);
+        MarkDirty();
     }
 
     public void Add(Bolt bolt) {
         Bolts.Add(bolt);
+        MarkDirty();
     }
 
     public void Add(Fill fill) {
         fills.Add(fill);
+        MarkDirty();
     }
 
-#if TRIFILL
-    public void Add(TriFill fill) {
-        triFills.Add(fill);
-    }
-#endif
-
-    public void Add(Vector3[] fill) {
+    public void Add(ArbitraryFill fill) {
         arbitraryFills.Add(fill);
+        MarkDirty();
     }
 
     public void Remove(Edge edge) {
         edges.Remove(edge);
+        MarkDirty();
     }
 
     public void Remove(Bolt bolt) {
         Bolts.Remove(bolt);
+        MarkDirty();
     }
 
     public void Remove(Fill fill) {
         fills.Remove(fill);
+        MarkDirty();
     }
 
-#if TRIFILL
-    public void Remove(TriFill fill) {
-        triFills.Remove(fill);
-    }
-#endif
-    public void Remove(Vector3[] fill) {
+    public void Remove(ArbitraryFill fill) {
         arbitraryFills.Remove(fill);
+        MarkDirty();
     }
-
 
     public void ToggleEdges(bool immediate = false) {
         Camera camera = (Scene as Level)!.Camera;
@@ -159,24 +169,38 @@ public class CustomLightningRenderer : Entity {
             }
         }
     }
+
+    private void EnsureCapacity(ref VertexPositionColor[] verts, int nVertices) {
+        if (verts.Length < nVertices) {
+            Array.Resize(ref verts, nVertices);
+        }
+    }
+
     private void OnRenderBloom() {
         Camera camera = (Scene as Level)!.Camera;
         Color color = Color.White * (0.25f + Fade * 0.75f);
-        int num = 0;
         float scale = HDlesteCompat.Scale;
 
+        // todo: maybe move this into BloomVerts and cache it as well?
         foreach (Edge edge in edges) {
             if (edge.Visible) {
                 Draw.Line((edge.Parent.Position + edge.A), (edge.Parent.Position + edge.B), color, 4f * scale);
             }
         }
 
-        RenderFills(ref num, ref bloomVerts, color);
+        if (CachedBloomVertsCount is null) {
+            int num = 0;
+            RenderFills(ref num, ref BloomVerts, color);
+            CachedBloomVertsCount = num;
+        }
 
-        if (num > 0) {
+        if (CachedBloomVertsCount.Value > 0) {
             GameplayRenderer.End();
-            GFX.DrawVertices(camera.Matrix * Matrix.CreateScale(scale), bloomVerts, num, null, null);
+            GFX.DrawVertices(camera.Matrix * Matrix.CreateScale(scale), BloomVerts, CachedBloomVertsCount.Value, null, null);
             GameplayRenderer.Begin();
+
+            // disable caching for now, the performance tradeoff between culling and caching needs to be investigated
+            CachedBloomVertsCount = null;
         }
 
         if (Fade > 0f) {
@@ -186,49 +210,40 @@ public class CustomLightningRenderer : Entity {
     }
 
     public void RenderFills(ref int index, ref VertexPositionColor[] verts, Color color) {
+        EnsureCapacity(ref verts, index + fills.Count * 6);
         foreach (Fill fill in fills) {
-            bloomVerts[index].Color = color;
-            bloomVerts[index].Position = new Vector3(fill.R.X, fill.R.Y, 0f);
+            verts[index].Color = color;
+            verts[index].Position = new Vector3(fill.R.X, fill.R.Y, 0f);
             index++;
-            bloomVerts[index].Color = color;
-            bloomVerts[index].Position = new Vector3(fill.R.X + fill.R.Width, fill.R.Y, 0f);
+            verts[index].Color = color;
+            verts[index].Position = new Vector3(fill.R.X + fill.R.Width, fill.R.Y, 0f);
             index++;
-            bloomVerts[index].Color = color;
-            bloomVerts[index].Position = new Vector3(fill.R.X + fill.R.Width, fill.R.Y + fill.R.Height, 0f);
+            verts[index].Color = color;
+            verts[index].Position = new Vector3(fill.R.X + fill.R.Width, fill.R.Y + fill.R.Height, 0f);
             index++;
 
-            bloomVerts[index].Color = color;
-            bloomVerts[index].Position = new Vector3(fill.R.X, fill.R.Y, 0f);
+            verts[index].Color = color;
+            verts[index].Position = new Vector3(fill.R.X, fill.R.Y, 0f);
             index++;
-            bloomVerts[index].Color = color;
-            bloomVerts[index].Position = new Vector3(fill.R.X, fill.R.Y + fill.R.Height, 0f);
+            verts[index].Color = color;
+            verts[index].Position = new Vector3(fill.R.X, fill.R.Y + fill.R.Height, 0f);
             index++;
-            bloomVerts[index].Color = color;
-            bloomVerts[index].Position = new Vector3(fill.R.X + fill.R.Width, fill.R.Y + fill.R.Height, 0f);
-            index++;
-        }
-
-#if TRIFILL
-        foreach (TriFill edge in triFills) {
-            bloomVerts[index].Color = color;
-            bloomVerts[index].Position = new Vector3(edge.Tri.A, 0f);
-            index++;
-            bloomVerts[index].Color = color;
-            bloomVerts[index].Position = new Vector3(edge.Tri.B, 0f);
-            index++;
-            bloomVerts[index].Color = color;
-            bloomVerts[index].Position = new Vector3(edge.Tri.C, 0f);
+            verts[index].Color = color;
+            verts[index].Position = new Vector3(fill.R.X + fill.R.Width, fill.R.Y + fill.R.Height, 0f);
             index++;
         }
-#endif
 
         for (int i = 0; i < arbitraryFills.Count; i++) {
             var fill = arbitraryFills[i];
-
-            for (int j = 0; j < fill.Length; j++) {
-                verts[index].Color = color;
-                verts[index].Position = fill[j];
-                index++;
+            
+            if (CameraCullHelper.IsRectangleVisible(fill.Bounds)) {
+                var fillVerts = fill.Verts;
+                EnsureCapacity(ref verts, index + fillVerts.Length);
+                for (int j = 0; j < fillVerts.Length; j++) {
+                    verts[index].Color = color;
+                    verts[index].Position = fillVerts[j];
+                    index++;
+                }
             }
         }
     }
@@ -286,6 +301,7 @@ public class CustomLightningRenderer : Entity {
             verts[i].Color = color;
             i++;
         }
+
         do {
             float extraLen = PseudoRandRange(ref seed, 0f, 4f);
             num3 += 0.1f;
@@ -537,13 +553,13 @@ public class CustomLightningRenderer : Entity {
         }
     }
 
-#if TRIFILL
-    public class TriFill {
-        public TriangleHitbox Tri;
+    public class ArbitraryFill {
+        public readonly Vector3[] Verts;
+        public readonly Rectangle Bounds;
 
-        public TriFill(TriangleHitbox triangle) {
-            Tri = triangle;
+        public ArbitraryFill(Vector3[] verts) {
+            Verts = verts;
+            Bounds = RectangleExt.FromPoints(verts);
         }
     }
-#endif
 }

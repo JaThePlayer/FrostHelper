@@ -30,6 +30,18 @@ public static class RectangleExt {
         return new Rectangle(smallestX, smallestY, width, height);
     }
 
+    public static Rectangle FromPoints(Vector3[] points) {
+        int smallestX = (int) points.Min(v => v.X);
+        int smallestY = (int) points.Min(v => v.Y);
+        int largestX = (int) points.Max(v => v.X);
+        int largestY = (int) points.Max(v => v.Y);
+
+        int width = largestX - smallestX;
+        int height = largestY - smallestY;
+
+        return new Rectangle(smallestX, smallestY, width, height);
+    }
+
     public static Rectangle Merge(Rectangle a, Rectangle b) {
         int smallestX = Math.Min(a.Left, b.Left);
         int smallestY = Math.Min(a.Top, b.Top);
