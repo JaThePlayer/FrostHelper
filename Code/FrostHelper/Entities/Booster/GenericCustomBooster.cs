@@ -23,6 +23,10 @@ namespace FrostHelper.Entities.Boosters {
 
             // eliminate a lag spike when first leaving a booster
             ChangeDashSpeedOnce.LoadIfNeeded();
+
+            // get upside down jumpthru types if they exist
+            GravityHelperUpsideDownJumpThruType = TypeHelper.EntityNameToTypeSafe("GravityHelper/UpsideDownJumpThru");
+            MaddieHelpingHandUpsideDownJumpThruType = TypeHelper.EntityNameToTypeSafe("MaxHelpingHand/UpsideDownJumpThru");
         }
 
         [OnUnload]
@@ -106,6 +110,14 @@ namespace FrostHelper.Entities.Boosters {
             }
         }
         #endregion
+
+        private static Type? GravityHelperUpsideDownJumpThruType;
+        private static Type? MaddieHelpingHandUpsideDownJumpThruType;
+
+        private static bool IsUpsideDownJumpThru(JumpThru jumpThru) {
+            Type type = jumpThru.GetType();
+            return type == GravityHelperUpsideDownJumpThruType || type == MaddieHelpingHandUpsideDownJumpThruType;
+        }
 
         public bool BoostingPlayer { get; private set; }
         public string reappearSfx;
@@ -514,10 +526,18 @@ namespace FrostHelper.Entities.Boosters {
             }
 
             if (player.DashDir.Y == 0f) {
+                // check whether the player is inverted
+                bool playerInverted = GravityHelperIntegration.IsPlayerInverted?.Invoke() ?? false;
+                // loop on all jumpthrus
                 foreach (Entity entity in player.Scene.Tracker.SafeGetEntities<JumpThru>()) {
                     JumpThru jumpThru = (JumpThru) entity;
-                    if (player.CollideCheck(jumpThru) && player.Bottom - jumpThru.Top <= 6f) {
-                        player.MoveVExact((int) (jumpThru.Top - player.Bottom), null, null);
+
+                    // only continue if the player is the correct gravity to stand on the jumpthru
+                    if (playerInverted != IsUpsideDownJumpThru(jumpThru)) continue;
+
+                    var offset = playerInverted ? jumpThru.Bottom - player.Top : player.Bottom - jumpThru.Top;
+                    if (player.CollideCheck(jumpThru) && offset <= 6f) {
+                        player.MoveVExact((int) -offset, null, null);
                     }
                 }
                 if (player.CanUnDuck && Input.Jump.Pressed && player.jumpGraceTimer > 0f && !ch9hub) {
@@ -600,11 +620,13 @@ namespace FrostHelper.Entities.Boosters {
             Player player = (e as Player)!;
             var booster = GetBoosterThatIsBoostingPlayer(player);
 
-            Vector2 boostTarget = GravityHelperIntegration.InvertIfPlayerInverted(player.boostTarget);
             Vector2 value = Input.Aim.Value * 3f;
-            Vector2 vector = Calc.Approach(player.ExactPosition, boostTarget - player.Collider.Center + value, 80f * Engine.DeltaTime);
+            Vector2 vector = Calc.Approach(player.ExactPosition, player.boostTarget - player.Collider.Center + value, 80f * Engine.DeltaTime);
+
+            GravityHelperIntegration.BeginOverride?.Invoke();
             player.MoveToX(vector.X, null);
             player.MoveToY(vector.Y, null);
+            GravityHelperIntegration.EndOverride?.Invoke();
 
             if ((Input.Dash.Pressed || Input.CrouchDashPressed) && booster.CanFastbubble()) {
                 player.demoDashed = Input.CrouchDashPressed;
@@ -620,8 +642,11 @@ namespace FrostHelper.Entities.Boosters {
             Player player = (e as Player)!;
             Vector2 boostTarget = (Vector2) FrostModule.player_boostTarget.GetValue(player);
             Vector2 vector = (boostTarget - player.Collider.Center).Floor();
+
+            GravityHelperIntegration.BeginOverride?.Invoke();
             player.MoveToX(vector.X, null);
             player.MoveToY(vector.Y, null);
+            GravityHelperIntegration.EndOverride?.Invoke();
 
             GetBoosterThatIsBoostingPlayer(player)?.OnBoostEnd(player);
         }

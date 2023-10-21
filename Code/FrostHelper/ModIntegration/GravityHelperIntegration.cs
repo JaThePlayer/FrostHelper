@@ -24,6 +24,9 @@ public static class GravityHelperIntegration {
 
     public static Func<bool>? IsPlayerInverted;
 
+    public static Action? BeginOverride;
+
+    public static Action? EndOverride;
 
     //NON-API
     public static float InvertIfPlayerInverted(float f) {
