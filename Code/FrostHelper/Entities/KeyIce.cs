@@ -196,8 +196,6 @@ public sealed class KeyIce : Key {
 
         if (LoadedFromPersistence /*.Cast<KeyIce>().Any(k => k.LoadedFromPersistence && k.ID.Key == ID.Key)*/) {
             foreach (KeyIce k in scene.Tracker.SafeGetEntities<KeyIce>()) {
-                Console.WriteLine(k.ID.Key);
-
                 if (!k.LoadedFromPersistence && k.ID.Key == ID.Key) {
                     k.Visible = false;
                     k.Active = false;

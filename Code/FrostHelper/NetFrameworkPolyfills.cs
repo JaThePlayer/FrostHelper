@@ -7,7 +7,7 @@ namespace System {
     // Licensed to the .NET Foundation under one or more agreements.
     // The .NET Foundation licenses this file to you under the MIT license.
     // https://source.dot.net/#System.Private.CoreLib/Index.cs,019bce07c00229cb
-    public readonly struct Index : IEquatable<Index> {
+    public struct Index : IEquatable<Index> {
         private readonly int _value;
 
         /// <summary>Construct an Index using a value and indicating if the index is from the start or from the end.</summary>

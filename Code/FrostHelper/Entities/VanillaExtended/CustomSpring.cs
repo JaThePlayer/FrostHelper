@@ -91,7 +91,7 @@ public class CustomSpring : Spring {
     string dir;
 
     internal Vector2 speedMult;
-
+    private int Version;
 
     public bool MultiplyPlayerY;
 
@@ -113,6 +113,7 @@ public class CustomSpring : Spring {
 
     public CustomSpring(EntityData data, Vector2 offset, CustomOrientations orientation) : base(data.Position + offset, CustomToRegularOrientation[orientation], data.Bool("playerCanUse", true)) {
         LoadIfNeeded();
+        Version = data.Int("version", 0);
         // this class also has lazy hooks, and we don't want a lag spike when first hitting a spring
         TimeBasedClimbBlocker.LoadIfNeeded();
 
@@ -244,7 +245,12 @@ public class CustomSpring : Spring {
     }
 
     private void NewOnCollide(Player player) {
-        if (player.StateMachine.State == Player.StDreamDash || !playerCanUse) return;
+        if (player.StateMachine.State == Player.StDreamDash || !playerCanUse)
+            return;
+
+        if (Version == 0 && NewOnCollide_Version0(player)) {
+            return;
+        }
 
         switch (Orientation) {
             case CustomOrientations.Floor:
@@ -271,7 +277,7 @@ public class CustomSpring : Spring {
                     player.Speed.Y *= speedMult.Y;
                 }
 
-                Player_varJumpSpeed.SetValue(player, player.Speed.Y);
+                player.varJumpSpeed = player.Speed.Y;
 
                 TryBreak();
 
@@ -286,7 +292,7 @@ public class CustomSpring : Spring {
                     BounceAnimate();
                     player.Speed *= speedMult;
                     if (MultiplyPlayerY)
-                        Player_varJumpSpeed.SetValue(player, player.Speed.Y);
+                        player.varJumpSpeed = player.Speed.Y;
                     TryBreak();
                 }
                 break;
@@ -294,7 +300,7 @@ public class CustomSpring : Spring {
                 if (player.SideBounce(-1, Left, CenterY)) {
                     player.Speed *= speedMult;
                     if (MultiplyPlayerY)
-                        Player_varJumpSpeed.SetValue(player, player.Speed.Y);
+                        player.varJumpSpeed = player.Speed.Y;
                     BounceAnimate();
 
                     TryBreak();
@@ -305,7 +311,46 @@ public class CustomSpring : Spring {
         }
     }
 
-    private static FieldInfo Player_varJumpSpeed = typeof(Player).GetField("varJumpSpeed", BindingFlags.NonPublic | BindingFlags.Instance);
+    /// <summary>
+    /// Old version of the NewOnCollide method before PR4. This has broken upside-down spring behaviour - it launches the player way too high.
+    /// </summary>
+    private bool NewOnCollide_Version0(Player player) {
+        switch (Orientation) {
+            case CustomOrientations.Floor:
+                if (GravityHelperIntegration.InvertIfPlayerInverted(player.Speed.Y) >= 0f) {
+                    BounceAnimate();
+                    GravityHelperIntegration.SuperBounce(player, Top);
+                    player.Speed.Y *= speedMult.Y;
+
+                    TryBreak();
+                }
+                return true;
+            case CustomOrientations.Ceiling:
+                // weird check here to fix buffered spring cancels
+                if (GravityHelperIntegration.InvertIfPlayerInverted(player.Speed.Y) < 0f
+                    || (player.Speed.Y == 0f && inactiveTimer <= 0f)
+                ) {
+                    BounceAnimate();
+
+                    if (GravityHelperIntegration.IsPlayerInverted?.Invoke() ?? false) {
+                        player.SuperBounce(Bottom + player.Height);
+                        player.Speed.Y *= speedMult.Y;
+                    } else {
+                        player.SuperBounce(Bottom + player.Height);
+                        player.Speed.Y *= -speedMult.Y;
+                    }
+
+                    player.varJumpSpeed = player.Speed.Y;
+                    TryBreak();
+
+                    TimeBasedClimbBlocker.NoClimbTimer = 4f / 60f;
+                    inactiveTimer = 6f * Engine.DeltaTime;
+                }
+                return true;
+        }
+        return false;
+    }
+
 
     public void TryBreak() {
         if (OneUse) {

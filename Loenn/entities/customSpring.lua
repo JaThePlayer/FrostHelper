@@ -51,7 +51,8 @@ local function createSpringHandler(name, spriteRotation, speedAsVector)
             return sprite:getRectangle()
         end,
         rotate = jautils.getNameRotationHandler(rotations),
-        flip = jautils.getNameFlipHandler(rotations)
+        flip = jautils.getNameFlipHandler(rotations),
+        ignoredFields = { "version" }
     }
 
     jautils.createPlacementsPreserveOrder(handler, "normal", {
@@ -62,6 +63,7 @@ local function createSpringHandler(name, spriteRotation, speedAsVector)
         { "playerCanUse", true },
         { "renderOutline", true },
         { "attachGroup", -1, "FrostHelper.attachGroup" },
+        { "version", 1, "integer" }
     })
 
     return handler

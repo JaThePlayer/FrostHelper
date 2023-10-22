@@ -128,10 +128,22 @@ end
 ]]
 
 jautils.fieldTypeOverrides = {
-    color = {
+    color =  function (data) return {
         fieldType = "color",
         allowXNAColors = true,
-    },
+    } end,
+    list = function (data)
+        local baseOverride = jautils.fieldTypeOverrides[data.listType]
+        local base = baseOverride and baseOverride(data) or {
+            fieldType = data.listType,
+        }
+        base["ext:list"] = {
+            separator = data.separator or ",",
+            minElements = data.minElements or 1, -- the minimum amount of elements in this list. Defaults to 1. Can be 0, in which case an empty string is allowed.
+            maxElements = data.maxElements or -1, -- the maximum amount of elements in this list. Defaults to -1 (unlimited).
+        }
+        return base
+    end,
     editableDropdown = function(data)
         return {
             options = data,
