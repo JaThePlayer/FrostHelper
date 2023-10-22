@@ -23,10 +23,6 @@ namespace FrostHelper.Entities.Boosters {
 
             // eliminate a lag spike when first leaving a booster
             ChangeDashSpeedOnce.LoadIfNeeded();
-
-            // get upside down jumpthru types if they exist
-            GravityHelperUpsideDownJumpThruType = TypeHelper.EntityNameToTypeSafe("GravityHelper/UpsideDownJumpThru");
-            MaddieHelpingHandUpsideDownJumpThruType = TypeHelper.EntityNameToTypeSafe("MaxHelpingHand/UpsideDownJumpThru");
         }
 
         [OnUnload]
@@ -110,14 +106,6 @@ namespace FrostHelper.Entities.Boosters {
             }
         }
         #endregion
-
-        private static Type? GravityHelperUpsideDownJumpThruType;
-        private static Type? MaddieHelpingHandUpsideDownJumpThruType;
-
-        private static bool IsUpsideDownJumpThru(JumpThru jumpThru) {
-            Type type = jumpThru.GetType();
-            return type == GravityHelperUpsideDownJumpThruType || type == MaddieHelpingHandUpsideDownJumpThruType;
-        }
 
         public bool BoostingPlayer { get; private set; }
         public string reappearSfx;
@@ -531,9 +519,6 @@ namespace FrostHelper.Entities.Boosters {
                 // loop on all jumpthrus
                 foreach (Entity entity in player.Scene.Tracker.SafeGetEntities<JumpThru>()) {
                     JumpThru jumpThru = (JumpThru) entity;
-
-                    // only continue if the player is the correct gravity to stand on the jumpthru
-                    if (playerInverted != IsUpsideDownJumpThru(jumpThru)) continue;
 
                     var offset = playerInverted ? jumpThru.Bottom - player.Top : player.Bottom - jumpThru.Top;
                     if (player.CollideCheck(jumpThru) && offset <= 6f) {
