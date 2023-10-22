@@ -244,61 +244,64 @@ public class CustomSpring : Spring {
     }
 
     private void NewOnCollide(Player player) {
-        if (!(player.StateMachine.State == Player.StDreamDash || !playerCanUse)) {
-            switch (Orientation) {
-                case CustomOrientations.Floor:
-                    if (GravityHelperIntegration.InvertIfPlayerInverted(player.Speed.Y) >= 0f) {
-                        BounceAnimate();
-                        GravityHelperIntegration.SuperBounce(player, Top);
-                        player.Speed.Y *= speedMult.Y;
+        if (player.StateMachine.State == Player.StDreamDash || !playerCanUse) return;
 
-                        TryBreak();
-                    }
-                    break;
-                case CustomOrientations.Ceiling:
-                    // weird check here to fix buffered spring cancels
-                    if (GravityHelperIntegration.InvertIfPlayerInverted(player.Speed.Y) < 0f 
-                        || (player.Speed.Y == 0f && inactiveTimer <= 0f)
-                    ) {
-                        BounceAnimate();
+        switch (Orientation) {
+            case CustomOrientations.Floor:
+            case CustomOrientations.Ceiling:
+                // weird check here to fix buffered spring cancels
+                var realY = GravityHelperIntegration.InvertIfPlayerInverted(player.Speed.Y);
+                if (Orientation == CustomOrientations.Floor && realY < 0 ||
+                    Orientation == CustomOrientations.Ceiling && (realY > 0 || realY == 0 && inactiveTimer > 0)) {
+                    return;
+                }
 
-                        if (GravityHelperIntegration.IsPlayerInverted?.Invoke() ?? false) {
-                            player.SuperBounce(Bottom + player.Height);
-                            player.Speed.Y *= speedMult.Y;
-                        } else {
-                            player.SuperBounce(Bottom + player.Height);
-                            player.Speed.Y *= -speedMult.Y;
-                        }
+                var playerInverted = GravityHelperIntegration.IsPlayerInverted?.Invoke() ?? false;
 
+                BounceAnimate();
+
+                if (playerInverted && Orientation == CustomOrientations.Floor) {
+                    GravityHelperIntegration.InvertedSuperBounce(player, Top);
+                    player.Speed.Y *= speedMult.Y;
+                } else if (!playerInverted && Orientation == CustomOrientations.Ceiling) {
+                    player.SuperBounce(Bottom + player.Height);
+                    player.Speed.Y *= -speedMult.Y;
+                } else {
+                    player.SuperBounce(Orientation == CustomOrientations.Floor ? Top : Bottom);
+                    player.Speed.Y *= speedMult.Y;
+                }
+
+                Player_varJumpSpeed.SetValue(player, player.Speed.Y);
+
+                TryBreak();
+
+                if (playerInverted && Orientation == CustomOrientations.Floor || Orientation == CustomOrientations.Ceiling) {
+                    TimeBasedClimbBlocker.NoClimbTimer = 4f / 60f;
+                    inactiveTimer = 6f * Engine.DeltaTime;
+                }
+
+                break;
+            case CustomOrientations.WallLeft:
+                if (player.SideBounce(1, Right, CenterY)) {
+                    BounceAnimate();
+                    player.Speed *= speedMult;
+                    if (MultiplyPlayerY)
                         Player_varJumpSpeed.SetValue(player, player.Speed.Y);
-                        TryBreak();
+                    TryBreak();
+                }
+                break;
+            case CustomOrientations.WallRight:
+                if (player.SideBounce(-1, Left, CenterY)) {
+                    player.Speed *= speedMult;
+                    if (MultiplyPlayerY)
+                        Player_varJumpSpeed.SetValue(player, player.Speed.Y);
+                    BounceAnimate();
 
-                        TimeBasedClimbBlocker.NoClimbTimer = 4f / 60f;
-                        inactiveTimer = 6f * Engine.DeltaTime;
-                    }
-                    break;
-                case CustomOrientations.WallLeft:
-                    if (player.SideBounce(1, Right, CenterY)) {
-                        BounceAnimate();
-                        player.Speed *= speedMult;
-                        if (MultiplyPlayerY)
-                            Player_varJumpSpeed.SetValue(player, player.Speed.Y);
-                        TryBreak();
-                    }
-                    break;
-                case CustomOrientations.WallRight:
-                    if (player.SideBounce(-1, Left, CenterY)) {
-                        player.Speed *= speedMult;
-                        if (MultiplyPlayerY)
-                            Player_varJumpSpeed.SetValue(player, player.Speed.Y);
-                        BounceAnimate();
-
-                        TryBreak();
-                    }
-                    break;
-                default:
-                    throw new Exception("Orientation not supported!");
-            }
+                    TryBreak();
+                }
+                break;
+            default:
+                throw new Exception("Orientation not supported!");
         }
     }
 

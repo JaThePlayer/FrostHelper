@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Library</OutputType>
-    <TargetFrameworks>net452</TargetFrameworks>
+    <TargetFramework>net452</TargetFramework>
     <LangVersion>preview</LangVersion>
     <AssemblyName>FrostTempleHelper</AssemblyName>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -10,38 +10,26 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Platforms>AnyCPU</Platforms>
     <OutputPath>bin\</OutputPath>
-	  <Nullable>enable</Nullable>
+    <Nullable>enable</Nullable>
     <Optimize>True</Optimize>
     <DebugType>embedded</DebugType>
 
     <DefineConstants>$(DefineConstants)TRACE;MAP_PROCESSOR;SPEEDCHALLENGES</DefineConstants>
 
-    <CelesteGamePath Condition="'$(CELESTEGAMEPATH)' == ''">..\..\..\..</CelesteGamePath>
+    <CelesteGamePath Condition="'$(CELESTEGAMEPATH)' == '' And Exists('..\..\..\..\legacyRef\Celeste.exe')">..\..\..\..\legacyRef</CelesteGamePath>
+    <CelesteGamePath Condition="'$(CELESTEGAMEPATH)' == '' And Exists('..\..\..\..\Celeste.exe')">..\..\..\..</CelesteGamePath>
+    <CelesteGamePath Condition="'$(CELESTEGAMEPATH)' == ''">lib-stripped</CelesteGamePath>
   </PropertyGroup>
 
   <!-- Packages -->
   <ItemGroup>
-    <PackageReference Include="Mono.Cecil" PrivateAssets="all" Version="0.11.4">
-      <IncludeAssets>compile</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="MonoMod" PrivateAssets="all" Version="21.12.13.1">
-		<IncludeAssets>compile</IncludeAssets>
-	</PackageReference>
-    <PackageReference Include="MonoMod.RuntimeDetour" PrivateAssets="all" Version="21.12.13.1">
-      <IncludeAssets>compile</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="MonoMod.Utils" PrivateAssets="all" Version="21.12.13.1">
-      <IncludeAssets>compile</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="YamlDotNet" PrivateAssets="all" Version="11.2.1">
-      <IncludeAssets>compile</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="KeraLua" Version="1.0.22">
-      <IncludeAssets>compile</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="NLua" Version="1.4.25">
-      <IncludeAssets>compile</IncludeAssets>
-    </PackageReference>
+    <PackageReference Include="Mono.Cecil" PrivateAssets="all" Version="0.11.4" IncludeAssets="compile" />
+    <PackageReference Include="MonoMod" PrivateAssets="all" Version="21.12.13.1" IncludeAssets="compile" />
+    <PackageReference Include="MonoMod.RuntimeDetour" PrivateAssets="all" Version="21.12.13.1" IncludeAssets="compile" />
+    <PackageReference Include="MonoMod.Utils" PrivateAssets="all" Version="21.12.13.1" IncludeAssets="compile" />
+    <PackageReference Include="YamlDotNet" PrivateAssets="all" Version="11.2.1" IncludeAssets="compile" />
+    <PackageReference Include="KeraLua" Version="1.0.22" IncludeAssets="compile" />
+    <PackageReference Include="NLua" Version="1.4.25" IncludeAssets="compile" />
     <PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild" Version="0.4.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -50,17 +38,8 @@
 
   <!-- Dependencies -->
   <ItemGroup>
-    <Reference Include="Celeste">
-      <HintPath>lib-stripped\Celeste.exe</HintPath>
-      <Private>False</Private>
-    </Reference>
-
-    <!-- Publicize Include="Celeste" -->
-
-    <Reference Include="MMHOOK_Celeste">
-      <HintPath>$(CELESTEGAMEPATH)\MMHOOK_Celeste.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
+    <Reference Include="Celeste" HintPath="$(CELESTEGAMEPATH)\Celeste.exe" Private="False" Publicize="True" />
+    <Reference Include="MMHOOK_Celeste" HintPath="$(CELESTEGAMEPATH)\MMHOOK_Celeste.dll" Private="False" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
