@@ -3,12 +3,45 @@ local vanillaPatterns = loadCelesteAsset("Assets/FrostHelper/LuaBoss/vanillaPatt
 
 local function customBeams()
     while true do
+        --[[
         beam()
         beam({
             followTime = 0.5,
             lockTime = 0.,
             --activeTime = 1,
             rotationSpeed = 20000
+        })
+        ]]
+        beam({
+            angle = 0
+        })
+        beam({
+            angle = 90
+        })
+        beam({
+            angle = 180
+        })
+        beam({
+            angle = 270
+        })
+
+        beam({
+            angle = 0
+        },
+        {
+            angle = 45
+        },
+        {
+            angle = 90
+        },
+        {
+            angle = 180
+        },
+        {
+            angle = 270
+        },
+        {
+            angle = 270+45
         })
     end
 end
@@ -17,20 +50,21 @@ local function customBullets()
     local offset = 0
 
     while true do
+        beginCharge()
+        wait(0.50)
+
         shoot({
             angle = 0 + offset,
-        })
-        shoot({
+        },
+        {
             angle = 90 + offset,
-        })
-        shoot({
+        },
+        {
             angle = 180 + offset,
-        })
-        shoot({
+        },
+        {
             angle = 270 + offset,
         })
-
-        wait(0.50)
 
         offset = offset + 45
     end

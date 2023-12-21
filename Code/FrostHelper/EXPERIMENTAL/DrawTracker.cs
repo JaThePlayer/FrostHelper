@@ -1,4 +1,9 @@
-﻿using System.Diagnostics;
+﻿// While these are real issues that should be adressed, this should be moved to Mapping Utils instead anyway, which has a cleaner solution for this.
+// As such, the following warnings will be ignored, oh well
+#pragma warning disable CL0003 // call orig in hooks
+#pragma warning disable CL0001 // dont pass lambdas to EmitDelegate
+
+using System.Diagnostics;
 
 namespace FrostHelper.EXPERIMENTAL;
 
@@ -20,8 +25,6 @@ public static class DrawTracker {
 
         DrawAmts = new();
         Hooks = new();
-
-
 
         FrostModule.GetCurrentLevel().OnEndOfFrame += () => {
             foreach (var method in typeof(SpriteBatch).GetMethods()) {
@@ -113,6 +116,7 @@ public static class DrawTracker {
         }
     }
 
+
     private static void EntityList_RenderExcept(On.Monocle.EntityList.orig_RenderExcept orig, EntityList self, int excludeTags) {
         foreach (Entity entity in self.entities) {
             if (entity.Visible && !entity.TagCheck(excludeTags)) {
@@ -140,13 +144,16 @@ public static class DrawTracker {
     private static void IncrCount() {
         var t = _currentObj?.GetType();
 
-        var tn = t?.FullName ?? new StackTrace(2).GetFrames().First(f => 
-            !f.GetMethod().Name.Contains("DMD") &&
-            !f.GetMethod().Name.Contains("Trampoline") &&
-            f.GetMethod().DeclaringType.Assembly != typeof(SpriteBatch).Assembly &&
-            f.GetMethod().DeclaringType.Assembly != typeof(Image).Assembly
-        ).GetMethod().GetID().Split('(')[0];
+        var tn = t?.FullName ?? new StackTrace(2).GetFrames().First(f => f.GetMethod() is { DeclaringType: { }} m &&
+            !m.Name.Contains("DMD") &&
+            !m.Name.Contains("Trampoline") &&
+            m.DeclaringType.Assembly != typeof(SpriteBatch).Assembly &&
+            m.DeclaringType.Assembly != typeof(Image).Assembly
+        ).GetMethod()?.GetID().Split('(')[0];
 
+        if (tn is null)
+            return;
+        
         if (DrawAmts.TryGetValue(tn, out var a)) {
             DrawAmts[tn] = a + 1;
         } else {

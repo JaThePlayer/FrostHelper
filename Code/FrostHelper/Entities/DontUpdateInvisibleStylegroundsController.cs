@@ -3,11 +3,11 @@
 namespace FrostHelper;
 
 [CustomEntity("FrostHelper/DontUpdateInvisibleStylegroundsController")]
-public class DontUpdateInvisibleStylegroundsController : Entity {
+internal sealed class DontUpdateInvisibleStylegroundsController : Entity {
     internal static readonly Action<Backdrop, Scene> Backdrop_base_Update = EasierILHook.CreateDynamicMethod<Action<Backdrop, Scene>>("Wrapper.base_Update", il => {
         il.Emit(OpCodes.Ldarg_0);
         il.Emit(OpCodes.Ldarg_1);
-        il.Emit(OpCodes.Call, typeof(Backdrop).GetMethod("Update")); // use Call instead of Callvirt to call the base method
+        il.Emit(OpCodes.Call, typeof(Backdrop).GetMethod(nameof(Backdrop.Update))!); // use Call instead of Callvirt to call the base method
         il.Emit(OpCodes.Ret);
     });
 
@@ -90,7 +90,7 @@ public class DontUpdateInvisibleStylegroundsController : Entity {
     }
 
     public class Wrapper : Backdrop {
-        public Backdrop Inner;
+        public readonly Backdrop Inner;
 
         public Wrapper(Backdrop inner) {
             Inner = inner;

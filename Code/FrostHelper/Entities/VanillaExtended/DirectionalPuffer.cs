@@ -59,8 +59,8 @@ public class DirectionalPuffer : Puffer {
 
         // replace the sprite with a custom one
         Remove(Get<Sprite>());
-        var sprite = CustomSpriteHelper.CreateCustomSprite("pufferFish", data.Attr("directory", "objects/puffer/"));
-        Puffer_sprite.SetValue(this, sprite);
+        sprite = CustomSpriteHelper.CreateCustomSprite("pufferFish", data.Attr("directory", "objects/puffer/"));
+        
         Add(sprite);
         sprite.Play("idle", false, false);
         sprite.SetColor(data.GetColor("color", "ffffff"));
@@ -172,8 +172,8 @@ public class DirectionalPuffer : Puffer {
             // emit new branch
             cursor.Emit(OpCodes.Ldarg_0); // this
             cursor.Emit(OpCodes.Ldarg_1); // player
-            cursor.EmitDelegate<Func<Puffer, Player, bool>>((p, player) => (p is DirectionalPuffer dirPuff) && dirPuff.DirectionCheck(player));
-            cursor.Emit(OpCodes.Brtrue, label.Target);
+            cursor.EmitDelegate(ShouldSkipPufferExplode);
+            cursor.Emit(OpCodes.Brtrue, label.Target!);
         }
 
         // add a label to the end of the function so that it's easier to branch to it later
@@ -194,12 +194,16 @@ public class DirectionalPuffer : Puffer {
             cursor.EmitCall(HandleCustomBounceEvents);
 
             // if the func returned false, early return
-            cursor.Emit(OpCodes.Brfalse, returnLabel.Target);
+            cursor.Emit(OpCodes.Brfalse, returnLabel.Target!);
 
             // restore the stack
             cursor.Emit(OpCodes.Ldarg_1); // player
             cursor.Emit(OpCodes.Ldloc, fromYLocal); // this.Top
         }
+    }
+
+    private static bool ShouldSkipPufferExplode(Puffer p, Player player) {
+        return (p is DirectionalPuffer dirPuff) && dirPuff.DirectionCheck(player);
     }
 
     internal static bool HandleCustomBounceEvents(Player player, Puffer self) {
@@ -292,8 +296,6 @@ public class DirectionalPuffer : Puffer {
             player.Dashes = dirPuffer.DashRecovery;
         }
     }
-
-    private static FieldInfo Puffer_sprite = typeof(Puffer).GetField("sprite", BindingFlags.NonPublic | BindingFlags.Instance);
 
 
     // based on Maddie's Helping Hand's Static Puffers

@@ -1,10 +1,8 @@
-﻿using Celeste.Mod.Entities;
-
-namespace FrostTempleHelper.Entities.azcplo1k;
+﻿namespace FrostHelper.Entities.Noperture;
 
 [CustomEntity("noperture/deadlyLazer")]
-class uadjaiz : Entity {
-    public uadjaiz(EntityData data, Vector2 offset) : base(data.Position + offset) {
+class DeadlyLazer : Entity {
+    public DeadlyLazer(EntityData data, Vector2 offset) : base(data.Position + offset) {
         Collider = new Hitbox(4f, data.Height + 1f, 2f);
         Add(new PlayerCollider((player) => { player.Die(Vector2.Zero); }));
     }

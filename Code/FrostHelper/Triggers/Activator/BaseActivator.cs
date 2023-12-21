@@ -53,6 +53,7 @@ internal class BaseActivator : Trigger {
     public void CallOnStay(Player? player = null) {
         return; // see comment in OnEntityEnterActivator.Update
 
+#pragma warning disable CS0162 // Unreachable code detected
         if (lastActivatedTrigger is { } tr) {
             if (tr.Scene != Scene) {
                 lastActivatedTrigger = null;
@@ -71,6 +72,7 @@ internal class BaseActivator : Trigger {
                 tr.OnStay(player);
             }
         }
+#pragma warning restore CS0162 // Unreachable code detected
     }
 
     /// <summary>
@@ -81,6 +83,7 @@ internal class BaseActivator : Trigger {
     public void CallOnLeave(Player? player = null) {
         return; // see comment in OnEntityEnterActivator.Update
 
+#pragma warning disable CS0162 // Unreachable code detected
         if (lastActivatedTrigger is { } tr) {
             if (tr.Scene != Scene) {
                 lastActivatedTrigger = null;
@@ -101,6 +104,7 @@ internal class BaseActivator : Trigger {
         }
 
         lastActivatedTrigger = null;
+#pragma warning restore CS0162 // Unreachable code detected
     }
 
     private IEnumerator DelayedActivateAll(Player player) {

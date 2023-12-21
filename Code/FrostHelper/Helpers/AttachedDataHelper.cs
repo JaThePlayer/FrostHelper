@@ -41,7 +41,7 @@ internal static class AttachedDataHelper {
         // also add anything from base types
         var type = objType;
         while (type.BaseType is { } baseType) {
-            if (ObjectToPossibleDatas.TryGetValue(baseType, out var baseDatas)) {
+            if (ObjectToPossibleDatas.TryGetValue(baseType, out var baseDatas) && baseDatas is {}) {
                 datas.AddRange(baseDatas);
             }
 
@@ -130,7 +130,7 @@ internal static class AttachedDataHelper {
     public static T? TryGetAttached<T>(this object obj) where T : class {
         DataStore<T>.Data.TryGetValue(obj, out var ret);
 
-        return (T) ret;
+        return (T?) ret;
     }
 
     /// <summary>

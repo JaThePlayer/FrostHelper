@@ -23,8 +23,10 @@ internal static class ReloadGCEdit {
             // Remove this overly aggressive gc run:
             // GC.Collect();
             // GC.WaitForPendingFinalizers();
+#pragma warning disable CL0005 // dont call remove - we need to here, as that's the whole point
             cursor.Remove();
             cursor.Remove();
+#pragma warning restore CL0005
         }
     }
 }

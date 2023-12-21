@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Library</OutputType>
-    <TargetFramework>net452</TargetFramework>
+    <TargetFramework>net7.0</TargetFramework>
     <LangVersion>preview</LangVersion>
     <AssemblyName>FrostTempleHelper</AssemblyName>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -16,19 +16,17 @@
 
     <DefineConstants>$(DefineConstants)TRACE;MAP_PROCESSOR;SPEEDCHALLENGES</DefineConstants>
 
-    <CelesteGamePath Condition="'$(CELESTEGAMEPATH)' == '' And Exists('..\..\..\..\legacyRef\Celeste.exe')">..\..\..\..\legacyRef</CelesteGamePath>
-    <CelesteGamePath Condition="'$(CELESTEGAMEPATH)' == '' And Exists('..\..\..\..\Celeste.exe')">..\..\..\..</CelesteGamePath>
+    <CelesteGamePath Condition="'$(CELESTEGAMEPATH)' == '' And Exists('..\..\..\..\Celeste.dll')">..\..\..\..</CelesteGamePath>
     <CelesteGamePath Condition="'$(CELESTEGAMEPATH)' == ''">lib-stripped</CelesteGamePath>
   </PropertyGroup>
 
   <!-- Packages -->
   <ItemGroup>
+    <PackageReference Include="CelesteAnalyzer" Version="1.0.3.1" />
     <PackageReference Include="Mono.Cecil" PrivateAssets="all" Version="0.11.4" IncludeAssets="compile" />
-    <PackageReference Include="MonoMod" PrivateAssets="all" Version="21.12.13.1" IncludeAssets="compile" />
-    <PackageReference Include="MonoMod.RuntimeDetour" PrivateAssets="all" Version="21.12.13.1" IncludeAssets="compile" />
-    <PackageReference Include="MonoMod.Utils" PrivateAssets="all" Version="21.12.13.1" IncludeAssets="compile" />
+    <PackageReference Include="MonoModReorg.RuntimeDetour" PrivateAssets="all" IncludeAssets="compile" Version="23.3.22.1" />
+    <PackageReference Include="MonoModReorg.Utils" PrivateAssets="all" IncludeAssets="compile" Version="23.3.22.1" />
     <PackageReference Include="YamlDotNet" PrivateAssets="all" Version="11.2.1" IncludeAssets="compile" />
-    <PackageReference Include="KeraLua" Version="1.0.22" IncludeAssets="compile" />
     <PackageReference Include="NLua" Version="1.4.25" IncludeAssets="compile" />
     <PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild" Version="0.4.0">
       <PrivateAssets>all</PrivateAssets>
@@ -38,14 +36,10 @@
 
   <!-- Dependencies -->
   <ItemGroup>
-    <Reference Include="Celeste" HintPath="$(CELESTEGAMEPATH)\Celeste.exe" Private="False" Publicize="True" />
+    <Reference Include="Celeste" HintPath="$(CELESTEGAMEPATH)\Celeste.dll" Private="False" Publicize="True" />
     <Reference Include="MMHOOK_Celeste" HintPath="$(CELESTEGAMEPATH)\MMHOOK_Celeste.dll" Private="False" />
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Xml" />
+    <!-- There's no Nuget package for MonoModReorg.Patcher yet...-->
+    <Reference Include="MMHOOK_Celeste" HintPath="$(CELESTEGAMEPATH)\MonoMod.Patcher.dll" Private="False" />
   </ItemGroup>
 
   <Choose>
@@ -66,4 +60,9 @@
       </ItemGroup>
     </Otherwise>
   </Choose>
+
+  <Target Name="CopyFiles" AfterTargets="Build">
+    <Copy SourceFiles="$(OutputPath)\$(AssemblyName).dll" DestinationFolder="bin" />
+    <!--<Copy SourceFiles="$(OutputPath)\$(AssemblyName).pdb" DestinationFolder="bin" />-->
+  </Target>
 </Project>

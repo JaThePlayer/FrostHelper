@@ -1,4 +1,5 @@
-﻿using FrostHelper.Helpers;
+﻿using Celeste.Mod.Helpers;
+using FrostHelper.Helpers;
 
 namespace FrostHelper;
 

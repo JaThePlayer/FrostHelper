@@ -120,7 +120,6 @@ public enum FrameworkType {
 }
 
 public class FrostModule : EverestModule {
-    static bool outBackHelper = false;
     public static SpriteBank SpriteBank;
     // Only one alive module instance can exist at any given time.
     public static FrostModule Instance;
@@ -132,7 +131,7 @@ public class FrostModule : EverestModule {
 
     static FrostModule() {
         // from communal helper - https://github.com/CommunalHelper/CommunalHelper/blob/6877bdf1e3527656adcdb56a89071da6fe4e42bf/src/Entities/Misc/Shape3DRenderer.cs#L185-L187
-        Framework = typeof(Game).Assembly.FullName.Contains("FNA")
+        Framework = typeof(Game).Assembly.FullName!.Contains("FNA")
         ? FrameworkType.FNA
         : FrameworkType.XNA;
     }
@@ -247,7 +246,7 @@ public class FrostModule : EverestModule {
     }
     #endregion
 
-    private void Player_ctor(On.Celeste.Player.orig_ctor orig, Player self, Vector2 position, PlayerSpriteMode spriteMode) {
+    private static void Player_ctor(On.Celeste.Player.orig_ctor orig, Player self, Vector2 position, PlayerSpriteMode spriteMode) {
         orig(self, position, spriteMode);
         DynamicData.For(self).Set("lastDreamSpeed", 0f);
         // Let's define new states
@@ -273,8 +272,8 @@ public class FrostModule : EverestModule {
         CelesteTASIntegration.RegisterState(WASDMovementState.ID, WASDMovementState.GetTasToolsDisplayName());
     }
 
-    public static FieldInfo player_boostTarget = typeof(Player).GetField("boostTarget", BindingFlags.Instance | BindingFlags.NonPublic);
-    public static FieldInfo player_calledDashEvents = typeof(Player).GetField("calledDashEvents", BindingFlags.Instance | BindingFlags.NonPublic);
+    public static FieldInfo player_boostTarget = typeof(Player).GetField("boostTarget", BindingFlags.Instance | BindingFlags.NonPublic)!;
+    public static FieldInfo player_calledDashEvents = typeof(Player).GetField("calledDashEvents", BindingFlags.Instance | BindingFlags.NonPublic)!;
     #region YellowBoost
 #if OLD_YELLOW_BOOSTER
     public static int YellowBoostState;
@@ -373,9 +372,6 @@ public class FrostModule : EverestModule {
 
         // Custom dream blocks and feathers
         On.Celeste.Player.UpdateSprite -= Player_UpdateSprite;
-
-        if (outBackHelper)
-            typeof(FrostModule).Assembly.GetType("FrostTempleHelper.Entities.azcplo1k.abcdhr").GetMethod("Unload").Invoke(null, new object[0]);
 
         foreach (var hook in registeredHooks) {
             hook.Dispose();
@@ -489,16 +485,16 @@ public class FrostModule : EverestModule {
     [Command("detailed_count", "[Frost Helper] Lists all entities by type")]
     public static void CmdDetailedCount() {
         Console.WriteLine("Components:");
-        print(Engine.Scene.Entities.SelectMany(s => s));
+        Print(Engine.Scene.Entities.SelectMany(s => s));
         Console.WriteLine("Entities:");
-        print(Engine.Scene.Entities);
+        Print(Engine.Scene.Entities);
 
-        void print(IEnumerable<object> obj) {
-            var types = obj.Select(e => e.GetType());
-            var longestType = types.Max(t => t.FullName.Length);
+        void Print(IEnumerable<object> obj) {
+            var types = obj.Select(e => e.GetType()).ToList();
+            var longestType = types.Max(t => (t.FullName ?? t.Name).Length);
 
             types.Distinct()
-                 .ToDictionary(t => t.FullName, t => types.Count(t2 => t2 == t))
+                 .ToDictionary(t => t.FullName ?? t.Name, t => types.Count(t2 => t2 == t))
                  .OrderBy(p => p.Value) // while OrderByDescending might make more sense, this ordering makes it easier to read in the console
                  .Select(p => $"{p.Key}{new string(' ', longestType - p.Key.Length)} {p.Value}")
                  .Foreach(Console.WriteLine);

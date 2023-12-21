@@ -11,6 +11,7 @@ internal class CassetteListener : Component {
         _ => Color.White
     };
 
+#pragma warning disable CS0649 // Field is never assigned to, and will always have its default value
     public Action? OnFinish;
     public Action? OnWillToggle;
     public Action? OnActivated;
@@ -20,6 +21,7 @@ internal class CassetteListener : Component {
 
     public int Index;
     public bool Activated;
+#pragma warning restore CS0649 // Field is never assigned to, and will always have its default value
 
     private CassetteBlockManager cassetteBlockManager;
 

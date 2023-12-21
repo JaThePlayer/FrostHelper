@@ -5,6 +5,7 @@
 *.exe
 Starforge/
 Rysy/
+Rysy_/
 Audio/
 Graphics/
 .vscode/

@@ -148,6 +148,8 @@ internal sealed class LuaBadelineBoss : FinalBoss {
             Scene.Add(helperEntity);
             return;
         }
+
+        _beamFireSoundPlayedThisFrame = false;
     }
 
     private void UpdateLuaCtx() {
@@ -163,7 +165,7 @@ internal sealed class LuaBadelineBoss : FinalBoss {
             return LuaHelper.LuaFuncToIEnumerator(func);
         }
 
-        return new object[0].GetEnumerator();
+        return Array.Empty<object>().GetEnumerator();
     }
 
     internal void BeforeOnPlayer() {
@@ -215,6 +217,8 @@ internal sealed class LuaBadelineBoss : FinalBoss {
         ShootImpl(location, args);
     }
 
+    private bool _beamFireSoundPlayedThisFrame;
+    
     public IEnumerator Beam(LuaTable? args = null) {
         laserSfx.Play("event:/char/badeline/boss_laser_charge", null, 0f);
         Sprite.Play("attack2Begin", true, false);
@@ -228,6 +232,9 @@ internal sealed class LuaBadelineBoss : FinalBoss {
 
             CreatedShots.Add(beam);
             level.Add(beam);
+
+            // the beam could've changed the follow timer on its own (for example, the 'angle' arg removes the follow time
+            followTime = beam.followTimer;
         }
         yield return followTime;
 
@@ -235,7 +242,11 @@ internal sealed class LuaBadelineBoss : FinalBoss {
         yield return lockTime;
 
         laserSfx.Stop(true);
-        Audio.Play("event:/char/badeline/boss_laser_fire", Position);
+        if (!_beamFireSoundPlayedThisFrame) {
+            Audio.Play("event:/char/badeline/boss_laser_fire", Position);
+            _beamFireSoundPlayedThisFrame = true;
+        }
+        
         Sprite.Play("attack2Recoil", false, false);
     }
 
@@ -542,10 +553,18 @@ public class CustomBossBeam : Entity {
         if (target.X >= boss.X) {
             num *= -1;
         }
-        angle = Calc.Angle(boss.BeamOrigin, target.Center);
-        Vector2 vector = Calc.ClosestPointOnLine(boss.BeamOrigin, boss.BeamOrigin + Calc.AngleToVector(angle, BeamLength), target.Center);
-        vector += (target.Center - boss.BeamOrigin).Perpendicular().SafeNormalize(AngleStartOffset) * num;
-        angle = Calc.Angle(boss.BeamOrigin, vector);
+
+        if (args?["angle"] is { }) {
+            angle = args.GetOrDefault("angle", float.MinValue).ToRad();
+            chargeTimer -= followTimer;
+            followTimer = 0;
+        } else {
+            angle = Calc.Angle(boss.BeamOrigin, target.Center);
+            Vector2 vector = Calc.ClosestPointOnLine(boss.BeamOrigin, boss.BeamOrigin + Calc.AngleToVector(angle, BeamLength), target.Center);
+            vector += (target.Center - boss.BeamOrigin).Perpendicular().SafeNormalize(AngleStartOffset) * num;
+            angle = Calc.Angle(boss.BeamOrigin, vector);
+        }
+
         return this;
     }
 
@@ -730,9 +749,9 @@ public class CustomBossBeam : Entity {
 
     private Sprite beamStartSprite;
 
-    private float chargeTimer;
+    internal float chargeTimer;
 
-    private float followTimer;
+    internal float followTimer;
 
     private float activeTimer;
 

@@ -9,7 +9,7 @@ public static class DebugRCExt {
             Name = "CSharp Types To Entity IDs",
             InfoHTML = "Translates a list of CSharp type names OR entity IDs to a list of Entity IDs",
             Handle = c => {
-                var types = c.Request.Headers["types"].Split(',');
+                var types = c.Request.Headers["types"]?.Split(',') ?? Array.Empty<string>();
                 DebugRC.Write(c, string.Join(",", API.EntityNamesFromTypeNames(types)));
             }
         },

@@ -22,16 +22,39 @@ function helpers.notify(message)
     fhNotifHelper.Notify(message)
 end
 
-function helpers.shoot(args)
-    self:Shoot(args)
+function helpers.shoot(...)
+    local allShots = {...}
+
+    for _, args in ipairs(allShots) do
+        self:Shoot(args)
+    end
 end
 
-function helpers.shootAt(location, args)
-    self:ShootAt(location, args)
+function helpers.shootAt(location, ...)
+    local allShots = {...}
+
+    for _, args in ipairs(allShots) do
+        self:ShootAt(location, args)
+    end
 end
 
-function helpers.beam(args)
-    helpers.wait(self:Beam(args))
+function helpers.beam(...)
+    local allBeams = {...}
+
+    if #allBeams == 1 then
+        helpers.wait(self:Beam(allBeams[1]))
+        return
+    end
+
+    for i, beamArgs in ipairs(allBeams) do
+        if i == #allBeams then
+            helpers.wait(self:Beam(beamArgs))
+        else
+            helpers.startCoroutine(function ()
+                helpers.wait(self:Beam(beamArgs))
+            end)
+        end
+    end
 end
 
 function helpers.beginCharge()

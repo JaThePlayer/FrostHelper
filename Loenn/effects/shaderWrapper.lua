@@ -3,6 +3,7 @@ local shaderWrapper = {
     defaultData = {
         wrappedTag = "",
         shader = "",
+        shaderFlag = "",
     }
 }
 

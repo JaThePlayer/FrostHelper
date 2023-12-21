@@ -24,12 +24,14 @@ public static class MonocleDrawShapeFixer {
         var cursor = new ILCursor(ctx);
 
         if (cursor.TryGotoNext(MoveType.Before, 
-            instr => instr.MatchLdsfld(typeof(Draw).FullName, "Pixel"),
+            instr => instr.MatchLdsfld(typeof(Draw).FullName!, "Pixel"),
             instr => instr.MatchCallvirt<MTexture>("get_Texture"),
             instr => instr.MatchCallvirt<VirtualTexture>("get_Texture_Safe")
         )) {
+#pragma warning disable CL0005 // this is just an experimental thing anyway
             cursor.RemoveRange(3); // remove the 3 instrs we just matched
-            cursor.Emit(OpCodes.Ldsfld, typeof(MonocleDrawShapeFixer).GetField(nameof(PixelTexture))); // replace with just one static field load
+#pragma warning restore CL0005
+            cursor.Emit(OpCodes.Ldsfld, typeof(MonocleDrawShapeFixer).GetField(nameof(PixelTexture))!); // replace with just one static field load
         }
     }
 
@@ -42,8 +44,8 @@ public static class MonocleDrawShapeFixer {
         PixelTexture = null!;
 
         if (Hooks is { } h)
-        foreach (var item in h) {
-            item?.Dispose();
-        }
+            foreach (var item in h) {
+                item?.Dispose();
+            }
     }
 }

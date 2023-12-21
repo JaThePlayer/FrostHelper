@@ -127,11 +127,13 @@ public static class EasierILHook {
 
     public static void LoadField(this ILCursor p, FieldInfo fieldInfo) => p.Emit(OpCodes.Ldfld, fieldInfo);
 
-    public static void LoadField<T>(this ILCursor p, string fieldName) => p.Emit(OpCodes.Ldfld, typeof(T).GetField(fieldName, BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic));
+    public static void LoadField<T>(this ILCursor p, string fieldName) 
+        => p.Emit(OpCodes.Ldfld, typeof(T).GetField(fieldName, BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic) ?? throw new MissingFieldException(typeof(T).Name, fieldName));
 
     public static void EmitCall(this ILProcessor p, MethodInfo method) => p.Emit(OpCodes.Call, method);
     public static void EmitCall(this ILCursor p, MethodInfo method) => p.Emit(OpCodes.Call, method);
-    public static void EmitCall<T>(this ILCursor p, string methodName) => p.Emit(OpCodes.Call, typeof(T).GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance));
+    public static void EmitCall<T>(this ILCursor p, string methodName) 
+        => p.Emit(OpCodes.Call, typeof(T).GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance) ?? throw new MissingMethodException(typeof(T).Name, methodName));
 
     public static void EmitCall<T>(this ILCursor p, T action) where T : Delegate {
         p.Emit(OpCodes.Call, action.Method);
@@ -190,7 +192,38 @@ public static class EasierILHook {
     };
 
     public static ILHook Hook<T>(string methodName, ILContext.Manipulator manipulator) {
-        return new ILHook(typeof(T).GetMethod(methodName, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static), manipulator);
+        return new ILHook(typeof(T).GetMethod(methodName, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static)!, manipulator);
+    }
+    
+    /// <summary>
+    /// Appends a call to <paramref name="toCall"/> to the beginning of the given function.
+    /// </summary>
+    public static ILHook CreatePrefixHook<T>(Type type, string methodName, T toCall, int capturedArgsCount = 0) where T : Delegate {
+        var hook = new ILHook(
+            type.GetMethod(methodName, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static)!,
+            ctx => {
+                var cursor = new ILCursor(ctx);
+
+                for (int i = 0; i < capturedArgsCount; i++) {
+                    cursor.Emit(OpCodes.Ldarg, i);
+                }
+                cursor.EmitCall(toCall);
+            });
+
+        return hook;
+    }
+
+    public static ILHook CreatePostRetHook<T>(Type type, string methodName, T toCall) where T : Delegate {
+        var hook = new ILHook(
+            type.GetMethod(methodName, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static)!,
+            ctx => {
+                var cursor = new ILCursor(ctx);
+                while (cursor.TryGotoNext(MoveType.Before, i => i.MatchRet())) {
+                    cursor.EmitCall(toCall);
+                }
+            });
+
+        return hook;
     }
 
     public static T CreateDynamicMethod<T>(string methodName, Action<ILProcessor> generator) where T : Delegate {
@@ -215,7 +248,7 @@ public static class EasierILHook {
         => CreateAnyFastGetter<Func<TField>>(field);
 
     public static T CreateAnyFastGetter<T>(this FieldInfo field) where T : Delegate
-        => CreateDynamicMethod<T>($"{field.DeclaringType.FullName}.dyn_fastGet_{field.Name}", (il) => {
+        => CreateDynamicMethod<T>($"{field.DeclaringType?.FullName}.dyn_fastGet_{field.Name}", (il) => {
             if (field.IsStatic) {
                 il.Emit(OpCodes.Ldsfld, field);
             } else {
@@ -250,15 +283,15 @@ public static class EasierILHook {
         foreach (TypeDefinition nest in type.NestedTypes) {
             if (nest.Name.StartsWith("<" + methodName + ">d__")) {
                 // check that this nested type contains a MoveNext() method
-                MethodDefinition method = nest.FindMethod("System.Boolean MoveNext()");
+                var method = nest.FindMethod("System.Boolean MoveNext()");
                 if (method == null)
                     return null!;
 
                 // we found it! let's convert it into basic System.Reflection stuff and hook it.
                 //Logger.Log("ExtendedVariantMode/ExtendedVariantsModule", $"Building IL hook for method {method.FullName} in order to mod {typeName}.{methodName}()");
-                Type reflectionType = typeof(Player).Assembly.GetType(typeName);
-                Type reflectionNestedType = reflectionType.GetNestedType(nest.Name, BindingFlags.NonPublic);
-                MethodBase moveNextMethod = reflectionNestedType.GetMethod("MoveNext", BindingFlags.NonPublic | BindingFlags.Instance);
+                Type reflectionType = typeof(Player).Assembly.GetType(typeName)!;
+                Type reflectionNestedType = reflectionType.GetNestedType(nest.Name, BindingFlags.NonPublic)!;
+                MethodBase moveNextMethod = reflectionNestedType.GetMethod("MoveNext", BindingFlags.NonPublic | BindingFlags.Instance)!;
                 return new ILHook(moveNextMethod, manipulator);
             }
         }

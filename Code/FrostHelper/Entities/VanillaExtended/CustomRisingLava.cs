@@ -2,9 +2,11 @@
 
 [CustomEntity("FrostHelper/CustomRisingLava")]
 [Tracked]
-public class CustomRisingLava : Entity {
+public sealed class CustomRisingLava : Entity {
     #region Hooks
     private static bool _hooksLoaded;
+    private static ILHook? _onStay, _onLeave;
+    
 
     [HookPreload]
     public static void LoadIfNeeded() {
@@ -12,20 +14,42 @@ public class CustomRisingLava : Entity {
             return;
         _hooksLoaded = !_hooksLoaded;
 
-        On.Celeste.Mod.Entities.LavaBlockerTrigger.OnStay += LavaBlockerTrigger_OnStay;
-        On.Celeste.Mod.Entities.LavaBlockerTrigger.OnLeave += LavaBlockerTrigger_OnLeave;
+        _onStay = EasierILHook.CreatePrefixHook(typeof(LavaBlockerTrigger), nameof(LavaBlockerTrigger.OnStay), OnLavaBlockerTriggerStay, capturedArgsCount: 1);
+        _onLeave = EasierILHook.CreatePrefixHook(typeof(LavaBlockerTrigger), nameof(LavaBlockerTrigger.OnLeave), OnLavaBlockerTriggerLeave, capturedArgsCount: 1);
     }
 
+    private static void OnLavaBlockerTriggerStay(LavaBlockerTrigger self) {
+        if (self is not { enabled: true, Scene: { } scene })
+            return;
+        
+        foreach (CustomRisingLava lava in scene.Tracker.SafeGetEntities<CustomRisingLava>())
+            lava.waiting = true;
+    }
+    
+    private static void OnLavaBlockerTriggerLeave(LavaBlockerTrigger self) {
+        if (self is not { enabled: true, Scene: { } scene })
+            return;
+        
+        foreach (CustomRisingLava lava in scene.Tracker.SafeGetEntities<CustomRisingLava>())
+            lava.waiting = false;
+    }
+    
     [OnUnload]
     public static void Unload() {
         if (!_hooksLoaded)
             return;
         _hooksLoaded = !_hooksLoaded;
+        
+        _onStay?.Dispose();
+        _onStay = null;
+        _onLeave?.Dispose();
+        _onLeave = null;
 
-        On.Celeste.Mod.Entities.LavaBlockerTrigger.OnStay -= LavaBlockerTrigger_OnStay;
-        On.Celeste.Mod.Entities.LavaBlockerTrigger.OnLeave -= LavaBlockerTrigger_OnLeave;
+        //On.Celeste.Mod.Entities.LavaBlockerTrigger.OnStay -= LavaBlockerTrigger_OnStay;
+        //On.Celeste.Mod.Entities.LavaBlockerTrigger.OnLeave -= LavaBlockerTrigger_OnLeave;
     }
 
+    /*
     private static void LavaBlockerTrigger_OnLeave(On.Celeste.Mod.Entities.LavaBlockerTrigger.orig_OnLeave orig, Celeste.Mod.Entities.LavaBlockerTrigger self, Player player) {
         if (self.enabled && self.Scene is { } scene)
             foreach (CustomRisingLava lava in scene.Tracker.SafeGetEntities<CustomRisingLava>())
@@ -42,7 +66,7 @@ public class CustomRisingLava : Entity {
                     lava.waiting = true;
 
         orig(self, player);
-    }
+    }*/
 
     #endregion
     public bool ReverseCoreMode;

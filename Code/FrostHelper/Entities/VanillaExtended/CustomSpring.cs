@@ -152,16 +152,13 @@ public class CustomSpring : Spring {
         Add(pufferCollider);
         DynData<Spring> dyndata = new DynData<Spring>(this);
 
-        Sprite spr = dyndata.Get<Sprite>("sprite");
+        var spr = sprite;
         Remove(spr);
         Add(Sprite = new Sprite(GFX.Game, dir) {
             Color = data.GetColor("color", "White"),
         });
         Sprite.Add("idle", "", 0f, new int[1]);
-        Sprite.Add("bounce", "", 0.07f, "idle", new int[]
-        {
-                0,1,2,2,2,2,2,2,2,2,2,3,4,5
-        });
+        Sprite.Add("bounce", "", 0.07f, "idle", 0, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 4, 5);
         Sprite.Add("disabled", "white", 0.07f);
         Sprite.Play("idle", false, false);
         Sprite.Origin.X = Sprite.Width / 2f;
@@ -406,13 +403,11 @@ public class CustomSpring : Spring {
 
     private void NewOnPuffer(Puffer p) {
         if (p.HitSpring(this)) {
-            Vector2 pufferSpeed = (Vector2) Puffer_hitSpeed.GetValue(p);
-            Puffer_hitSpeed.SetValue(p, pufferSpeed * speedMult);
+            p.hitSpeed *= speedMult;
             BounceAnimate();
             TryBreak();
         }
     }
-    private FieldInfo Puffer_hitSpeed = typeof(Puffer).GetField("hitSpeed", BindingFlags.Instance | BindingFlags.NonPublic);
 
     private static ParticleType P_Crumble_Up = new ParticleType {
         Color = Calc.HexToColor("847E87"),

@@ -4,6 +4,28 @@ using FrostHelper.Helpers;
 
 namespace FrostHelper.ModIntegration;
 
+/// <summary>
+/// Acts like a reference to an effect. Safe between hot reloads.
+/// </summary>
+internal sealed class EffectRef {
+    private Effect? effect;
+    private readonly string key;
+
+    public Effect Get() {
+        if (effect is { IsDisposed: true }) {
+            effect = null;
+        }
+
+        effect ??= ShaderHelperIntegration.GetEffect(key);
+
+        return effect;
+    }
+
+    internal EffectRef(string key) {
+        this.key = key;
+    }
+}
+
 public static class ShaderHelperIntegration {
     public class MissingShaderException : Exception {
         private string id;
@@ -32,7 +54,7 @@ public static class ShaderHelperIntegration {
     }
 
     private static void Content_OnUpdate(ModAsset from, ModAsset to) {
-        if (to.Format == "cso" || to.Format == ".cso") {
+        if (to.Format is "cso" or ".cso") {
             try {
                 AssetReloadHelper.Do("Reloading Shader", () => {
                     var effectName = to.PathVirtual.Substring("Effects/".Length, to.PathVirtual.Length - ".cso".Length - "Effects/".Length);
@@ -116,7 +138,7 @@ public static class ShaderHelperIntegration {
 
         return null;
     }
-
+    
     public static Effect GetEffect(string id) {
         if (TryGetEffect(id) is { } s)
             return s;
@@ -124,6 +146,9 @@ public static class ShaderHelperIntegration {
         NotifyAboutMissingShader(id);
         return GFX.FxTexture;
     }
+
+    internal static EffectRef GetEffectRef(string id)
+        => new(id);
 
     internal static void NotifyAboutMissingShader(string id) {
         NotificationHelper.Notify($"Shader not found: {id}");
@@ -208,6 +233,7 @@ public static class ShaderHelperIntegration {
         parameters["TransformMatrix"]?.SetValue(halfPixelOffset * projection);
 
         parameters["ViewMatrix"]?.SetValue(camera ?? Matrix.Identity);
+        parameters["Photosensitive"]?.SetValue(Settings.Instance.DisableFlashes);
 
         return effect;
     }

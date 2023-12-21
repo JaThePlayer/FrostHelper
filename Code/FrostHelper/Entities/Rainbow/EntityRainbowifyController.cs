@@ -41,6 +41,7 @@ public class EntityRainbowifyController : Entity {
             while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchCall<Color>("get_White"))) {
                 cursor.Emit(OpCodes.Pop);
                 cursor.Emit(OpCodes.Ldarg_0); // this
+#pragma warning disable CL0001 // dont pass lambas - we need to capture some state here
                 cursor.EmitDelegate((object self) => {
                     if (condition(self)) {
                         return ColorHelper.GetHue(Engine.Scene, positionGetter(self));
@@ -49,6 +50,7 @@ public class EntityRainbowifyController : Entity {
                     }
 
                 });
+#pragma warning restore CL0001
                 return;
             }
         };

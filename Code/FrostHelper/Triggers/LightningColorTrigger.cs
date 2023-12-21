@@ -96,11 +96,7 @@ public class LightningColorTrigger : Trigger {
     private Color[] electricityColors;
     public string FillColor;
     public float FillColorMultiplier;
-
-    private static FieldInfo LightningRenderer_electricityColors = typeof(LightningRenderer).GetField("electricityColors", BindingFlags.Instance | BindingFlags.NonPublic);
-
-    private static FieldInfo LightningRenderer_bolts = typeof(LightningRenderer).GetField("bolts", BindingFlags.Instance | BindingFlags.NonPublic);
-
+    
     private static FieldInfo? Bolt_color = null;
 
     private int? NewDepth;
@@ -162,14 +158,15 @@ public class LightningColorTrigger : Trigger {
         if (newDepth is { } depth)
             renderer.Depth = depth;
 
-        //LightningRenderer_electricityColors.SetValue(renderer, colors);
         renderer.electricityColors = colors;
-        var bolts = renderer.bolts;// LightningRenderer_bolts.GetValue(renderer);
+        var bolts = renderer.bolts;
         var i = 0;
         foreach (var bolt in bolts) {
             if (Bolt_color == null) {
-                Bolt_color = bolt.GetType().GetField("color", BindingFlags.Instance | BindingFlags.NonPublic);
+                Bolt_color = bolt.GetType().GetField("color", BindingFlags.Instance | BindingFlags.NonPublic)!;
             }
+            
+            // bolt.color is readonly
             Bolt_color.SetValue(bolt, colors[i % 2]);
             i++;
         }

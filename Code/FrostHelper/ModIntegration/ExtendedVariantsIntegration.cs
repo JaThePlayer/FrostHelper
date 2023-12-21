@@ -1,58 +1,89 @@
-﻿namespace FrostHelper.ModIntegration;
+﻿using MonoMod.ModInterop;
 
-public static class ExtendedVariantsIntegration {
-    [OnLoadContent]
-    public static void Load() {
-        EverestModuleMetadata extVariantsModuleMeta = new EverestModuleMetadata { Name = "ExtendedVariantMode", VersionString = "0.19.8" };
-        if (IntegrationUtils.TryGetModule(extVariantsModuleMeta, out extVariantsModule)) {
-            Loaded = true;
-            ExtVariantsModule_TriggerManager = extVariantsModule.GetType().GetField("TriggerManager");
-            ExtVariantsModule_VariantHandlers = extVariantsModule.GetType().GetField("VariantHandlers");
-            variantsEnumType = extVariantsModule.GetType().Module.GetType("ExtendedVariants.Module.ExtendedVariantsModule+Variant");
-            TriggerManager_OnEnteredInTrigger = ExtVariantsModule_TriggerManager.FieldType.GetMethod("OnEnteredInTrigger", new[] {
-                //Variant variantChange, object newValue, bool revertOnLeave, bool isFade, bool revertOnDeath, bool legacy
-                variantsEnumType, typeof(object), typeof(bool), typeof(bool), typeof(bool), typeof(bool)
-            });
-            JumpCountVariant = Enum.Parse(variantsEnumType, "JumpCount");
-        }
+namespace FrostHelper.ModIntegration;
+
+// ReSharper disable InconsistentNaming 
+// ReSharper disable UnassignedField.Global
+#pragma warning disable CS0649 // Field is never assigned to
+#pragma warning disable CA2211
+
+// From Mapping Utils
+[ModImportName("ExtendedVariantMode")]
+public static class ExtVariantsAPI
+{
+    public static bool LoadIfNeeded()
+    {
+        if (Loaded)
+            return true;
+
+        typeof(ExtVariantsAPI).ModInterop();
+
+        Loaded = true;
+
+        return true;
     }
 
-    private static bool _loaded;
-    public static bool Loaded {
-        set => _loaded = value;
-        get {
-            if (!_loaded)
-                Load();
-            return _loaded;
-        }
+    private static bool Loaded { get; set; }
+
+    public static bool Available => LoadIfNeeded() && GetCurrentVariantValue is { }; 
+
+    // object GetCurrentVariantValue(string variantString)
+    public static Func<string, object>? GetCurrentVariantValue;
+    
+    //TriggerVariant(string variantString, object newValue, bool revertOnDeath)
+    public static Action<string, object, bool>? TriggerVariant;
+
+    //void SetJumpCount(int jumpCount)
+    public static Action<int>? SetJumpCount;
+    
+    //void CapJumpCount(int jumpCount)
+    public static Action<int>? CapJumpCount;
+    
+    public static object? GetVariantValue(Variant variant)
+    {
+        LoadIfNeeded();
+
+        return GetCurrentVariantValue?.Invoke(variant.ToString());
     }
 
-    private static EverestModule extVariantsModule;
-    private static FieldInfo ExtVariantsModule_TriggerManager;
-    private static FieldInfo ExtVariantsModule_VariantHandlers;
-    private static MethodInfo TriggerManager_OnEnteredInTrigger;
-    private static Type variantsEnumType;
-    private static object JumpCountVariant;
+    public static float? GetVariantFloat(Variant variant) => GetVariantValue(variant) switch
+    {
+        null => null,
+        var obj => Convert.ToSingle(obj),
+    };
+    
+    public static int? GetVariantInt(Variant variant) => GetVariantValue(variant) switch
+    {
+        null => null,
+        var obj => Convert.ToInt32(obj),
+    };
 
-    public static object GetTriggerManager() {
-        return ExtVariantsModule_TriggerManager.GetValue(extVariantsModule);
+    public static void SetVariant(Variant variant, object newValue, bool revertOnDeath)
+    {
+        LoadIfNeeded();
+
+        TriggerVariant?.Invoke(variant.ToString(), newValue, revertOnDeath);
     }
-
-    public static int GetCurrentJumpCountVariantValue() {
-        var triggerManager = DynamicData.For(GetTriggerManager());
-
-        return (int) triggerManager.Invoke("GetCurrentVariantValue", JumpCountVariant);
+    
+    public enum Variant {
+        Gravity, FallSpeed, JumpHeight, WallBouncingSpeed, DisableWallJumping, DisableClimbJumping, JumpCount, RefillJumpsOnDashRefill, DashSpeed, DashLength,
+        HyperdashSpeed, ExplodeLaunchSpeed, DashCount, HeldDash, DontRefillDashOnGround, SpeedX, Friction, AirFriction, BadelineChasersEverywhere, ChaserCount,
+        AffectExistingChasers, BadelineBossesEverywhere, BadelineAttackPattern, ChangePatternsOfExistingBosses, FirstBadelineSpawnRandom, LegacyDashSpeedBehavior,
+        BadelineBossCount, BadelineBossNodeCount, BadelineLag, DelayBetweenBadelines, OshiroEverywhere, OshiroCount, ReverseOshiroCount, DisableOshiroSlowdown,
+        WindEverywhere, SnowballsEverywhere, SnowballDelay, AddSeekers, DisableSeekerSlowdown, TheoCrystalsEverywhere, AllowThrowingTheoOffscreen, AllowLeavingTheoBehind,
+        Stamina, UpsideDown, DisableNeutralJumping, RegularHiccups, HiccupStrength, RoomLighting, RoomBloom, GlitchEffect, EverythingIsUnderwater, ForceDuckOnGround,
+        InvertDashes, InvertGrab, AllStrawberriesAreGoldens, GameSpeed, ColorGrading, JellyfishEverywhere, RisingLavaEverywhere, RisingLavaSpeed, InvertHorizontalControls,
+        BounceEverywhere, SuperdashSteeringSpeed, ScreenShakeIntensity, AnxietyEffect, BlurLevel, ZoomLevel, DashDirection, BackgroundBrightness, DisableMadelineSpotlight,
+        ForegroundEffectOpacity, MadelineIsSilhouette, DashTrailAllTheTime, DisableClimbingUpOrDown, SwimmingSpeed, BoostMultiplier, FriendlyBadelineFollower,
+        DisableRefillsOnScreenTransition, RestoreDashesOnRespawn, DisableSuperBoosts, DisplayDashCount, MadelineHasPonytail, MadelineBackpackMode, InvertVerticalControls,
+        DontRefillStaminaOnGround, EveryJumpIsUltra, CoyoteTime, BackgroundBlurLevel, NoFreezeFrames, PreserveExtraDashesUnderwater, AlwaysInvisible, DisplaySpeedometer,
+        WallSlidingSpeed, DisableJumpingOutOfWater, DisableDashCooldown, DisableKeysSpotlight, JungleSpidersEverywhere, CornerCorrection, PickupDuration,
+        MinimumDelayBeforeThrowing, DelayBeforeRegrabbing, DashTimerMultiplier, JumpDuration, HorizontalSpringBounceDuration, HorizontalWallJumpDuration,
+        ResetJumpCountOnGround, UltraSpeedMultiplier, JumpCooldown, SpinnerColor, WallJumpDistance, WallBounceDistance, DashRestriction, CorrectedMirrorMode,
+        // vanilla variants
+        AirDashes, DashAssist, VanillaGameSpeed, Hiccups, InfiniteStamina, Invincible, InvisibleMotion, LowFriction, MirrorMode, NoGrabbing, PlayAsBadeline,
+        SuperDashing, ThreeSixtyDashing
     }
-
-    public static void SetCurrentJumpCountVariantValue(int amt) {
-        var triggerManager = GetTriggerManager();
-        // variantChange, object newValue, bool revertOnLeave, bool isFade, bool revertOnDeath, bool legacy
-        TriggerManager_OnEnteredInTrigger.Invoke(triggerManager, new[] { JumpCountVariant, amt, false, false, false, false });
-
-        IDictionary dictionary = (IDictionary) ExtVariantsModule_VariantHandlers.GetValue(extVariantsModule);
-        var jumpCountVariant = new DynamicData(dictionary[JumpCountVariant]);
-
-        jumpCountVariant.Invoke("AddJumps", amt, true, -1);
-    }
-
 }
+
+#pragma warning restore CS0649

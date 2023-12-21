@@ -21,8 +21,8 @@ public class CustomFeather : Entity {
         IL.Celeste.Player.BeforeUpTransition += modFeatherState;
         IL.Celeste.Player.HiccupJump += modFeatherState;
 
-        FrostModule.RegisterILHook(new ILHook(typeof(Player).GetMethod("orig_Update", BindingFlags.Instance | BindingFlags.Public), modFeatherState));
-        FrostModule.RegisterILHook(new ILHook(typeof(Player).GetMethod("orig_UpdateSprite", BindingFlags.Instance | BindingFlags.NonPublic), modFeatherState));
+        FrostModule.RegisterILHook(new ILHook(typeof(Player).GetMethod("orig_Update", BindingFlags.Instance | BindingFlags.Public)!, modFeatherState));
+        FrostModule.RegisterILHook(new ILHook(typeof(Player).GetMethod("orig_UpdateSprite", BindingFlags.Instance | BindingFlags.NonPublic)!, modFeatherState));
 
         On.Celeste.PlayerSprite.Render += PlayerSprite_Render;
     }
@@ -80,13 +80,16 @@ public class CustomFeather : Entity {
         Player player = (e as Player)!;
 
         var data = DynamicData.For(player);
-        CustomFeather feather = data.Get<CustomFeather>("fh.customFeather");
+        var feather = data.Get<CustomFeather>("fh.customFeather");
+        if (feather is null)
+            return;
+        
         player.Sprite.Play("startStarFly", false, false);
         data.Set("starFlyTransforming", true);
         data.Set("starFlyTimer", feather.FlyTime);
         data.Set("starFlySpeedLerp", 0f);
         data.Set("jumpGraceTimer", 0f);
-        BloomPoint starFlyBloom = data.Get<BloomPoint>("starFlyBloom");
+        BloomPoint? starFlyBloom = player.starFlyBloom;
         if (starFlyBloom == null) {
             player.Add(starFlyBloom = new BloomPoint(new Vector2(0f, -6f), 0f, 16f));
         }
@@ -95,8 +98,8 @@ public class CustomFeather : Entity {
         data.Set("starFlyBloom", starFlyBloom);
         player.Collider = data.Get<Hitbox>("starFlyHitbox");
         data.Set("hurtbox", data.Get("starFlyHurtbox"));
-        SoundSource starFlyLoopSfx = data.Get<SoundSource>("starFlyLoopSfx");
-        SoundSource starFlyWarningSfx = data.Get<SoundSource>("starFlyWarningSfx");
+        var starFlyLoopSfx = data.Get<SoundSource>("starFlyLoopSfx");
+        var starFlyWarningSfx = data.Get<SoundSource>("starFlyWarningSfx");
         if (starFlyLoopSfx == null) {
             player.Add(starFlyLoopSfx = new SoundSource());
             starFlyLoopSfx.DisposeOnTransition = false;
@@ -104,13 +107,15 @@ public class CustomFeather : Entity {
             starFlyWarningSfx.DisposeOnTransition = false;
         }
         starFlyLoopSfx.Play("event:/game/06_reflection/feather_state_loop", "feather_speed", 1f);
-        starFlyWarningSfx.Stop(true);
+        starFlyWarningSfx?.Stop(true);
         data.Set("starFlyLoopSfx", starFlyLoopSfx);
         data.Set("starFlyWarningSfx", starFlyWarningSfx);
     }
     public static void CustomFeatherEnd(Entity e) {
         Player player = (e as Player)!;
-        CustomFeather feather = DynamicData.For(player).Get<CustomFeather>("fh.customFeather");
+        var feather = DynamicData.For(player).Get<CustomFeather>("fh.customFeather");
+        if (feather is null)
+            return;
 
         player.Play("event:/game/06_reflection/feather_state_end", null, 0f);
         player.starFlyWarningSfx.Stop(true);
@@ -131,7 +136,9 @@ public class CustomFeather : Entity {
     }
     public static IEnumerator CustomFeatherCoroutine(Entity e) {
         Player player = (e as Player)!;
-        CustomFeather feather = DynamicData.For(player).Get<CustomFeather>("fh.customFeather");
+        var feather = DynamicData.For(player).Get<CustomFeather>("fh.customFeather");
+        if (feather is null)
+            yield break;
 
         while (player.Sprite.CurrentAnimationID == "startStarFly") {
             yield return null;
@@ -175,7 +182,9 @@ public class CustomFeather : Entity {
         Player player = (e as Player)!;
         Level level = player.SceneAs<Level>();
         BloomPoint bloomPoint = player.starFlyBloom;
-        CustomFeather feather = DynamicData.For(player).Get<CustomFeather>("fh.customFeather");
+        var feather = DynamicData.For(player).Get<CustomFeather>("fh.customFeather");
+        if (feather is null)
+            return Player.StNormal;
 
         float StarFlyTime = feather.FlyTime;
         bloomPoint.Alpha = Calc.Approach(bloomPoint.Alpha, 0.7f, Engine.DeltaTime * StarFlyTime);

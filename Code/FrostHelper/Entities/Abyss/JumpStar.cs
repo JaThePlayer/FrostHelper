@@ -1,4 +1,5 @@
-﻿using FrostHelper.ModIntegration;
+﻿using FrostHelper.Helpers;
+using FrostHelper.ModIntegration;
 
 namespace FrostHelper;
 
@@ -18,8 +19,10 @@ public class JumpStar : Entity {
     public Sprite Sprite;
 
     public JumpStar(EntityData data, Vector2 offset) : base(data.Position + offset) {
-        if (!ExtendedVariantsIntegration.Loaded) {
-            throw new Exception("Jump stars require the Extended Variants mod!!!");
+        ExtVariantsAPI.LoadIfNeeded();
+        
+        if (!ExtVariantsAPI.Available) {
+            throw new Exception("Jump stars require the Extended Variants mod, but it is not installed.");
         }
 
         Strength = data.Int("strength", 0);
@@ -42,12 +45,15 @@ public class JumpStar : Entity {
         switch (Mode) {
             case JumpStarModes.Jump:
                 amt = Strength + 1;
-                int prevJumpCount = ExtendedVariantsIntegration.GetCurrentJumpCountVariantValue();
+                int prevJumpCount = ExtVariantsAPI.GetVariantInt(ExtVariantsAPI.Variant.JumpCount) ?? 0;
 
                 if (prevJumpCount != amt) {
                     Sprite.Play("active");
                     Sprite.OnFinish = (string s) => { Sprite.Play("idle"); };
-                    ExtendedVariantsIntegration.SetCurrentJumpCountVariantValue(amt);
+                    
+                    ExtVariantsAPI.SetVariant(ExtVariantsAPI.Variant.JumpCount, amt, false);
+                    ExtVariantsAPI.SetJumpCount?.Invoke(amt - 1);
+                    ExtVariantsAPI.CapJumpCount?.Invoke(amt);
                 }
                 break;
             case JumpStarModes.Dash:

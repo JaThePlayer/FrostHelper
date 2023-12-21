@@ -16,8 +16,25 @@ public class CustomSpinner : Entity {
             return;
         _hooksLoaded = true;
 
-        On.Celeste.Mod.Entities.CrystalShatterTrigger.OnEnter += CrystalShatterTrigger_OnEnter;
+        FrostModule.RegisterILHook(EasierILHook.CreatePrefixHook(typeof(CrystalShatterTrigger), nameof(CrystalShatterTrigger.OnEnter), OnCrystalShatterTriggerEnter, capturedArgsCount: 1));
         On.Celeste.Player.SummitLaunchUpdate += Player_SummitLaunchUpdate;
+    }
+
+    private static void OnCrystalShatterTriggerEnter(CrystalShatterTrigger self) {
+        var spinners = self.Scene.Tracker.SafeGetEntities<CustomSpinner>();
+        if (spinners.Count <= 0)
+            return;
+        
+        CrystalShatterTrigger.Modes mode = self.mode;
+        if (mode == CrystalShatterTrigger.Modes.All) {
+            Audio.Play("event:/game/06_reflection/boss_spikes_burst");
+        }
+        
+        foreach (CustomSpinner spinner in spinners) {
+            if (mode == CrystalShatterTrigger.Modes.All || self.CollideCheck(spinner)) {
+                spinner.Destroy(false);
+            }
+        }
     }
 
     private static int Player_SummitLaunchUpdate(On.Celeste.Player.orig_SummitLaunchUpdate orig, Player self) {
@@ -38,24 +55,7 @@ public class CustomSpinner : Entity {
             return;
         _hooksLoaded = false;
 
-        On.Celeste.Mod.Entities.CrystalShatterTrigger.OnEnter -= CrystalShatterTrigger_OnEnter;
         On.Celeste.Player.SummitLaunchUpdate -= Player_SummitLaunchUpdate;
-    }
-
-    private static void CrystalShatterTrigger_OnEnter(On.Celeste.Mod.Entities.CrystalShatterTrigger.orig_OnEnter orig, CrystalShatterTrigger self, Player player) {
-        var list = self.Scene.Tracker.SafeGetEntities<CustomSpinner>();
-        if (list.Count > 0) {
-            CrystalShatterTrigger.Modes mode = self.mode;
-            if (mode == CrystalShatterTrigger.Modes.All) {
-                Audio.Play("event:/game/06_reflection/boss_spikes_burst");
-            }
-            foreach (CustomSpinner crystalStaticSpinner in list) {
-                if (mode == CrystalShatterTrigger.Modes.All || self.CollideCheck(crystalStaticSpinner)) {
-                    crystalStaticSpinner.Destroy(false);
-                }
-            }
-        }
-        orig(self, player);
     }
     #endregion
 

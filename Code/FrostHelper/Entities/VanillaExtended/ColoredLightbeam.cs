@@ -1,13 +1,11 @@
 ﻿namespace FrostHelper;
 
 [CustomEntity("FrostHelper/ColoredLightbeam")]
-public class ColoredLightbeam : LightBeam {
-    private static FieldInfo LightBeam_color = typeof(LightBeam).GetField("color", BindingFlags.NonPublic | BindingFlags.Instance);
-
+public sealed class ColoredLightbeam : LightBeam {
     public float ParallaxAmount;
 
     public ColoredLightbeam(EntityData data, Vector2 offset) : base(data, offset) {
-        LightBeam_color.SetValue(this, ColorHelper.GetColor(data.Attr("color", "ccffff")));
+        color = ColorHelper.GetColor(data.Attr("color", "ccffff"));
         ParallaxAmount = data.Float("parallaxAmount", 0f);
     }
 

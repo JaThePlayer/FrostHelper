@@ -124,10 +124,10 @@ public class CustomDreamBlockV2 : DreamBlock {
         */
     }
 
-    private static readonly FieldInfo DreamBlock_activeBackColor = typeof(DreamBlock).GetField("activeBackColor", BindingFlags.NonPublic | BindingFlags.Static);
-    private static readonly FieldInfo DreamBlock_disabledBackColor = typeof(DreamBlock).GetField("disabledBackColor", BindingFlags.NonPublic | BindingFlags.Static);
-    private static readonly FieldInfo DreamBlock_activeLineColor = typeof(DreamBlock).GetField("activeLineColor", BindingFlags.NonPublic | BindingFlags.Static);
-    private static readonly FieldInfo DreamBlock_disabledLineColor = typeof(DreamBlock).GetField("disabledLineColor", BindingFlags.NonPublic | BindingFlags.Static);
+    private static readonly FieldInfo DreamBlock_activeBackColor = typeof(DreamBlock).GetField("activeBackColor", BindingFlags.NonPublic | BindingFlags.Static)!;
+    private static readonly FieldInfo DreamBlock_disabledBackColor = typeof(DreamBlock).GetField("disabledBackColor", BindingFlags.NonPublic | BindingFlags.Static)!;
+    private static readonly FieldInfo DreamBlock_activeLineColor = typeof(DreamBlock).GetField("activeLineColor", BindingFlags.NonPublic | BindingFlags.Static)!;
+    private static readonly FieldInfo DreamBlock_disabledLineColor = typeof(DreamBlock).GetField("disabledLineColor", BindingFlags.NonPublic | BindingFlags.Static)!;
 
     public static void SetDreamBlockColors(Color back, Color line, bool active) {
         var method = active ? _setActiveDreamBlockColors : _setDisabledDreamBlockColors;
@@ -197,18 +197,21 @@ public class CustomDreamBlockV2 : DreamBlock {
         while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchStfld<Player>("Speed"))) {
             cursor.Index--;
             cursor.Emit(OpCodes.Ldarg_0);
-            cursor.EmitDelegate<Func<Vector2, Player, Vector2>>((origSpeed, player) => {
-                CustomDreamBlockV2 currentDreamBlock = player.CollideFirst<CustomDreamBlockV2>(player.Position + Vector2.UnitX * Math.Sign(player.Speed.X)) ?? player.CollideFirst<CustomDreamBlockV2>(player.Position + Vector2.UnitY * Math.Sign(player.Speed.Y));
-                if (currentDreamBlock != null && currentDreamBlock.ConserveSpeed) {
-                    var newSpeed = player.Speed * Math.Sign(currentDreamBlock.DashSpeed);
-                    //player.DashDir = newSpeed.SafeNormalize();
-                    return newSpeed;
-                }
-                return origSpeed;
-            });
+            cursor.EmitDelegate<Func<Vector2, Player, Vector2>>(GetDreamDashSpeed);
 
             break;
         }
+    }
+
+    private static Vector2 GetDreamDashSpeed(Vector2 origSpeed, Player player) {
+        CustomDreamBlockV2 currentDreamBlock = player.CollideFirst<CustomDreamBlockV2>(player.Position + Vector2.UnitX * Math.Sign(player.Speed.X)) ?? player.CollideFirst<CustomDreamBlockV2>(player.Position + Vector2.UnitY * Math.Sign(player.Speed.Y));
+        if (currentDreamBlock is { ConserveSpeed: true }) {
+            var newSpeed = player.Speed * Math.Sign(currentDreamBlock.DashSpeed);
+            //player.DashDir = newSpeed.SafeNormalize();
+            return newSpeed;
+        }
+
+        return origSpeed;
     }
 
     private static void Player_DreamDashEnd(On.Celeste.Player.orig_DreamDashEnd orig, Player self) {

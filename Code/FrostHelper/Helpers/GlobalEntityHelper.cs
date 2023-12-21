@@ -69,6 +69,8 @@ public static class GlobalEntityHelper {
         HashSet<string> targetRooms = mapData.ParseLevelsList(container.Attr("rooms", "*"));
 
         var globalRoom = mapData.Levels.FirstOrDefault(data => data.Name == globalEntityRoomName);
+        if (globalRoom is null)
+            return;
 
         foreach (var room in self.Session.MapData.Levels) {
             if (room == globalRoom || !targetRooms.Contains(room.Name) || allGlobalRooms.Contains(room.Name))

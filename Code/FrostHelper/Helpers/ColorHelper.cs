@@ -3,22 +3,22 @@
 namespace FrostHelper;
 
 public static class ColorHelper {
-    static Dictionary<string, Color> cache = new Dictionary<string, Color>(StringComparer.OrdinalIgnoreCase);
-    static Dictionary<string, Color[]> colorArrayCache = new Dictionary<string, Color[]>(StringComparer.OrdinalIgnoreCase);
+    static readonly Dictionary<string, Color> Cache = new(StringComparer.OrdinalIgnoreCase);
+    static readonly Dictionary<string, Color[]> ColorArrayCache = new(StringComparer.OrdinalIgnoreCase);
     static ColorHelper() {
         foreach (var prop in typeof(Color).GetProperties()) {
-            object value = prop.GetValue(default(Color), null);
+            object value = prop.GetValue(default(Color), null)!;
             if (value is Color color)
-                cache[prop.Name] = color;
+                Cache[prop.Name] = color;
         }
-        cache[""] = Color.White;
-        colorArrayCache[""] = null!;
+        Cache[""] = Color.White;
+        ColorArrayCache[""] = null!;
     }
     /// <summary>
     /// Returns a list of colors from a comma-separated string of hex colors OR xna color names
     /// </summary>
     public static Color[] GetColors(string colors) {
-        if (colorArrayCache.TryGetValue(colors, out Color[] val))
+        if (ColorArrayCache.TryGetValue(colors, out var val))
             return val;
 
         string[] split = colors.Trim().Split(',');
@@ -27,12 +27,12 @@ public static class ColorHelper {
             parsed[i] = GetColor(split[i]);
         }
 
-        colorArrayCache[colors] = parsed;
+        ColorArrayCache[colors] = parsed;
         return parsed;
     }
 
     public static Color GetColor(string color) {
-        if (cache.TryGetValue(color, out Color val))
+        if (Cache.TryGetValue(color, out Color val))
             return val;
 
         try {
@@ -60,12 +60,14 @@ public static class ColorHelper {
         if (hex.Length == 0)
             return default;
 
-        if (hex[0] == '#') {
-            hex = hex.Substring(1);
+        var hexSpan = hex.AsSpan();
+        if (hexSpan[0] == '#') {
+            hexSpan = hexSpan[1..];
         }
+        hexSpan = hexSpan.Trim();
 
-        var packedValue = hex.ToUIntHex();
-        return hex.Trim().Length switch {
+        var packedValue = hexSpan.ToUIntHex();
+        return hexSpan.Length switch {
             // allow 7-length as RGB because of Temple of Zoom from SC having 00bc000 as spinner tint... why
             6 or 7 => new Color((byte) (packedValue >> 16), (byte) (packedValue >> 8), (byte) packedValue), //rgb
             8 => new Color((byte) (packedValue >> 24), (byte) (packedValue >> 16), (byte) (packedValue >> 8), (byte) packedValue), // rgba

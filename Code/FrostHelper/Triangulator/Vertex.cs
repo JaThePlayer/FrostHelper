@@ -8,13 +8,15 @@
             Index = index;
         }
 
-        public override bool Equals(object obj) {
+        public override bool Equals(object? obj) {
+            if (obj is null)
+                return false;
             if (obj.GetType() != typeof(Vertex))
                 return false;
             return Equals((Vertex) obj);
         }
 
-        public bool Equals(Vertex obj) {
+        public readonly bool Equals(Vertex obj) {
             return obj.Position.Equals(Position) && obj.Index == Index;
         }
 

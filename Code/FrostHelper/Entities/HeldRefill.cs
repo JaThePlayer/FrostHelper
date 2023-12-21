@@ -143,12 +143,17 @@ public class HeldRefill : Entity {
     public static void HeldDashBegin(Entity e) {
         Player player = (e as Player)!;
         var refill = GetHeldRefillUsedByPlayer(player);
+        if (refill is null)
+            return;
+        
         player.Position = refill.Position;
         player.Speed = Vector2.Zero;
     }
     public static int HeldDashUpdate(Entity e) {
         Player player = (e as Player)!;
         var refill = GetHeldRefillUsedByPlayer(player);
+        if (refill is null)
+            return Player.StNormal;
         //player.Speed = Vector2.Zero;
         //var tunnelNode = TunnelNodes[i];
 
@@ -200,6 +205,8 @@ public class HeldRefill : Entity {
     public static void HeldDashEnd(Entity e) {
         Player player = (e as Player)!;
         var refill = GetHeldRefillUsedByPlayer(player);
+        if (refill is null)
+            return;
         SetHeldRefillUsedByPlayer(player, null!);
 
         refill.TravelPercent = refill.Nodes.Length - 1;
@@ -217,7 +224,7 @@ public class HeldRefill : Entity {
         }
     }
 
-    public static HeldRefill GetHeldRefillUsedByPlayer(Player player) {
+    public static HeldRefill? GetHeldRefillUsedByPlayer(Player player) {
         return DynamicData.For(player).Get<HeldRefill>("fh.heldRefill");
     }
 

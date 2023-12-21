@@ -80,12 +80,13 @@ public static class WASDMovementState {
         Hitbox = new Hitbox(HitboxWidth, HitboxWidth);
 
         previousCollider = player.Collider;
-        previousNormalHitbox = (Hitbox) Player_normalHitbox.GetValue(player);
-        previousDuckHitbox = (Hitbox) Player_duckHitbox.GetValue(player);
-        previousNormalHurtbox = (Hitbox) Player_normalHurtbox.GetValue(player);
+        previousNormalHitbox = player.normalHitbox;
+        previousDuckHitbox = player.duckHitbox;
+        previousNormalHurtbox = player.normalHurtbox;
         previousHurbox = player.hurtbox;
 
         player.Collider = Hitbox;
+
         Player_normalHitbox.SetValue(player, Hitbox);
         Player_duckHitbox.SetValue(player, Hitbox);
         Player_normalHurtbox.SetValue(player, Hitbox);
@@ -115,7 +116,7 @@ public static class WASDMovementState {
     }
 
     // these are readonly, and so we can't bypass access checks that easily.
-    private static FieldInfo Player_normalHitbox = typeof(Player).GetField("normalHitbox", BindingFlags.NonPublic | BindingFlags.Instance);
-    private static FieldInfo Player_duckHitbox = typeof(Player).GetField("duckHitbox", BindingFlags.NonPublic | BindingFlags.Instance);
-    private static FieldInfo Player_normalHurtbox = typeof(Player).GetField("normalHurtbox", BindingFlags.NonPublic | BindingFlags.Instance);
+    private static FieldInfo Player_normalHitbox = typeof(Player).GetField(nameof(Player.normalHitbox), BindingFlags.NonPublic | BindingFlags.Instance)!;
+    private static FieldInfo Player_duckHitbox = typeof(Player).GetField(nameof(Player.duckHitbox), BindingFlags.NonPublic | BindingFlags.Instance)!;
+    private static FieldInfo Player_normalHurtbox = typeof(Player).GetField(nameof(Player.normalHurtbox), BindingFlags.NonPublic | BindingFlags.Instance)!;
 }

@@ -242,6 +242,19 @@ public class EntityBatcher : Entity {
         GameplayRenderer.Begin();
     }
 
+    internal static void RenderCapturedEntities(List<Entity> affectedEntities, int? requiredDepth, bool consumeStylegrounds, bool makeEntitiesInvisible) {
+        foreach (var item in affectedEntities) {
+            if (item is not null && item.Scene is not null 
+                                 && (requiredDepth is null || item.Depth == requiredDepth) 
+                                 && (makeEntitiesInvisible || item.Visible)) {
+                var v = item.Visible;
+                item.Visible = true;
+                item.Render();
+                item.Visible = v;
+            }
+        }
+    }
+    
     public static void Apply(List<Entity> AffectedEntities, string Shader, Dictionary<string, object> ShaderParameters, int? requiredDepth, bool consumeStylegrounds, bool makeEntitiesInvisible) {
         Draw.SpriteBatch.End();
 
@@ -259,17 +272,7 @@ public class EntityBatcher : Entity {
 
         GameplayRenderer.Begin();
 
-        foreach (var item in AffectedEntities) {
-            if (item is not null && item.Scene is not null 
-                && (requiredDepth is null || item.Depth == requiredDepth) 
-                && (makeEntitiesInvisible || item.Visible)) {
-                var v = item.Visible;
-                item.Visible = true;
-                item.Render();
-                item.Visible = v;
-            }
-
-        }
+        RenderCapturedEntities(AffectedEntities, requiredDepth, consumeStylegrounds, makeEntitiesInvisible);
 
         GameplayRenderer.End();
 

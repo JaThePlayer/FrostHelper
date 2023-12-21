@@ -64,51 +64,12 @@ public class RainbowTilesetController : Entity {
         return false;
     }
 
-    // OLD
-    private static void TileGrid_RenderAt1(On.Monocle.TileGrid.orig_RenderAt orig, TileGrid self, Vector2 position) {
-        if (self.Scene is null) {
-            return;
-        }
-
-        var controller = self.Scene.Tracker.SafeGetEntity<RainbowTilesetController>();
-        if (controller is null || self.Alpha <= 0f) {
-            orig(self, position);
-            return;
-        }
-
-        ColorHelper.SetGetHueScene(Engine.Scene);
-
-        Rectangle clippedRenderTiles = self.GetClippedRenderTiles();
-
-        int tileWidth = self.TileWidth;
-        int tileHeight = self.TileHeight;
-
-        Color color = self.Color * self.Alpha;
-        Vector2 renderPos = new Vector2(position.X + clippedRenderTiles.Left * tileWidth, position.Y + clippedRenderTiles.Top * tileHeight);
-        for (int i = clippedRenderTiles.Left; i < clippedRenderTiles.Right; i++) {
-            for (int j = clippedRenderTiles.Top; j < clippedRenderTiles.Bottom; j++) {
-                MTexture mtexture = self.Tiles[i, j];
-                if (mtexture != null) {
-                    Draw.SpriteBatch.Draw(mtexture.Texture.Texture, renderPos, mtexture.ClipRect,
-                        color: contains(controller.TilesetTextures, mtexture.Parent)
-                        ? ColorHelper.GetHue(renderPos) * self.Alpha
-                        : color
-                    );
-                }
-                renderPos.Y += tileHeight;
-            }
-            renderPos.X += tileWidth;
-            renderPos.Y = position.Y + clippedRenderTiles.Top * tileHeight;
-        }
-    }
-
     [OnUnload]
     public static void Unload() {
         if (!_loadedHooks)
             return;
         _loadedHooks = false;
 
-        On.Monocle.TileGrid.RenderAt -= TileGrid_RenderAt1;
         IL.Monocle.TileGrid.RenderAt -= TileGrid_RenderAt;
     }
     #endregion
@@ -125,21 +86,19 @@ public class RainbowTilesetController : Entity {
         Tag = Tags.Persistent;
 
         if (!all) {
-            var TilesetIDs = FrostModule.GetCharArrayFromCommaSeparatedList(data.Attr("tilesets"));
+            var tilesetIDs = FrostModule.GetCharArrayFromCommaSeparatedList(data.Attr("tilesets"));
 
-            TilesetTextures = new MTexture[TilesetIDs.Length];
+            TilesetTextures = new MTexture[tilesetIDs.Length];
             for (int i = 0; i < TilesetTextures.Length; i++) {
-                TilesetTextures[i] = autotiler.GenerateMap(new VirtualMap<char>(new char[,] { { TilesetIDs[i] } }), true).TileGrid.Tiles[0, 0].Parent;
+                TilesetTextures[i] = autotiler.GenerateMap(new VirtualMap<char>(new char[,] { { tilesetIDs[i] } }), true).TileGrid.Tiles[0, 0].Parent;
             }
         } else {
-            // Autotiler.lookup is Dictionary<char, Autotiler.TerrainType>
-            // Autotiler.TerrainType is private, let's do some trickery
-            var autotilerLookupKeys = (Autotiler_lookup.GetValue(autotiler) as IDictionary)!.Keys;
+            var autotilerLookupKeys = autotiler.lookup;
             TilesetTextures = new MTexture[autotilerLookupKeys.Count];
             var enumerator = autotilerLookupKeys.GetEnumerator();
             for (int i = 0; i < TilesetTextures.Length; i++) {
                 enumerator.MoveNext();
-                TilesetTextures[i] = autotiler.GenerateMap(new VirtualMap<char>(new char[,] { { (char) enumerator.Current } }), true).TileGrid.Tiles[0, 0].Parent;
+                TilesetTextures[i] = autotiler.GenerateMap(new VirtualMap<char>(new[,] { { enumerator.Current.Key } }), true).TileGrid.Tiles[0, 0].Parent;
             }
         }
     }
@@ -155,7 +114,4 @@ public class RainbowTilesetController : Entity {
             }
         }
     }
-
-    // Dictionary<char, Autotiler.TerrainType>
-    private static FieldInfo Autotiler_lookup = typeof(Autotiler).GetField("lookup", BindingFlags.NonPublic | BindingFlags.Instance);
 }

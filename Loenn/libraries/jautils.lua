@@ -94,36 +94,6 @@ function jautils.addAll(addTo, toAddTable, insertLoc)
 end
 
 --[[
-    RYSY-accelerated
-]]
-
--- returns an iterator that returns all entities of a certain SID in the room
--- accelerated in Rysy
-function jautils.entitiesWithSID(room, typeName)
-    if RYSY then
-        return ipairs(RYSY.entitiesWithSID(room, typeName))
-    end
-
-    local function iter(tbl, i)
-        ::start::
-        i = i + 1
-        local v = tbl[i]
-        if v==nil then
-            return
-        end
-
-        if v._name ~= typeName then
-            goto start
-        end
-
-        return i, v
-    end
-
-    -- return iterator function, table, and starting point
-    return iter, room.entities, 0
-end
-
---[[
     PLACEMENTS
 ]]
 

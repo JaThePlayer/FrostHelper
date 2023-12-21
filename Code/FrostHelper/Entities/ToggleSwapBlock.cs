@@ -301,7 +301,9 @@ public class ToggleSwapBlock : Solid {
 
     private EventInstance moveSfx;
 
+#pragma warning disable CS0649 // Field is never assigned to, and will always have its default value
     private EventInstance returnSfx;
+#pragma warning restore CS0649 // Field is never assigned to, and will always have its default value
 
     private DisplacementRenderer.Burst burst;
 

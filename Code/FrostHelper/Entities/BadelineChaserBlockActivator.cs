@@ -29,8 +29,6 @@ public class BadelineChaserBlockActivator : Solid {
         }
     }
 
-    bool lastState;
-
     public Sprite Emblem;
 
     /// <summary>

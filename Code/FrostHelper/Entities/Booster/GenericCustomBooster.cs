@@ -17,9 +17,9 @@ namespace FrostHelper.Entities.Boosters {
             IL.Celeste.Player.OnBoundsH += modRedDashState;
             IL.Celeste.Player.OnBoundsV += modRedDashState;
             IL.Celeste.DashBlock.OnDashed += modRedDashStateDashBlock;
-            FrostModule.RegisterILHook(new ILHook(typeof(Player).GetProperty("DashAttacking", BindingFlags.Instance | BindingFlags.Public).GetGetMethod(true), modRedDashState));
-            FrostModule.RegisterILHook(new ILHook(typeof(Player).GetMethod("CallDashEvents", BindingFlags.NonPublic | BindingFlags.Instance), modCallDashEvents));
-            FrostModule.RegisterILHook(new ILHook(typeof(Player).GetMethod("orig_WindMove", BindingFlags.NonPublic | BindingFlags.Instance), modBoosterState));
+            FrostModule.RegisterILHook(new ILHook(typeof(Player).GetProperty("DashAttacking", BindingFlags.Instance | BindingFlags.Public)!.GetGetMethod(true)!, modRedDashState));
+            FrostModule.RegisterILHook(new ILHook(typeof(Player).GetMethod("CallDashEvents", BindingFlags.NonPublic | BindingFlags.Instance)!, modCallDashEvents));
+            FrostModule.RegisterILHook(new ILHook(typeof(Player).GetMethod("orig_WindMove", BindingFlags.NonPublic | BindingFlags.Instance)!, modBoosterState));
 
             // eliminate a lag spike when first leaving a booster
             ChangeDashSpeedOnce.LoadIfNeeded();
@@ -57,13 +57,21 @@ namespace FrostHelper.Entities.Boosters {
 
             if (cursor.TryGotoNext(MoveType.After, instr => instr.MatchStfld<Player>("calledDashEvents"))) {
                 cursor.Emit(OpCodes.Ldarg_0);
-                cursor.EmitDelegate((Player self) => {
-                    if (GetBoosterThatIsBoostingPlayer(self) is { BoostingPlayer: true }) {
-                        FrostModule.player_calledDashEvents.SetValue(self, false);
+                cursor.EmitDelegate(ShouldCallDashEvents);
 
-                        self.SetAttached<GenericCustomBooster>(null!);
-                        return false;
-                    }
+                // if delegateOut == false: return
+                cursor.Emit(OpCodes.Brtrue, cursor.Instrs[cursor.Index]);
+                cursor.Emit(OpCodes.Ret);
+            }
+        }
+
+        private static bool ShouldCallDashEvents(Player self) {
+            if (GetBoosterThatIsBoostingPlayer(self) is { BoostingPlayer: true }) {
+                FrostModule.player_calledDashEvents.SetValue(self, false);
+
+                self.SetAttached<GenericCustomBooster>(null!);
+                return false;
+            }
 
 #if OLD_YELLOW_BOOSTER
                 foreach (YellowBoosterOLD b in self.Scene.Tracker.GetEntities<YellowBoosterOLD>()) {
@@ -79,30 +87,25 @@ namespace FrostHelper.Entities.Boosters {
                     }
                 }
 #endif
-                    foreach (GenericCustomBooster b in self.Scene.Tracker.SafeGetEntities<GenericCustomBooster>()) {
-                        if (b.StartedBoosting/* && b.CollideCheck(self)*/) {
-                            b.PlayerBoosted(self, self.DashDir);
-                            return false;
-                        }
-                        if (b.BoostingPlayer && GetBoosterThatIsBoostingPlayer(self) == b) {
-                            return false;
-                        }
-                    }
+            foreach (GenericCustomBooster b in self.Scene.Tracker.SafeGetEntities<GenericCustomBooster>()) {
+                if (b.StartedBoosting /* && b.CollideCheck(self)*/) {
+                    b.PlayerBoosted(self, self.DashDir);
+                    return false;
+                }
 
-                    return true;
-                });
-
-                // if delegateOut == false: return
-                cursor.Emit(OpCodes.Brtrue, cursor.Instrs[cursor.Index]);
-                cursor.Emit(OpCodes.Ret);
+                if (b.BoostingPlayer && GetBoosterThatIsBoostingPlayer(self) == b) {
+                    return false;
+                }
             }
+
+            return true;
         }
 
         static void modBoosterState(ILContext il) {
             ILCursor cursor = new ILCursor(il);
             while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdcI4(Player.StBoost) && instr.Previous.MatchCallvirt<StateMachine>("get_State"))) {
                 cursor.Emit(OpCodes.Ldarg_0); // this
-                cursor.Emit(OpCodes.Call, typeof(FrostModule).GetMethod(nameof(FrostModule.GetBoosterState)));
+                cursor.EmitCall(FrostModule.GetBoosterState);
             }
         }
         #endregion
@@ -403,7 +406,7 @@ namespace FrostHelper.Entities.Boosters {
             Level level = player.SceneAs<Level>();
             bool doNotDropTheo = false;
             if (level != null) {
-                MapMetaModeProperties meta = level.Session.MapData.GetMeta();
+                MapMetaModeProperties meta = level.Session.MapData.Meta;
                 doNotDropTheo = (meta != null) && meta.TheoInBubble.GetValueOrDefault();
             }
 
@@ -613,7 +616,7 @@ namespace FrostHelper.Entities.Boosters {
             player.MoveToY(vector.Y, null);
             GravityHelperIntegration.EndOverride?.Invoke();
 
-            if ((Input.Dash.Pressed || Input.CrouchDashPressed) && booster.CanFastbubble()) {
+            if (booster is { } && (Input.Dash.Pressed || Input.CrouchDashPressed) && booster.CanFastbubble()) {
                 player.demoDashed = Input.CrouchDashPressed;
                 Input.Dash.ConsumePress();
                 Input.CrouchDash.ConsumePress();
@@ -625,7 +628,7 @@ namespace FrostHelper.Entities.Boosters {
 
         public static void BoostEnd(Entity e) {
             Player player = (e as Player)!;
-            Vector2 boostTarget = (Vector2) FrostModule.player_boostTarget.GetValue(player);
+            Vector2 boostTarget = player.boostTarget;
             Vector2 vector = (boostTarget - player.Collider.Center).Floor();
 
             GravityHelperIntegration.BeginOverride?.Invoke();

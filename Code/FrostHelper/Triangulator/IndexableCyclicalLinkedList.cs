@@ -1,4 +1,7 @@
-﻿namespace Triangulator {
+﻿#pragma warning disable CS8602 // Dereference of a possibly null reference.
+#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
+#pragma warning disable CS8603 // Possible null reference return.
+namespace Triangulator {
     // https://github.com/nickgravelyn/Triangulator/blob/master/Triangulator/Internal%20Classes/IndexableCyclicalLinkedList.cs
     /// <summary>
     /// Implements a LinkedList that is both indexable as well as cyclical. Thus

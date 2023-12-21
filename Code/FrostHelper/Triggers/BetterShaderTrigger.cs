@@ -4,9 +4,6 @@ using FrostHelper.ModIntegration;
 
 namespace FrostHelper;
 
-/// <summary>
-/// Should really be a part of shader helper
-/// </summary>
 [CustomEntity("FrostHelper/BetterShaderTrigger", "FrostHelper/ScreenwideShaderTrigger")]
 [Tracked]
 public class BetterShaderTrigger : Trigger {
@@ -87,8 +84,6 @@ public class BetterShaderTrigger : Trigger {
     }
 
     public static void SimpleApply(RenderTarget2D source, RenderTargetBinding[] targets, Effect eff) {
-        ShaderHelperIntegration.ApplyStandardParameters(eff);
-
         Engine.Instance.GraphicsDevice.SetRenderTargets(targets);
 
 

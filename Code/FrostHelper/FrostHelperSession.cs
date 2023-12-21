@@ -54,7 +54,7 @@ public class FrostHelperSession : EverestModuleSession {
             KeyStartPos = keyStartPos;
         }
 
-        public override bool Equals(object y) {
+        public override bool Equals(object? y) {
             if (y is null && this is null)
                 return true;
 

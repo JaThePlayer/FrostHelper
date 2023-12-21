@@ -42,32 +42,36 @@ public class ForcedFastfallTrigger : Trigger {
     private static void Player_NormalUpdate(ILContext il) {
         var cursor = new ILCursor(il);
 
-        while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdcR4(160f))) {
+        while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdcR4(Player.MaxFall))) {
             cursor.Emit(OpCodes.Pop);
             cursor.Emit(OpCodes.Ldarg_0); // this
-            cursor.EmitDelegate((Player player) => {
-                return !IsForcedFastfall(player.Scene) ? 160f : 240f;
-            });
+            cursor.EmitDelegate(GetMaxFallSpeed);
             break;
         }
 
         while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchStloc(9))) {
             cursor.Emit(OpCodes.Ldarg_0); // this
-            cursor.EmitDelegate((Player player) => {
-                if (!IsForcedFastfall(player.Scene)) {
-                    float num3 = 160f;
-                    float num4 = 240f;
-                    if (player.SceneAs<Level>().InSpace) {
-                        num3 *= 0.6f;
-                        num4 *= 0.6f;
-                    }
-                    return num3 + (num4 - num3) * 0.5f;
-                } else {
-                    return 200f;
-                }
-            });
+            cursor.EmitDelegate(GetCurrentFallSpeed);
             cursor.Emit(OpCodes.Stloc_S, (byte) 9);
             break;
         }
+    }
+
+    private static float GetCurrentFallSpeed(Player player) {
+        if (IsForcedFastfall(player.Scene))
+            return Player.MaxFall + (Player.FastMaxFall - Player.MaxFall) * 0.5f; //200f;
+        
+        float maxFall = Player.MaxFall;
+        float fastMaxFall = Player.FastMaxFall;
+        if (player.SceneAs<Level>().InSpace) {
+            maxFall *= 0.6f;
+            fastMaxFall *= 0.6f;
+        }
+
+        return maxFall + (fastMaxFall - maxFall) * 0.5f;
+    }
+
+    private static float GetMaxFallSpeed(Player player) {
+        return !IsForcedFastfall(player.Scene) ? Player.MaxFall : Player.FastMaxFall;
     }
 }

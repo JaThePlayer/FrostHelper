@@ -1,4 +1,7 @@
-﻿namespace FrostHelper;
+﻿// This is a legacy class used for 1 (one) map, I don't really care about how horrible it is rn
+#pragma warning disable CL0004
+
+namespace FrostHelper;
 
 [CustomEntity("FrostHelper/ChronosTrigger")]
 public class ChronosTrigger : Trigger {
@@ -48,7 +51,7 @@ public class ChronosTrigger : Trigger {
         if ((display = player.Scene.Tracker.SafeGetEntity<ChronosDisplay>()) != null)
             display.RemoveSelf();
     }
-
+    
     private bool Player_UseRefill(On.Celeste.Player.orig_UseRefill orig, Player self, bool twoDashes) {
         if (Scene == null) {
             On.Celeste.Player.UseRefill -= Player_UseRefill;

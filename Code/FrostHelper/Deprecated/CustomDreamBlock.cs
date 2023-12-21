@@ -396,12 +396,13 @@ public class CustomDreamBlock : Solid {
         DynData<Player> data = new DynData<Player>(player);
         Input.Rumble(RumbleStrength.Light, RumbleLength.Medium);
         Vector2 position = player.Position;
-        player.Speed = player.DashDir * data.Get<CustomDreamBlock>("customDreamBlock").DashSpeed;
+        player.Speed = player.DashDir * (data.Get<CustomDreamBlock>("customDreamBlock")?.DashSpeed ?? 1f);
         player.NaiveMove(player.Speed * Engine.DeltaTime);
-        float dreamDashCanEndTimer = data.Get<float>("dreamDashCanEndTimer");
-        if (dreamDashCanEndTimer > 0f) {
-            data.Set("dreamDashCanEndTimer", dreamDashCanEndTimer -= Engine.DeltaTime);
+        
+        if (player.dreamDashCanEndTimer > 0f) {
+            player.dreamDashCanEndTimer -= Engine.DeltaTime;
         }
+        
         CustomDreamBlock dreamBlock = player.CollideFirst<CustomDreamBlock>();
         if (dreamBlock == null) {
             if (DreamDashedIntoSolid(player)) {
@@ -414,7 +415,7 @@ public class CustomDreamBlock : Solid {
                     player.Die(Vector2.Zero, false, true);
                 }
             } else {
-                if (dreamDashCanEndTimer <= 0f) {
+                if (player.dreamDashCanEndTimer <= 0f) {
                     Celeste.Celeste.Freeze(0.05f);
                     bool flag5 = Input.Jump.Pressed && player.DashDir.X != 0f;
                     if (flag5) {
@@ -482,13 +483,14 @@ public class CustomDreamBlock : Solid {
     public static void DreamDashBegin(Entity e) {
         Player player = (e as Player)!;
         DynData<Player> data = new DynData<Player>(player);
-        SoundSource dreamSfxLoop = data.Get<SoundSource>("dreamSfxLoop");
-        bool flag = dreamSfxLoop == null;
-        if (flag) {
+        SoundSource dreamSfxLoop = player.dreamSfxLoop;
+
+        if (dreamSfxLoop == null) {
             dreamSfxLoop = new SoundSource();
             player.Add(dreamSfxLoop);
             data.Set("dreamSfxLoop", dreamSfxLoop);
         }
+        
         player.Speed = player.DashDir * 240f;
         player.TreatNaive = true;
         player.Depth = -12000;
@@ -513,7 +515,7 @@ public class CustomDreamBlock : Solid {
         }
         player.RefillStamina();
         player.TreatNaive = false;
-        CustomDreamBlock dreamBlock = data.Get<CustomDreamBlock>("customDreamBlock");
+        var dreamBlock = data.Get<CustomDreamBlock>("customDreamBlock");
         if (dreamBlock != null) {
             bool flag4 = player.DashDir.X != 0f;
             if (flag4) {

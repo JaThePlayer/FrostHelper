@@ -8,6 +8,7 @@ public static class Extensions {
     public static int ToIntHex(this string s) => int.Parse(s, NumberStyles.HexNumber);
     public static uint ToUInt(this string s) => Convert.ToUInt32(s, CultureInfo.InvariantCulture);
     public static uint ToUIntHex(this string s) => uint.Parse(s, NumberStyles.HexNumber);
+    public static uint ToUIntHex(this ReadOnlySpan<char> s) => uint.Parse(s, NumberStyles.HexNumber);
     public static short ToShort(this string s) => Convert.ToInt16(s, CultureInfo.InvariantCulture);
     public static ushort ToUShort(this string s) => Convert.ToUInt16(s, CultureInfo.InvariantCulture);
     public static byte ToByte(this string s) => Convert.ToByte(s, CultureInfo.InvariantCulture);
@@ -194,4 +195,13 @@ public static class Extensions {
     }
 
     public static Point ToPoint(this Vector2 v) => new((int) v.X, (int)v.Y);
+
+    /// <summary>
+    /// Calls ToList on the given enumerable, unless it is already a List, in which case this is a no-op.
+    /// As such, it does not guarantee that the returned list is a new list.
+    /// </summary>
+    public static List<T> ToListIfNotList<T>(this IEnumerable<T> self) => self switch {
+        List<T> list => list,
+        var other => other.ToList()
+    };
 }

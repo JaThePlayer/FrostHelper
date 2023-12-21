@@ -682,6 +682,7 @@ triggers.FrostHelper/StylegroundBlendModeTrigger.attributes.description.colorWri
 style.effects.FrostHelper/ShaderWrapper.name=Shader Wrapper
 style.effects.FrostHelper/ShaderWrapper.description.wrappedTag=The tag which will be affected by this wrapper.
 style.effects.FrostHelper/ShaderWrapper.description.shader=The path to the shader to use with this backdrop, relative to the Effects/ folder
+style.effects.FrostHelper/ShaderWrapper.description.shaderFlag=Flag that needs to be enabled for the shader to be rendered.\nBegin the flag with ! to invert the condition.\nIf the shader doesn't get rendered, the affected stylegrounds will be rendered normally.\nIf VivHelper is an everest.yaml dependency, you can use !VH_Photosensitive to only run the shader if photosensitive mode is disabled.
 
 # other
 ui.fh.attachGroup.tooltip=Assigns this entity a new group that's not yet used in this room

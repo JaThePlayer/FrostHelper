@@ -31,7 +31,7 @@ public class GroupedMoverAttacher : Entity {
         if (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdfld<EntityList>("adding") &&
                                                         instr.Next.MatchCallvirt(out var reference) && reference.Name == "Clear")) {
             cursor.Emit(OpCodes.Ldarg_0); // this
-            cursor.Emit(OpCodes.Ldfld, typeof(EntityList).GetField("toAwake", BindingFlags.NonPublic | BindingFlags.Instance));
+            cursor.Emit(OpCodes.Ldfld, typeof(EntityList).GetField(nameof(EntityList.toAwake), BindingFlags.NonPublic | BindingFlags.Instance)!);
             cursor.Emit(OpCodes.Ldarg_0); // this
             cursor.EmitCall(PreAwake);
         }

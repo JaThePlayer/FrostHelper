@@ -1,7 +1,7 @@
 ﻿namespace FrostTempleHelper.Entities.azcplo1k;
 
 [CustomEntity("noperture/portalSurface")]
-class uadzca : Solid {
+class PortalSurface : Solid {
     public string ColorStr;
     public Color Color;
 
@@ -13,7 +13,7 @@ class uadzca : Solid {
         ["Green"] = new Color(0.3f, 1.0f, 0.3f, 1.0f),
     };
 
-    public uadzca(EntityData data, Vector2 offset) : base(data.Position + offset, data.Width, data.Height, true) {
+    public PortalSurface(EntityData data, Vector2 offset) : base(data.Position + offset, data.Width, data.Height, true) {
         ColorStr = data.Attr("color", "Blue");
         Color = Colors[ColorStr];
     }

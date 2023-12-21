@@ -1,26 +1,24 @@
 ﻿using Celeste.Mod.Helpers;
 using FrostHelper.Helpers;
-using System.Diagnostics;
 
 namespace FrostHelper;
 
 public static class TypeHelper {
-    private static Dictionary<string, Type>? entityNameToType = null;
+    private static Dictionary<string, Type>? entityNameToType;
 
     [OnLoad]
     public static void Load() {
-        On.Celeste.Mod.Everest.Loader.LoadModAssembly += Loader_LoadModAssembly;
+        AppDomain.CurrentDomain.AssemblyLoad += CurrentDomainOnAssemblyLoad;
+    }
+
+    private static void CurrentDomainOnAssemblyLoad(object? sender, AssemblyLoadEventArgs args) {
+        // Clear the cache if an assembly is loaded/hot reloaded
+        entityNameToType = null!;
     }
 
     [OnUnload]
     public static void Unload() {
-        On.Celeste.Mod.Everest.Loader.LoadModAssembly -= Loader_LoadModAssembly;
-    }
-
-    // Clear the cache if a mod is loaded/hot reloaded
-    private static void Loader_LoadModAssembly(On.Celeste.Mod.Everest.Loader.orig_LoadModAssembly orig, EverestModuleMetadata meta, Assembly asm) {
-        orig(meta, asm);
-        entityNameToType = null!;
+        AppDomain.CurrentDomain.AssemblyLoad -= CurrentDomainOnAssemblyLoad;
     }
 
     public static Type EntityNameToType(string entityName) {

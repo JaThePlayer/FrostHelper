@@ -1,13 +1,13 @@
 ﻿namespace FrostHelper;
 
 public static class CustomSpriteHelper {
-    private static Dictionary<string, SpriteData> cache = new();
+    private static readonly Dictionary<string, SpriteData> Cache = new();
 
     /// <summary>
     /// Creates a <see cref="Sprite"/> like <see cref="SpriteBank.Create(string)"/>, except all the sprites are taken from <paramref name="customDirectory"/> instead of the path specified in Spites.xml
     /// </summary>
     public static Sprite CreateCustomSprite(string id, string customDirectory) {
-        if (cache.TryGetValue(customDirectory, out SpriteData cachedData)) {
+        if (Cache.TryGetValue(customDirectory, out var cachedData)) {
             return cachedData.Create();
         }
 
@@ -18,7 +18,7 @@ public static class CustomSpriteHelper {
             customData.Add(source.XML, customDirectory);
         }
 
-        cache[customDirectory] = customData;
+        Cache[customDirectory] = customData;
         return customData.Create();
     }
 }

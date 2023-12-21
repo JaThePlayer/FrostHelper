@@ -35,6 +35,7 @@ function dust.sprite(room, entity)
     local baseOutlineSprite = drawableSpriteStruct.fromInternalTexture(baseOutlineTexture, entity)
 
     baseOutlineSprite:setColor(jautils.getColors(entity.edgeColors or "f25a10,ff0000,f21067")[1] or dustEdgeColor)
+    baseOutlineSprite.depth = -49
     baseSprite:setColor(rainbow and jautils.getRainbowHue(room, entity.x, entity.y) or (entity.tint or "ffffff"))
 
     return {

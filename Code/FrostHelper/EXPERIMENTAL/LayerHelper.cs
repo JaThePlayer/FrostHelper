@@ -87,7 +87,7 @@ public class LayerTracker : Entity {
     public void Track(Entity entity, EntityData from) => Track(entity, from.Int("_editorLayer", 0));
 
     public void Track(Entity entity, int layer) {
-        if (Layers.TryGetValue(layer, out List<Entity> layerEntities)) {
+        if (Layers.TryGetValue(layer, out var layerEntities)) {
             layerEntities.Add(entity);
         } else {
             Layers[layer] = new() { entity };
