@@ -4,7 +4,8 @@ using NLua;
 namespace FrostHelper.Entities;
 
 [CustomEntity("FrostHelper/LuaBoss")]
-internal sealed class LuaBadelineBoss : FinalBoss {
+[Tracked]
+public sealed class LuaBadelineBoss : FinalBoss {
     #region Hooks
     private static bool _HooksLoaded;
 
@@ -68,10 +69,22 @@ internal sealed class LuaBadelineBoss : FinalBoss {
     private EntityData EntityData;
     private LuaTable LuaCtx;
 
+    public Guid Id { get; private set; }
+
     private List<Entity> CreatedShots { get; set; } = new();
 
     private List<Coroutine> CreatedCoroutines { get; set; } = new();
 
+    // internal lua api
+    public static LuaBadelineBoss? GetById(Guid id) {
+        foreach (LuaBadelineBoss boss in Engine.Scene.Tracker.SafeGetEntities<LuaBadelineBoss>()) {
+            if (boss.Id == id)
+                return boss;
+        }
+
+        return null;
+    }
+    
     public LuaBadelineBoss(EntityData e, Vector2 offset) : base(e, offset) {
         LoadHooksIfNeeded();
 
@@ -79,11 +92,13 @@ internal sealed class LuaBadelineBoss : FinalBoss {
         patternIndex = -1;
         canChangeMusic = false;
         dialog = false;
+        Id = Guid.NewGuid();
 
         Filename = e.Attr("filename");
 
         LuaCtx = LuaHelper.DictionaryToLuaTable(new() {
-            ["self"] = this
+            ["self"] = this,
+            ["selfId"] = Id,
         });
 
         UpdateLuaCtx();

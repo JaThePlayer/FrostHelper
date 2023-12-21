@@ -41,8 +41,9 @@ local function customBeams()
             angle = 270
         },
         {
-            angle = 270+45
+            angle = 315
         })
+        wait(0.3)
     end
 end
 

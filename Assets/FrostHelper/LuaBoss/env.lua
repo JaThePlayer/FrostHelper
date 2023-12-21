@@ -5,8 +5,15 @@ local celesteMod = celeste.mod
 local engine = require("#monocle.engine")
 local fhLuaHelper = require("#FrostHelper.Helpers.LuaHelper")
 local fhNotifHelper = require("#FrostHelper.Helpers.NotificationHelper")
+local fhLuaBossType = require("#FrostHelper.Entities.LuaBadelineBoss")
 
 local helpers = {}
+
+function helpers.getBoss()
+    local boss = fhLuaBossType.GetById(selfId)
+    self = boss
+    return boss
+end
 
 --- Pause code exection for duration seconds, or waits for a C# IEnumerator to finish.
 function helpers.wait(duration)
@@ -26,7 +33,7 @@ function helpers.shoot(...)
     local allShots = {...}
 
     for _, args in ipairs(allShots) do
-        self:Shoot(args)
+        helpers.getBoss():Shoot(args)
     end
 end
 
@@ -34,7 +41,7 @@ function helpers.shootAt(location, ...)
     local allShots = {...}
 
     for _, args in ipairs(allShots) do
-        self:ShootAt(location, args)
+        helpers.getBoss():ShootAt(location, args)
     end
 end
 
@@ -42,23 +49,23 @@ function helpers.beam(...)
     local allBeams = {...}
 
     if #allBeams == 1 then
-        helpers.wait(self:Beam(allBeams[1]))
+        helpers.wait(helpers.getBoss():Beam(allBeams[1]))
         return
     end
 
     for i, beamArgs in ipairs(allBeams) do
         if i == #allBeams then
-            helpers.wait(self:Beam(beamArgs))
+            helpers.wait(helpers.getBoss():Beam(beamArgs))
         else
             helpers.startCoroutine(function ()
-                helpers.wait(self:Beam(beamArgs))
+                helpers.wait(helpers.getBoss():Beam(beamArgs))
             end)
         end
     end
 end
 
 function helpers.beginCharge()
-   self:StartShootCharge()
+    helpers.getBoss():StartShootCharge()
 end
 
 function helpers.shatterSpinners(args)
@@ -82,11 +89,11 @@ function helpers.shatterSpinners(args)
         args.types = { args.types }
     end
 
-    self:ShatterSpinners(args)
+    helpers.getBoss():ShatterSpinners(args)
 end
 
 function helpers.startCoroutine(func)
-    self:StartCoroutine(func)
+    helpers.getBoss():StartCoroutine(func)
 end
 
 function helpers.vector2(x, y)
