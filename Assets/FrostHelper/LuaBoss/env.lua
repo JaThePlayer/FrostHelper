@@ -10,6 +10,7 @@ local fhLuaBossType = require("#FrostHelper.Entities.LuaBadelineBoss")
 local helpers = {}
 
 function helpers.getBoss()
+    -- get the boss by unique id each time, as otherwise savestates make lua point to an old boss instance.
     local boss = fhLuaBossType.GetById(selfId)
     self = boss
     return boss
@@ -24,9 +25,9 @@ function helpers.log(message, tag)
     celesteMod.logger.log(celesteMod.LogLevel.Info, tag or "FrostHelper.CustomBoss", tostring(message))
 end
 
--- Shows an in-game message that also get logged to the console, for debugging.
+-- Shows an in-game message that also gets logged to the console, for debugging.
 function helpers.notify(message)
-    fhNotifHelper.Notify(message)
+    fhNotifHelper.NotifyInfo(tostring(message))
 end
 
 function helpers.shoot(...)
@@ -122,6 +123,11 @@ end
 -- @treturn bool The state of the flag.
 function helpers.getFlag(flag)
     return engine.Scene.Session:GetFlag(flag)
+end
+
+---Seeds lua's math.random using the current session timer.
+function helpers.seedRandomWithSessionTime()
+    math.randomseed(helpers.getBoss().Scene.Session.Time)
 end
 
 --- Loads and returns the result of a Lua asset.

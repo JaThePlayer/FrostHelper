@@ -3,6 +3,8 @@ local vanillaPatterns = loadCelesteAsset("Assets/FrostHelper/LuaBoss/vanillaPatt
 
 local function customBeams()
     while true do
+        seedRandomWithSessionTime()
+        notify(math.random(1, 4))
         --[[
         beam()
         beam({

@@ -131,7 +131,6 @@ public class PlusOneRefill : Entity {
         if (oneUse) {
             RemoveSelf();
         }
-        yield break;
     }
     private Sprite sprite;
 

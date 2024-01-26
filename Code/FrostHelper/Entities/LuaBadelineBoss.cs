@@ -287,7 +287,7 @@ public sealed class LuaBadelineBoss : FinalBoss {
             }
         } else {
             NotificationHelper.Notify("No Types???");
-            types = new Type?[0];
+            types = Type.EmptyTypes;
         }
 
         LuaFunction? filterFunc = args.GetOrDefault<LuaFunction?>("filter", null);
@@ -349,6 +349,112 @@ public sealed class LuaBadelineBoss : FinalBoss {
 
         bool ShouldSkip(Entity entity) => filterFunc?.Call(entity) is [not true, ..];
     }
+
+    /*
+    public IEnumerator AttractPlayer(LuaTable? args = null) {
+        var player = Scene.Tracker.GetEntity<Player>();
+        
+        if (player is { Dead: false })
+            player.StartAttract(Center + Vector2.UnitY * 4f);
+        float timer = 0.15f;
+        while (player is { Dead: false, AtAttractTarget: false })
+        {
+            yield return null;
+            timer -= Engine.DeltaTime;
+        }
+      
+        if (timer > 0.0)
+            yield return timer;
+        
+        foreach (ReflectionTentacles entity in Scene.Tracker.GetEntities<ReflectionTentacles>())
+            entity.Retreat();
+      
+        if (player != null)
+        {
+            Celeste.Celeste.Freeze(0.1f);
+            Engine.TimeRate = !lastHit ? 0.75f : 0.5f;
+            Input.Rumble(RumbleStrength.Strong, RumbleLength.Medium);
+        }
+      
+        PushPlayer(player);
+        
+        level.Shake();
+    }
+    
+    public IEnumerator LuaMoveToNode(LuaTable? args = null) {
+        var nodeIdx = args.GetIntOrNull("nodeIdx");
+        //var lastHit = args.
+      if (lastHit)
+      {
+        Audio.SetMusicParam("boss_pitch", 1f);
+        Tween tween = Tween.Create(Tween.TweenMode.Oneshot, duration: 0.3f, start: true);
+        tween.OnUpdate = t => Glitch.Value = 0.6f * t.Eased;
+        Add(tween);
+      }
+      else
+      {
+        Tween tween = Tween.Create(Tween.TweenMode.Oneshot, duration: 0.3f, start: true);
+        tween.OnUpdate = t => Glitch.Value = (float) (0.5 * (1.0 - t.Eased));
+        Add(tween);
+      }
+      
+      //AttractPlayer goes here
+
+      yield return 0.05f;
+      
+      for (float direction = 0.0f; direction < 6.2831854820251465; direction += 0.17453292f)
+      {
+        Vector2 position = Center + Sprite.Position + Calc.AngleToVector(direction + Calc.Random.Range(-1f * (float) Math.PI / 90f, (float) Math.PI / 90f), Calc.Random.Range(16, 20));
+        level.Particles.Emit(P_Burst, position, direction);
+      }
+      yield return 0.05f;
+      
+      Audio.SetMusicParam("boss_pitch", 0.0f);
+      float from1 = Engine.TimeRate;
+      Tween tween1 = Tween.Create(Tween.TweenMode.Oneshot, duration: 0.35f / Engine.TimeRateB, start: true);
+      tween1.UseRawDeltaTime = true;
+      tween1.OnUpdate = t =>
+      {
+          if (bossBg != null && bossBg.Alpha < (double) t.Eased)
+              bossBg.Alpha = t.Eased;
+          Engine.TimeRate = MathHelper.Lerp(from1, 1f, t.Eased);
+          if (!lastHit)
+              return;
+          Glitch.Value = (float) (0.60000002384185791 * (1.0 - t.Eased));
+      };
+      Add(tween1);
+      yield return 0.2f;
+      
+      Vector2 from2 = Position;
+      Vector2 to = nodes[nodeIndex];
+      float duration = Vector2.Distance(from2, to) / 600f;
+      float dir = (to - from2).Angle();
+      Tween tween2 = Tween.Create(Tween.TweenMode.Oneshot, Ease.SineInOut, duration, true);
+      tween2.OnUpdate = t =>
+      {
+        Position = Vector2.Lerp(from2, to, t.Eased);
+        if (t.Eased < 0.10000000149011612 || t.Eased > 0.89999997615814209 || !Scene.OnInterval(0.02f))
+          return;
+        TrailManager.Add(this, Player.NormalHairColor, 0.5f, false, false);
+        level.Particles.Emit(Player.P_DashB, 2, Center, Vector2.One * 3f, dir);
+      };
+      tween2.OnComplete = t =>
+      {
+        Sprite.Play("recoverHit");
+        Moving = false;
+        Collidable = true;
+        Player entity = Scene.Tracker.GetEntity<Player>();
+        if (entity != null)
+        {
+          facing = Math.Sign(entity.X - X);
+          if (facing == 0)
+            facing = -1;
+        }
+        StartAttacking();
+        floatSine.Reset();
+      };
+      Add(tween2);
+    }*/
     #endregion
 }
 

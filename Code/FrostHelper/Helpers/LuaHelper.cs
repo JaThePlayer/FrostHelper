@@ -101,6 +101,21 @@ public static class LuaHelper {
 
         return null;
     }
+    
+    public static int? GetIntOrNull(this LuaTable? table, object key) {
+        if (table is null)
+            return null;
+
+        if (table[key] is { } obj) {
+            return obj switch {
+                double d => (int) d,
+                long l => (int)l,
+                _ => null,
+            };
+        }
+
+        return null;
+    }
 
     public static T GetOrDefault<T>(this LuaTable? table, object key, T def) {
         if (table is null)

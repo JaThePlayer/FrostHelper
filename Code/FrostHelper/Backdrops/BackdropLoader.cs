@@ -21,6 +21,8 @@ public static class BackdropLoader {
             "FrostHelper/EntityBackdrop" => new EntityBackdrop(child),
             "FrostHelper/ShaderWrapper" => new ShaderWrapperBackdrop(child),
             "FrostHelper/ShaderFolder" => ShaderFolder.CreateWithInnerStyles(map, child),
+            "FrostHelper/ShaderWrapperColorList" => new ColorListShaderWrapper(child),
+            "FrostHelper/ColorgradeWrapper" => new ColorgradeWrapper(child),
             _ => null!,
         };
     }

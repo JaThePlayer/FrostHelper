@@ -684,6 +684,16 @@ style.effects.FrostHelper/ShaderWrapper.description.wrappedTag=The tag which wil
 style.effects.FrostHelper/ShaderWrapper.description.shader=The path to the shader to use with this backdrop, relative to the Effects/ folder
 style.effects.FrostHelper/ShaderWrapper.description.shaderFlag=Flag that needs to be enabled for the shader to be rendered.\nBegin the flag with ! to invert the condition.\nIf the shader doesn't get rendered, the affected stylegrounds will be rendered normally.\nIf VivHelper is an everest.yaml dependency, you can use !VH_Photosensitive to only run the shader if photosensitive mode is disabled.
 
+style.effects.FrostHelper/ShaderWrapperColorList.name=Shader Wrapper (Color List)
+style.effects.FrostHelper/ShaderWrapperColorList.description.wrappedTag=The tag which will be affected by this wrapper.
+style.effects.FrostHelper/ShaderWrapperColorList.description.shader=The path to the shader to use with this backdrop, relative to the Effects/ folder
+style.effects.FrostHelper/ShaderWrapperColorList.description.shaderFlag=Flag that needs to be enabled for the shader to be rendered.\nBegin the flag with ! to invert the condition.\nIf the shader doesn't get rendered, the affected stylegrounds will be rendered normally.\nIf VivHelper is an everest.yaml dependency, you can use !VH_Photosensitive to only run the shader if photosensitive mode is disabled.
+style.effects.FrostHelper/ShaderWrapperColorList.description.colors=Comma-seperated list of hex colors, which will be passed to the `Colors` uniform on the provided shader.
+
+style.effects.FrostHelper/ColorgradeWrapper.name=Colorgrade Wrapper
+style.effects.FrostHelper/ColorgradeWrapper.description.wrappedTag=The tag which will be affected by this wrapper.
+style.effects.FrostHelper/ColorgradeWrapper.description.colorgrade=The colorgrade to apply to the wrapped stylegrounds.
+
 # other
 ui.fh.attachGroup.tooltip=Assigns this entity a new group that's not yet used in this room
 ui.fh.attachGroup.name=Auto

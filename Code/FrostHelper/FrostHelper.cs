@@ -185,9 +185,6 @@ public class FrostModule : EverestModule {
     public override void Load() {
         typeof(API.API).ModInterop();
 
-        // Register new states
-        On.Celeste.Player.ctor += Player_ctor;
-
         // Custom dream blocks and feathers
         On.Celeste.Player.UpdateSprite += Player_UpdateSprite;
 
@@ -196,10 +193,51 @@ public class FrostModule : EverestModule {
         if (!Settings.HookLazyLoading) {
             AttributeHelper.InvokeAllWithAttribute(typeof(HookPreload));
         }
+        
+        Everest.Events.Player.OnRegisterStates += PlayerOnOnRegisterStates;
+    }
+
+    private void PlayerOnOnRegisterStates(Player self) {
+        // used for dream blocks, this runs in the ctor so let's do that
+        DynamicData.For(self).Set("lastDreamSpeed", 0f);
+
+        GenericCustomBooster.CustomBoostState = self.AddState("Custom Boost", GenericCustomBooster.BoostUpdate, GenericCustomBooster.BoostCoroutine, GenericCustomBooster.BoostBegin, GenericCustomBooster.BoostEnd);
+        GenericCustomBooster.CustomRedBoostState = self.AddState("Custom Red Boost", GenericCustomBooster.RedDashUpdate, GenericCustomBooster.RedDashCoroutine, GenericCustomBooster.RedDashBegin, GenericCustomBooster.RedDashEnd);
+#pragma warning disable CS0618 // Type or member is obsolete
+        CustomDreamDashState = self.AddState("Custom Dream Dash (Obsolete)", CustomDreamBlock.DreamDashUpdate, null!, CustomDreamBlock.DreamDashBegin, CustomDreamBlock.DreamDashEnd);
+#pragma warning restore CS0618 // Type or member is obsolete
+        
+        CustomFeather.CustomFeatherState = self.AddState("Custom Feather", CustomFeather.StarFlyUpdate, CustomFeather.CustomFeatherCoroutine, CustomFeather.CustomFeatherBegin, CustomFeather.CustomFeatherEnd);
+        HeldRefill.HeldDashState = self.AddState("Held Dash", HeldRefill.HeldDashUpdate, HeldRefill.HeldDashRoutine, HeldRefill.HeldDashBegin, HeldRefill.HeldDashEnd);
+        WASDMovementState.ID = self.AddState(WASDMovementState.GetTasToolsDisplayName(), WASDMovementState.Update, null!, WASDMovementState.Begin, WASDMovementState.End);
+        /*
+         DynamicData.For(self).Set("lastDreamSpeed", 0f);
+         // Let's define new states
+         // .AddState is defined in StateMachineExt
+ #if OLD_YELLOW_BOOSTER
+         YellowBoostState = self.StateMachine.AddState(YellowBoostUpdate, YellowBoostCoroutine, YellowBoostBegin, YellowBoostEnd);
+         ModIntegration.CelesteTASIntegration.RegisterState(YellowBoostState, "Yellow Boost");
+ #endif
+         GenericCustomBooster.CustomBoostState = self.StateMachine.AddState(GenericCustomBooster.BoostUpdate, GenericCustomBooster.BoostCoroutine, GenericCustomBooster.BoostBegin, GenericCustomBooster.BoostEnd);
+         GenericCustomBooster.CustomRedBoostState = self.StateMachine.AddState(GenericCustomBooster.RedDashUpdate, GenericCustomBooster.RedDashCoroutine, GenericCustomBooster.RedDashBegin, GenericCustomBooster.RedDashEnd);
+ #pragma warning disable CS0618 // Type or member is obsolete
+         CustomDreamDashState = self.StateMachine.AddState(CustomDreamBlock.DreamDashUpdate, null!, CustomDreamBlock.DreamDashBegin, CustomDreamBlock.DreamDashEnd);
+ #pragma warning restore CS0618 // Type or member is obsolete
+         CustomFeather.CustomFeatherState = self.StateMachine.AddState(CustomFeather.StarFlyUpdate, CustomFeather.CustomFeatherCoroutine, CustomFeather.CustomFeatherBegin, CustomFeather.CustomFeatherEnd);
+         HeldRefill.HeldDashState = self.StateMachine.AddState(HeldRefill.HeldDashUpdate, HeldRefill.HeldDashRoutine, HeldRefill.HeldDashBegin, HeldRefill.HeldDashEnd);
+         WASDMovementState.ID = self.StateMachine.AddState(WASDMovementState.Update, null!, WASDMovementState.Begin, WASDMovementState.End);
+
+         CelesteTASIntegration.RegisterState(GenericCustomBooster.CustomBoostState, "Custom Boost");
+         CelesteTASIntegration.RegisterState(GenericCustomBooster.CustomRedBoostState, "Custom Red Boost");
+         CelesteTASIntegration.RegisterState(CustomDreamDashState, "Custom Dream Dash (Obsolete)");
+         CelesteTASIntegration.RegisterState(CustomFeather.CustomFeatherState, "Custom Feather");
+         CelesteTASIntegration.RegisterState(HeldRefill.HeldDashState, "Held Dash");
+         CelesteTASIntegration.RegisterState(WASDMovementState.ID, WASDMovementState.GetTasToolsDisplayName());
+         */
     }
 
     public static List<Entity> CollideAll(Entity entity) {
-        List<Entity> collided = new List<Entity>();
+        List<Entity> collided = [];
         foreach (Entity e in entity.Scene.Entities) {
             if (entity.CollideCheck(e))
                 collided.Add(e);
@@ -245,32 +283,6 @@ public class FrostModule : EverestModule {
         }
     }
     #endregion
-
-    private static void Player_ctor(On.Celeste.Player.orig_ctor orig, Player self, Vector2 position, PlayerSpriteMode spriteMode) {
-        orig(self, position, spriteMode);
-        DynamicData.For(self).Set("lastDreamSpeed", 0f);
-        // Let's define new states
-        // .AddState is defined in StateMachineExt
-#if OLD_YELLOW_BOOSTER
-        YellowBoostState = self.StateMachine.AddState(YellowBoostUpdate, YellowBoostCoroutine, YellowBoostBegin, YellowBoostEnd);
-        ModIntegration.CelesteTASIntegration.RegisterState(YellowBoostState, "Yellow Boost");
-#endif
-        GenericCustomBooster.CustomBoostState = self.StateMachine.AddState(GenericCustomBooster.BoostUpdate, GenericCustomBooster.BoostCoroutine, GenericCustomBooster.BoostBegin, GenericCustomBooster.BoostEnd);
-        GenericCustomBooster.CustomRedBoostState = self.StateMachine.AddState(GenericCustomBooster.RedDashUpdate, GenericCustomBooster.RedDashCoroutine, GenericCustomBooster.RedDashBegin, GenericCustomBooster.RedDashEnd);
-#pragma warning disable CS0618 // Type or member is obsolete
-        CustomDreamDashState = self.StateMachine.AddState(CustomDreamBlock.DreamDashUpdate, null!, CustomDreamBlock.DreamDashBegin, CustomDreamBlock.DreamDashEnd);
-#pragma warning restore CS0618 // Type or member is obsolete
-        CustomFeather.CustomFeatherState = self.StateMachine.AddState(CustomFeather.StarFlyUpdate, CustomFeather.CustomFeatherCoroutine, CustomFeather.CustomFeatherBegin, CustomFeather.CustomFeatherEnd);
-        HeldRefill.HeldDashState = self.StateMachine.AddState(HeldRefill.HeldDashUpdate, HeldRefill.HeldDashRoutine, HeldRefill.HeldDashBegin, HeldRefill.HeldDashEnd);
-        WASDMovementState.ID = self.StateMachine.AddState(WASDMovementState.Update, null!, WASDMovementState.Begin, WASDMovementState.End);
-
-        CelesteTASIntegration.RegisterState(GenericCustomBooster.CustomBoostState, "Custom Boost");
-        CelesteTASIntegration.RegisterState(GenericCustomBooster.CustomRedBoostState, "Custom Red Boost");
-        CelesteTASIntegration.RegisterState(CustomDreamDashState, "Custom Dream Dash (Obsolete)");
-        CelesteTASIntegration.RegisterState(CustomFeather.CustomFeatherState, "Custom Feather");
-        CelesteTASIntegration.RegisterState(HeldRefill.HeldDashState, "Held Dash");
-        CelesteTASIntegration.RegisterState(WASDMovementState.ID, WASDMovementState.GetTasToolsDisplayName());
-    }
 
     public static FieldInfo player_boostTarget = typeof(Player).GetField("boostTarget", BindingFlags.Instance | BindingFlags.NonPublic)!;
     public static FieldInfo player_calledDashEvents = typeof(Player).GetField("calledDashEvents", BindingFlags.Instance | BindingFlags.NonPublic)!;
@@ -364,8 +376,7 @@ public class FrostModule : EverestModule {
 
     // Unload the entirety of your mod's content, remove any event listeners and undo all hooks.
     public override void Unload() {
-        // Register new states
-        On.Celeste.Player.ctor -= Player_ctor;
+        Everest.Events.Player.OnRegisterStates -= PlayerOnOnRegisterStates;
 
         // For custom Boosters
         //On.Celeste.Player.CallDashEvents -= Player_CallDashEvents;
@@ -376,7 +387,7 @@ public class FrostModule : EverestModule {
         foreach (var hook in registeredHooks) {
             hook.Dispose();
         }
-        registeredHooks = new List<ILHook>();
+        registeredHooks = [];
 
         AttributeHelper.InvokeAllWithAttribute(typeof(OnUnload));
 
@@ -400,7 +411,7 @@ public class FrostModule : EverestModule {
     /// </summary>
     public static Type[] GetTypes(string typeString) {
         if (typeString == string.Empty) {
-            return new Type[0];
+            return Type.EmptyTypes;
         }
 
         string[] split = typeString.Trim().Split(',');
@@ -416,7 +427,7 @@ public class FrostModule : EverestModule {
     /// </summary>
     public static List<Type> GetTypesAsList(string typeString) {
         if (typeString == string.Empty) {
-            return new();
+            return [];
         }
 
         string[] split = typeString.Trim().Split(',');
@@ -432,7 +443,7 @@ public class FrostModule : EverestModule {
     /// </summary>
     public static HashSet<Type> GetTypesAsHashSet(string typeString) {
         if (typeString == string.Empty) {
-            return new();
+            return [];
         }
 
         string[] split = typeString.Trim().Split(',');

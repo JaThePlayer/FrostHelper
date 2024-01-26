@@ -24,6 +24,14 @@ internal sealed class EffectRef {
     internal EffectRef(string key) {
         this.key = key;
     }
+
+    internal EffectRef(Effect eff) {
+        effect = eff;
+    }
+
+    private static EffectRef? _colorGrade;
+    // provides an effect ref for alternative color grade - same as vanilla, but doesn't share global state with the vanilla colorgrades
+    internal static EffectRef AltColorGrade => _colorGrade ??= new(GFX.FxColorGrading.Clone());
 }
 
 public static class ShaderHelperIntegration {

@@ -1,6 +1,10 @@
 ﻿namespace FrostHelper.Helpers;
 public static class NotificationHelper {
     // note: used internally by lua badeline boss
+    public static void NotifyInfo(string notif) {
+        Notify(new Notification(LogLevel.Info, notif));
+    }
+    
     public static void Notify(string notif, LogLevel logLevel = LogLevel.Error) {
         Notify(new Notification(logLevel, notif));
     }

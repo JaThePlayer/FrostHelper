@@ -17,8 +17,12 @@ internal class ShaderFolder : Backdrop {
         return folder;
     }
     
-    public ShaderFolder(BinaryPacker.Element element) {
-        Effect = ShaderHelperIntegration.GetEffectRef(element.Attr("shader", ""));
+    public ShaderFolder(BinaryPacker.Element element) 
+        : this(element, ShaderHelperIntegration.GetEffectRef(element.Attr("shader", ""))) {
+    }
+
+    public ShaderFolder(BinaryPacker.Element element, EffectRef effect) {
+        Effect = effect;
         Condition = new(element.Attr("shaderFlag"));
         
         Inner = [];
@@ -54,11 +58,16 @@ internal class ShaderFolder : Backdrop {
         }
     }
 
+    protected virtual void SetEffectParams(Effect effect) {
+        effect.ApplyStandardParameters();
+    }
+
     public override void Render(Scene scene) {
         base.Render(scene);
 
         if (IsShaderEnabled()) {
-            RenderWithShader(Renderer, scene, Effect.Get(), Inner, fakeVisibility: false);
+            var effect = Effect.Get();
+            RenderWithShader(Renderer, scene, effect, Inner, fakeVisibility: false);
         } else {
             RenderStyles(Renderer, scene, Inner, fakeVisibility: false);
         }
@@ -80,7 +89,7 @@ internal class ShaderFolder : Backdrop {
         renderer.Backdrops = oldBackdrops;
     }
     
-    internal static void RenderWithShader(BackdropRenderer renderer, Scene scene, Effect eff, List<Backdrop> backdrops, bool fakeVisibility = true) {
+    internal void RenderWithShader(BackdropRenderer renderer, Scene scene, Effect eff, List<Backdrop> backdrops, bool fakeVisibility = true) {
         if (backdrops.Count == 0)
             return;
         
@@ -88,8 +97,6 @@ internal class ShaderFolder : Backdrop {
         var renderTargets = gd.GetRenderTargets();
         var prevBlendState = gd.BlendState;
         var tempBuffer = RenderTargetHelper.RentFullScreenBuffer();
-        
-        eff.ApplyStandardParameters();
 
         renderer.EndSpritebatch();
         gd.SetRenderTarget(tempBuffer);
@@ -97,6 +104,7 @@ internal class ShaderFolder : Backdrop {
 
         RenderStyles(renderer, scene, backdrops, fakeVisibility);
 
+        SetEffectParams(eff);
         BetterShaderTrigger.SimpleApply(tempBuffer, renderTargets, eff);
         renderer.StartSpritebatch(prevBlendState);
         

@@ -64,7 +64,10 @@ public class CustomSpinner : Entity {
     public bool MoveWithWind;
     public bool DashThrough;
     public string SpritePathSuffix = "";
+    
+    // used by maddie's helping hand
     public Color Tint;
+    
     public Color BorderColor;
     public int ID;
     public bool Rainbow;
@@ -76,6 +79,25 @@ public class CustomSpinner : Entity {
     public bool RegisteredToRenderers = false;
     public bool SingleFGImage;
     public int AttachGroup;
+    
+    public bool iceMode;
+    public string directory;
+    public string destroyColor;
+    public bool isCore;
+    public static ParticleType P_Move => CrystalStaticSpinner.P_Move;
+    public const float ParticleInterval = 0.02f;
+
+    // used by maddie's helping hand
+    public bool AttachToSolid;
+
+    public Entity? filler;
+    public Entity? deco;
+
+    private float offset;
+
+    private bool expanded;
+
+    private int randomSeed;
 
     internal CustomSpinnerController controller;
 
@@ -620,24 +642,6 @@ public class CustomSpinner : Entity {
         }
         RemoveSelf();
     }
-
-    public bool iceMode;
-    public string directory;
-    public string destroyColor;
-    public bool isCore;
-    public static ParticleType P_Move => CrystalStaticSpinner.P_Move;
-    public const float ParticleInterval = 0.02f;
-
-    public bool AttachToSolid;
-
-    public Entity? filler;
-    public Entity? deco;
-
-    private float offset;
-
-    private bool expanded;
-
-    private int randomSeed;
 }
 
 [Tracked]
