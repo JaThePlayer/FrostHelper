@@ -33,6 +33,11 @@ end
 function helpers.shoot(...)
     local allShots = {...}
 
+    if #allShots == 0 then
+        helpers.getBoss():Shoot({})
+        return
+    end
+
     for _, args in ipairs(allShots) do
         helpers.getBoss():Shoot(args)
     end
@@ -41,6 +46,11 @@ end
 function helpers.shootAt(location, ...)
     local allShots = {...}
 
+    if #allShots == 0 then
+        helpers.getBoss():ShootAt(location, {})
+        return
+    end
+
     for _, args in ipairs(allShots) do
         helpers.getBoss():ShootAt(location, args)
     end
@@ -48,6 +58,11 @@ end
 
 function helpers.beam(...)
     local allBeams = {...}
+
+    if #allBeams == 0 then
+        helpers.wait(helpers.getBoss():Beam({}))
+        return
+    end
 
     if #allBeams == 1 then
         helpers.wait(helpers.getBoss():Beam(allBeams[1]))

@@ -203,6 +203,7 @@ public class EntityBatcher : Entity {
                 throw new Exception("Mask shaders need a 'maskShader' parameter!");
         }
 
+        //shader.ApplyStandardParameters();
         shader.ApplyParametersFrom(shaderParameters, false);
         return shader;
     }
@@ -215,6 +216,10 @@ public class EntityBatcher : Entity {
         //GaussianBlur.Blur(temp2, temp, GameplayBuffers.TempA, GetFloatParam("fade", ShaderParameters), false, GetSamples(ShaderParameters), 1f, GaussianBlur.Direction.Both, GetFloatParam("alpha", ShaderParameters));
         var shader = GetMaskShader(shaderParameters);
 
+        // todo: setting
+        //Engine.Graphics.GraphicsDevice.SetRenderTarget(GameplayBuffers.Gameplay);
+        //Engine.Graphics.GraphicsDevice.Clear(Color.Transparent);
+        
         // step 3: shader
         Engine.Instance.GraphicsDevice.Textures[1] = maskTarget; // t1 -> mask
         BetterShaderTrigger.SimpleApply(temp2, GameplayBuffers.Gameplay, shader);

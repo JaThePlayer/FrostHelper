@@ -18,13 +18,13 @@ public class CustomCrushBlock : Solid {
         if (!Directory.EndsWith("/"))
             Directory += '/';
 
-        fillColor = Calc.HexToColor("62222b");
+        fillColor = data.GetColor("fillColor", "62222b");
         idleImages = new List<Image>();
         activeTopImages = new List<Image>();
         activeRightImages = new List<Image>();
         activeLeftImages = new List<Image>();
         activeBottomImages = new List<Image>();
-        OnDashCollide = new DashCollision(OnDashed);
+        OnDashCollide = OnDashed;
         returnStack = new List<MoveState>();
 
         giant = Width >= 48f && Height >= 48f && chillOut;
@@ -50,15 +50,20 @@ public class CustomCrushBlock : Solid {
                 canMoveVertically = true;
                 break;
         }
-        Add(face = GFX.SpriteBank.Create(giant ? "giant_crushblock_face" : "crushblock_face"));
+
+        var faceXmlEntry = giant ? "giant_crushblock_face" : "crushblock_face";
+        face = data.Bool("reskinFace", false)
+            ? CustomSpriteHelper.CreateCustomSprite(faceXmlEntry, Directory)
+            : GFX.SpriteBank.Create(faceXmlEntry);
+        Add(face);
         face.Position = new Vector2(Width, Height) / 2f;
         face.Play("idle", false, false);
-        face.OnLastFrame = delegate (string f) {
-            bool flag = f == "hit";
-            if (flag) {
+        face.OnLastFrame = f => {
+            if (f == "hit") {
                 face.Play(nextFaceDirection, false, false);
             }
         };
+        
         int num = (int) (Width / 8f) - 1;
         int num2 = (int) (Height / 8f) - 1;
         AddImage(idle, 0, 0, 0, 0, -1, -1);

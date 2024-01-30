@@ -8,4 +8,6 @@ return controllerEntity.createHandler("FrostHelper/EntityBatcher", {
     { "types", "" },
     { "parameters", "" },
     { "dynamicDepthBatchSplitField", "" },
+    { "makeEntitiesInvisible", true },
+    { "consumeStylegrounds", false }
 }, true, "editor/FrostHelper/RainbowTilesetController")

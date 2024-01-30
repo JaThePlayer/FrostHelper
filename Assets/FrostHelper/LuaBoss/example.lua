@@ -5,6 +5,9 @@ local function customBeams()
     while true do
         seedRandomWithSessionTime()
         notify(math.random(1, 4))
+        shoot()
+        beam()
+        shootAt({x = 0, y = 0})
         --[[
         beam()
         beam({
