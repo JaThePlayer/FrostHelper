@@ -23,6 +23,7 @@ public static class BackdropLoader {
             "FrostHelper/ShaderFolder" => ShaderFolder.CreateWithInnerStyles(map, child),
             "FrostHelper/ShaderWrapperColorList" => new ColorListShaderWrapper(child),
             "FrostHelper/ColorgradeWrapper" => new ColorgradeWrapper(child),
+            "FrostHelper/Gradient" => new GradientStyleground(child),
             _ => null!,
         };
     }

@@ -72,4 +72,12 @@ blendStates.colorWriteChannels =
     All = 0xF
 }
 
+blendStates.blendModes = {
+    "alphablend",
+    "additive",
+    "subtract",
+    "reversesubtract",
+    "multiply"
+}
+
 return blendStates

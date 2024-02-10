@@ -1,4 +1,5 @@
 ﻿using FrostHelper.Helpers;
+using System.Globalization;
 
 namespace FrostHelper;
 
@@ -34,17 +35,16 @@ public static class ColorHelper {
     public static Color GetColor(string color) {
         if (Cache.TryGetValue(color, out Color val))
             return val;
+        
+        if (TryHexToColor(color, out var parsed))
+            return parsed;
+            
+        NotificationHelper.Notify(new(LogLevel.Error, $"Invalid color: {color}"));
+        parsed = Color.Transparent;
+        // Don't log again for the same color
+        Cache[color] = Color.Transparent;
 
-        try {
-            val = HexToColor(color);
-            //cache[color] = val;
-            return val;
-        } catch {
-            //cache[color] = Color.Transparent;
-            NotificationHelper.Notify(new(LogLevel.Error, $"Invalid color: {color}"));
-        }
-
-        return Color.Transparent;
+        return parsed;
     }
 
     public static Color Clone(this Color c, float a) {
@@ -57,22 +57,32 @@ public static class ColorHelper {
     /// <param name="hex">A hex code representation of the color, as RGB or RGBA</param>
     /// <returns></returns>
     public static Color HexToColor(string hex) {
-        if (hex.Length == 0)
-            return default;
+        if (TryHexToColor(hex, out var parsed)) {
+            return parsed;
+        }
 
-        var hexSpan = hex.AsSpan();
+        return default;
+    }
+
+    public static bool TryHexToColor(ReadOnlySpan<char> hexSpan, out Color color) {
         if (hexSpan[0] == '#') {
             hexSpan = hexSpan[1..];
         }
         hexSpan = hexSpan.Trim();
 
-        var packedValue = hexSpan.ToUIntHex();
-        return hexSpan.Length switch {
+        if (!uint.TryParse(hexSpan, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var packedValue)) {
+            color = default;
+            return false;
+        }
+        
+        (bool ret, color) = hexSpan.Length switch {
             // allow 7-length as RGB because of Temple of Zoom from SC having 00bc000 as spinner tint... why
-            6 or 7 => new Color((byte) (packedValue >> 16), (byte) (packedValue >> 8), (byte) packedValue), //rgb
-            8 => new Color((byte) (packedValue >> 24), (byte) (packedValue >> 16), (byte) (packedValue >> 8), (byte) packedValue), // rgba
-            _ => default,
+            6 or 7 => (true, new Color((byte) (packedValue >> 16), (byte) (packedValue >> 8), (byte) packedValue)), //rgb
+            8 => (true, new Color((byte) (packedValue >> 24), (byte) (packedValue >> 16), (byte) (packedValue >> 8), (byte) packedValue)), // rgba
+            _ => (false, default),
         };
+
+        return ret;
     }
 
     public static string ColorToHex(Color color) {
@@ -104,5 +114,31 @@ public static class ColorHelper {
         crystalSpinner.Scene = scene;
 
         return crystalSpinner.GetHue(position);
+    }
+}
+
+internal readonly struct RGBAOrXnaColor : ISpanParsable<RGBAOrXnaColor> {
+    public Color Color { get; init; }
+    
+    public static RGBAOrXnaColor Parse(string s, IFormatProvider? provider) 
+        => Parse(s.AsSpan(), provider);
+
+    public static bool TryParse(string? s, IFormatProvider? provider, out RGBAOrXnaColor result) =>
+        TryParse(s.AsSpan(), provider, out result);
+
+    public static RGBAOrXnaColor Parse(ReadOnlySpan<char> s, IFormatProvider? provider)
+    {
+        if (!TryParse(s, provider, out var parsed))
+        {
+            throw new Exception($"Invalid RGBA color: {s}");
+        }
+
+        return parsed;
+    }
+
+    public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, out RGBAOrXnaColor result) {
+        result = new() { Color = ColorHelper.GetColor(s.ToString()) };
+
+        return true;
     }
 }

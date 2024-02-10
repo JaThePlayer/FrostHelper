@@ -89,4 +89,30 @@ internal static class CustomBackdropBlendModeHelper {
 
         return null;
     }
+
+    public static BlendState ParseBlendMode(string mode) => mode switch {
+        "alphablend" => BlendState.AlphaBlend,
+        "additive" => BlendState.Additive,
+        "subtract" => GFX.Subtract,
+        "reversesubtract" => EeveeHelperReverseSubtract,
+        "multiply" => EeveeHelperMultiply,
+        _ => BlendState.AlphaBlend
+    };
+    
+    private static readonly BlendState EeveeHelperReverseSubtract = new()
+    {
+        ColorSourceBlend = Blend.One,
+        ColorDestinationBlend = Blend.One,
+        ColorBlendFunction = BlendFunction.Subtract,
+        AlphaSourceBlend = Blend.One,
+        AlphaDestinationBlend = Blend.One,
+        AlphaBlendFunction = BlendFunction.Add
+    };
+
+    private static readonly BlendState EeveeHelperMultiply = new()
+    {
+        ColorBlendFunction = BlendFunction.Add,
+        ColorSourceBlend = Blend.DestinationColor,
+        ColorDestinationBlend = Blend.Zero
+    };
 }

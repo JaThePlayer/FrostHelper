@@ -694,6 +694,10 @@ style.effects.FrostHelper/ColorgradeWrapper.name=Colorgrade Wrapper
 style.effects.FrostHelper/ColorgradeWrapper.description.wrappedTag=The tag which will be affected by this wrapper.
 style.effects.FrostHelper/ColorgradeWrapper.description.colorgrade=The colorgrade to apply to the wrapped stylegrounds.
 
+style.effects.FrostHelper/Gradient.name=Gradient
+style.effects.FrostHelper/Gradient.description.gradient=Describes the gradient to use.\nThis is a list of gradient segments, seperated by ;\nEach segment is made of 3 values, seperated by ,\n- Starting Color\n- Ending Color\n- Screen Percent - Number between 0 and 100, which specifies how much of the screen this segment takes up.\nGenerally, the Ending Color of a segment and the Starting Color of the next segment should be equal.
+style.effects.FrostHelper/Gradient.description.direction=The direction in which this gradient is drawn.
+
 # other
 ui.fh.attachGroup.tooltip=Assigns this entity a new group that's not yet used in this room
 ui.fh.attachGroup.name=Auto

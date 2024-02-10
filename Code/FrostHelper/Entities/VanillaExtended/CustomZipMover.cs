@@ -4,7 +4,7 @@ namespace FrostHelper;
 
 [CustomEntity("FrostHelper/CustomZipMover")]
 [Tracked(false)]
-public class CustomZipMover : Solid {
+public sealed class CustomZipMover : Solid {
     public enum LineColor {
         Red,
         Blue,
@@ -15,22 +15,25 @@ public class CustomZipMover : Solid {
     }
 
     // TODO: this is absolutely awful, fix this!!!
-    string innercogstr;
-    string cogstr;
-    string blockstr;
-    string lightstr;
-    string directory;
-    bool isCore = false;
-    bool iceModeNext = false;
-    bool iceMode = false;
+    private string innercogstr;
+    private string cogstr;
+    private string blockstr;
+    private string lightstr;
+    private string directory;
+    private bool isCore = false;
+    private bool iceModeNext = false;
+    private bool iceMode = false;
 
-    Color ColdLineColor;
-    Color ColdLightLineColor;
-    Color HotLineColor;
-    Color HotLightLineColor;
+    private Color ColdLineColor;
+    private Color ColdLightLineColor;
+    private Color HotLineColor;
+    private Color HotLightLineColor;
 
-    bool drawLine;
-    Color tint = Color.White;
+    private bool drawLine;
+    private Color tint = Color.White;
+    
+    private MultiImage BorderImages;
+    private bool FillMiddle;
 
     private void OnChangeMode(Session.CoreModes coreMode) {
         iceModeNext = coreMode == Session.CoreModes.Cold;
@@ -213,9 +216,7 @@ public class CustomZipMover : Solid {
         if (bloom != null)
             bloom.Y = streetlight.CurrentAnimationFrame * 3;
     }
-
-
-    public MultiImage BorderImages;
+    
     public void CreateSprites() {
         Components.RemoveAll<Image>();
         Components.RemoveAll<MultiImage>();
@@ -223,10 +224,10 @@ public class CustomZipMover : Solid {
 
         #region Border
         {
-            float widthBy8 = Width / 8f;
-            float heightBy8 = Height / 8f;
-            int edgeCount = (int) ((widthBy8 * 2) + (heightBy8 * 2) - 4);
-            Image[] edgeImages = new Image[edgeCount];
+            var widthBy8 = (int)(Width / 8) + (Width % 8 > 0 ? 1 : 0);
+            var heightBy8 = (int)(Height / 8) + (Height % 8 > 0 ? 1 : 0);
+            int edgeCount = int.Max(widthBy8 * 2 + heightBy8 * 2 - 4, 1);
+            var edgeImages = new Image[edgeCount];
             int imageIndex = 0;
 
             int i = 0;
@@ -261,8 +262,6 @@ public class CustomZipMover : Solid {
         streetlight.Position = new Vector2(Width / 2f - streetlight.Width / 2f, 0f);
     }
 
-
-    bool FillMiddle;
     public override void Render() {
         if (!CameraCullHelper.IsRectangleVisible(Collider.Bounds))
             return;

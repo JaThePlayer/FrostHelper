@@ -3,7 +3,7 @@
 /// <summary>
 /// Combines many images into one component
 /// </summary>
-public class MultiImage : Component {
+internal sealed class MultiImage : Component {
     public Image[] Images;
     public MultiImage(List<Image> images) : base(false, true) {
         Images = images.ToArray();
@@ -33,7 +33,7 @@ public class MultiImage : Component {
 
     public override void Render() {
         foreach (var image in Images) {
-            image.Texture?.Draw(Entity.Position + image.RenderPosition, image.Origin, image.Color, image.Scale, image.Rotation, image.Effects);
+            image?.Texture?.Draw(Entity.Position + image.RenderPosition, image.Origin, image.Color, image.Scale, image.Rotation, image.Effects);
         }
     }
 }
