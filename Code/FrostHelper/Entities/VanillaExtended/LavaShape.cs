@@ -320,11 +320,11 @@ public class LavaShape : Component {
             for (int i = 0; i < EdgeVertices.Length - 1; i++) {
                 Edge(ref vertCount, EdgeVertices[i], EdgeVertices[i + 1], vector5.X, vector5.Y, i > 0, true);
             }
-            Edge(ref vertCount, EdgeVertices[EdgeVertices.Length - 1], EdgeVertices[0], vector5.X, vector5.Y, true, false);
+            Edge(ref vertCount, EdgeVertices[^1], EdgeVertices[0], vector5.X, vector5.Y, true, false);
             dirty = false;
         }
         Camera camera = (Scene as Level)!.Camera;
-        GFX.DrawVertices(Matrix.CreateTranslation(new Vector3(Position, 0f)) * camera.Matrix, verts, vertCount, null, null);
+        GFX.DrawVertices(Matrix.CreateTranslation(new Vector3(Position + new Vector2(0.5f, 0.5f), 0f)) * camera.Matrix, verts, vertCount, null, null);
         GameplayRenderer.Begin();
         Vector2 value = new Vector2(Entity.Position.X, MinY) + Position;
         MTexture mtexture = GFX.Game["particles/bubble"];

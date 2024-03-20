@@ -1,8 +1,15 @@
 ﻿namespace FrostHelper;
 
 internal static class ChangeDashSpeedOnce {
-    public static float? NextDashSpeed;
-    public static float? NextSuperJumpSpeed;
+    public static float? NextDashSpeed {
+        get => FrostModule.Session.NextDashSpeed;
+        set => FrostModule.Session.NextDashSpeed = value;
+    }
+    
+    public static float? NextSuperJumpSpeed {
+        get => FrostModule.Session.NextSuperJumpSpeed;
+        set => FrostModule.Session.NextSuperJumpSpeed = value;
+    }
 
     public static void ChangeNextDashSpeed(float speed) {
         LoadIfNeeded();
@@ -62,24 +69,18 @@ internal static class ChangeDashSpeedOnce {
     }
 
     public static float GetDashSpeed(float orig) {
-        if (NextDashSpeed is not null) {
-            orig = NextDashSpeed.Value;
-            NextDashSpeed = null;
-
+        if (NextDashSpeed is not { } next)
             return orig;
-        }
-
-        return orig;
+        
+        NextDashSpeed = null;
+        return next;
     }
 
     public static float GetSuperJumpSpeed(float orig) {
-        if (NextSuperJumpSpeed is not null) {
-            orig = NextSuperJumpSpeed.Value;
-            NextSuperJumpSpeed = null;
-
+        if (NextSuperJumpSpeed is not {} next)
             return orig;
-        }
-
-        return orig;
+        
+        NextSuperJumpSpeed = null;
+        return next;
     }
 }

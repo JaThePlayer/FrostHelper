@@ -523,6 +523,10 @@ triggers.FrostHelper/DoorDisableTrigger.placements.name.default=Disable Door
 
 triggers.FrostHelper/FlagIfVisibleTrigger.placements.name.default=Flag If Visible
 
+triggers.FrostHelper/FlagInvertTrigger.placements.name.default=Flag Invert
+triggers.FrostHelper/FlagInvertTrigger.placements.description.default=Inverts the value of a given flag.
+triggers.FrostHelper/FlagInvertTrigger.attributes.description.flag=The flag to invert.
+
 triggers.FrostHelper/TemporaryFlagTrigger.placements.name.default=Temporary Flag
 triggers.FrostHelper/TemporaryFlagTrigger.placements.description.default=Sets a flag which will get reset automatically when you die
 
@@ -697,6 +701,8 @@ style.effects.FrostHelper/ColorgradeWrapper.description.colorgrade=The colorgrad
 style.effects.FrostHelper/Gradient.name=Gradient
 style.effects.FrostHelper/Gradient.description.gradient=Describes the gradient to use.\nThis is a list of gradient segments, seperated by ;\nEach segment is made of 3 values, seperated by ,\n- Starting Color\n- Ending Color\n- Screen Percent - Number between 0 and 100, which specifies how much of the screen this segment takes up.\nGenerally, the Ending Color of a segment and the Starting Color of the next segment should be equal.
 style.effects.FrostHelper/Gradient.description.direction=The direction in which this gradient is drawn.
+style.effects.FrostHelper/Gradient.description.loopX=Whether the gradient loops on the X axis.\nMostly useful when using Styleground Move Triggers.
+style.effects.FrostHelper/Gradient.description.loopY=Whether the gradient loops on the Y axis.\nMostly useful when using Styleground Move Triggers.
 
 # other
 ui.fh.attachGroup.tooltip=Assigns this entity a new group that's not yet used in this room

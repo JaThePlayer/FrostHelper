@@ -129,4 +129,21 @@ public static class CameraCullHelper {
 
         return RectangleExt.FromPoints(r1.ToPoint(), r2.ToPoint());
     }
+
+    /// <summary>
+    /// Returns a rectangle which contains the region of the provided rectangle which is visible
+    /// </summary>
+    internal static Rectangle GetVisibleSection(Rectangle r, int lenience = 4, Camera? camera = null) {
+        camera ??= (Engine.Scene as Level)?.Camera;
+
+        if (camera is null)
+            return r;
+
+        var left = int.Max(r.X, (int) camera.Left - lenience);
+        var top = int.Max(r.Y, (int) camera.Top - lenience);
+        var right = int.Min(r.Right, (int)camera.Right + lenience);
+        var bot = int.Min(r.Bottom, (int)camera.Bottom + lenience);
+
+        return new(left, top, right - left, bot - top);
+    }
 }

@@ -5,7 +5,9 @@ return {
     defaultData = {
         gradient = "ffffff,000000,90;000000,ffffff,90",
         direction = "Vertical",
-        blendMode = "alphablend"
+        blendMode = "alphablend",
+        loopX = false,
+        loopY = false,
     },
     fieldInformation = {
         direction = {

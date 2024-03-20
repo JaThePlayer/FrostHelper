@@ -1,4 +1,5 @@
-﻿using FrostHelper.DecalRegistry;
+﻿using FrostHelper.Backdrops;
+using FrostHelper.DecalRegistry;
 using FrostHelper.Entities.Boosters;
 using System.Runtime.CompilerServices;
 using static FrostHelper.Helpers.BackdropHelper;
@@ -11,7 +12,7 @@ internal static class AttachedDataHelper {
         internal static ConditionalWeakTable<object, object>.CreateValueCallback Factory = (o) => Activator.CreateInstance<T>();
     }
 
-    static Dictionary<Type, List<ConditionalWeakTable<object, object>>?> ObjectToPossibleDatas = new();
+    private static readonly Dictionary<Type, List<ConditionalWeakTable<object, object>>?> ObjectToPossibleDatas = new();
 
     static AttachedDataHelper() {
         RegisterData<Decal, RainbowDecalMarker>();
@@ -19,6 +20,7 @@ internal static class AttachedDataHelper {
 
         // make sure that backdrops are registered before parallax, so that parallax can copy values from Backdrops
         RegisterData<Backdrop, OrigPositionData>();
+        RegisterData<Backdrop, CustomBackdropBlendModeHelper.BlendModeAttachedData>();
         RegisterData<Parallax, DontUpdateInvisibleStylegroundsController.ParallaxWrapInfo>();
     }
     /// <summary>
@@ -33,7 +35,7 @@ internal static class AttachedDataHelper {
 
     private static void RegisterData<TData>(Type objType) where TData : class {
         if (!ObjectToPossibleDatas.TryGetValue(objType, out var datas)) {
-            datas = ObjectToPossibleDatas[objType] = new();
+            datas = ObjectToPossibleDatas[objType] = [];
         }
 
         datas!.Add(DataStore<TData>.Data);
@@ -59,6 +61,8 @@ internal static class AttachedDataHelper {
             }
             type = baseType;
         }
+
+        ObjectToPossibleDatas[startingType] = datas;
 
         return datas;
     }
@@ -140,8 +144,7 @@ internal static class AttachedDataHelper {
     public static void SetAttached<T>(this object obj, T val) where T : class {
         var data = DataStore<T>.Data;
 
-        data.Remove(obj);
-        data.Add(obj, val);
+        data.AddOrUpdate(obj, val);
     }
 
 }

@@ -62,7 +62,7 @@ internal static class CustomBackdropBlendModeHelper {
     }
     #endregion
 
-    private class BlendModeAttachedData {
+    internal class BlendModeAttachedData {
         public BlendState State;
 
         public BlendModeAttachedData(BlendState state) {

@@ -132,6 +132,9 @@ public class ToggleSwapBlock : Solid {
         }
         float num = lerp;
         lerp = Calc.Approach(lerp, target, speed * Engine.DeltaTime);
+        if (start == end)
+            lerp = target;
+        
         if (lerp != num) {
             Vector2 vector = (end - start) * speed;
             Vector2 position = Position;
@@ -147,7 +150,10 @@ public class ToggleSwapBlock : Solid {
                     _ => start - end,
                 });
             }
-            MoveTo(Vector2.Lerp(start, end, lerp), vector);
+
+            if (start != end) {
+                MoveTo(Vector2.Lerp(start, end, lerp), vector);
+            }
             if (position != Position) {
                 Audio.Position(moveSfx, Center);
                 Audio.Position(returnSfx, Center);

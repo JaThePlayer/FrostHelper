@@ -10,6 +10,9 @@ public class FrostHelperSession : EverestModuleSession {
 
     public Color BloomColor { get; set; } = Color.White;
     public bool RainbowBloom { get; set; } = false;
+    
+    public float? NextDashSpeed { get; set; }
+    public float? NextSuperJumpSpeed { get; set; }
 
     /// <summary>
     /// Used by some Frost Helper entities to make an entity remove itself immediately, but while allowing it to do other stuff
