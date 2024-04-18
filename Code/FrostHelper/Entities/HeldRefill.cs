@@ -14,7 +14,12 @@ public class HeldRefill : Entity {
     public float TravelPercent;
     public Vector2 LastTravelDelta;
 
+    private readonly Color LineColor;
+
     public HeldRefill(EntityData data, Vector2 offset) : base(data.Position + offset) {
+        var directory = data.Attr("directory", "objects/refill").TrimEnd('/');
+        LineColor = data.GetColor("lineColor", "ffff00");
+        
         if (data.Nodes[0] == data.Position) {
             Nodes = data.NodesOffset(offset);
         } else {
@@ -29,12 +34,12 @@ public class HeldRefill : Entity {
 
         SpeedMult = Math.Max(data.Float("speed", 6f), 0);
 
-        Add(Sprite = new Sprite(GFX.Game, "objects/refill/idle"));
+        Add(Sprite = new Sprite(GFX.Game, $"{directory}/idle"));
         Sprite.AddLoop("idle", "", 0.1f);
         Sprite.Play("idle", false, false);
         Sprite.CenterOrigin();
 
-        Add(Flash = new Sprite(GFX.Game, "objects/refill/flash"));
+        Add(Flash = new Sprite(GFX.Game, $"{directory}/flash"));
         Flash.Add("flash", "", 0.05f);
         Flash.OnFinish = _ => Flash.Visible = false;
         Flash.CenterOrigin();
@@ -87,9 +92,9 @@ public class HeldRefill : Entity {
                 float angle = Calc.Angle(Nodes[i + 1], Nodes[i]);
                 float fullLength = Vector2.Distance(Nodes[i + 1], Nodes[i]);
 
-                Draw.LineAngle(CenterLinePos(Nodes[i + 1]), angle, (float) Math.Floor(fullLength * (1f - percent)), Color.Yellow);
+                Draw.LineAngle(CenterLinePos(Nodes[i + 1]), angle, (float) Math.Floor(fullLength * (1f - percent)), LineColor);
             } else {
-                Draw.Line(CenterLinePos(Nodes[i]), CenterLinePos(Nodes[i + 1]), bloom ? Color.White * 0.3f : Color.Yellow, bloom ? 3 : 1);
+                Draw.Line(CenterLinePos(Nodes[i]), CenterLinePos(Nodes[i + 1]), bloom ? Color.White * 0.3f : LineColor, bloom ? 3 : 1);
             }
         }
     }
@@ -218,8 +223,12 @@ public class HeldRefill : Entity {
     public static IEnumerator HeldDashRoutine(Entity e) {
         Player player = (e as Player)!;
         Level level = (player.Scene as Level)!;
+        
         while (true) {
-            level.ParticlesFG.Emit(ZipMover.P_Sparks, 64, player.Position, new Vector2(4f));
+            var refill = GetHeldRefillUsedByPlayer(player);
+            if (refill is null)
+                yield break;
+            level.ParticlesFG.Emit(ZipMover.P_Sparks, 64, player.Position, new Vector2(4f), refill.LineColor);
             yield return null;
         }
     }

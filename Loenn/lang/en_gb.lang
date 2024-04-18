@@ -336,6 +336,9 @@ entities.FrostHelper/EntityRainbowifyController.placements.name.normal=Entity Ra
 entities.FrostHelper/EntityRainbowifyController.attributes.description.types=List of entity types to make rainbow. Refer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Entity-Rainbowifier
 
 entities.FrostHelper/HeldRefill.placements.name.normal=Held Refill
+entities.FrostHelper/HeldRefill.attributes.description.speed=The speed multiplier applied when using this refill.
+entities.FrostHelper/HeldRefill.attributes.description.directory=Directory to take sprites from. It should have the same sprite filenames as a vanilla refill.
+entities.FrostHelper/HeldRefill.attributes.description.lineColor=The color to use for rendering the path of this refill.
 
 entities.FrostHelper/Icicle.placements.name.normal=Icicle
 entities.FrostHelper/Icicle.attributes.description.directory=The directory containing an idle00.png file to use for the icicle. Additional animation frames can be added by creating idle01.png, idle02.png and so on. Must end with a /
@@ -681,6 +684,16 @@ triggers.FrostHelper/StylegroundBlendModeTrigger.attributes.description.alphaSou
 triggers.FrostHelper/StylegroundBlendModeTrigger.attributes.description.alphaDestinationBlend=One - Each component of the color is multiplied by {1, 1, 1, 1}.\nZero - Each component of the color is multiplied by {0, 0, 0, 0}.\nSourceColor - Each component of the color is multiplied by the source color. {Rs, Gs, Bs, As}, where Rs, Gs, Bs, As are color source values.\nInverseSourceColor - Each component of the color is multiplied by the inverse of the source color. {1 - Rs, 1 - Gs, 1 - Bs, 1 - As}, where Rs, Gs, Bs, As are color source values.\nSourceAlpha - Each component of the color is multiplied by the alpha value of the source. {As, As, As, As}, where As is the source alpha value.\nInverseSourceAlpha - Each component of the color is multiplied by the inverse of the alpha value of the source. {1 - As, 1 - As, 1 - As, 1 - As}, where As is the source alpha value.\nDestinationColor - Each component color is multiplied by the destination color. {Rd, Gd, Bd, Ad}, where Rd, Gd, Bd, Ad are color destination values.\nInverseDestinationColor - Each component of the color is multiplied by the inversed destination color. {1 - Rd, 1 - Gd, 1 - Bd, 1 - Ad}, where Rd, Gd, Bd, Ad are color destination values.\nDestinationAlpha - Each component of the color is multiplied by the alpha value of the destination. {Ad, Ad, Ad, Ad}, where Ad is the destination alpha value.\nInverseDestinationAlpha - Each component of the color is multiplied by the inversed alpha value of the destination. {1 - Ad, 1 - Ad, 1 - Ad, 1 - Ad}, where Ad is the destination alpha value.\nBlendFactor - Each component of the color is multiplied by a constant set by the "Blend Factor" property on this trigger\nInverseBlendFactor - Each component of the color is multiplied by a inversed constant set by the "Blend Factor" property on this trigger\nSourceAlphaSaturation - Each component of the color is multiplied by either the alpha of the source color, or the inverse of the alpha of the source color, whichever is greater. {f, f, f, 1}, where f = min(As, 1 - As), where As is the source alpha value.\n
 triggers.FrostHelper/StylegroundBlendModeTrigger.attributes.description.blendFactor=Used by BlendFactor and InverseBlendFactor modes for blend modes.
 triggers.FrostHelper/StylegroundBlendModeTrigger.attributes.description.colorWriteChannels=Which color channels to write to.
+
+triggers.FrostHelper/EntityMoveTrigger.placements.name.default=Entity Move
+triggers.FrostHelper/EntityMoveTrigger.placements.description.default=Moves targeted entities when the player enters this trigger\nor its activated by Activators or Trigger Triggers.\nNodes specify a rectangle from which entities will be moved.
+triggers.FrostHelper/EntityMoveTrigger.attributes.description.types=Comma-seperated list of types that should/shouldn't get moved (depending on the "blacklist" setting).\nTypes can be SID's (shown at the top of entity edit windows).
+triggers.FrostHelper/EntityMoveTrigger.attributes.description.blacklist=Whether the "types" list is a blacklist or whitelist.
+triggers.FrostHelper/EntityMoveTrigger.attributes.description.moveByX=How many pixels right the entities should be moved. (Use negative numbers to move left)
+triggers.FrostHelper/EntityMoveTrigger.attributes.description.moveByY=How many pixels down the entities should be moved. (Use negative numbers to move up)
+triggers.FrostHelper/EntityMoveTrigger.attributes.description.duration=How long (in seconds) the entities will be moved for.
+triggers.FrostHelper/EntityMoveTrigger.attributes.description.easing=The Easing type used for the movement. You can either pick one of the presets, or write lua code that returns a number (typically between 0.0 and 1.0).\nYour input will be converted to:\nreturn function(p){(name.Contains("return") ? "" : " return")} {name} end\nwhere 'p' is tween.Percent - a number between (0.0, 1.0), which is the percent/100 of the move time elapsed.
+triggers.FrostHelper/EntityMoveTrigger.attributes.description.once=Whether this trigger can be used only once.
 
 # effects
 style.effects.FrostHelper/ShaderWrapper.name=Shader Wrapper

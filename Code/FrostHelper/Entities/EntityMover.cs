@@ -1,45 +1,35 @@
-﻿namespace FrostHelper;
+﻿using FrostHelper.Helpers;
+
+namespace FrostHelper;
 
 [CustomEntity("FrostHelper/EntityMover")]
 class EntityMover : Entity {
-    List<Type> Types;
-    bool isBlacklist;
+    private readonly EntityFilter entityFilter;
 
-    Vector2 endNode;
+    private readonly Vector2 endNode;
 
     // For Tween
-    Ease.Easer easer;
-    float duration;
+    private readonly Ease.Easer easer;
+    private readonly float duration;
+    private readonly float pauseTime;
+    private readonly bool mustCollide;
+    private readonly List<(Entity entity, Vector2 start)> entities = [];
+    private readonly bool relativeMode;
+    private readonly Vector2 distance;
+    private readonly string onEndSfx;
 
-    float pauseTime;
-    bool mustCollide;
-
-    float pauseTimer = 0f;
-
-    Tween tween;
-    List<Tuple<Entity, Vector2>> entities = new List<Tuple<Entity, Vector2>>();
-
-    bool relativeMode = true;
-    Vector2 distance;
-
-    string onEndSFX;
-
+    private float pauseTimer = 0f;
+    private Tween tween;
 
     public EntityMover(EntityData data, Vector2 offset) : base(data.Position + offset) {
         Collider = new Hitbox(data.Width, data.Height);
 
-        Types = FrostModule.GetTypes(data.Attr("types", "")).ToList();
-        isBlacklist = data.Bool("blacklist");
+        entityFilter = EntityFilter.CreateFrom(data);
 
         pauseTime = data.Float("pauseTimeLength", 0f);
         pauseTimer = data.Float("startPauseTimeLength", 0f);
         relativeMode = data.Bool("relativeMovementMode", false);
-        onEndSFX = data.Attr("onEndSFX", "");
-        if (isBlacklist) {
-            // Some basic types we don't want to move D:
-            foreach (Type type in new List<Type>() { typeof(Player), typeof(SolidTiles), typeof(BackgroundTiles), typeof(SpeedrunTimerDisplay), typeof(StrawberriesCounter) })
-                Types.Add(type);
-        }
+        onEndSfx = data.Attr("onEndSFX", "");
 
         endNode = data.FirstNodeNullable(offset).GetValueOrDefault();
         easer = EaseHelper.GetEase(data.Attr("easing", "CubeInOut"));
@@ -53,44 +43,26 @@ class EntityMover : Entity {
     public override void Awake(Scene scene) {
         base.Awake(scene);
         foreach (Entity entity in scene.Entities) {
-            if ((!mustCollide || Collider.Collide(entity.Position)) && (Types.Contains(entity.GetType()) != isBlacklist)) {
-                entities.Add(new Tuple<Entity, Vector2>(entity, entity.Position));
+            if ((!mustCollide || Collider.Collide(entity.Position)) && entityFilter.Matches(entity)) {
+                entities.Add((entity, entity.Position));
             }
         }
+        
         var t = Tween.Create(Tween.TweenMode.Looping, easer, duration, true);
-        t.OnUpdate = (Tween tw) => {
-            foreach (var item in entities) {
-                if (item == null) {
-                    continue;
-                }
-                Vector2 start = item.Item2;
-                Vector2 end = relativeMode ? item.Item2 + distance : endNode;
-                if (moveBack) {
-                    if (item.Item1 is Solid solid) {
-                        try {
-                            solid.MoveTo(Vector2.Lerp(end, start, tw.Eased));
-                        } catch { }
-                    } else {
-                        item.Item1.Position = Vector2.Lerp(end, start, tw.Eased);
-                    }
-                } else {
-                    if (item.Item1 is Solid solid) {
-                        try {
-                            solid.MoveTo(Vector2.Lerp(start, end, tw.Eased));
-                        } catch { }
-                    } else {
-                        item.Item1.Position = Vector2.Lerp(start, end, tw.Eased);
-                    }
-                }
-
+        t.OnUpdate = tw => {
+            foreach ((Entity? entity, Vector2 start) in entities) {
+                Vector2 end = relativeMode ? start + distance : endNode;
+                var to = moveBack ? Vector2.Lerp(end, start, tw.Eased) : Vector2.Lerp(start, end, tw.Eased);
+                
+                EntityMoveHelper.MoveEntity(entity, to);
             }
         };
 
-        t.OnComplete = delegate (Tween tw) {
+        t.OnComplete = _ => {
             moveBack = !moveBack;
             pauseTimer = pauseTime;
-            if (onEndSFX != "") {
-                Audio.Play(onEndSFX);
+            if (onEndSfx != "") {
+                Audio.Play(onEndSfx);
             }
         };
         Add(tween = t);

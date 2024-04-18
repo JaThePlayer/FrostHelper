@@ -10,13 +10,17 @@ heldRefill.nodeLimits = { 1, math.huge }
 heldRefill.nodeLineRenderType = "line"
 
 jautils.createPlacementsPreserveOrder(heldRefill, "normal", {
-    { "speed", 6 }
+    { "speed", 6 },
+    { "directory", "objects/refill" },
+    { "lineColor", "ffff00", "color" },
 })
 
 function heldRefill.nodeSprite() end
 
 function heldRefill.sprite(room, entity)
-    local sprites = {drawableSpriteStruct.fromTexture("objects/refill/idle00", entity)}
+    local dir = entity.directory or "objects/refill"
+
+    local sprites = {drawableSpriteStruct.fromTexture(dir .. "/idle00", entity)}
 
     local points = { entity.x, entity.y }
     for _, value in ipairs(entity.nodes) do
@@ -26,7 +30,7 @@ function heldRefill.sprite(room, entity)
 
     return jautils.union(
         sprites,
-        drawableLine.fromPoints(points, entity.lineColor, 1)
+        drawableLine.fromPoints(points, entity.lineColor or "ffff00", 1)
     )
 end
 
