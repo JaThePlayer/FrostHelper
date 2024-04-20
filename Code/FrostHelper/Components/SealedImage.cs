@@ -11,4 +11,9 @@ internal sealed class SealedImage : Image {
     public SealedImage(MTexture texture, bool active) : base(texture, active)
     {
     }
+
+    public new SealedImage JustifyOrigin(Vector2 vec) {
+        base.JustifyOrigin(vec);
+        return this;
+    }
 }

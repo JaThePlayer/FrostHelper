@@ -25,6 +25,21 @@ public static class Extensions {
     }
 
     /// <summary>
+    /// Gets a hashset out of a comma-seperated list of elements. Each element in the hashset is trimmed
+    /// </summary>
+    public static HashSet<string> GetStringHashsetTrimmed(this EntityData data, string key, string def = "") {
+        HashSet<string> ret = [];
+        var str = data.Attr(key, def).AsSpan();
+        
+        var p = new SpanParser(str);
+        while (p.SliceUntil(',').TryUnpack(out var entryParser)) {
+            ret.Add(entryParser.ReadStr().Trim().ToString());
+        }
+        
+        return ret;
+    }
+
+    /// <summary>
     /// Calls data.Attr, but uses the default value if the attribute is null or an empty string
     /// </summary>
     public static string AttrNullable(this EntityData data, string key, string def) { 
@@ -175,8 +190,8 @@ public static class Extensions {
         return null;
     }
 
-    private static List<Entity> _emptyListEntity = new();
-    private static List<Component> _emptyListComponent = new();
+    private static readonly List<Entity> _emptyListEntity = new();
+    private static readonly List<Component> _emptyListComponent = new();
 
     /// <summary>
     /// Calls <see cref="Entity.Add(Component)"/> with the given component, and then returns that component

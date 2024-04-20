@@ -6,6 +6,7 @@ using System.Diagnostics;
 namespace FrostHelper.Entities;
 
 [CustomEntity("FrostHelper/ArbitraryShapeCloud")]
+[Tracked]
 internal sealed class ArbitraryShapeCloud : Entity {
     private static volatile int _Debug_RenderTargetCount = 0;
 
@@ -14,15 +15,18 @@ internal sealed class ArbitraryShapeCloud : Entity {
         Console.WriteLine($"ArbitraryShapeCloud_RenderTargets: {_Debug_RenderTargetCount}");
     }
 
-    public VertexPositionColor[] Fill;
-    public readonly Color Color;
-    public Vector2[] Nodes;
-    public float Parallax;
+    public readonly VertexPositionColor[] Fill;
+    public readonly Vector2[] Nodes;
     public readonly List<CloudTexture> Textures;
-
+    
+    public Color Color;
+    public float Parallax;
+    public bool Rainbow;
     public CachingOptions CachingStrategy;
+    public readonly HashSet<string> CloudTags;
 
     private Rectangle? Bounds;
+    private List<SealedImage> Images = [];
 
     public enum CachingOptions {
         Auto,
@@ -35,8 +39,10 @@ internal sealed class ArbitraryShapeCloud : Entity {
 
     public ArbitraryShapeCloud(EntityData data, Vector2 offset) : base(data.Position + offset) {
         Color = data.GetColor("color", "ffffff");
-        Fill = ArbitraryShapeEntityHelper.GetFillVertsFromNodes(data, offset, Color);
+        Fill = ArbitraryShapeEntityHelper.GetFillVertsFromNodes(data, offset, Color.White);
         Nodes = data.GetNodesWithOffsetWithPositionAppended(offset);
+        Rainbow = data.Bool("rainbow");
+        CloudTags = data.GetStringHashsetTrimmed("cloudTag");
 
         Parallax = data.Float("parallax", 0f);
         Depth = data.Int("depth");
@@ -53,8 +59,6 @@ internal sealed class ArbitraryShapeCloud : Entity {
                 break;
             case CachingOptions.RenderTarget:
                 HandleRenderTargetStrategy();
-                break;
-            default:
                 break;
         }
 
@@ -84,22 +88,16 @@ internal sealed class ArbitraryShapeCloud : Entity {
     private Rectangle CalcBounds() {
         var oldPos = Position;
         Position = default;
-        var allPoses = Nodes.Concat(Components.OfType<Image>().SelectMany(i => {
+        var allPoses = Nodes.Concat(Images.SelectMany(i => {
             var r = i.GetRectangle();
 
             return new[] { r.Location.ToVector2(), new(r.Right, r.Bottom) };
-        })).ToList();
+        }));
+        
+        var ret = RectangleExt.FromPoints(allPoses);
+        
         Position = oldPos;
-
-        var left = allPoses.Min(n => n.X);
-        var right = allPoses.Max(n => n.X);
-        var top = allPoses.Min(n => n.Y);
-        var bottom = allPoses.Max(n => n.Y);
-
-        var w = (int) (right - left);
-        var h = (int) (bottom - top);
-
-        return new((int) left, (int) top, w, h);
+        return ret;
     }
 
     private void BeforeRender() {
@@ -139,9 +137,11 @@ internal sealed class ArbitraryShapeCloud : Entity {
 
         // draw sprites
         Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointWrap, DepthStencilState.None, RasterizerState.CullNone, null, cam);
-        foreach (var item in Components.components) {
-            if (item.Visible)
+        foreach (var item in Images) {
+            if (item.Visible) {
+                item.Color = Color.White;
                 item.Render();
+            }
         }
         GameplayRenderer.End();
 
@@ -167,36 +167,25 @@ internal sealed class ArbitraryShapeCloud : Entity {
     }
 
     private void DoRender(bool bloomBlocker) {
+        var color = Rainbow ? ColorHelper.GetHue(Scene, Position) * (Color.A / 255f) : Color;
+        if (color == default) {
+            RenderTarget?.Dispose();
+            RenderTarget = null;
+            return;
+        }
+        
         if (RenderTarget is { IsDisposed: false }) {
-            Draw.SpriteBatch.Draw(RenderTarget, RenderTargetRenderPos + CalcParallaxOffset(RenderTargetRenderPos), Color.White);
+            Draw.SpriteBatch.Draw(RenderTarget, RenderTargetRenderPos + CalcParallaxOffset(RenderTargetRenderPos), color);
         } else {
             // in case of savestates, the render target will get cleared before loading a state, but we should still cache after loading back.
             if (CachingStrategy == CachingOptions.RenderTarget) {
                 HandleRenderTargetStrategy();
             }
-            RenderNoTarget(CalcParallaxOffset(Position), bloomBlocker);
+            RenderNoTarget(CalcParallaxOffset(Position), bloomBlocker, color);
         }
     }
 
-    /*
-    public override void DebugRender(Camera camera) {
-        foreach (var item in Nodes) {
-            Draw.HollowRect(item + CalcParallaxOffset(item), 1, 1, Color.Red);
-        }
-
-        if (Bounds is { } bounds) {
-            Draw.HollowRect(Bounds.Value.MovedBy(CalcParallaxOffset(Position)), Color.Pink);
-        }
-
-        ArbitraryShapeEntityHelper.DrawDebugWireframe(Fill, Color.Red * 0.3f, (p => {
-            var v2 = new Vector2(p.Position.X, p.Position.Y);
-
-            return v2 + CalcParallaxOffset(v2);
-        }));
-    }
-    */
-
-    void RenderNoTarget(Vector2 parallaxOffset, bool bloomBlocker) {
+    void RenderNoTarget(Vector2 parallaxOffset, bool bloomBlocker, Color color) {
         Bounds ??= CalcBounds();
         if (!CameraCullHelper.IsRectangleVisible(Bounds.Value.MovedBy(parallaxOffset)))
             return;
@@ -205,7 +194,7 @@ internal sealed class ArbitraryShapeCloud : Entity {
 
         var cam = SceneAs<Level>().Camera.Matrix * Matrix.CreateTranslation(parallaxOffset.X, parallaxOffset.Y, 0f);
         GFX.DrawVertices(cam, Fill, Fill.Length,
-            bloomBlocker ? CustomBloomBlocker.BloomBlockVertsEffect : null,
+            bloomBlocker ? CustomBloomBlocker.BloomBlockVertsEffect : EffectRef.SolidColorVerts(color),
             //null,
             bloomBlocker ? CustomBloomBlocker.ReverseCutoutState : BlendState.AlphaBlend
         );
@@ -219,9 +208,11 @@ internal sealed class ArbitraryShapeCloud : Entity {
 
         var lastPos = Position;
         Position = parallaxOffset;
-        foreach (var item in Components.components) {
-            if (item.Visible)
+        foreach (var item in Images) {
+            if (item.Visible) {
+                item.Color = color;
                 item.Render();
+            }
         }
         Position = lastPos;
     }
@@ -262,12 +253,6 @@ internal sealed class ArbitraryShapeCloud : Entity {
             var curr = start;
             var dist = Vector2.Distance(start, n);
             while (dist > 0) {
-                /*
-                var validTextures = Textures.Where(t => t.Texture.Width * widthFactor < dist).ToList();
-                if (validTextures.Count == 0) {
-                    break;
-                }
-                var t = curr.SeededRandomFrom(validTextures);*/
                 var t = curr.SeededRandomFrom(Textures);
 
                 var spr = t.Texture;
@@ -275,11 +260,10 @@ internal sealed class ArbitraryShapeCloud : Entity {
                 var offset = Math.Min(0, dist - sprW);
                 var rot = angle + t.DefaultRotation;
 
-                Add(new Image(spr) {
+                Images.Add(new SealedImage(spr) {
+                    Entity = this,
                     Rotation = rot,
-                    Color = Color,
                     Position = (curr + angleVec * offset).Floor() + Vector2.UnitY.Rotate(rot) * 2f,
-                    //FlipX = curr.SeededRandomBool(),
                 }.JustifyOrigin(new Vector2(0f, 1f)));
 
                 curr += angleVec * sprW;
@@ -290,6 +274,24 @@ internal sealed class ArbitraryShapeCloud : Entity {
         }
     }
 
+    /*
+    public override void DebugRender(Camera camera) {
+        foreach (var item in Nodes) {
+            Draw.HollowRect(item + CalcParallaxOffset(item), 1, 1, Color.Red);
+        }
+
+        if (Bounds is { } bounds) {
+            Draw.HollowRect(Bounds.Value.MovedBy(CalcParallaxOffset(Position)), Color.Pink);
+        }
+
+        ArbitraryShapeEntityHelper.DrawDebugWireframe(Fill, Color.Red * 0.3f, (p => {
+            var v2 = new Vector2(p.Position.X, p.Position.Y);
+
+            return v2 + CalcParallaxOffset(v2);
+        }));
+    }
+    */
+    
     public class CloudTexture {
         public string Path;
         public float DefaultRotation;

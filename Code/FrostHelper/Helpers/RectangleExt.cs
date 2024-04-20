@@ -1,46 +1,22 @@
-﻿namespace FrostHelper.Helpers;
+﻿using System.Runtime.CompilerServices;
+
+namespace FrostHelper.Helpers;
 
 public static class RectangleExt {
-    public static Rectangle FromPoints(Vector2 a, Vector2 b) => FromPoints(a.ToPoint(), b.ToPoint());
+    public static Rectangle FromPoints(Vector2 a, Vector2 b)
+        => FromTwoPointsCore<Vector2, GetX, GetY>(a, b);
 
-    //https://stackoverflow.com/questions/45259380/convert-2-vector2-points-to-a-rectangle-in-xna-monogame
-    public static Rectangle FromPoints(Point a, Point b) {
-        //we need to figure out the top left and bottom right coordinates
-        //we need to account for the fact that a and b could be any two opposite points of a rectangle, not always coming into this method as topleft and bottomright already.
-        int smallestX = Math.Min(a.X, b.X);
-        int smallestY = Math.Min(a.Y, b.Y);
-        int largestX = Math.Max(a.X, b.X);
-        int largestY = Math.Max(a.Y, b.Y);
+    public static Rectangle FromPoints(Point a, Point b)
+        => FromTwoPointsCore<Point, GetX, GetY>(a, b);
 
-        int width = largestX - smallestX;
-        int height = largestY - smallestY;
+    public static Rectangle FromPoints(IEnumerable<Vector2> points)
+        => FromPointsCore<Vector2, IEnumerator<Vector2>, GetX, GetY>(points.GetEnumerator());
 
-        return new Rectangle(smallestX, smallestY, width, height);
-    }
-
-    public static Rectangle FromPoints(Vector2[] points) {
-        int smallestX = (int) points.Min(v => v.X);
-        int smallestY = (int) points.Min(v => v.Y);
-        int largestX = (int) points.Max(v => v.X);
-        int largestY = (int) points.Max(v => v.Y);
-
-        int width = largestX - smallestX;
-        int height = largestY - smallestY;
-
-        return new Rectangle(smallestX, smallestY, width, height);
-    }
-
-    public static Rectangle FromPoints(Vector3[] points) {
-        int smallestX = (int) points.Min(v => v.X);
-        int smallestY = (int) points.Min(v => v.Y);
-        int largestX = (int) points.Max(v => v.X);
-        int largestY = (int) points.Max(v => v.Y);
-
-        int width = largestX - smallestX;
-        int height = largestY - smallestY;
-
-        return new Rectangle(smallestX, smallestY, width, height);
-    }
+    /// <summary>
+    /// Creates a rectangle out of X and Y coordinates of the provided points.
+    /// </summary>
+    public static Rectangle FromPointsFromXY(Vector3[] points)
+        => FromPointsCore<Vector3, LinqExt.ArrayEnumerator<Vector3>, GetX, GetY>(points.GetArrayEnumerator());
 
     public static Rectangle Merge(Rectangle a, Rectangle b) {
         int smallestX = Math.Min(a.Left, b.Left);
@@ -56,10 +32,8 @@ public static class RectangleExt {
 
     public static Rectangle Merge(IEnumerable<Rectangle> rectangles) {
         bool any = false;
-        int smallestX = int.MaxValue;
-        int smallestY = int.MaxValue;
-        int largestX = int.MinValue;
-        int largestY = int.MinValue;
+        int smallestX = int.MaxValue, smallestY = int.MaxValue;
+        int largestX = int.MinValue, largestY = int.MinValue;
 
         foreach (var r in rectangles) {
             any = true;
@@ -78,6 +52,52 @@ public static class RectangleExt {
         int height = largestY - smallestY;
 
         return new Rectangle(smallestX, smallestY, width, height);
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static Rectangle FromPointsCore<T, TEnumerator, TGetX, TGetY>(TEnumerator points)
+    where TGetX : struct, IStaticFunc<T, int>
+    where TGetY : struct, IStaticFunc<T, int>
+    where TEnumerator : IEnumerator<T> {
+        int smallestX = int.MaxValue, smallestY = int.MaxValue;
+        int largestX = int.MinValue, largestY = int.MinValue;
+        
+        while (points.MoveNext()) {
+            var p = points.Current;
+
+            var x = TGetX.Invoke(p);
+            if (x < smallestX) {
+                smallestX = x;
+            } else if (x > largestX) {
+                largestX = x;
+            }
+            
+            var y = TGetY.Invoke(p);
+            if (y < smallestY) {
+                smallestY = y;
+            } else if (y > largestY) {
+                largestY = y;
+            }
+        }
+
+        return new Rectangle(smallestX, smallestY, largestX - smallestX, largestY - smallestY);
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static Rectangle FromTwoPointsCore<T, TGetX, TGetY>(T a, T b)
+        where TGetX : struct, IStaticFunc<T, int>
+        where TGetY : struct, IStaticFunc<T, int> {
+        var ax = TGetX.Invoke(a);
+        var ay = TGetY.Invoke(a);
+        var bx = TGetX.Invoke(b);
+        var by = TGetY.Invoke(b);
+            
+        if (ax > bx)
+            (ax, bx) = (bx, ax);
+        if (ay > by)
+            (ay, by) = (by, ay);
+
+        return new Rectangle(ax, ay, bx - ax, by - ay);
     }
 
     public static Rectangle MultSize(this Rectangle r, int mult) {
@@ -100,4 +120,26 @@ public static class RectangleExt {
     public static Rectangle MovedBy(this Rectangle r, Vector2 offset) => new(r.X + (int) offset.X, r.Y + (int) offset.Y, r.Width, r.Height);
     public static Rectangle MovedBy(this Rectangle r, int x, int y) => new(r.X + x, r.Y + y, r.Width, r.Height);
     public static Rectangle MovedTo(this Rectangle r, Vector2 pos) => new((int) pos.X, (int) pos.Y, r.Width, r.Height);
+    
+    private struct GetX : IStaticFunc<Vector2, int>, IStaticFunc<Vector3, int>, IStaticFunc<Point, int> {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int Invoke(Vector2 arg) => (int)arg.X;
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int Invoke(Vector3 arg) => (int)arg.X;
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int Invoke(Point arg) => arg.X;
+    }
+    
+    private struct GetY : IStaticFunc<Vector2, int>, IStaticFunc<Vector3, int>, IStaticFunc<Point, int> {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int Invoke(Vector2 arg) => (int)arg.Y;
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int Invoke(Vector3 arg) => (int)arg.Y;
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int Invoke(Point arg) => arg.Y;
+    }
 }

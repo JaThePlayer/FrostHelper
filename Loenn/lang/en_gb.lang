@@ -459,6 +459,8 @@ entities.FrostHelper/ArbitraryShapeCloud.attributes.description.depth=The depth 
 entities.FrostHelper/ArbitraryShapeCloud.attributes.description.textures=A comma-seperated list of textures to use for the edges of the cloud.
 entities.FrostHelper/ArbitraryShapeCloud.attributes.description.cache=Determines how this cloud should cache itself for performance.\nAuto - Let Frost Helper automatically choose the best caching method. Recommended.\nNever - Never cache the cloud, could cause lag. (Uses camera culling instead)\nRenderTarget - Render the whole cloud once into a render target. Makes clouds not lag the game at all, at the cost of using more VRAM.
 entities.FrostHelper/ArbitraryShapeCloud.attributes.description.windingOrder=The winding order of the polygon.\nIf your shape looks broken in-game, try changing this property until it looks correctly.
+entities.FrostHelper/ArbitraryShapeCloud.attributes.description.rainbow=Whether the cloud has rainbow colors.
+entities.FrostHelper/ArbitraryShapeCloud.attributes.description.cloudTag=A tag for this cloud. Used by Arbitrary Shape Cloud Edit triggers.\nMultiple tags can be specified by using commas.
 
 entities.FrostHelper/BloomBlocker.placements.name.default=Arbitrary Shape Bloom Blocker
 entities.FrostHelper/BloomBlocker.placements.description.default=Blocks bloom (either fully or partially) in a polygonal area defined by nodes.
@@ -694,6 +696,19 @@ triggers.FrostHelper/EntityMoveTrigger.attributes.description.moveByY=How many p
 triggers.FrostHelper/EntityMoveTrigger.attributes.description.duration=How long (in seconds) the entities will be moved for.
 triggers.FrostHelper/EntityMoveTrigger.attributes.description.easing=The Easing type used for the movement. You can either pick one of the presets, or write lua code that returns a number (typically between 0.0 and 1.0).\nYour input will be converted to:\nreturn function(p){(name.Contains("return") ? "" : " return")} {name} end\nwhere 'p' is tween.Percent - a number between (0.0, 1.0), which is the percent/100 of the move time elapsed.
 triggers.FrostHelper/EntityMoveTrigger.attributes.description.once=Whether this trigger can be used only once.
+
+triggers.FrostHelper/ArbitraryShapeCloudEditColor.placements.name.default=Arbitrary Shape Cloud Edit Color
+triggers.FrostHelper/ArbitraryShapeCloudEditColor.placements.description.default=Edits the color (potentially over some time period) of Arbitrary Shape Clouds with the provided tag.
+triggers.FrostHelper/ArbitraryShapeCloudEditColor.attributes.description.cloudTag=The cloud tag to edit.\nMake sure to set the Cloud Tag field on the clouds you want to edit with this trigger to be the same as this!
+triggers.FrostHelper/ArbitraryShapeCloudEditColor.attributes.description.color=The new color to use for the cloud.
+triggers.FrostHelper/ArbitraryShapeCloudEditColor.attributes.description.duration=How long the transition between the old and new colors takes.
+triggers.FrostHelper/ArbitraryShapeCloudEditColor.attributes.description.easing=The Easing type used for the color change. You can either pick one of the presets, or write lua code that returns a number (typically between 0.0 and 1.0).\nYour input will be converted to:\nreturn function(p){(name.Contains("return") ? "" : " return")} {name} end\nwhere 'p' is tween.Percent - a number between (0.0, 1.0), which is the percent/100 of the move time elapsed.
+
+triggers.FrostHelper/ArbitraryShapeCloudEditRainbow.placements.name.default=Arbitrary Shape Cloud Edit Rainbow
+triggers.FrostHelper/ArbitraryShapeCloudEditRainbow.placements.description.default=Edits whether Arbitrary Shape Clouds with the provided tag are rainbow.
+triggers.FrostHelper/ArbitraryShapeCloudEditRainbow.attributes.description.cloudTag=The cloud tag to edit.\nMake sure to set the Cloud Tag field on the clouds you want to edit with this trigger to be the same as this!
+triggers.FrostHelper/ArbitraryShapeCloudEditRainbow.attributes.description.enable=Whether the clouds should be rainbow or not.
+
 
 # effects
 style.effects.FrostHelper/ShaderWrapper.name=Shader Wrapper

@@ -103,9 +103,8 @@ public static class CameraCullHelper {
         var renderPos = image.RenderPosition;
         var scale = image.Scale;
         var size = new Vector2(image.Width, image.Height) * scale;
-        Vector2 pos;
         if (image.Rotation == 0f) {
-            pos = renderPos - image.Origin * scale + image.Texture.DrawOffset;
+            Vector2 pos = renderPos - image.Origin * scale + image.Texture.DrawOffset;
 
             return new Rectangle((int) pos.X, (int) pos.Y, (int) size.X, (int) size.Y);
         }
@@ -127,7 +126,7 @@ public static class CameraCullHelper {
             Math.Max(p4.Y, Math.Max(p3.Y, Math.Max(p1.Y, p2.Y)))
         ) + image.Texture.DrawOffset.Rotate(image.Rotation);
 
-        return RectangleExt.FromPoints(r1.ToPoint(), r2.ToPoint());
+        return RectangleExt.FromPoints(r1, r2);
     }
 
     /// <summary>

@@ -82,4 +82,24 @@ internal static class LinqExt {
                 return value;
         }
     }
+
+    internal static ArrayEnumerator<T> GetArrayEnumerator<T>(this T[] arr) => new(arr);
+
+    internal struct ArrayEnumerator<T>(T[] arr) : IEnumerator<T> {
+        private int i = -1;
+        
+        public bool MoveNext()
+            => ++i < arr.Length;
+
+        public void Reset() {
+            i = -1;
+        }
+
+        public T Current => arr[i];
+
+        object IEnumerator.Current => Current!;
+
+        public void Dispose() {
+        }
+    }
 }

@@ -24,7 +24,9 @@ jautils.createPlacementsPreserveOrder(cloud, "default", {
     { "textures", defaultTextures },
     { "cache", "Auto", cacheOptions },
     { "windingOrder", "Auto", jautils.windingOrders },
+    { "cloudTag", "", "FrostHelper.cloudTag" },
     { "blockBloom", false },
+    { "rainbow", false },
 })
 
 cloud.sprite = arbitraryShapeEntity.getSpriteFunc("00ff00", "fcf579", function (entity)

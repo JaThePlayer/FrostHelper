@@ -559,7 +559,7 @@ public class CustomLightningRenderer : Entity {
 
         public ArbitraryFill(Vector3[] verts) {
             Verts = verts;
-            Bounds = RectangleExt.FromPoints(verts);
+            Bounds = RectangleExt.FromPointsFromXY(verts);
         }
     }
 }

@@ -30,12 +30,18 @@ internal ref struct SpanParser(ReadOnlySpan<char> input)
         return ret;
     }
     
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Res<T> Read<T>(IFormatProvider? format = null) where T : ISpanParsable<T>
         => ReadSlice<T>(format, Remaining.Length);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryRead<T>(out T parsed, IFormatProvider? format = null) where T : ISpanParsable<T>
         => Read<T>(format).TryUnpack(out parsed);
     
+    /// <summary>
+    /// Reads the remaining span to completion, returning that span.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ReadOnlySpan<char> ReadStr()
         => ReadSliceStr(Remaining.Length);
 
@@ -65,30 +71,25 @@ internal ref struct SpanParser(ReadOnlySpan<char> input)
         return ret;
     }
 
+    /// <summary>
+    /// Returns a new parser, which contains a slice of the span from the current location to the location of the next <paramref name="until"/> character.
+    /// </summary>
     public ParserRes SliceUntil(char until)
     {
         var rem = Remaining;
         if (rem.Length == 0)
-        {
-            return new(new(), false);
-        }
+            return ParserRes.Error();
         
         var len = rem.IndexOf(until);
-        ParserRes ret;
-        
-        if (len == -1)
+        if (len < 0)
         {
-            ret = new ParserRes(new(Remaining), true);
-            Remaining = Remaining[..0];
-        }
-        else
-        {
-            ret = new ParserRes(new(Remaining[..len]), true);
-            Remaining = Remaining[(len+1)..]; // +1 to skip past the 'until' character
+            // read until the end
+            Remaining = ReadOnlySpan<char>.Empty;
+            return ParserRes.Ok(new(rem));
         }
         
-
-        return ret;
+        Remaining = rem[(len+1)..]; // +1 to skip past the 'until' character
+        return ParserRes.Ok(new(rem[..len]));
     }
 
 
@@ -108,14 +109,17 @@ internal readonly struct Res<T>(T val, bool success)
     
     private T ValOrDef => val;
     
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public T Or(T def) => success ? val : def;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryUnpack(out T ret)
     {
         ret = ValOrDef;
         return success;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator T(Res<T> res) => res.IsSuccess ? res.ValOrDef : throw new SpanParseFailException();
 }
 
@@ -151,16 +155,24 @@ internal readonly ref struct ParserRes
     
     private SpanParser ValOrDef { get; }
     
-    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public SpanParser Or(SpanParser def) => IsSuccess ? ValOrDef : def;
     
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryUnpack(out SpanParser ret)
     {
         ret = ValOrDef;
         return IsSuccess;
     }
     
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator SpanParser(ParserRes res) => res.IsSuccess ? res.ValOrDef : throw new SpanParseFailException();
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ParserRes Error() => default;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ParserRes Ok(SpanParser parser) => new ParserRes(parser, true);
 }
 
 internal class SpanParseFailException : Exception

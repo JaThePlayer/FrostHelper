@@ -1,33 +1,12 @@
-local tagHelper = {}
+local mapScanHelper = require("mods").requireFromPlugin("libraries.mapScanHelper")
 
-local function _findAllTagsScan(into, styles)
-    for _, style in ipairs(styles) do
-        local tagStr = style.tag
-        if tagStr then
-            -- tags can be split by ','
-            local tags = style.tag:split(',')()
-            for _, tag in ipairs(tags) do
-                into[tag] = true
-            end
-        end
-    end
-end
+local tagHelper = {}
 
 ---Finds all tags used in FG and BG stylegrounds in the given map
 ---@param map table
 ---@return table<string>
 function tagHelper.findAllTags(map)
-    local ret = {}
-    _findAllTagsScan(ret, map.stylesFg)
-    _findAllTagsScan(ret, map.stylesBg)
-
-    -- convert from a table<string, bool>, to a list<string>
-    local list = {}
-    for tag, _ in pairs(ret) do
-        table.insert(list, tag)
-    end
-
-    return list
+    return mapScanHelper.findAllStylegroundTagsInMap(map)
 end
 
 return tagHelper

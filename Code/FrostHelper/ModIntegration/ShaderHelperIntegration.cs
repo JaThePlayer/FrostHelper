@@ -32,6 +32,20 @@ internal sealed class EffectRef {
     private static EffectRef? _colorGrade;
     // provides an effect ref for alternative color grade - same as vanilla, but doesn't share global state with the vanilla colorgrades
     internal static EffectRef AltColorGrade => _colorGrade ??= new(GFX.FxColorGrading.Clone());
+    
+    private static EffectRef? _solidColor;
+
+    /// <summary>
+    /// Provides a shader with a SolidColor uniform which transforms all non-transparent pixels into that color. To be used for GFX.DrawPrimitives
+    /// </summary>
+    internal static Effect SolidColorVerts(Color color) {
+        var effectRef = _solidColor ??= new("FrostHelper/solidColorVerts");
+
+        var eff = effectRef.Get();
+        eff.Parameters["SolidColor"].SetValue(color.ToVector4());
+        
+        return eff;
+    }
 }
 
 public static class ShaderHelperIntegration {
@@ -67,8 +81,7 @@ public static class ShaderHelperIntegration {
                 AssetReloadHelper.Do("Reloading Shader", () => {
                     var effectName = to.PathVirtual.Substring("Effects/".Length, to.PathVirtual.Length - ".cso".Length - "Effects/".Length);
 
-                    if (FallbackEffectDict.TryGetValue(effectName, out var effect)) {
-                        FallbackEffectDict.Remove(effectName);
+                    if (FallbackEffectDict.Remove(effectName, out var effect)) {
                         if (!effect.IsDisposed)
                             effect.Dispose();
                     }
@@ -123,7 +136,6 @@ public static class ShaderHelperIntegration {
 #else
         FallbackEffectDict;
 #endif
-
     // exposed via the API
     public static Effect? TryGetEffect(string id) {
         id = id.Replace('\\', '/');
