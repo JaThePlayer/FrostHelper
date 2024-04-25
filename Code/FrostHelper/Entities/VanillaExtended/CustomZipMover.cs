@@ -504,6 +504,7 @@ public sealed class CustomZipMover : Solid {
         
         public ZipMoverPathRenderer() {
             Depth = 5000;
+            Tag |= Tags.Persistent;
         }
 
         public void CreateSparks(CustomZipMover zipper) {
@@ -517,10 +518,12 @@ public sealed class CustomZipMover : Solid {
             var sparkDirToA = num + 3.14159274f - 0.3926991f;
             var sparkDirToB = num + 3.14159274f + 0.3926991f;
             
-            SceneAs<Level>().ParticlesBG.Emit(ZipMover.P_Sparks, from + sparkAdd + Calc.Random.Range(-Vector2.One, Vector2.One), sparkDirFromA);
-            SceneAs<Level>().ParticlesBG.Emit(ZipMover.P_Sparks, from - sparkAdd + Calc.Random.Range(-Vector2.One, Vector2.One), sparkDirFromB);
-            SceneAs<Level>().ParticlesBG.Emit(ZipMover.P_Sparks, to + sparkAdd + Calc.Random.Range(-Vector2.One, Vector2.One), sparkDirToA);
-            SceneAs<Level>().ParticlesBG.Emit(ZipMover.P_Sparks, to - sparkAdd + Calc.Random.Range(-Vector2.One, Vector2.One), sparkDirToB);
+            var particles = SceneAs<Level>().ParticlesBG;
+            
+            particles.Emit(ZipMover.P_Sparks, from + sparkAdd + Calc.Random.Range(-Vector2.One, Vector2.One), sparkDirFromA);
+            particles.Emit(ZipMover.P_Sparks, from - sparkAdd + Calc.Random.Range(-Vector2.One, Vector2.One), sparkDirFromB);
+            particles.Emit(ZipMover.P_Sparks, to + sparkAdd + Calc.Random.Range(-Vector2.One, Vector2.One), sparkDirToA);
+            particles.Emit(ZipMover.P_Sparks, to - sparkAdd + Calc.Random.Range(-Vector2.One, Vector2.One), sparkDirToB);
         }
 
         public override void Render() {

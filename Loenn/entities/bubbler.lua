@@ -20,30 +20,18 @@ jautils.createPlacementsPreserveOrder(bubbler, "normal", {
     { "color", "ffffff", "color"}
 })
 
-function bubbler.nodeSprite(room, entity, node, nodeIndex)
-    local nodeSprite = drawableSpriteStruct.fromTexture("objects/FrostHelper/bubble00", node)
-    nodeSprite:setColor(jautils.multColor(entity.color or "ffffff", 1))
-
-    nodeSprite:addPosition(0, -10)
-
-    return nodeSprite
-end
 
 function bubbler.sprite(room, entity)
     local mainSprite = drawableSpriteStruct.fromTexture("objects/FrostHelper/bubble00", entity)
-    local nodeSprite = bubbler.nodeSprite(room, entity, entity.nodes[2], 2)
-    nodeSprite:setColor(jautils.multColor(entity.color or "ffffff", 0.5))
 
-    local points = { entity.x, entity.y }
-    for _, value in ipairs(entity.nodes) do
-        table.insert(points, value.x)
-        table.insert(points, value.y - 10)
-    end
+    return mainSprite
+end
 
-    return jautils.union(
-        mainSprite,
-        nodeSprite
-    )
+function bubbler.nodeSprite(room, entity, node, nodeIndex)
+    local nodeSprite = drawableSpriteStruct.fromTexture("objects/FrostHelper/bubble00", node)
+    nodeSprite:addPosition(0, -10)
+
+    return nodeSprite
 end
 
 function bubbler.selection(room, entity)
