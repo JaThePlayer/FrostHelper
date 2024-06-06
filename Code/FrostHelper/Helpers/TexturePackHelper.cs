@@ -40,7 +40,7 @@ internal static class TexturePackHelper {
         // currently, all textures are simply packed horizontally
         // todo: make better use of vertical space
         foreach (var inputTexture in inputTextures) {
-            width += inputTexture.Width;
+            width += inputTexture.Width + (int)float.Abs(inputTexture.DrawOffset.X);
             height = int.Max(height, inputTexture.Height);
         }
 
@@ -67,7 +67,7 @@ internal static class TexturePackHelper {
             
             var newTexture = new MTexture(mTexture, pos.X, pos.Y, t.Width, t.Height);
             packedTextures.Add(newTexture);
-            pos.X += t.Width;
+            pos.X += t.Width + (int)float.Abs(t.DrawOffset.X);
         }
         
         Draw.SpriteBatch.End();

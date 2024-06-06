@@ -13,7 +13,20 @@ public sealed class CustomZipMover : Solid {
         public static SpriteSource LegacyNormal => Get("objects/zipmover");
         
         private static readonly Dictionary<string, SpriteSource> Cache = new();
+        
+        private static void OnContentChanged(ModAsset from, ReadOnlySpan<char> spritePath) {
+            foreach (var (k, v) in Cache) {
+                if (spritePath.StartsWith(k)) {
+                    Cache.Remove(k);
+                }
+            }
+        }
+        
         public static SpriteSource Get(string dir) {
+            if (Cache.Count == 0) {
+                FrostModule.OnSpriteChanged += OnContentChanged;
+            }
+            
             if (Cache.TryGetValue(dir, out var cached))
                 return cached;
 

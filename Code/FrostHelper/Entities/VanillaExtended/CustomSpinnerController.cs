@@ -45,10 +45,32 @@ public class CustomSpinnerController : Entity {
 }
 
 internal sealed class CustomSpinnerSpriteSource {
-    private static readonly Dictionary<(string, string), CustomSpinnerSpriteSource> Cache = new();
+    private static readonly Dictionary<(string dir, string suffix), CustomSpinnerSpriteSource> Cache = new();
+    
+    private static void OnContentChanged(ModAsset from, ReadOnlySpan<char> spritePath) {
+        foreach (var (k, v) in Cache) {
+            if (spritePath.StartsWith(k.dir)) {
+                Cache.Remove(k);
+            }
 
+            /*
+             doesn't quite work right
+            if (FrostModule.TryGetCurrentLevel() is { } lvl) {
+                lvl.OnEndOfFrame += () => {
+
+                    foreach (CustomSpinner s in lvl.Tracker.SafeGetEntities<CustomSpinner>()) {
+                        s.ClearSprites();
+                    }
+                };
+            }
+            */
+        }
+    }
+    
     public static CustomSpinnerSpriteSource Get(string dir, string suffix) {
         var key = (dir, suffix);
+        if (Cache.Count == 0)
+            FrostModule.OnSpriteChanged += OnContentChanged;
 
         if (Cache.TryGetValue(key, out var cached))
             return cached;
@@ -66,15 +88,26 @@ internal sealed class CustomSpinnerSpriteSource {
     private string HotBgSpritePath { get; }
     private string HotFgSpritePath { get; }
 
-    private List<MTexture> FgTextures { get; }
+    private List<MTexture> FgTextures { get; set; }
     private List<MTexture>? FgHotTextures { get; set; }
     private List<MTexture>? FgDecoTextures { get; set; }
     
-    private List<MTexture> BgTextures { get; }
-    
+    private List<MTexture> BgTextures { get; set; }
+
     private List<MTexture>? BgHotTextures { get; set; }
     private List<MTexture>? BgDecoTextures { get; set; }
+
+    private VirtualTexture? PackedTexture;
+    private VirtualTexture? PackedDecoTexture;
+
+    ~CustomSpinnerSpriteSource() {
+        PackedTexture?.Dispose();
+        PackedTexture = null;
         
+        PackedDecoTexture?.Dispose();
+        PackedDecoTexture = null;
+    }
+    
     private CustomSpinnerSpriteSource(string dir, string suffix) {
         Directory = dir;
         SpritePathSuffix = suffix;
@@ -91,12 +124,10 @@ internal sealed class CustomSpinnerSpriteSource {
         
         // Atlas pack textures for better rendering perf
         
-        // We're leaking packedVirt here, but since this is a cached singleton, we might as well let it live forever.
-        // This is only a small memory leak when hot reloading code mods...
         var packed = TexturePackHelper.CreatePackedGroups([
                 GFX.Game.GetAtlasSubtextures(GetFGSpritePath(false)),
                 GFX.Game.GetAtlasSubtextures(GetBGSpritePath(false)),
-            ], $"spinner.{dir}.{suffix}", out var packedVirt);
+            ], $"spinner.{dir}.{suffix}", out PackedTexture);
 
         (FgTextures, BgTextures) = (packed[0], packed[1]);
 
@@ -104,7 +135,7 @@ internal sealed class CustomSpinnerSpriteSource {
             packed = TexturePackHelper.CreatePackedGroups([
                     GFX.Game.GetAtlasSubtextures(GetFGSpritePath(false) + "Deco"),
                     GFX.Game.GetAtlasSubtextures(GetBGSpritePath(false) + "Deco"),
-                ], $"spinner.deco.{dir}.{suffix}", out var packedDecoVirt);
+                ], $"spinner.deco.{dir}.{suffix}", out PackedDecoTexture);
 
             (FgDecoTextures, BgDecoTextures) = (packed[0], packed[1]);
         }

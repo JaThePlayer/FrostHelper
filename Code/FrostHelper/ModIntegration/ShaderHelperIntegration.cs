@@ -65,17 +65,7 @@ public static class ShaderHelperIntegration {
         public override string Message => "Shader Helper is not installed, but Frost Helper tried getting an effect!\nAdd ShaderHelper as a dependency in your everest.yaml!";
     }
 
-    [OnLoad]
-    public static void Load() {
-        Everest.Content.OnUpdate += Content_OnUpdate;
-    }
-
-    [OnUnload]
-    public static void Unload() {
-        Everest.Content.OnUpdate -= Content_OnUpdate;
-    }
-
-    private static void Content_OnUpdate(ModAsset from, ModAsset to) {
+    internal static void Content_OnUpdate(ModAsset from, ModAsset to) {
         if (to.Format is "cso" or ".cso") {
             try {
                 AssetReloadHelper.Do("Reloading Shader", () => {

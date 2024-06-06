@@ -195,6 +195,22 @@ public class FrostModule : EverestModule {
         }
         
         Everest.Events.Player.OnRegisterStates += PlayerOnOnRegisterStates;
+        Everest.Content.OnUpdate += ContentOnOnUpdate;
+    }
+
+    internal delegate void OnSpriteChangedHandler(ModAsset old, ReadOnlySpan<char> texturePath);
+
+    internal static event OnSpriteChangedHandler OnSpriteChanged;
+
+    private void ContentOnOnUpdate(ModAsset from, ModAsset to) {
+        ShaderHelperIntegration.Content_OnUpdate(from, to);
+        
+        var virtPath = from.PathVirtual.AsSpan();
+        if (virtPath.StartsWith("Graphics/Atlases/Gameplay/")) {
+            virtPath = virtPath["Graphics/Atlases/Gameplay/".Length..];
+
+            OnSpriteChanged(from, virtPath);
+        }
     }
 
     private void PlayerOnOnRegisterStates(Player self) {
@@ -210,30 +226,6 @@ public class FrostModule : EverestModule {
         CustomFeather.CustomFeatherState = self.AddState("Custom Feather", CustomFeather.StarFlyUpdate, CustomFeather.CustomFeatherCoroutine, CustomFeather.CustomFeatherBegin, CustomFeather.CustomFeatherEnd);
         HeldRefill.HeldDashState = self.AddState("Held Dash", HeldRefill.HeldDashUpdate, HeldRefill.HeldDashRoutine, HeldRefill.HeldDashBegin, HeldRefill.HeldDashEnd);
         WASDMovementState.ID = self.AddState(WASDMovementState.GetTasToolsDisplayName(), WASDMovementState.Update, null!, WASDMovementState.Begin, WASDMovementState.End);
-        /*
-         DynamicData.For(self).Set("lastDreamSpeed", 0f);
-         // Let's define new states
-         // .AddState is defined in StateMachineExt
- #if OLD_YELLOW_BOOSTER
-         YellowBoostState = self.StateMachine.AddState(YellowBoostUpdate, YellowBoostCoroutine, YellowBoostBegin, YellowBoostEnd);
-         ModIntegration.CelesteTASIntegration.RegisterState(YellowBoostState, "Yellow Boost");
- #endif
-         GenericCustomBooster.CustomBoostState = self.StateMachine.AddState(GenericCustomBooster.BoostUpdate, GenericCustomBooster.BoostCoroutine, GenericCustomBooster.BoostBegin, GenericCustomBooster.BoostEnd);
-         GenericCustomBooster.CustomRedBoostState = self.StateMachine.AddState(GenericCustomBooster.RedDashUpdate, GenericCustomBooster.RedDashCoroutine, GenericCustomBooster.RedDashBegin, GenericCustomBooster.RedDashEnd);
- #pragma warning disable CS0618 // Type or member is obsolete
-         CustomDreamDashState = self.StateMachine.AddState(CustomDreamBlock.DreamDashUpdate, null!, CustomDreamBlock.DreamDashBegin, CustomDreamBlock.DreamDashEnd);
- #pragma warning restore CS0618 // Type or member is obsolete
-         CustomFeather.CustomFeatherState = self.StateMachine.AddState(CustomFeather.StarFlyUpdate, CustomFeather.CustomFeatherCoroutine, CustomFeather.CustomFeatherBegin, CustomFeather.CustomFeatherEnd);
-         HeldRefill.HeldDashState = self.StateMachine.AddState(HeldRefill.HeldDashUpdate, HeldRefill.HeldDashRoutine, HeldRefill.HeldDashBegin, HeldRefill.HeldDashEnd);
-         WASDMovementState.ID = self.StateMachine.AddState(WASDMovementState.Update, null!, WASDMovementState.Begin, WASDMovementState.End);
-
-         CelesteTASIntegration.RegisterState(GenericCustomBooster.CustomBoostState, "Custom Boost");
-         CelesteTASIntegration.RegisterState(GenericCustomBooster.CustomRedBoostState, "Custom Red Boost");
-         CelesteTASIntegration.RegisterState(CustomDreamDashState, "Custom Dream Dash (Obsolete)");
-         CelesteTASIntegration.RegisterState(CustomFeather.CustomFeatherState, "Custom Feather");
-         CelesteTASIntegration.RegisterState(HeldRefill.HeldDashState, "Held Dash");
-         CelesteTASIntegration.RegisterState(WASDMovementState.ID, WASDMovementState.GetTasToolsDisplayName());
-         */
     }
 
     public static List<Entity> CollideAll(Entity entity) {
@@ -392,6 +384,8 @@ public class FrostModule : EverestModule {
         AttributeHelper.InvokeAllWithAttribute(typeof(OnUnload));
 
         OutlineHelper.Dispose();
+        
+        Everest.Content.OnUpdate -= ContentOnOnUpdate;
     }
 
     // Optional, initialize anything after Celeste has initialized itself properly.

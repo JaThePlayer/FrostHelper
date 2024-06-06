@@ -85,7 +85,19 @@ internal sealed class DustGraphicsDirectory {
         Eyes = $"{directory}/eyes";
     }
 
+    private static void OnContentChanged(ModAsset from, ReadOnlySpan<char> spritePath) {
+        foreach (var (k, v) in Directories) {
+            if (spritePath.StartsWith(k)) {
+                Directories.Remove(k);
+            }
+        }
+    }
+    
     public static DustGraphicsDirectory Get(string directory) {
+        if (Directories.Count == 0) {
+            FrostModule.OnSpriteChanged += OnContentChanged;
+        }
+        
         if (Directories.TryGetValue(directory, out var cached))
             return cached;
 

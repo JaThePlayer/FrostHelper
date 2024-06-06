@@ -273,6 +273,15 @@ public class CustomSpinner : Entity {
         }
     }
 
+    internal void ClearSprites() {
+        if (!expanded)
+            return;
+
+        expanded = false;
+        Visible = false;
+        Components.RemoveAll<SealedImage>();
+    }
+
 
     public void ForceInstantiate() {
         CreateSprites();
@@ -357,7 +366,6 @@ public class CustomSpinner : Entity {
                 Scene.Tracker.SafeGetEntity<SpinnerDecoRenderer>()?.Spinners.Remove(this);
             RegisteredToRenderers = false;
         }
-
     }
 
     private void RegisterToRenderers() {
