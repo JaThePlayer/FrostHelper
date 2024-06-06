@@ -120,8 +120,9 @@ public class HeldRefill : Entity {
         yield break;
     }
     public void OnPlayer(Player player) {
-        // TODO
         if (AnyDashPressed() && player.Holding is null) {
+            Input.Dash.ConsumePress();
+            Input.CrouchDash.ConsumePress();
             Collidable = false;
             SetHeldRefillUsedByPlayer(player, this);
             player.StateMachine.State = HeldDashState;
