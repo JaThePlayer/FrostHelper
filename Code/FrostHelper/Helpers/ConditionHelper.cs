@@ -1,8 +1,10 @@
-﻿namespace FrostHelper.Helpers;
+﻿using FrostHelper.ModIntegration;
+
+namespace FrostHelper.Helpers;
 
 public static class ConditionHelper {
     private static readonly Condition _EmptyCondition = new Condition("");
-    public class Condition {
+    public class Condition : ISavestatePersisted {
         public bool Inverted;
         public string Flag;
         public bool Empty;

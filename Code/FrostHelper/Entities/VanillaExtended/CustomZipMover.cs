@@ -1,4 +1,5 @@
 ﻿using FrostHelper.Helpers;
+using FrostHelper.ModIntegration;
 using System.Runtime.CompilerServices;
 
 namespace FrostHelper;
@@ -6,7 +7,7 @@ namespace FrostHelper;
 [CustomEntity("FrostHelper/CustomZipMover")]
 [Tracked]
 public sealed class CustomZipMover : Solid {
-    internal sealed class SpriteSource {
+    internal sealed class SpriteSource : ISavestatePersisted {
         public static SpriteSource LegacyRed => Get("objects/FrostHelper/customZipMover/redcog");
         public static SpriteSource LegacyBlue => Get("objects/FrostHelper/customZipMover/redcog/cold");
         public static SpriteSource LegacyBlack => Get("objects/FrostHelper/customZipMover/blackcog");

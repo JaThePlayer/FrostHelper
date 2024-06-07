@@ -1,4 +1,6 @@
-﻿namespace FrostHelper.Entities;
+﻿using FrostHelper.ModIntegration;
+
+namespace FrostHelper.Entities;
 
 [CustomEntity("FrostHelper/DustSprite")]
 [Tracked]
@@ -68,7 +70,7 @@ internal sealed class CustomDustBunny : DustStaticSpinner {
     }
 }
 
-internal sealed class DustGraphicsDirectory {
+internal sealed class DustGraphicsDirectory : ISavestatePersisted {
     private static readonly Dictionary<string, DustGraphicsDirectory> Directories = new(StringComparer.Ordinal);
 
     public readonly string Base;
@@ -110,7 +112,7 @@ internal sealed class DustEdgesTracker {
     public readonly Dictionary<DustEdgeColors, List<CustomDustEdge>> EdgeColorCache = new();
 }
 
-internal sealed class DustEdgeColors(Vector3[] colors) : IEquatable<DustEdgeColors> {
+internal sealed class DustEdgeColors(Vector3[] colors) : IEquatable<DustEdgeColors>, ISavestatePersisted {
     public Vector3[] Colors => colors;
 
     private int? _hash;

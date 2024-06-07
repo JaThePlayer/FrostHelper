@@ -1,4 +1,5 @@
 ﻿using Celeste.Mod;
+using FrostHelper.Entities;
 using FrostHelper.Entities.Boosters;
 using FrostHelper.EXPERIMENTAL;
 using FrostHelper.Helpers;
@@ -173,6 +174,11 @@ public class FrostModule : EverestModule {
 
         AttributeHelper.InvokeAllWithAttribute(typeof(OnLoadContent));
         GravityHelperIntegration.Load();
+        SpeedrunToolIntegration.LoadIfNeeded();
+        
+        SpeedrunToolIntegration.AddReturnSameObjectProcessor?.Invoke(t => 
+            t.IsAssignableTo(typeof(ISavestatePersisted))
+        );
     }
 
     private static List<ILHook> registeredHooks = new List<ILHook>();

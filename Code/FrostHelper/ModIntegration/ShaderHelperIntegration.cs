@@ -7,7 +7,7 @@ namespace FrostHelper.ModIntegration;
 /// <summary>
 /// Acts like a reference to an effect. Safe between hot reloads.
 /// </summary>
-internal sealed class EffectRef {
+internal sealed class EffectRef : ISavestatePersisted {
     private Effect? effect;
     private readonly string key;
 

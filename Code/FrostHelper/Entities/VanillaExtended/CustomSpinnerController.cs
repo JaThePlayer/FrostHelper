@@ -44,7 +44,7 @@ public class CustomSpinnerController : Entity {
     }
 }
 
-internal sealed class CustomSpinnerSpriteSource {
+internal sealed class CustomSpinnerSpriteSource : ISavestatePersisted {
     private static readonly Dictionary<(string dir, string suffix), CustomSpinnerSpriteSource> Cache = new();
     
     private static void OnContentChanged(ModAsset from, ReadOnlySpan<char> spritePath) {
