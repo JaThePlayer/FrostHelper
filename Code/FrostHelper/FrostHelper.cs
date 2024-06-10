@@ -208,8 +208,11 @@ public class FrostModule : EverestModule {
 
     internal static event OnSpriteChangedHandler OnSpriteChanged;
 
-    private void ContentOnOnUpdate(ModAsset from, ModAsset to) {
-        ShaderHelperIntegration.Content_OnUpdate(from, to);
+    private void ContentOnOnUpdate(ModAsset? from, ModAsset? to) {
+        if (from is null)
+            return;
+        if (to is {})
+            ShaderHelperIntegration.Content_OnUpdate(from, to);
         
         var virtPath = from.PathVirtual.AsSpan();
         if (virtPath.StartsWith("Graphics/Atlases/Gameplay/")) {
