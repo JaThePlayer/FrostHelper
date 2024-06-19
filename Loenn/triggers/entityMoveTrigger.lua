@@ -12,7 +12,7 @@ jautils.createPlacementsPreserveOrder(flagInvert, "default", {
     { "blacklist", false },
     { "moveByX", 0.0 },
     { "moveByY", 0.0 },
-    { "duration", 1.0 },
+    { "moveDuration", 1.0 },
     { "easing", "CubeInOut", jautils.easings },
     { "once", false },
 }, true)

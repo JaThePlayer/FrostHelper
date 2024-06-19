@@ -693,7 +693,8 @@ triggers.FrostHelper/EntityMoveTrigger.attributes.description.types=Comma-sepera
 triggers.FrostHelper/EntityMoveTrigger.attributes.description.blacklist=Whether the "types" list is a blacklist or whitelist.
 triggers.FrostHelper/EntityMoveTrigger.attributes.description.moveByX=How many pixels right the entities should be moved. (Use negative numbers to move left)
 triggers.FrostHelper/EntityMoveTrigger.attributes.description.moveByY=How many pixels down the entities should be moved. (Use negative numbers to move up)
-triggers.FrostHelper/EntityMoveTrigger.attributes.description.duration=How long (in seconds) the entities will be moved for.
+triggers.FrostHelper/EntityMoveTrigger.attributes.description.moveDuration=How long (in seconds) the entities will be moved for.
+triggers.FrostHelper/EntityMoveTrigger.attributes.description.duration=BUGGED: If you're seeing this, this trigger is outdated,\n and this property will do nothing.\nPlease place a new Entity Move Trigger,\nand change its Move Duration setting instead.
 triggers.FrostHelper/EntityMoveTrigger.attributes.description.easing=The Easing type used for the movement. You can either pick one of the presets, or write lua code that returns a number (typically between 0.0 and 1.0).\nYour input will be converted to:\nreturn function(p){(name.Contains("return") ? "" : " return")} {name} end\nwhere 'p' is tween.Percent - a number between (0.0, 1.0), which is the percent/100 of the move time elapsed.
 triggers.FrostHelper/EntityMoveTrigger.attributes.description.once=Whether this trigger can be used only once.
 
