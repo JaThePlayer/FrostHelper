@@ -27,8 +27,13 @@ public class BadelineChaserBlock : Solid {
 
     public Sprite Emblem;
 
+    private readonly bool GiveLiftBoost;
+
     private void ShiftSize(int amount) {
-        MoveV(amount);
+        if (GiveLiftBoost)
+            MoveV(amount);
+        else
+            MoveV(amount, 0);
     }
 
     public BadelineChaserBlock(EntityData data, Vector2 offset) : base(data.Position + offset, data.Width, data.Height, false) {
@@ -41,6 +46,8 @@ public class BadelineChaserBlock : Solid {
         Emblem.Play(Reversed ? "pressed" : "solid");
         AllowStaticMovers = true;
         Depth = Depths.Solids;
+
+        GiveLiftBoost = data.Bool("giveLiftBoost", true);
     }
 
     bool justChangedState;

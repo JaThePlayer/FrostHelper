@@ -27,6 +27,7 @@ entities.FrostHelper/DustSprite.attributes.description.attachGroup=The group tha
 entities.FrostHelper/BadelineChaserBlock.placements.name.badeline_chaser_block=Badeline Chaser Block
 entities.FrostHelper/BadelineChaserBlock.placements.name.badeline_chaser_block_reversed=Badeline Chaser Block (Reversed)
 entities.FrostHelper/BadelineChaserBlock.attributes.description.reversed=Whether the state of this chaser block should be the inverse of the usual state.
+entities.FrostHelper/BadelineChaserBlock.attributes.description.giveLiftBoost=Whether this block should give lift boost when it gets activated.\nAllows for the equivalent of Cassette Boosts.
 
 # Badeline Chaser Block Activator
 entities.FrostHelper/BadelineChaserBlockActivator.placements.name.badeline_chaser_block_activator=Badeline Chaser Block Activator

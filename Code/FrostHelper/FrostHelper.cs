@@ -213,12 +213,15 @@ public class FrostModule : EverestModule {
             return;
         if (to is {})
             ShaderHelperIntegration.Content_OnUpdate(from, to);
+
+        if (from.PathVirtual is null)
+            return;
         
         var virtPath = from.PathVirtual.AsSpan();
         if (virtPath.StartsWith("Graphics/Atlases/Gameplay/")) {
             virtPath = virtPath["Graphics/Atlases/Gameplay/".Length..];
 
-            OnSpriteChanged(from, virtPath);
+            OnSpriteChanged?.Invoke(from, virtPath);
         }
     }
 
