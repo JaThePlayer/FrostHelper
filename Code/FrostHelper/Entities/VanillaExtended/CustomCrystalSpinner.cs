@@ -345,7 +345,7 @@ public class CustomSpinner : Entity {
 
         if (controller.NoCycles || Scene.OnInterval(0.05f, offset)) {
             // grabbing the cached player from the controller is faster than the tracker.
-            if (controller.Player is { } player) {
+            if ((controller.Player ??= Scene.Tracker.SafeGetEntity<Player>()) is { } player) {
                 Collidable = Math.Abs(player.X - X) < 128f && Math.Abs(player.Y - Y) < 128f;
             }
         }

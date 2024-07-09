@@ -234,6 +234,7 @@ entities.FrostHelper/GrayBooster.attributes.description.enterSfx=SFX to play whe
 entities.FrostHelper/GrayBooster.attributes.description.reappearSfx=SFX to play when the booster respawns
 entities.FrostHelper/GrayBooster.attributes.description.boostSfx=SFX to play when the booster starts boosting the player
 entities.FrostHelper/GrayBooster.attributes.description.red=Whether this booster should act like a red one, that has an unlimited range.
+entities.FrostHelper/GrayBooster.attributes.description.redBoostDashOutMode=When this is a red booster, decides whether the player can dash out of the booster early.\nDefault - Vanilla behaviour, player needs to have a dash.\nEvenAtZeroDashes - The player can dash out of the booster even without any dashes.\nNever - The player can't dash out of the booster.
 entities.FrostHelper/GrayBooster.attributes.description.dashes=How many dashes the player will have after leaving the booster.\nSet to -1 to simply refill dashes according to the current maximum dash count.\nSet to -2 to not change dash count in any way.\nOther positive values will set the dash count to the specified amount.\nOther negative values crash.
 
 entities.FrostHelper/BlueBooster.attributes.description.directory=The directory from which the sprites are taken, relative to Atlases/Gameplay/
@@ -245,6 +246,7 @@ entities.FrostHelper/BlueBooster.attributes.description.enterSfx=SFX to play whe
 entities.FrostHelper/BlueBooster.attributes.description.reappearSfx=SFX to play when the booster respawns
 entities.FrostHelper/BlueBooster.attributes.description.boostSfx=SFX to play when the booster starts boosting the player
 entities.FrostHelper/BlueBooster.attributes.description.red=Whether this booster should act like a red one, that has an unlimited range.
+entities.FrostHelper/BlueBooster.attributes.description.redBoostDashOutMode=When this is a red booster, decides whether the player can dash out of the booster early.\nDefault - Vanilla behaviour, player needs to have a dash.\nEvenAtZeroDashes - The player can dash out of the booster even without any dashes.\nNever - The player can't dash out of the booster.
 
 entities.FrostHelper/YellowBooster.attributes.description.directory=The directory from which the sprites are taken, relative to Atlases/Gameplay/
 entities.FrostHelper/YellowBooster.attributes.description.respawnTime=Time (in seconds) it takes the booster to respawn after being used. A number <= 0 will make the booster never respawn.
@@ -266,6 +268,7 @@ entities.FrostHelper/IncrementBooster.attributes.description.enterSfx=SFX to pla
 entities.FrostHelper/IncrementBooster.attributes.description.reappearSfx=SFX to play when the booster respawns
 entities.FrostHelper/IncrementBooster.attributes.description.boostSfx=SFX to play when the booster starts boosting the player
 entities.FrostHelper/IncrementBooster.attributes.description.red=Whether this booster should act like a red one, that has an unlimited range.
+entities.FrostHelper/IncrementBooster.attributes.description.redBoostDashOutMode=When this is a red booster, decides whether the player can dash out of the booster early.\nDefault - Vanilla behaviour, player needs to have a dash.\nEvenAtZeroDashes - The player can dash out of the booster even without any dashes.\nNever - The player can't dash out of the booster.
 entities.FrostHelper/IncrementBooster.attributes.description.dashCap=Maximum amount of dashes the player can have after leaving this booster. Leave at -1 for no cap.
 entities.FrostHelper/IncrementBooster.attributes.description.dashes=How many additional dashes the player will get after leaving the booster.
 entities.FrostHelper/IncrementBooster.attributes.description.refillBeforeIncrementing=Refills the player's dashes before incrementing the dash amount.

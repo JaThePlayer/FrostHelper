@@ -12,6 +12,10 @@ local dashesOptions = {
     minimumValue = -2
 }
 
+local dashOutModes = {
+    "Default", "EvenAtZeroDashes", "Never"
+}
+
 local function getSpriteForBooster(room, entity)
     return jautils.getCustomSprite(entity, "directory", "/booster00", fallback)
 end
@@ -49,6 +53,7 @@ local dashIncrementBooster = createCustomBoosterHandler("FrostHelper/IncrementBo
     { "enterSfx", "event:/game/04_cliffside/greenbooster_enter" },
     { "boostSfx", "event:/game/04_cliffside/greenbooster_dash" },
     { "releaseSfx", "event:/game/04_cliffside/greenbooster_end" },
+    { "redBoostDashOutMode", "Default", dashOutModes },
     { "red", false },
     { "refillBeforeIncrementing", false},
     { "preserveSpeed", false },
@@ -74,6 +79,7 @@ local grayBooster = createCustomBoosterHandler("FrostHelper/GrayBooster", {
     { "enterSfx", "event:/game/04_cliffside/greenbooster_enter" },
     { "boostSfx", "event:/game/04_cliffside/greenbooster_dash" },
     { "releaseSfx", "event:/game/04_cliffside/greenbooster_end" },
+    { "redBoostDashOutMode", "Default", dashOutModes },
     { "red", false },
     { "dashes", -1, dashesOptions },
     { "preserveSpeed", false },
@@ -97,6 +103,7 @@ local blueBooster = createCustomBoosterHandler("FrostHelper/BlueBooster", {
     { "enterSfx", "event:/game/04_cliffside/greenbooster_enter" },
     { "boostSfx", "event:/game/04_cliffside/greenbooster_dash" },
     { "releaseSfx", "event:/game/04_cliffside/greenbooster_end" },
+    { "redBoostDashOutMode", "Default", dashOutModes },
     { "red", false },
     { "preserveSpeed", false },
 })
@@ -112,6 +119,7 @@ local yellowBooster = createCustomBoosterHandler("FrostHelper/YellowBooster", {
     { "enterSfx", "event:/game/04_cliffside/greenbooster_enter" },
     { "boostSfx", "event:/game/04_cliffside/greenbooster_dash" },
     { "releaseSfx", "event:/game/04_cliffside/greenbooster_end" },
+    -- { "redBoostDashOutMode", "Default", dashOutModes },
     { "dashes", -1, dashesOptions },
     { "preserveSpeed", false },
 })

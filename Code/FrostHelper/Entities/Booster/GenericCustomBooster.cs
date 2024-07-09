@@ -1,6 +1,7 @@
 ﻿using Celeste.Mod.Meta;
 using FrostHelper.Helpers;
 using FrostHelper.ModIntegration;
+using System.Diagnostics;
 
 namespace FrostHelper.Entities.Boosters {
     [Tracked(true)]
@@ -135,12 +136,17 @@ namespace FrostHelper.Entities.Boosters {
         // respawnTime = 0 would already make the booster not respawn in earlier versions, so it will stay that way, even if it could be unintuitive
         public bool ShouldRespawn => RespawnTime > 0f;
 
+        public readonly RedBoostDashOutModes RedBoostDashOutMode;
+
+        public readonly string Directory;
+
         public GenericCustomBooster(EntityData data, Vector2 offset) : base(data.Position + offset) {
             LoadIfNeeded();
 
             Depth = -8500;
             Collider = new Circle(10f, 0f, 2f);
-            sprite = new Sprite(GFX.Game, data.Attr("directory", "objects/FrostHelper/blueBooster/")) {
+            Directory = data.Attr("directory", "objects/FrostHelper/blueBooster/");
+            sprite = new Sprite(GFX.Game, Directory) {
                 Visible = true
             };
             sprite.CenterOrigin();
@@ -179,11 +185,12 @@ namespace FrostHelper.Entities.Boosters {
             DashRecovery = data.Int("dashes", -1);
             PreserveSpeed = data.Bool("preserveSpeed", false);
             OutlineColor = data.GetColor("outlineColor", "000000");
+            RedBoostDashOutMode = data.Enum("redBoostDashOutMode", RedBoostDashOutModes.Default);
         }
 
         public override void Added(Scene scene) {
             base.Added(scene);
-            Image image = new Image(GFX.Game["objects/booster/outline"]);
+            Image image = new Image(GFX.Game[$"{Directory.AsSpan().TrimEnd('/')}/outline"]);
             image.CenterOrigin();
             image.Color = Color.White * 0.75f;
             outline = new Entity(Position) {
@@ -501,12 +508,27 @@ namespace FrostHelper.Entities.Boosters {
 
         public static int RedDashUpdate(Entity e) {
             Player player = (e as Player)!;
+            var booster = GetBoosterThatIsBoostingPlayer(player) ?? throw new UnreachableException();
 
             player.StartedDashing = false;
-            bool ch9hub = false;//this.LastBooster != null && this.LastBooster.Ch9HubTransition;
+            bool ch9hub = false;
             player.gliderBoostTimer = 0.05f;
 
-            if (player.CanDash) {
+            // player.CanDash checks player.Dashes > 0. For blue boosters, the player might be in a booster with no dashes.
+            // Because `EvenAtZeroDashes` has to make this check pass in some way,
+            // the easiest way is to just change player dash count temporarily.
+            var oldDashCount = player.Dashes;
+            var dashOutMode = booster.RedBoostDashOutMode;
+            player.Dashes = dashOutMode switch {
+                RedBoostDashOutModes.Default => player.Dashes,
+                RedBoostDashOutModes.EvenAtZeroDashes => 1,
+                RedBoostDashOutModes.Never => 0,
+                _ => throw new UnreachableException(),
+            };
+            var canDashOut = player.CanDash;
+            player.Dashes = oldDashCount;
+            
+            if (canDashOut) {
                 foreach (GenericCustomBooster b in player.Scene.Tracker.SafeGetEntities<GenericCustomBooster>()) {
                     if (b.BoostingPlayer) {
                         b.BoostingPlayer = false;
@@ -651,5 +673,11 @@ namespace FrostHelper.Entities.Boosters {
         }
 
         #endregion
+    }
+
+    public enum RedBoostDashOutModes {
+        Default,
+        EvenAtZeroDashes,
+        Never,
     }
 }
