@@ -15,20 +15,6 @@ local toggleSwapBlock = {}
 toggleSwapBlock.name = "FrostHelper/ToggleSwapBlock"
 toggleSwapBlock.nodeLineRenderType = "line"
 
-toggleSwapBlock.placements =
-{
-    name = "normal",
-    data = {
-        width = 16,
-        height = 16,
-        directory = "objects/swapblock",
-        speed = 360,
-        renderBG = false,
-        moveSFX = "event:/game/05_mirror_temple/swapblock_move",
-        moveEndSFX = "event:/game/05_mirror_temple/swapblock_move_end",
-    }
-}
-
 jautils.createPlacementsPreserveOrder(toggleSwapBlock, "normal", {
     { "directory", "objects/swapblock" },
     { "speed", 360 },

@@ -8,6 +8,7 @@ local afterDeathBehaviours = {
 
 local mover = {
     name = "FrostHelper/StylegroundMoveTrigger",
+    category = "visual",
 }
 
 jautils.createPlacementsPreserveOrder(mover, "Styleground Move", {

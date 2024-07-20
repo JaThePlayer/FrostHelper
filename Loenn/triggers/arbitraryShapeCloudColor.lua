@@ -4,6 +4,7 @@ local jautils = require("mods").requireFromPlugin("libraries.jautils")
 local function createHandler(name, fieldInfo, extendedText)
     local h = {
         name = name,
+        category = "visual",
     }
 
     jautils.addExtendedText(h, extendedText or function (trigger)

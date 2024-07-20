@@ -59,11 +59,11 @@ local function createSpringHandler(name, spriteRotation, speedAsVector)
         { "color", "ffffff", "color" },
         { "directory", "objects/spring/" },
         { "speedMult", speedAsVector and "1.0" or 1.0 },
+        { "attachGroup", -1, "FrostHelper.attachGroup" },
+        { "version", 1, "integer" },
         { "oneUse", false },
         { "playerCanUse", true },
         { "renderOutline", true },
-        { "attachGroup", -1, "FrostHelper.attachGroup" },
-        { "version", 1, "integer" }
     })
 
     return handler

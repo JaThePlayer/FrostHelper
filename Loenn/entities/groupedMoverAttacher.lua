@@ -10,11 +10,11 @@ local entityGroupAttacher = {
 jautils.createPlacementsPreserveOrder(entityGroupAttacher, "default", {
     { "width", 8 },
     { "height", 8 },
-    { "types", "" },
+    { "types", "", "typesList" },
     { "isBlacklist", false },
+    { "attachGroup", 0, "FrostHelper.attachGroup" },
     { "specialHandling", true },
     { "canBeLeader", true },
-    { "attachGroup", 0, "FrostHelper.attachGroup" },
 })
 
 return entityGroupAttacher

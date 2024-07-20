@@ -23,7 +23,7 @@ entityMover.depth = -19999999
 jautils.createPlacementsPreserveOrder(entityMover, "normal", {
     { "width", 16 },
     { "height", 16 },
-    { "types", "" },
+    { "types", "", "typesList" },
     { "blacklist", false },
     { "moveDuration", 1.0 },
     { "easing", "CubeInOut", jautils.easings },

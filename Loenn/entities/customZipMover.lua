@@ -20,28 +20,29 @@ jautils.createPlacementsPreserveOrder(zipper, "custom_zip_mover", {
     { "coldLineColor", "006bb3", "color" },
     { "coldLineLightColor", "0099ff", "color" },
     { "tint", "ffffff", "color" },
-    --{ "percentage", 100 },
     { "directory", "objects/zipmover" },
     { "speedMultiplier", 1.0 },
-    { "coldSpeedMultiplier", 0.25 },
+    { "coldSpeedMultiplier", 1 / 4 },
+    { "bloomAlpha", 1.0 },
+    { "bloomRadius", 6.0 },
     { "isCore", false },
     { "showLine", true },
     { "fillMiddle", true },
-    { "bloomAlpha", 1.0 },
-    { "bloomRadius", 6.0 },
 })
 
 jautils.addPlacement(zipper, "slow", {
     { "lineColor", "006bb3" },
     { "lineLightColor", "0099ff" },
-    { "percentage", 50 },
+    { "speedMultiplier", 0.5 },
+    { "coldSpeedMultiplier", 0.5 / 4 },
     { "directory", "objects/FrostHelper/customZipMover/redcog/cold" },
 })
 
 jautils.addPlacement(zipper, "fast", {
     { "lineColor", "e62e00" },
     { "lineLightColor", "ff5c33" },
-    { "percentage", 200 },
+    { "speedMultiplier", 2.0 },
+    { "coldSpeedMultiplier", 2 / 4 },
     { "directory", "objects/FrostHelper/customZipMover/redcog" },
 })
 

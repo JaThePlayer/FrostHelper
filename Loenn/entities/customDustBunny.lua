@@ -15,14 +15,14 @@ local dust = {
 }
 
 jautils.createPlacementsPreserveOrder(dust, "default", {
-    { "edgeColors", "f25a10,ff0000,f21067" },
+    { "edgeColors", "f25a10,ff0000,f21067", "colorList" },
     { "directory", "danger/dustcreature", "editableDropdown", builtinDirectories },
     { "tint", "ffffff", "color" },
     { "eyeColor", "ff0000", "color" },
+    { "attachGroup", -1, "FrostHelper.attachGroup" },
+    { "attachToSolid", false },
     { "rainbow", false },
     { "rainbowEyes", false },
-    { "attachToSolid", false },
-    { "attachGroup", -1, "FrostHelper.attachGroup" },
 })
 
 function dust.sprite(room, entity)

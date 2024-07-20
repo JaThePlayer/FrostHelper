@@ -2,6 +2,7 @@ local jautils = require("mods").requireFromPlugin("libraries.jautils")
 
 local shaderTrigger = {
     name = "FrostHelper/ScreenwideShaderTrigger",
+    category = "visual",
     placements = {
         name = "default",
         data = {

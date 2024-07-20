@@ -3,6 +3,7 @@ local jautils = require("mods").requireFromPlugin("libraries.jautils")
 
 local bloomColor = {
     name = "FrostHelper/BloomColorTrigger",
+    category = "visual",
     placements = {
         name = "default",
         data = {
@@ -23,6 +24,7 @@ end)
 
 local rainbowBloom = {
     name = "FrostHelper/RainbowBloomTrigger",
+    category = "visual",
     placements = {
         name = "default",
         data = {
@@ -33,6 +35,7 @@ local rainbowBloom = {
 
 local bloomColorFade = {
     name = "FrostHelper/BloomColorFadeTrigger",
+    category = "visual",
     placements = {
         name = "default",
         data = {
@@ -63,6 +66,7 @@ end)
 
 local bloomColorPulse = {
     name = "FrostHelper/BloomColorPulseTrigger",
+    category = "visual",
 }
 
 jautils.createPlacementsPreserveOrder(bloomColorPulse, "default", {

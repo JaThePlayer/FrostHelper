@@ -1,6 +1,5 @@
 ﻿using FrostHelper.Colliders;
 using FrostHelper.Components;
-using FrostHelper.Helpers;
 using FrostHelper.ModIntegration;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -205,14 +204,13 @@ public class CustomSpinner : Entity {
 
     public override void Awake(Scene scene) {
         ConnectorRendererJustAdded = false;
-
+        controller = ControllerHelper<CustomSpinnerController>.AddToSceneIfNeeded(scene);
+        UpdateController();
+        
         base.Awake(scene);
         if (InView()) {
             CreateSprites();
         }
-
-        controller = ControllerHelper<CustomSpinnerController>.AddToSceneIfNeeded(scene);
-        UpdateController();
     }
 
     private void UpdateController() {
@@ -306,6 +304,7 @@ public class CustomSpinner : Entity {
             // base.Update();
 
             var scene = Scene;
+            var offset = this.offset;
 
             if (Rainbow && scene.OnInterval(0.08f, offset))
                 UpdateHue();
@@ -315,7 +314,12 @@ public class CustomSpinner : Entity {
                 UnregisterFromRenderers();
             }
 
-            DoCycle();
+            if (HasCollider && (controller.NoCycles || scene.OnInterval(0.05f, offset))) {
+                // grabbing the cached player from the controller is faster than the tracker.
+                if ((controller.Player ??= scene.Tracker.SafeGetEntity<Player>()) is { } player) {
+                    Collidable = Math.Abs(player.X - X) < 128f && Math.Abs(player.Y - Y) < 128f;
+                }
+            }
         }
 
         if (MoveWithWind) {
@@ -339,23 +343,15 @@ public class CustomSpinner : Entity {
         base.Render();
     }
 
-    private void DoCycle() {
-        if (!HasCollider)
-            return;
-
-        if (controller.NoCycles || Scene.OnInterval(0.05f, offset)) {
-            // grabbing the cached player from the controller is faster than the tracker.
-            if ((controller.Player ??= Scene.Tracker.SafeGetEntity<Player>()) is { } player) {
-                Collidable = Math.Abs(player.X - X) < 128f && Math.Abs(player.Y - Y) < 128f;
-            }
-        }
-    }
-
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private bool InView() {
-        var camera = (Scene as Level)!.Camera;
-        return X > camera.X - 16f && Y > camera.Y - 16f && X < camera.X + 336f && Y < camera.Y + 196f;
-    }
+        var camera = (Scene as Level)?.Camera;
+        if (camera is null)
+            return true;
 
+        var diff = Position - camera.position;
+        return diff.X > -16f && diff.Y > -16f && diff.X < 336f && diff.Y < 196f;
+    }
 
     private void UnregisterFromRenderers() {
         if (RegisteredToRenderers) {

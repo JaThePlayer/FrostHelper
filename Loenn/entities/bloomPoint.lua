@@ -14,18 +14,6 @@ local bloomPoint = {
 }
 
 function bloomPoint.sprite(room, entity)
-    --[[
-    local gradientSprite = drawableSprite.fromTexture(gradientPath, entity)
-    local alpha = math.min(entity.alpha, 0.6)
-    local scale = entity.radius * 2 * (1 / gradientSprite.meta.width)
-
-    gradientSprite:setColor({alpha, alpha, alpha, alpha})
-    gradientSprite:setScale(scale, scale)
-
-    return gradientSprite
-    ]]
-
-
     return bloomSprite.getSprite(entity, entity.alpha, entity.radius)
 end
 

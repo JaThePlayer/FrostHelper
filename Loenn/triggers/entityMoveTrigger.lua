@@ -8,7 +8,7 @@ local flagInvert = {
 }
 
 jautils.createPlacementsPreserveOrder(flagInvert, "default", {
-    { "types", "" },
+    { "types", "", "typesList" },
     { "blacklist", false },
     { "moveByX", 0.0 },
     { "moveByY", 0.0 },

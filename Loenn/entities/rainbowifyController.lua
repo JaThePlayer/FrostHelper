@@ -1,8 +1,15 @@
 local controllerEntity = require("mods").requireFromPlugin("libraries.controllerEntity")
+local jautils = require("mods").requireFromPlugin("libraries.jautils")
 
-return controllerEntity.createHandler("FrostHelper/EntityRainbowifyController", {
+local controller = controllerEntity.createHandler("FrostHelper/EntityRainbowifyController", {
     name = "normal",
     data = {
         types = "",
     },
 }, false, "editor/FrostHelper/EntityRainbowifyController")
+
+jautils.createPlacementsPreserveOrder(controller, "normal", {
+    { "types", "", "typesList" },
+})
+
+return controller

@@ -48,6 +48,11 @@ function debugRC.entityTypesToNames(entityTypes)
             return cached
         end
 
+        if not debugRC.available then
+            _entityTypesToNamesCache[entityTypes] = splitList(entityTypes)
+            return _entityTypesToNamesCache[entityTypes]
+        end
+
         local response =
             frostSettings.useDebugRC() and request.send(_entityTypesToNamesUrl, {
                 headers = {
@@ -56,10 +61,12 @@ function debugRC.entityTypesToNames(entityTypes)
             })
 
         local names = response and response.body or entityTypes
-
         local t = splitList(names)
-
         _entityTypesToNamesCache[entityTypes] = t
+
+        if not response or not response.body then
+            debugRC.available = false
+        end
 
         return t
     end

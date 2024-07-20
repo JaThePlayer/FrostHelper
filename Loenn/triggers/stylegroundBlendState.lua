@@ -3,6 +3,7 @@ local blendStates = require("mods").requireFromPlugin("libraries.blendStates", "
 
 local blendStateTrigger = {
     name = "FrostHelper/StylegroundBlendModeTrigger",
+    category = "visual",
 }
 
 jautils.createPlacementsPreserveOrder(blendStateTrigger, "default", {

@@ -5,7 +5,7 @@ return controllerEntity.createHandler("FrostHelper/EntityBatcher", {
     { "flagInverted", false },
     { "effect", "" },
     { "depth", -1000000, "integer" },
-    { "types", "" },
+    { "types", "", "typesList" },
     { "parameters", "" },
     { "dynamicDepthBatchSplitField", "" },
     { "makeEntitiesInvisible", true },

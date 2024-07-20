@@ -8,17 +8,14 @@ local flutterbird = {}
 flutterbird.name = "FrostHelper/CustomFlutterBird"
 flutterbird.depth = -9999
 
-flutterbird.placements = {
-    name = "normal",
-    data = {
-        colors = "89fbff,f0fc6c,f493ff,93baff",
-        directory = "scenery/flutterbird/",
-        dontFlyAway = false,
-        hopSfx = "event:/game/general/birdbaby_hop",
-        flyAwaySfx = "event:/game/general/birdbaby_flyaway",
-        tweetingSfx = "event:/game/general/birdbaby_tweet_loop",
-    }
-}
+jautils.createPlacementsPreserveOrder(flutterbird, "normal", {
+    { "colors", "89fbff,f0fc6c,f493ff,93baff", "colorList" },
+    { "directory", "scenery/flutterbird/" },
+    { "hopSfx", "event:/game/general/birdbaby_hop" },
+    { "flyAwaySfx", "event:/game/general/birdbaby_flyaway" },
+    { "tweetingSfx", "event:/game/general/birdbaby_tweet_loop" },
+    { "dontFlyAway", false },
+})
 
 function flutterbird.sprite(room, entity)
     utils.setSimpleCoordinateSeed(entity.x, entity.y)

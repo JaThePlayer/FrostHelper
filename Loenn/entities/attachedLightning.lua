@@ -12,9 +12,9 @@ local attachedLightning = {
 jautils.createPlacementsPreserveOrder(attachedLightning, "default", {
     { "width", 8 },
     { "height", 8 },
-    { "perLevel", false },
     { "moveTime", 5.0 },
     { "attachGroup", 0, "FrostHelper.attachGroup" },
+    { "perLevel", false },
 })
 
 return attachedLightning

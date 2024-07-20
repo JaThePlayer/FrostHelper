@@ -17,16 +17,15 @@ jautils.createPlacementsPreserveOrder(spinner, "custom_spinner", {
     { "borderColor", "000000", "color" },
     { "directory", "danger/FrostHelper/icecrystal" },
     { "spritePathSuffix", "" },
-    { "attachToSolid", false },
-    { "moveWithWind", false },
-    { "dashThrough", false },
-    { "rainbow", false },
-    { "collidable", true },
-    { "drawOutline", true },
     { "bloomAlpha", 0.0 },
     { "bloomRadius", 0.0 },
     { "debrisCount", 8, "integer" },
     { "attachGroup", -1, "FrostHelper.attachGroup" },
+    { "attachToSolid", false },
+    { "dashThrough", false },
+    { "rainbow", false },
+    { "collidable", true },
+    { "drawOutline", true },
     { "singleFGImage", false }
 })
 

@@ -8,8 +8,8 @@ local lightning = {
 }
 
 jautils.createPlacementsPreserveOrder(lightning, "default", {
-    { "fill", true },
     { "windingOrder", "Auto", jautils.windingOrders },
+    { "fill", true },
 })
 
 lightning.sprite = arbitraryShapeEntity.getSpriteFunc("ffffff", "fcf579", "fcf57919", "ff0000")

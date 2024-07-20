@@ -10,15 +10,26 @@ local function point(position, color)
     return jautils.getFilledRectangleSprite(utils.rectangle(position.x - 1, position.y - 1, 3, 3), color)
 end
 
-local function drawFilledPolygon(pt, fillColor)
+local function drawFilledPolygon(triangles, sprite)
     drawing.callKeepOriginalColor(function()
+        local fillColor = sprite.color
+
         love.graphics.setColor(fillColor)
-        local ok, triangles = pcall(love.math.triangulate, pt)
-        if not ok then return end
         for _, triangle in ipairs(triangles) do
             love.graphics.polygon("fill", triangle)
         end
     end)
+end
+
+local function createPolygonSprite(points, fillColor)
+    local ok, triangles = pcall(love.math.triangulate, points)
+    if not ok then return end
+
+    local sprite = drawableFunction.fromFunction(drawFilledPolygon, triangles)
+    table.insert(sprite.args, sprite)
+    sprite.color = fillColor -- let Lonn Extended set this
+
+    return sprite
 end
 
 function helper.getSpriteFunc(nodeColor, lineColor, fillColor, mainNodeColor)
@@ -29,7 +40,7 @@ function helper.getSpriteFunc(nodeColor, lineColor, fillColor, mainNodeColor)
 
     return function(room, entity)
         local fillColor = jautils.getColor(fillColor and utils.callIfFunction(fillColor, entity) or "fcf57919")
-        
+
         if entity.nodes then
             local points = { entity.x, entity.y }
             local nodeSprites = { point(entity, mainNodeColor)}
@@ -48,7 +59,7 @@ function helper.getSpriteFunc(nodeColor, lineColor, fillColor, mainNodeColor)
             end
 
             return jautils.union(
-                (filled and jautils.inLonn) and drawableFunction.fromFunction(drawFilledPolygon, points, fillColor),
+                (filled and jautils.inLonn) and createPolygonSprite(points, fillColor),
                 drawableLineStruct.fromPoints(points, lineColor, 1),
                 nodeSprites
             )

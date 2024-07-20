@@ -2,6 +2,7 @@ local jautils = require("mods").requireFromPlugin("libraries/jautils")
 
 local lightningColorTrigger = {}
 lightningColorTrigger.name = "FrostHelper/LightningColorTrigger"
+lightningColorTrigger.category = "visual"
 
 jautils.createPlacementsPreserveOrder(lightningColorTrigger, "normal", {
     { "width", 16 },

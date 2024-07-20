@@ -1,5 +1,6 @@
 local anxietyTrigger = {}
 anxietyTrigger.name = "FrostHelper/AnxietyTrigger"
+anxietyTrigger.category = "visual"
 anxietyTrigger.placements = {
     name = "normal",
     data = {

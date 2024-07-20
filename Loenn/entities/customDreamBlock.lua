@@ -20,20 +20,19 @@ dreamBlock.nodeLineRenderType = "line"
 jautils.createPlacementsPreserveOrder(dreamBlock, "custom_dream_block", {
     { "width", 16 },
     { "height", 16 },
-    { "oneUse", false },
-    { "below", false },
     { "speed", 240.0 },
-    { "conserveSpeed", false },
+    { "sameDirectionSpeedMultiplier", 2.0 },
     { "activeBackColor", "000000", "color" },
     { "disabledBackColor", "1f2e2d", "color" },
     { "activeLineColor", "ffffff", "color" },
     { "disabledLineColor", "6a8480", "color" },
-    { "allowRedirects", false },
-    { "allowSameDirectionDash", false },
-    { "sameDirectionSpeedMultiplier", 2.0 },
-    { "old", false },
     { "moveEase", "SineInOut", jautils.easings },
     { "moveSpeedMult", 1.0 },
+    { "oneUse", false },
+    { "below", false },
+    { "conserveSpeed", false },
+    { "allowRedirects", false },
+    { "allowSameDirectionDash", false },
 })
 
 local function addParticles(sprites, entity)

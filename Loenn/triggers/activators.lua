@@ -1,3 +1,5 @@
+local jautils = require("mods").requireFromPlugin("libraries.jautils")
+
 local activationModes = {
     "All", -- all triggers get activated at once
     "Cycle", -- each time this activator gets triggered, the next trigger gets activated, wrapping over to the first one once all other ones have been triggered.
@@ -134,6 +136,12 @@ return {
                 types = "",
                 activateAfterDeath = false,
             },
+        },
+        nil,
+        {
+            fieldInformation = {
+                types = jautils.typesListFieldInfo()
+            }
         }
     ),
     makeActivator("FrostHelper/OnDeathActivator",

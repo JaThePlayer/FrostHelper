@@ -18,13 +18,13 @@ jautils.createPlacementsPreserveOrder(customKevin, "horizontal", {
     { "width", 16 },
     { "height", 16 },
     { "directory", "objects/FrostHelper/slowcrushblock/" },
-    { "chillout", false },
     { "crushSpeed", 120.0 },
     { "returnSpeed", 60.0 },
     { "returnAcceleration", 160.0 },
     { "crushAcceleration", 250.0 },
     { "axes", "Horizontal", axesEnum },
     { "fillColor", "62222b", "color" },
+    { "chillout", false },
     { "reskinFace", false },
 })
 

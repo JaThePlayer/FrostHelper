@@ -16,17 +16,17 @@ function wireLamps.depth(room, entity)
 end
 
 jautils.createPlacementsPreserveOrder(wireLamps, "default", {
-    { "above", false },
     { "wireColor", "595866", "color" },
     { "lightCount", 3, "integer" },
-    { "colors", "Red,Yellow,Blue,Green,Orange" },
+    { "colors", "Red,Yellow,Blue,Green,Orange", "colorList" },
     { "lightAlpha", 1.0 },
     { "lightStartFade", 8, "integer" },
     { "lightEndFade", 16, "integer" },
     { "lampSprite", "objects/FrostHelper/wireLamp" },
     { "frameDelay", 0.5 },
     { "wobbliness", 1.0 },
-    { "attached", false }
+    { "attached", false },
+    { "above", false },
 })
 
 function wireLamps.sprite(room, entity)

@@ -9,8 +9,8 @@ local controller = {
 local validOutlineShaders = { "", "FrostHelper/spinnerSolidBorder" }
 
 jautils.createPlacementsPreserveOrder(controller, "default", {
-    { "cycles", false },
     { "outlineShader", "", validOutlineShaders },
+    { "cycles", false },
 })
 
 return controller

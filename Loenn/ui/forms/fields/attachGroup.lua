@@ -69,7 +69,7 @@ function integerField.getElement(name, value, options)
 
     local button = uiElements.button(tostring(language.ui.fh.attachGroup.name), buttonPressed(formField))
 
-    button.style.padding *= 0.36
+    button.style.padding = 0
     button.style.spacing = 0
     button.tooltipText = tostring(language.ui.fh.attachGroup.tooltip)
     formField.field:addChild(button)

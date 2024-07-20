@@ -25,10 +25,10 @@ jautils.createPlacementsPreserveOrder(growBlock, "default", {
     { "texture", "objects/FrostHelper/growBlock/green", "editableDropdown",  builtinTexturePaths },
     { "blockGrowTime", 0.3 },
     { "vanishTime", 1.0 },
-    { "giveLiftBoost", true },
 	{ "tint", "ffffff", "color" },
+    { "giveLiftBoost", true },
     { "vanishOnFlagUnset", false },
-    { "version", 1, "integer" }
+    { "version", 1, "integer" },
     -- { "maxBlocks", 0 },
 })
 

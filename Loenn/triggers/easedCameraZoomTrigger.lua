@@ -2,6 +2,7 @@ local jautils = require("mods").requireFromPlugin("libraries.jautils")
 
 local easedCamera = {
     name = "FrostHelper/EasedCameraZoomTrigger",
+    category = "camera",
 }
 
 local ZoomTriggerRevertModes = {
@@ -14,9 +15,9 @@ jautils.createPlacementsPreserveOrder(easedCamera, "default", {
     { "easing", "Linear", jautils.easings },
     { "easeDuration", 1 },
     { "targetZoom", 2 },
+    { "revertMode", "RevertToNoZoom", ZoomTriggerRevertModes},
     { "revertOnLeave", false },
     { "focusOnPlayer", true },
-    { "revertMode", "RevertToNoZoom", ZoomTriggerRevertModes},
     { "disableInPhotosensitiveMode", true },
 })
 

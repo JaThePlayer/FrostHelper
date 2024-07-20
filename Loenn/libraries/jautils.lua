@@ -97,33 +97,76 @@ end
     PLACEMENTS
 ]]
 
+local entities = require("entities")
+
+local _cachedAllSids = nil
+local _cachedAllSidsLen = 0
+
+local function getAllSids()
+    if _cachedAllSids and _cachedAllSidsLen == #entities.registeredEntities then
+        return _cachedAllSids
+    end
+
+    local ret = {}
+    local amt = 0
+    for k,v in pairs(entities.registeredEntities) do
+        table.insert(ret, k)
+        amt = amt + 1
+    end
+
+    table.sort(ret)
+
+    _cachedAllSids = ret
+    _cachedAllSidsLen = #entities.registeredEntities
+
+    return ret
+end
+
+function jautils.typesListFieldInfo() return {
+    fieldType = "list",
+    elementSeparator = ",",
+    elementDefault = "",
+    elementOptions = {
+        options = getAllSids(),
+        searchable = true,
+    },
+} end
+
 jautils.fieldTypeOverrides = {
     color =  function (data) return {
         fieldType = "color",
         allowXNAColors = true,
+        useAlpha = true,
     } end,
-    list = function (data)
-        local baseOverride = jautils.fieldTypeOverrides[data.listType]
-        local base = baseOverride and baseOverride(data) or {
-            fieldType = data.listType,
-        }
-        base["ext:list"] = {
-            separator = data.separator or ",",
-            minElements = data.minElements or 1, -- the minimum amount of elements in this list. Defaults to 1. Can be 0, in which case an empty string is allowed.
-            maxElements = data.maxElements or -1, -- the maximum amount of elements in this list. Defaults to -1 (unlimited).
-        }
-        return base
-    end,
+    colorList = function (data) return {
+        fieldType = "list",
+        elementOptions = {
+            fieldType = "color",
+            allowXNAColors = true,
+        },
+        elementSeparator = ",",
+        elementDefault = "ffffff",
+        minimumElements = 1,
+    } end,
+    list = function (data) return {
+        fieldType = "list",
+        elementOptions = data and data.elementOptions,
+        elementSeparator = ",",
+        elementDefault = data and data.elementDefault,
+    } end,
+    typesList = jautils.typesListFieldInfo,
     editableDropdown = function(data)
         return {
             options = data,
-            editable = true
+            editable = true,
+            searchable = true,
         }
     end,
     dropdown = function(data)
         return {
             options = data,
-            editable = false
+            editable = false,
+            searchable = true,
         }
     end,
     depth = function (data)
@@ -131,6 +174,7 @@ jautils.fieldTypeOverrides = {
             options = celesteDepths,
             editable = true,
             fieldType = "integer",
+            searchable = true,
         }
     end,
     path = function (data)
@@ -146,25 +190,14 @@ jautils.fieldTypeOverrides = {
     end
 }
 
-function jautils.createPlacementsPreserveOrder(handler, placementName, placementData, appendSize)
-    handler.placements = {{
-        name = placementName,
-        data = {}
-    }}
-    local fieldOrder = { "x", "y" }
+local fieldTypesWhichNeedLiveUpdate = {
+    typesList = true,
+}
+
+local function createFieldInfoFromJaUtilsPlacement(placementData)
     local fieldInformation = {}
-    local hasAnyFieldInformation = false
-
-    if appendSize then
-        table.insert(placementData, 1, { "height", 16 })
-        table.insert(placementData, 1, { "width", 16 })
-    end
-
     for _,v in ipairs(placementData) do
         local fieldName, defaultValue, fieldType, fieldData = v[1], v[2], v[3], v[4]
-
-        table.insert(fieldOrder, fieldName)
-        handler.placements[1].data[fieldName] = defaultValue
         if fieldType then
             local override = jautils.fieldTypeOverrides[fieldType]
             if override then
@@ -192,15 +225,58 @@ function jautils.createPlacementsPreserveOrder(handler, placementName, placement
                     fieldInformation[fieldName] = { fieldType = fieldType }
                 end
             end
+        end
 
+        -- Provide the 'default' option
+        if fieldInformation[fieldName] and type(fieldInformation[fieldName]) == "table" then
+            fieldInformation[fieldName].default = defaultValue
+        elseif not fieldInformation[fieldName] then
+            fieldInformation[fieldName] = { default = defaultValue }
+        end
+    end
+
+    return fieldInformation
+end
+
+function jautils.createPlacementsPreserveOrder(handler, placementName, placementData, appendSize)
+    handler.placements = {{
+        name = placementName,
+        data = {}
+    }}
+    local fieldOrder = { "x", "y" }
+    local hasAnyFieldInformation = false
+    local needsLiveFieldInfoUpdate = false
+
+    if appendSize then
+        table.insert(placementData, 1, { "height", 16 })
+        table.insert(placementData, 1, { "width", 16 })
+    end
+
+    for _,v in ipairs(placementData) do
+        local fieldName, defaultValue, fieldType, fieldData = v[1], v[2], v[3], v[4]
+
+        table.insert(fieldOrder, fieldName)
+        handler.placements[1].data[fieldName] = defaultValue
+
+        if fieldType then
             hasAnyFieldInformation = true
+            if fieldTypesWhichNeedLiveUpdate[fieldType] then
+                needsLiveFieldInfoUpdate = true
+            end
+        end
+    end
+
+    if hasAnyFieldInformation then
+        if needsLiveFieldInfoUpdate then
+            handler.fieldInformation = function(entity)
+                return createFieldInfoFromJaUtilsPlacement(placementData)
+            end
+        else
+            handler.fieldInformation = createFieldInfoFromJaUtilsPlacement(placementData)
         end
     end
 
     handler.fieldOrder = fieldOrder
-    if hasAnyFieldInformation then
-        handler.fieldInformation = fieldInformation
-    end
 end
 
 function jautils.addPlacement(handler, placementName, ...)

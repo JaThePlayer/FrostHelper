@@ -170,32 +170,57 @@ internal class BaseActivator : Trigger {
         List<T>? into = null;
         List<Indexed<T>>? intoWithIndexes = null;
         if (ActivationMode == ActivationModes.Cycle) {
-            intoWithIndexes = new();
+            intoWithIndexes = [];
         } else {
-            into = new();
+            into = [];
         }
         var nodes = Nodes;
 
         foreach (T entity in Scene.Tracker.GetEntities<T>()) {
             var ePos = entity.Position;
-            var eCol = (Hitbox) entity.Collider;
 
-            var eRight = ePos.X + eCol.Width;
-            var eBottom = ePos.Y + eCol.Height;
+            switch (entity.Collider)
+            {
+                case Hitbox eCol:
+                {
+                    // Fast path for the 99.99% of triggers that use Hitbox colliders
+                    var eRight = ePos.X + eCol.Width;
+                    var eBottom = ePos.Y + eCol.Height;
 
-            for (int i = 0; i < nodes.Length; i++) {
-                Vector2 node = nodes[i];
-                if (node.X < eRight
-                 && node.X > ePos.X
-                 && node.Y < eBottom
-                 && node.Y > ePos.Y) {
-                    if (into is { })
-                        into.Add(entity);
-                    else
-                        intoWithIndexes!.Add(new() {
-                            Value = entity,
-                            Index = i,
-                        });
+                    for (int i = 0; i < nodes.Length; i++) {
+                        Vector2 node = nodes[i];
+                        if (node.X < eRight
+                            && node.X > ePos.X
+                            && node.Y < eBottom
+                            && node.Y > ePos.Y) {
+                            if (into is { })
+                                into.Add(entity);
+                            else
+                                intoWithIndexes!.Add(new() {
+                                    Value = entity,
+                                    Index = i,
+                                });
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+                case {} otherCollider: {
+                    for (int i = 0; i < nodes.Length; i++) {
+                        Vector2 node = nodes[i];
+                        if (otherCollider.Collide(node)) {
+                            if (into is { })
+                                into.Add(entity);
+                            else
+                                intoWithIndexes!.Add(new() {
+                                    Value = entity,
+                                    Index = i,
+                                });
+                            break;
+                        }
+                    }
+
                     break;
                 }
             }
@@ -212,7 +237,6 @@ internal class BaseActivator : Trigger {
                 into.Add(item.Value);
             }
         }
-
 
         return into!;
     }
