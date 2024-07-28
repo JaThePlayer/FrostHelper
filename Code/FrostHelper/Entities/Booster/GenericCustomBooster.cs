@@ -190,7 +190,8 @@ namespace FrostHelper.Entities.Boosters {
 
         public override void Added(Scene scene) {
             base.Added(scene);
-            Image image = new Image(GFX.Game[$"{Directory.AsSpan().TrimEnd('/')}/outline"]);
+            string str = $"{Directory.AsSpan().TrimEnd('/')}/outline";
+            Image image = new Image(GFX.Game[GFX.Game.Has(str) ? str : "objects/booster/outline"]);
             image.CenterOrigin();
             image.Color = Color.White * 0.75f;
             outline = new Entity(Position) {
