@@ -9,6 +9,8 @@ jautils.createPlacementsPreserveOrder(timer, "default", {
     { "height", 16 },
     { "flag", "" },
     { "time", 1.0 },
+    { "stopFlag", "" },
+    { "countDown", true },
 })
 
 return timer

@@ -5,6 +5,8 @@
 public class TimerEntity : Trigger {
     private readonly string Flag;
     private readonly float Time;
+    private readonly string StopFlag;
+    private readonly bool CountDown;
 
     private float TimeLeft;
     private bool Started;
@@ -22,8 +24,10 @@ public class TimerEntity : Trigger {
     public TimerEntity(EntityData data, Vector2 offset) : base(data, offset) {
         Flag = data.Attr("flag", "");
         Time = data.Float("time", 1f);
+        StopFlag = data.Attr("stopFlag", "");
+        CountDown = data.Bool("countDown", true);
 
-        TimeLeft = Time;
+        TimeLeft = (CountDown) ? Time : 0;
 
         Tag |= Tags.HUD;
 
@@ -60,13 +64,26 @@ public class TimerEntity : Trigger {
         if (!Started)
             return;
 
-        if (TimeLeft > 0) {
-            TimeLeft -= Engine.DeltaTime;
+        if (CountDown) {
+            if (TimeLeft > 0) {
+                TimeLeft -= Engine.DeltaTime;
 
-            if (TimeLeft <= 0) {
-                TimeLeft = 0;
-                SceneAs<Level>()?.Session.SetFlag(Flag, true);
+                if (TimeLeft <= 0) {
+                    TimeLeft = 0;
+                    SceneAs<Level>()?.Session.SetFlag(Flag, true);
 
+                    var tween = Tween.Create(Tween.TweenMode.Oneshot, Ease.Linear, duration: 1f, start: true);
+                    tween.OnComplete = (t) => RemoveSelf();
+                    tween.OnUpdate = (t) => Alpha = 1f - t.Eased;
+
+                    Add(tween);
+                }
+            }
+        } else {
+            // use the flag to determine when to end the timer
+            if (!(SceneAs<Level>().Session.GetFlag(StopFlag))) {
+                TimeLeft += Engine.DeltaTime;
+            } else {
                 var tween = Tween.Create(Tween.TweenMode.Oneshot, Ease.Linear, duration: 1f, start: true);
                 tween.OnComplete = (t) => RemoveSelf();
                 tween.OnUpdate = (t) => Alpha = 1f - t.Eased;
