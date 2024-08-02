@@ -17,7 +17,10 @@
     <DefineConstants>$(DefineConstants)TRACE;MAP_PROCESSOR;SPEEDCHALLENGES</DefineConstants>
 
     <CelesteGamePath Condition="'$(CELESTEGAMEPATH)' == '' And Exists('..\..\..\..\Celeste.dll')">..\..\..\..</CelesteGamePath>
+    <CelesteGamePath Condition="'$(CELESTEGAMEPATH)' == '' And Exists('..\..\..\Celeste.dll')">..\..\..</CelesteGamePath>
+    <!-- 
     <CelesteGamePath Condition="'$(CELESTEGAMEPATH)' == ''">lib-stripped</CelesteGamePath>
+    -->
   </PropertyGroup>
 
   <!-- Packages -->

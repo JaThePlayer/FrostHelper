@@ -1,23 +1,25 @@
 ﻿using FrostHelper.Components;
 
+// TODO: swap to everest's, might be missing OnSilentUpdate?
+using CassetteListener = FrostHelper.Components.CassetteListener;
+
 namespace FrostHelper.Triggers.Activator;
 
 [CustomEntity("FrostHelper/OnCassetteSwapActivator")]
-internal class OnCassetteSwapActivator : BaseActivator {
-    private CassetteListener Listener;
-
+internal sealed class OnCassetteSwapActivator : BaseActivator {
     public OnCassetteSwapActivator(EntityData data, Vector2 offset) : base(data, offset) {
         var index = data.Int("targetIndex", -1);
+        CassetteListener listener = new(index);
 
-        Add(Listener = new CassetteListener(index));
+        Add(listener);
 
-        Listener.OnActivated = () => {
+        listener.OnActivated = () => {
             var player = Scene?.Tracker.GetEntity<Player>();
             if (player is { } || ActivateAfterDeath)
                 ActivateAll(player!);
         };
 
-        Listener.OnSilentUpdate = (correctIndex) => {
+        listener.OnSilentUpdate = (correctIndex) => {
             var player = Scene?.Tracker.GetEntity<Player>();
             if (correctIndex && (player is { } || ActivateAfterDeath))
                 ActivateAll(player!);

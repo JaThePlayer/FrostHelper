@@ -415,7 +415,7 @@ entities.FrostHelper/LineIndicator.placements.name.default=Line Indicator
 entities.FrostHelper/LineIndicator.attributes.description.color=The color of this line.
 
 entities.FrostHelper/StaticDoor.placements.name.default=Static Door
-entities.FrostHelper/StaticDoor.placements.tooltip.default=A door that doesn't get moved by solids and doesn't get disabled when inside a solid
+entities.FrostHelper/StaticDoor.placements.description.default=A door that doesn't get moved by solids and doesn't get disabled when inside a solid
 entities.FrostHelper/StaticDoor.attributes.description.type=Changes the door type. If this is not 'wood', then the game grabs the sprite from the Sprites.xml entry of name '{type}door'\nFor example, for type = 'metal', it will use the 'metaldoor' Sprites.xml entry.
 entities.FrostHelper/StaticDoor.attributes.description.openSfx=Overrides the sfx played when this door opens.
 entities.FrostHelper/StaticDoor.attributes.description.closeSfx=Overrides the sfx played when this door closes.
@@ -426,6 +426,16 @@ entities.FrostHelper/ArbitraryShapeLightning.attributes.description.windingOrder
 
 entities.FrostHelper/ArbitraryBloom.placements.name.default=Arbitrary Bloom
 entities.FrostHelper/ArbitraryBloom.attributes.description.windingOrder=The winding order of the polygon.\nIf your shape looks broken in-game, try changing this property until it looks correctly.
+
+entities.FrostHelper/ArbitraryLight.placements.name.default=Arbitrary Shape Light
+entities.FrostHelper/ArbitraryLight.placements.description.default=A light source of an arbitrary shape, emanating from one central point.
+entities.FrostHelper/ArbitraryLight.attributes.description.color=Color of the light source.
+entities.FrostHelper/ArbitraryLight.attributes.description.alpha=Alpha value of the light source.
+entities.FrostHelper/ArbitraryLight.attributes.description.connectFirstAndLastNode=Whether there should be a triangle connecting the first and last node.
+entities.FrostHelper/ArbitraryLight.attributes.description.startFade=The distance after which the light's color starts to fade away.\nThe distance of nodes is equal to the Radius property.\nThe higher the values of StartFade, Radius and EndFade, the higher quality the gradient is.\nMake sure that StartFade < Radius < EndFade for correct results!
+entities.FrostHelper/ArbitraryLight.attributes.description.endFade=The distance after which the light's color is fully transparent.\nThe distance of nodes is equal to the Radius property.\nThe higher the values of StartFade, Radius and EndFade, the higher quality the gradient is.\nMake sure that StartFade < Radius < EndFade for correct results!
+entities.FrostHelper/ArbitraryLight.attributes.description.radius=The distance each node is considered to be from the central point (red square).\nIn combination with StartFade and EndFade, this decides how the color of the light source fades away.\nMake sure that StartFade < Radius < EndFade for correct results!
+entities.FrostHelper/ArbitraryLight.attributes.description.bloomAlpha=If > 0, creates an Arbitrary Bloom with this alpha value which covers the area of this light source.
 
 entities.FrostHelper/LightOccluderEntity.placements.name.default=Light Occluder
 
@@ -671,10 +681,29 @@ triggers.FrostHelper/NoMovementTrigger.placements.description.default=Disables w
 triggers.FrostHelper/Timer.placements.name.default=Timer
 triggers.FrostHelper/Timer.placements.description.default=Creates a visible timer, which sets a flag once it expires.
 triggers.FrostHelper/Timer.attributes.description.flag=The flag to set once the timer expires. This flag will get disabled when the room loads automatically.
-triggers.FrostHelper/Timer.attributes.description.time=How long the timer is.
+triggers.FrostHelper/Timer.attributes.description.time=How long the timer is (in seconds).
 triggers.FrostHelper/Timer.attributes.description.textColor=The color to use for the text.
 triggers.FrostHelper/Timer.attributes.description.iconColor=The color to use to tint the icon.
 triggers.FrostHelper/Timer.attributes.description.icon=The path to the icon to use for this timer, relative to Graphics/Atlases/Gameplay. Leave blank for no icon.
+triggers.FrostHelper/Timer.attributes.description.visible=Whether this timer is visible once triggered.
+triggers.FrostHelper/Timer.attributes.description.timerId=The Timer ID, used by the Timer Change Trigger.
+
+triggers.FrostHelper/IncrementingTimer.placements.name.default=Incrementing Timer
+triggers.FrostHelper/IncrementingTimer.placements.description.default=Creates a visible timer which counts up until stopped by a flag.
+triggers.FrostHelper/IncrementingTimer.attributes.description.stopFlag=The flag which stops this timer as long as its enabled.
+triggers.FrostHelper/IncrementingTimer.attributes.description.removeFlag=The flag which stops and removes this timer from the screen.
+triggers.FrostHelper/IncrementingTimer.attributes.description.textColor=The color to use for the text.
+triggers.FrostHelper/IncrementingTimer.attributes.description.iconColor=The color to use to tint the icon.
+triggers.FrostHelper/IncrementingTimer.attributes.description.icon=The path to the icon to use for this timer, relative to Graphics/Atlases/Gameplay. Leave blank for no icon.
+triggers.FrostHelper/IncrementingTimer.attributes.description.visible=Whether this timer is visible once triggered.
+triggers.FrostHelper/IncrementingTimer.attributes.description.timerId=The Timer ID, used by the Timer Change Trigger.
+
+triggers.FrostHelper/TimerChange.placements.name.default=Timer Change
+triggers.FrostHelper/TimerChange.placements.description.default=Changes how much time is left on a timer started by the Timer trigger.
+triggers.FrostHelper/TimerChange.attributes.description.timerId=The Timer ID of the timer that should be changed by this trigger.
+triggers.FrostHelper/TimerChange.attributes.description.timeChange=The amount of time (in seconds) to add/set.
+triggers.FrostHelper/TimerChange.attributes.description.operation=Determines which operation should be used.\nAdd - increases the timer by Time Change.\nSet - sets the timer to Time Change.
+triggers.FrostHelper/TimerChange.attributes.description.oneUse=Whether the trigger should be one-use.
 
 triggers.FrostHelper/LightningBaseColorTrigger.placements.name.default=Darkness Base Color
 triggers.FrostHelper/LightningBaseColorTrigger.attributes.description.color=The new color to use.

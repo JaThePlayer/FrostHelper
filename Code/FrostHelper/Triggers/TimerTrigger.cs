@@ -1,81 +1,63 @@
-﻿namespace FrostHelper.Entities;
+﻿namespace FrostHelper.Triggers;
 
-[CustomEntity("FrostHelper/Timer")]
-[Tracked]
-public class TimerEntity : Trigger {
-    private readonly string Flag;
-    private readonly float Time;
-
-    private float TimeLeft;
-    private bool Started;
-
-    private float Alpha = 1f;
-
-    private MTexture? Icon;
-
-    public Vector2 DrawPos;
-
+[Tracked(true)]
+internal abstract class BaseTimerEntity : Trigger {
     public Color TextColor, IconColor;
+    protected readonly MTexture? Icon;
+    
+    protected float Alpha = 1f;
+    internal float TimeLeft;
+    internal bool Started;
+    protected Vector2 DrawPos;
 
-    public static Vector2 OnscreenPos => new Vector2(Engine.Width / 2f, 0f);
-
-    public TimerEntity(EntityData data, Vector2 offset) : base(data, offset) {
-        Flag = data.Attr("flag", "");
-        Time = data.Float("time", 1f);
-
-        TimeLeft = Time;
-
+    internal readonly string TimerId;
+    
+    protected string GetText() => TimeSpan.FromSeconds(TimeLeft).ShortGameplayFormat();
+    
+    protected BaseTimerEntity(EntityData data, Vector2 offset) : base(data, offset)
+    {
         Tag |= Tags.HUD;
-
-        Visible = true;
-
-        if (data.Attr("icon", "frostHelper/time") is { } iconPath && !string.IsNullOrWhiteSpace(iconPath))
-            Icon = GFX.Game[iconPath];
-
+        TimerId = data.Attr("timerId", "");
+        Visible = data.Bool("visible", true);
         TextColor = data.GetColor("textColor", "ffffff");
         IconColor = data.GetColor("iconColor", "ffffff");
-
-        DrawPos = OnscreenPos;
-    }
-
-    public override void Added(Scene scene) {
-        base.Added(scene);
-
-        SceneAs<Level>()?.Session.SetFlag(Flag, false);
+        
+        if (data.Attr("icon", "frostHelper/time") is { } iconPath && !string.IsNullOrWhiteSpace(iconPath))
+            Icon = GFX.Game[iconPath];
+        
+        DrawPos = new(Engine.Width / 2f, 0f);
     }
 
     public override void OnEnter(Player player) {
         base.OnEnter(player);
-
-        if (!Started) {
-            Started = true;
-            DrawPos.Y = Scene.Tracker.GetEntities<TimerEntity>().Max(t => ((TimerEntity)t).DrawPos.Y) + TimerRenderHelper.Measure(GetText()).Y;
-        }
-
+        StartIfNeeded();
     }
 
-    public override void Update() {
-        base.Update();
+    protected void StartIfNeeded() {
+        if (Started)
+            return;
 
+        Started = true;
+        if (Visible) {
+            var timers = Scene.Tracker.GetEntities<BaseTimerEntity>()
+                .OfType<BaseTimerEntity>()
+                .Where(t => t.Visible)
+                .ToList();
+            
+            DrawPos.Y = TimerRenderHelper.Measure(GetText()).Y + (timers.Any() ? timers.Max(t => t.DrawPos.Y) : 0f);
+        }
+    }
+
+    protected void RemoveIfNeeded() {
         if (!Started)
             return;
 
-        if (TimeLeft > 0) {
-            TimeLeft -= Engine.DeltaTime;
-
-            if (TimeLeft <= 0) {
-                TimeLeft = 0;
-                SceneAs<Level>()?.Session.SetFlag(Flag, true);
-
-                var tween = Tween.Create(Tween.TweenMode.Oneshot, Ease.Linear, duration: 1f, start: true);
-                tween.OnComplete = (t) => RemoveSelf();
-                tween.OnUpdate = (t) => Alpha = 1f - t.Eased;
-
-                Add(tween);
-            }
-        }
+        var tween = Tween.Create(Tween.TweenMode.Oneshot, Ease.Linear, duration: 1f, start: true);
+        tween.OnComplete = (t) => RemoveSelf();
+        tween.OnUpdate = (t) => Alpha = 1f - t.Eased;
+        Add(tween);
     }
-
+    
     public override void Render() {
         base.Render();
 
@@ -92,8 +74,75 @@ public class TimerEntity : Trigger {
             icon.DrawJustified(iconPos, new(1f, 0.5f), IconColor * Alpha);
         }
     }
+}
 
-    private string GetText() => TimeSpan.FromSeconds(TimeLeft).ShortGameplayFormat();
+[CustomEntity("FrostHelper/Timer")]
+[Tracked]
+internal sealed class TimerEntity : BaseTimerEntity {
+    internal readonly string Flag;
+
+    public TimerEntity(EntityData data, Vector2 offset) : base(data, offset)
+    {
+        Flag = data.Attr("flag", "");
+        TimeLeft = data.Float("time", 1f);
+    }
+    
+    public override void Added(Scene scene) {
+        base.Added(scene);
+
+        SceneAs<Level>()?.Session.SetFlag(Flag, false);
+    }
+    
+    public override void Update() {
+        base.Update();
+
+        if (!Started)
+            return;
+
+        if (TimeLeft > 0) {
+            TimeLeft -= Engine.DeltaTime;
+
+            if (TimeLeft <= 0) {
+                TimeLeft = 0;
+                SceneAs<Level>()?.Session.SetFlag(Flag, true);
+                RemoveIfNeeded();
+            }
+        }
+    }
+}
+
+[CustomEntity("FrostHelper/IncrementingTimer")]
+[Tracked]
+internal sealed class IncrementingTimerEntity : BaseTimerEntity {
+    internal readonly string RemoveFlag;
+    internal readonly string StopFlag;
+    private bool _removed;
+    
+    public IncrementingTimerEntity(EntityData data, Vector2 offset) : base(data, offset)
+    {
+        StopFlag = data.Attr("stopFlag", "");
+        RemoveFlag = data.Attr("removeFlag", "");
+
+        if (RemoveFlag == "") {
+            RemoveFlag = StopFlag;
+        }
+    }
+    
+    public override void Update() {
+        base.Update();
+
+        if (!Started || _removed)
+            return;
+        
+        if (!SceneAs<Level>().Session.GetFlag(StopFlag)) {
+            TimeLeft += Engine.DeltaTime;
+        }
+
+        if (SceneAs<Level>().Session.GetFlag(RemoveFlag)) {
+            _removed = true;
+            RemoveIfNeeded();
+        }
+    }
 }
 
 static class TimerRenderHelper {

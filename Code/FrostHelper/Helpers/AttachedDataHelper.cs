@@ -15,7 +15,6 @@ internal static class AttachedDataHelper {
     private static readonly Dictionary<Type, List<ConditionalWeakTable<object, object>>?> ObjectToPossibleDatas = new();
 
     static AttachedDataHelper() {
-        RegisterData<Decal, RainbowDecalMarker>();
         RegisterData<Player, GenericCustomBooster>();
 
         // make sure that backdrops are registered before parallax, so that parallax can copy values from Backdrops

@@ -6,11 +6,17 @@ local drawing = jautils.inLonn and require("utils.drawing") or nil
 
 local helper = {}
 
+helper.isPolygonSupported = jautils.inLonn
+
 local function point(position, color)
     return jautils.getFilledRectangleSprite(utils.rectangle(position.x - 1, position.y - 1, 3, 3), color)
 end
 
 local function drawFilledPolygon(triangles, sprite)
+    if not drawing then
+        return
+    end
+
     drawing.callKeepOriginalColor(function()
         local fillColor = sprite.color
 
@@ -21,7 +27,27 @@ local function drawFilledPolygon(triangles, sprite)
     end)
 end
 
-local function createPolygonSprite(points, fillColor)
+local function drawFilledPolygonPreTriangulated(points, sprite)
+    if not drawing then
+        return
+    end
+
+    drawing.callKeepOriginalColor(function()
+        local fillColor = sprite.color
+        love.graphics.setColor(fillColor)
+        love.graphics.polygon("fill", points)
+    end)
+end
+
+function helper.createPolygonSpritePreTriangulated(triangles, fillColor)
+    local sprite = drawableFunction.fromFunction(drawFilledPolygonPreTriangulated, triangles)
+    table.insert(sprite.args, sprite)
+    sprite.color = fillColor -- let Lonn Extended set this
+
+    return sprite
+end
+
+function helper.createPolygonSprite(points, fillColor)
     local ok, triangles = pcall(love.math.triangulate, points)
     if not ok then return end
 
@@ -59,7 +85,7 @@ function helper.getSpriteFunc(nodeColor, lineColor, fillColor, mainNodeColor)
             end
 
             return jautils.union(
-                (filled and jautils.inLonn) and createPolygonSprite(points, fillColor),
+                (filled and jautils.inLonn) and helper.createPolygonSprite(points, fillColor),
                 drawableLineStruct.fromPoints(points, lineColor, 1),
                 nodeSprites
             )
@@ -72,12 +98,12 @@ end
 function helper.nodeSprite() end
 
 function helper.selection(room, entity)
-    local main = utils.rectangle(entity.x, entity.y, 4, 4)
+    local main = utils.rectangle(entity.x - 2, entity.y - 2, 4, 4)
 
     if entity.nodes then
         local nodeSelections = {}
         for _, node in ipairs(entity.nodes) do
-            table.insert(nodeSelections, utils.rectangle(node.x, node.y, 4, 4))
+            table.insert(nodeSelections, utils.rectangle(node.x - 2, node.y - 2, 4, 4))
         end
         return main, nodeSelections
     end

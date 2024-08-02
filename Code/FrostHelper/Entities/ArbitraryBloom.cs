@@ -1,13 +1,13 @@
-﻿namespace FrostHelper;
+﻿using System.Runtime.CompilerServices;
+
+namespace FrostHelper;
 
 [CustomEntity("FrostHelper/ArbitraryBloom")]
-internal sealed class ArbitraryBloom : Entity {
-    public Vector3[] Fill;
-    public float Alpha;
+internal sealed class ArbitraryBloomEntity : Entity {
+    public ArbitraryBloom Bloom { get; }
 
-    public ArbitraryBloom(EntityData data, Vector2 offset) : base(data.Position + offset) {
-        Fill = ArbitraryShapeEntityHelper.GetFillFromNodes(data, offset);
-        Alpha = data.Float("alpha", 1f);
+    public ArbitraryBloomEntity(EntityData data, Vector2 offset) : base(data.Position + offset) {
+        Bloom = new(data.Float("alpha", 1f), ArbitraryShapeEntityHelper.GetFillFromNodes(data, offset));
     }
 
     public override void Added(Scene scene) {
@@ -15,7 +15,7 @@ internal sealed class ArbitraryBloom : Entity {
 
         var controller = ControllerHelper<ArbitraryBloomRenderer>.AddToSceneIfNeeded(scene);
 
-        controller.Add(this);
+        controller.Add(Bloom);
     }
 
     public override void Removed(Scene scene) {
@@ -23,7 +23,21 @@ internal sealed class ArbitraryBloom : Entity {
 
         var controller = ControllerHelper<ArbitraryBloomRenderer>.AddToSceneIfNeeded(scene);
 
-        controller.Remove(this);
+        controller.Remove(Bloom);
+    }
+}
+
+internal sealed class ArbitraryBloom {
+    public readonly Vector3[] Fill;
+    public readonly float Alpha;
+
+    public bool Visible;
+
+    public ArbitraryBloom(float alpha, Vector3[] fill) {
+        Alpha = alpha;
+        Fill = fill;
+
+        Visible = true;
     }
 }
 
@@ -39,6 +53,7 @@ internal sealed class ArbitraryBloomRenderer : Entity {
         Tag = (Tags.Global | Tags.TransitionUpdate);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void NextVertex(ref int index, Vector3 pos, float alpha) {
         if (index >= verts.Length) {
             Array.Resize(ref verts, verts.Length + 128);

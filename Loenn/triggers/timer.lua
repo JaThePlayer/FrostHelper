@@ -4,11 +4,25 @@ local timer = {
     name = "FrostHelper/Timer",
 }
 
+local incTimer = {
+    name = "FrostHelper/IncrementingTimer",
+}
+
 jautils.createPlacementsPreserveOrder(timer, "default", {
-    { "width", 16 },
-    { "height", 16 },
+    { "timerId", "" },
     { "flag", "" },
     { "time", 1.0 },
+    { "visible", true },
 })
 
-return timer
+jautils.createPlacementsPreserveOrder(incTimer, "default", {
+    { "timerId", "" },
+    { "stopFlag", "" },
+    { "removeFlag", "" },
+    { "visible", true },
+})
+
+return {
+    timer,
+    incTimer,
+}

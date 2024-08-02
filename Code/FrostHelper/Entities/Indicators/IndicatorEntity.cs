@@ -37,7 +37,7 @@ public class PufferIndicator : IndicatorEntity {
 
         // unfortunately vanilla puffers are not tracked
         foreach (var e in Scene.Entities) {
-            if (typeof(Puffer).IsAssignableFrom(e.GetType()) && Collide.CheckRect(e, collisionRect)) {
+            if (e is Puffer && Collide.CheckRect(e, collisionRect)) {
                 RemoveSelf();
                 return;
             }

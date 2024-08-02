@@ -24,7 +24,7 @@ public class ArbitraryShapeLightning : Entity {
         }
         Edges[0] = new CustomLightningRenderer.Edge(this, Vector2.Zero, nodes[0] - Position);
         if (Fill)
-            Edges[Edges.Length - 1] = new CustomLightningRenderer.Edge(this, nodes[nodes.Length - 1] - Position, Vector2.Zero);
+            Edges[^1] = new CustomLightningRenderer.Edge(this, nodes[^1] - Position, Vector2.Zero);
 
         Collider = new ShapeHitbox(data.GetNodesWithOffsetWithPositionPrepended(offset)) { Fill = Fill };
         Add(new PlayerCollider(OnPlayer, Collider, null));

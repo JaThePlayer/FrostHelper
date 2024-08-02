@@ -107,11 +107,7 @@ public class StaticBumper : Entity {
             player.Die(vector, false, true);
             SceneAs<Level>().Particles.Emit(Bumper.P_FireHit, 12, Center + vector * 12f, Vector2.One * 3f, vector.Angle());
         } else if (respawnTimer <= 0f) {
-            if ((Scene as Level)!.Session.Area.ID == 9) {
-                Audio.Play("event:/game/09_core/pinballbumper_hit", Position);
-            } else {
-                Audio.Play("event:/game/06_reflection/pinballbumper_hit", Position);
-            }
+            Audio.Play("event:/game/06_reflection/pinballbumper_hit", Position);
             respawnTimer = respawnTime;
             Vector2 vector2 = player.ExplodeLaunch(Position, false, false);
             sprite.Play("hit", true, false);

@@ -5,10 +5,9 @@ internal sealed class SpinnerCollider : ColliderList {
     const float HitboxX = -8f, HitboxY = -3f, HitboxW = 16f, HitboxH = 4f;
     const float CircleRadius = 6f;
 
-    public SpinnerCollider() : base(new Collider[] {
-                new Circle(CircleRadius, 0f, 0f),
-                new Hitbox(HitboxW, HitboxH, HitboxX, HitboxY)
-            }) {
+    public SpinnerCollider() : base(
+        new Circle(CircleRadius, 0f, 0f), 
+        new Hitbox(HitboxW, HitboxH, HitboxX, HitboxY)) {
     }
 
     public override bool Collide(Hitbox hitbox) {

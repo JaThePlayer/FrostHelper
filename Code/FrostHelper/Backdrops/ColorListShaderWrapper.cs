@@ -3,7 +3,7 @@
 /// <summary>
 /// Shader wrapper accepting a list of colors as a uniform
 /// </summary>
-internal class ColorListShaderWrapper : ShaderWrapperBackdrop {
+internal sealed class ColorListShaderWrapper : ShaderWrapperBackdrop {
     private readonly Vector4[] _colors;
     
     public ColorListShaderWrapper(BinaryPacker.Element child) : base(child) {

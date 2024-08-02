@@ -5,7 +5,7 @@ namespace FrostHelper.Backdrops;
 /// <summary>
 /// Responsible for loading Frost Helper custom backdrops
 /// </summary>
-public static class BackdropLoader {
+internal static class BackdropLoader {
     [OnLoad]
     public static void Load() {
         Everest.Events.Level.OnLoadBackdrop += Level_LoadBackdrop;

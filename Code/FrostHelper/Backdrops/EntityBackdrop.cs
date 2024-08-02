@@ -1,6 +1,6 @@
 ﻿namespace FrostHelper.Effects;
 
-public class EntityBackdrop : Backdrop {
+internal sealed class EntityBackdrop : Backdrop {
     public int Layer;
     public bool AddParallax, MakeUncollidable;
 
