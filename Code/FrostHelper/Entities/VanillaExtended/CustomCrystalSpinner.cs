@@ -112,6 +112,8 @@ public class CustomSpinner : Entity {
 
     private int randomSeed;
 
+    private readonly BloomPoint? _bloomPoint;
+
     public CustomSpinner(EntityData data, Vector2 offset) : this(data, offset, data.Bool("attachToSolid", false), data.Attr("directory", "danger/FrostHelper/icecrystal"), data.Attr("destroyColor", "639bff"), data.Bool("isCore", false), data.Attr("tint", "ffffff")) { }
 
     public CustomSpinner(EntityData data, Vector2 position, bool attachToSolid, string directory, string destroyColor, bool isCore, string tint) : base(data.Position + position) {
@@ -162,7 +164,6 @@ public class CustomSpinner : Entity {
         } else {
             Collidable = false;
         }
-        Visible = false;
         Depth = -8500;
         AttachToSolid = attachToSolid;
         AttachGroup = data.Int("attachGroup", -1);
@@ -185,8 +186,10 @@ public class CustomSpinner : Entity {
         }
         float bloomAlpha = data.Float("bloomAlpha", 0.0f);
         if (bloomAlpha != 0.0f)
-            Add(new BloomPoint(Collidable ? Collider.Center : Position + new Vector2(8f, 8f), bloomAlpha, data.Float("bloomRadius", 0f)));
+            Add(_bloomPoint = new BloomPoint(Collidable ? Collider.Center : Position + new Vector2(8f, 8f), bloomAlpha, data.Float("bloomRadius", 0f)));
 
+        SetVisible(false);
+        
         SpriteSource = CustomSpinnerSpriteSource.Get(directory, spritePathSuffix);
     }
 
@@ -271,19 +274,26 @@ public class CustomSpinner : Entity {
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal void SetVisible(bool visible) {
+        Visible = visible;
+        if (_bloomPoint is { } p)
+            p.Visible = visible;
+    }
+    
     internal void ClearSprites() {
         if (!expanded)
             return;
 
         expanded = false;
-        Visible = false;
+        SetVisible(false);
         Components.RemoveAll<SealedImage>();
     }
 
 
     public void ForceInstantiate() {
         CreateSprites();
-        Visible = true;
+        SetVisible(true);
     }
 
     public override void Update() {
@@ -291,7 +301,7 @@ public class CustomSpinner : Entity {
             Collidable = false;
             if (InView()) {
                 RegisterToRenderers();
-                Visible = true;
+                SetVisible(true);
                 if (!expanded) {
                     CreateSprites();
                 }
@@ -310,7 +320,7 @@ public class CustomSpinner : Entity {
                 UpdateHue();
 
             if (scene.OnInterval(0.25f, offset) && !InView()) {
-                Visible = false;
+                SetVisible(false);
                 UnregisterFromRenderers();
             }
 

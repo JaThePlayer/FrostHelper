@@ -9,9 +9,11 @@ public static class MonocleDrawShapeFixer {
     public static void Load() {
         if (_hooksLoaded)
             return;
+        if (Draw.Pixel?.Texture?.Texture_Safe is not {} pixel)
+            return;
+        PixelTexture = pixel;
         _hooksLoaded = true;
 
-        PixelTexture = Draw.Pixel.Texture.Texture_Safe;
         Hooks = new();
 
         foreach (var method in typeof(Draw).GetMethods(BindingFlags.DeclaredOnly | BindingFlags.Static | BindingFlags.Public)) {

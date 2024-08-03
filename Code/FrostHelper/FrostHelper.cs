@@ -179,6 +179,9 @@ public class FrostModule : EverestModule {
         SpeedrunToolIntegration.AddReturnSameObjectProcessor?.Invoke(t => 
             t.IsAssignableTo(typeof(ISavestatePersisted))
         );
+        
+        if (Settings.FastShapeDraw)
+            MonocleDrawShapeFixer.Load();
     }
 
     private static List<ILHook> registeredHooks = new List<ILHook>();

@@ -21,7 +21,7 @@ public static class ConditionHelper {
                 startIndex++;
             }
 
-            Flag = str.Substring(startIndex);
+            Flag = str[startIndex..];
         }
 
         public bool Check() => Empty || (FrostModule.GetCurrentLevel().Session.GetFlag(Flag) != Inverted);

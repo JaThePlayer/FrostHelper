@@ -87,9 +87,10 @@ internal sealed class ArbitraryLight : VertexLight {
         // - if ((component.Entity == null || !component.Entity.Visible || !component.Visible || (double) component.Alpha <= 0.0 || component.Color.A <= (byte) 0 || (double) component.Center.X + (double) component.EndRadius <= (double) camera.X || (double) component.Center.Y + (double) component.EndRadius <= (double) camera.Y || (double) component.Center.X - (double) component.EndRadius >= (double) camera.X + 320.0 ? 0 : ((double) component.Center.Y - (double) component.EndRadius < (double) camera.Y + 180.0 ? 1 : 0)) != 0)
         // + if ((component.Entity == null || !component.Entity.Visible || ((IsVisibleArbitraryLight(component) || !component.Visible || (double) component.Alpha <= 0.0 || component.Color.A <= (byte) 0 || (double) component.Center.X + (double) component.EndRadius <= (double) camera.X || (double) component.Center.Y + (double) component.EndRadius <= (double) camera.Y || (double) component.Center.X - (double) component.EndRadius >= (double) camera.X + 320.0 ? 0 : ((double) component.Center.Y - (double) component.EndRadius < (double) camera.Y + 180.0 ? 1 : 0)) != 0))
         // first, find the end of this long if chain:
+        ILLabel? dontRenderLabel = null;
         if (cursor.TryGotoNext(MoveType.Before, instr => instr.MatchLdfld<VertexLight>(nameof(VertexLight.Index)))) {
-            if (cursor.TryGotoPrev(MoveType.After, instr => instr.MatchBrfalse(out _))) {
-                var label = cursor.MarkLabel();
+            if (cursor.TryGotoPrev(MoveType.After, instr => instr.MatchBrfalse(out dontRenderLabel))) {
+                var renderLabel = cursor.MarkLabel();
                 cursor.Index = 0;
                 
                 // now, find the Visible check
@@ -97,7 +98,11 @@ internal sealed class ArbitraryLight : VertexLight {
                     if (cursor.TryGotoNext(MoveType.After, instr => instr.MatchBrfalse(out _))) {
                         cursor.Emit(OpCodes.Ldloc, vertexLightLoc);
                         cursor.EmitCall(IsVisibleArbitraryLight);
-                        cursor.Emit(OpCodes.Brtrue, label);
+                        cursor.Emit(OpCodes.Brtrue, renderLabel);
+                        
+                        cursor.Emit(OpCodes.Ldloc, vertexLightLoc);
+                        cursor.EmitCall(IsArbitraryLight);
+                        cursor.Emit(OpCodes.Brtrue, dontRenderLabel!);
                     }
                 }
             }
@@ -108,8 +113,10 @@ internal sealed class ArbitraryLight : VertexLight {
         if (light is not ArbitraryLight arbitraryLight)
             return false;
 
-        return CameraCullHelper.IsRectangleVisible(arbitraryLight.Bounds);
+        return CameraCullHelper.IsRectangleVisible(arbitraryLight.Bounds) && arbitraryLight.Condition.Check();
     }
+
+    private static bool IsArbitraryLight(VertexLight light) => light is ArbitraryLight;
     
     #endregion
     
@@ -120,15 +127,21 @@ internal sealed class ArbitraryLight : VertexLight {
     public readonly float Radius;
 
     private readonly ArbitraryBloom? _bloom;
+
+    public readonly ConditionHelper.Condition Condition;
     
     public ArbitraryLight(EntityData data, Vector2 offset) : this(data.Position + offset,
         data.GetColor("color", "ffffff"), data.Float("alpha", 1f), data.Int("startFade", 16), data.Int("endFade", 32),
-        data.NodesOffset(offset), data.Bool("connectFirstAndLastNode", true), data.Float("radius"), data.Float("bloomAlpha", 0f)) {
+        data.NodesOffset(offset), data.Bool("connectFirstAndLastNode", true), data.Float("radius"), data.Float("bloomAlpha", 0f),
+        data.GetCondition("flag")) {
     }
 
     public ArbitraryLight(Vector2 position, Color color, float alpha, int startFade, int endFade,
-                          Vector2[] nodes, bool connectFirstAndLastNode, float radius, float bloomAlpha) : base(Vector2.Zero, color, alpha, startFade, endFade) {
+                          Vector2[] nodes, bool connectFirstAndLastNode, float radius, float bloomAlpha,
+                          ConditionHelper.Condition condition) : base(Vector2.Zero, color, alpha, startFade, endFade) {
         LoadHooksIfNeeded();
+        
+        Condition = condition;
         
         var pos = new Vector3(position, 0f);
         var fill = new Vector3[nodes.Length * 3 - (connectFirstAndLastNode ? 0 : 3)];

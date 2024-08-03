@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using FrostHelper.Helpers;
+using System.Runtime.CompilerServices;
 
 namespace FrostHelper;
 
@@ -31,11 +32,14 @@ internal sealed class ArbitraryBloom {
     public readonly Vector3[] Fill;
     public readonly float Alpha;
 
+    public readonly Rectangle Bounds;
+
     public bool Visible;
 
     public ArbitraryBloom(float alpha, Vector3[] fill) {
         Alpha = alpha;
         Fill = fill;
+        Bounds = RectangleExt.FromPointsFromXY(fill);
 
         Visible = true;
     }
@@ -72,7 +76,7 @@ internal sealed class ArbitraryBloomRenderer : Entity {
         // todo: cache?
         foreach (var bloom in Blooms) {
             var alpha = bloom.Alpha;
-            if (bloom.Visible && bloom.Alpha > 0) {
+            if (bloom.Visible && bloom.Alpha > 0 && CameraCullHelper.IsRectangleVisible(bloom.Bounds)) {
                 foreach (var vert in bloom.Fill) {
                     NextVertex(ref index, vert, alpha);
                 }

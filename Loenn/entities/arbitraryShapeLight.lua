@@ -17,6 +17,7 @@ jautils.createPlacementsPreserveOrder(arbitraryLight, "default", {
     { "endFade", 64, "integer" },
     { "radius", 24, "integer" },
     { "bloomAlpha", 0 },
+    { "flag", "" },
     { "connectFirstAndLastNode", false },
 })
 
