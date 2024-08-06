@@ -381,22 +381,28 @@ public class CustomSpring : Spring {
         if (h.HitSpring(this)) {
             BounceAnimate();
             TryBreak();
-            if (h.Entity is Glider glider) {
-                if (Orientation == CustomOrientations.Floor) {
-                    glider.Speed.Y *= speedMult.Y;
-                } else if (Orientation == CustomOrientations.Ceiling) {
-                    glider.Speed.Y *= -speedMult.Y;
-                } else {
-                    glider.Speed *= speedMult;
+
+            // Apply speed multiplier
+            if (h is { SpeedGetter: { }, SpeedSetter: { } }) {
+                // Old implementation didn't work with custom holdables
+                if (Version < 2 && h.Entity is not Glider and not TheoCrystal) {
+                    return;
                 }
-            } else if (h.Entity is TheoCrystal theo) {
-                if (Orientation == CustomOrientations.Floor) {
-                    theo.Speed.Y *= speedMult.Y;
-                } else if (Orientation == CustomOrientations.Ceiling) {
-                    theo.Speed.Y *= -speedMult.Y;
-                } else {
-                    theo.Speed *= speedMult;
+                
+                var speed = h.GetSpeed();
+                switch (Orientation)
+                {
+                    case CustomOrientations.Floor:
+                        speed.Y *= speedMult.Y;
+                        break;
+                    case CustomOrientations.Ceiling:
+                        speed.Y *= -speedMult.Y;
+                        break;
+                    default:
+                        speed *= speedMult;
+                        break;
                 }
+                h.SetSpeed(speed);
             }
         }
     }

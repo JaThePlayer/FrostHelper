@@ -266,14 +266,12 @@ function jautils.createPlacementsPreserveOrder(handler, placementName, placement
         end
     end
 
-    if hasAnyFieldInformation then
-        if needsLiveFieldInfoUpdate then
-            handler.fieldInformation = function(entity)
-                return createFieldInfoFromJaUtilsPlacement(placementData)
-            end
-        else
-            handler.fieldInformation = createFieldInfoFromJaUtilsPlacement(placementData)
+    if needsLiveFieldInfoUpdate then
+        handler.fieldInformation = function(entity)
+            return createFieldInfoFromJaUtilsPlacement(placementData)
         end
+    else
+        handler.fieldInformation = createFieldInfoFromJaUtilsPlacement(placementData)
     end
 
     handler.fieldOrder = fieldOrder
@@ -737,12 +735,23 @@ end
     Lönn Extended support
 ]]
 
+local triggers = require("triggers")
+
 ---Adds extended text support for the given trigger. Returns the handler itself
 ---@param triggerHandler table
 ---@param getter function<table>
 ---@return table triggerHandler
 function jautils.addExtendedText(triggerHandler, getter)
-    triggerHandler._lonnExt_extendedText = getter
+    --triggerHandler._lonnExt_extendedText = getter
+
+    triggerHandler.triggerText = function (room, trigger)
+        local text = triggers.getDrawableDisplayText(trigger)
+        local extText = getter(trigger)
+        if extText then
+            return string.format("%s (%s)", text, extText)
+        end
+        return text
+    end
 
     return triggerHandler
 end

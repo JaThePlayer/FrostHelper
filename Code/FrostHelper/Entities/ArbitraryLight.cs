@@ -159,7 +159,7 @@ internal sealed class ArbitraryLight : VertexLight {
         }
 
         Fill = fill;
-        Bounds = RectangleExt.FromPoints(nodes);
+        Bounds = RectangleExt.FromPointsFromXY(fill);
         Radius = radius;
 
         if (bloomAlpha > 0f) {

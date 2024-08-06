@@ -60,7 +60,7 @@ local function createSpringHandler(name, spriteRotation, speedAsVector)
         { "directory", "objects/spring/" },
         { "speedMult", speedAsVector and "1.0" or 1.0 },
         { "attachGroup", -1, "FrostHelper.attachGroup" },
-        { "version", 1, "integer" },
+        { "version", 2, "integer" },
         { "oneUse", false },
         { "playerCanUse", true },
         { "renderOutline", true },
