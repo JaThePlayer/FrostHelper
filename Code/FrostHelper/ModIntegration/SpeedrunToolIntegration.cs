@@ -20,6 +20,9 @@ public class SpeedrunToolIntegration {
     
     //public static void AddReturnSameObjectProcessor(Func<Type, bool> predicate) 
     public static Action<Func<Type, bool>>? AddReturnSameObjectProcessor;
+    
+    //AddCustomDeepCloneProcessor(Func<object, object> processor)
+    public static Action<Func<object, object>>? AddCustomDeepCloneProcessor;
 }
 
 /// <summary>

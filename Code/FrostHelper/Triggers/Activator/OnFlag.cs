@@ -17,7 +17,7 @@ internal sealed class OnFlagActivator : BaseActivator {
         ActivateAfterDeath = data.Bool("activateAfterDeath", true);
     }
 
-    public void OnFlag(bool value) {
+    public void OnFlag(Session session, string? flag, bool value) {
         if (value == TargetValue) {
             var player = Scene?.Tracker.GetEntity<Player>();
             if (player != null || ActivateAfterDeath)

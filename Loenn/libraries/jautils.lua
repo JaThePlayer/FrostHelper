@@ -6,6 +6,7 @@ local utils = require("utils")
 local xnaColors = require("consts.xna_colors")
 local rainbowHelper = require("mods").requireFromPlugin("libraries.rainbowHelper")
 local compat = require("mods").requireFromPlugin("libraries.compat")
+local mapScanHelper = require("mods").requireFromPlugin("libraries.mapScanHelper")
 
 local celesteDepths = --require("consts.object_depths")
 {
@@ -169,6 +170,14 @@ jautils.fieldTypeOverrides = {
             searchable = true,
         }
     end,
+    dropdown_int = function(data)
+        return {
+            fieldType = "integer",
+            options = data,
+            editable = false,
+            searchable = true,
+        }
+    end,
     depth = function (data)
         return {
             options = celesteDepths,
@@ -177,21 +186,18 @@ jautils.fieldTypeOverrides = {
             searchable = true,
         }
     end,
-    path = function (data)
-        print("path property here!!!")
+    sessionCounter = function (data)
         return {
-            fieldType = "path",
-            allowFolders = true,
-            allowFiles = false,
-            relativeToMod = true,
-            allowMissingPath = false,
-            allowEmpty = false,
+            options = mapScanHelper.findAllSessionCounters(),
+            editable = true,
+            searchable = true,
         }
     end
 }
 
 local fieldTypesWhichNeedLiveUpdate = {
     typesList = true,
+    sessionCounter = true,
 }
 
 local function createFieldInfoFromJaUtilsPlacement(placementData)
@@ -742,13 +748,14 @@ local triggers = require("triggers")
 ---@param getter function<table>
 ---@return table triggerHandler
 function jautils.addExtendedText(triggerHandler, getter)
+    if not getter then return triggerHandler end
     --triggerHandler._lonnExt_extendedText = getter
 
     triggerHandler.triggerText = function (room, trigger)
         local text = triggers.getDrawableDisplayText(trigger)
         local extText = getter(trigger)
         if extText then
-            return string.format("%s (%s)", text, extText)
+            return string.format("%s\n(%s)", text, extText)
         end
         return text
     end

@@ -8,7 +8,7 @@ namespace FrostHelper.Triggers.Activator;
 /// </summary>
 [CustomEntity("FrostHelper/IfActivator")]
 internal sealed class IfActivator : BaseActivator {
-    Condition condition;
+    readonly Condition condition;
 
     public IfActivator(EntityData data, Vector2 offset) : base(data, offset) {
         condition = data.GetCondition("condition", "");

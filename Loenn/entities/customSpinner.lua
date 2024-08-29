@@ -15,8 +15,8 @@ jautils.createPlacementsPreserveOrder(spinner, "custom_spinner", {
     { "tint", "ffffff", "color" },
     { "destroyColor", "b0eaff", "color" },
     { "borderColor", "000000", "color" },
-    { "directory", "danger/FrostHelper/icecrystal" },
-    { "spritePathSuffix", "" },
+    { "directory", "danger/crystal" },
+    { "spritePathSuffix", "_white" },
     { "bloomAlpha", 0.0 },
     { "bloomRadius", 0.0 },
     { "debrisCount", 8, "integer" },
@@ -29,11 +29,6 @@ jautils.createPlacementsPreserveOrder(spinner, "custom_spinner", {
     { "singleFGImage", false }
 })
 
-jautils.addPlacement(spinner, "rainbowTexture", {
-    {"directory", "danger/crystal" },
-	{"spritePathSuffix", "_white" },
-})
-
 local function createConnectorsForSpinner(room, entity, baseBGSprite)
     local sprites = {}
 
@@ -41,24 +36,6 @@ local function createConnectorsForSpinner(room, entity, baseBGSprite)
     local attachGroup = entity.attachGroup
     local attachToSolid = entity.attachToSolid or false
     local x, y = entity.x, entity.y
-
-    if RYSY and RYSY.entitiesWithSIDWithinRangeUntilThis then
-        for _, e2 in RYSY.entitiesWithSIDWithinRangeUntilThis(room, name, entity, 24) do
-            if e2.attachGroup == attachGroup and e2.attachToSolid == attachToSolid then
-                local e2x, e2y = e2.x, e2.y
-
-                local connector = jautils.copyTexture(baseBGSprite,
-                    math.floor((x + e2x) / 2),
-                    math.floor((y + e2y) / 2),
-                false)
-
-                connector.depth = -8499
-                table.insert(sprites, connector)
-            end
-        end
-
-        return sprites
-    end
 
     for _, e2 in ipairs(room.entities) do
         if e2 == entity then break end

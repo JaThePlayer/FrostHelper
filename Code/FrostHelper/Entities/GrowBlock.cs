@@ -71,7 +71,7 @@ public sealed class GrowBlock : Entity {
         }
     }
 
-    public void OnFlag(bool val) {
+    public void OnFlag(Session session, string? flag, bool val) {
         if (val) {
             if (GrowCoroutine is null || GrowCoroutine is { Finished: true }) {
                 GrowCoroutine = new Coroutine(GrowRoutine());

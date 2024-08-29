@@ -1,4 +1,5 @@
 ﻿using FrostHelper.ModIntegration;
+using System.Runtime.CompilerServices;
 
 namespace FrostHelper.Helpers;
 
@@ -23,8 +24,12 @@ public static class ConditionHelper {
 
             Flag = str[startIndex..];
         }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool Check() => Empty || Check(FrostModule.GetCurrentLevel().Session);
 
-        public bool Check() => Empty || (FrostModule.GetCurrentLevel().Session.GetFlag(Flag) != Inverted);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool Check(Session session) => Empty || (session.GetFlag(Flag) != Inverted);
     }
 
     public static Condition GetCondition(this EntityData data, string name, string def = "") {

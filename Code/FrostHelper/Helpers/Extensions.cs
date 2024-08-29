@@ -219,4 +219,17 @@ public static class Extensions {
         List<T> list => list,
         var other => other.ToList()
     };
+    
+    public static Session.Counter GetCounterObj(this Session session, string counterName) {
+        var counters = session.Counters;
+        foreach (var c in counters) {
+            if (c.Key == counterName)
+                return c;
+        }
+
+        var ret = new Session.Counter { Key = counterName, Value = 0 };
+        session.Counters.Add(ret);
+        
+        return ret;
+    }
 }

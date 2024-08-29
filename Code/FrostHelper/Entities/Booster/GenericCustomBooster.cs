@@ -128,6 +128,8 @@ namespace FrostHelper.Entities.Boosters {
         /// </summary>
         public int DashRecovery;
 
+        public bool StaminaRecovery;
+
         /// <summary>
         /// Speed at which the player entered the booster
         /// </summary>
@@ -186,6 +188,7 @@ namespace FrostHelper.Entities.Boosters {
             PreserveSpeed = data.Bool("preserveSpeed", false);
             OutlineColor = data.GetColor("outlineColor", "000000");
             RedBoostDashOutMode = data.Enum("redBoostDashOutMode", RedBoostDashOutModes.Default);
+            StaminaRecovery = data.Bool("staminaRecovery", true);
         }
 
         public override void Added(Scene scene) {
@@ -420,7 +423,8 @@ namespace FrostHelper.Entities.Boosters {
 
             HandleDashRefill(player);
 
-            player.RefillStamina();
+            if (StaminaRecovery)
+                player.RefillStamina();
             if (doNotDropTheo) {
                 return;
             }

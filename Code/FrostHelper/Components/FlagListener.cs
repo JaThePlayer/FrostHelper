@@ -1,15 +1,20 @@
 ﻿namespace FrostHelper;
 
 [Tracked]
-public class FlagListener : Component {
+public sealed class FlagListener : Component {
     private static bool _hooksLoaded;
 
-    public Action<bool> OnSet;
-    public string Flag;
+    public Action<Session, string?, bool> OnSet;
+    public string? Flag;
     public bool MustChange;
     public bool TriggerOnRoomBegin;
 
-    public FlagListener(string flag, Action<bool> onSet, bool mustChange, bool triggerOnRoomBegin) : base(false, false) {
+    // backwards compat, just in case
+    public FlagListener(string? flag, Action<bool> onSet, bool mustChange, bool triggerOnRoomBegin)
+        : this(flag, (_, _, val) => onSet(val), mustChange, triggerOnRoomBegin) {
+    }
+
+    public FlagListener(string? flag, Action<Session, string?, bool> onSet, bool mustChange, bool triggerOnRoomBegin) : base(false, false) {
         LoadHooksIfNeeded();
 
         Flag = flag;
@@ -21,8 +26,10 @@ public class FlagListener : Component {
     public override void EntityAwake() {
         base.EntityAwake();
 
-        if (TriggerOnRoomBegin)
-            OnSet(FrostModule.GetCurrentLevel().Session.GetFlag(Flag));
+        if (TriggerOnRoomBegin) {
+            var session = FrostModule.GetCurrentLevel().Session;
+            OnSet(session, Flag, session.GetFlag(Flag));
+        }
     }
 
     public static void LoadHooksIfNeeded() {
@@ -34,16 +41,15 @@ public class FlagListener : Component {
     }
 
     private static void Session_SetFlag(On.Celeste.Session.orig_SetFlag orig, Session self, string flag, bool setTo) {
-        bool? prevValue = null;
+        bool prevValue = self.GetFlag(flag);
+        orig(self, flag, setTo);
 
         foreach (FlagListener item in Engine.Scene.Tracker.SafeGetComponents<FlagListener>()) {
-            if (flag == item.Flag) {
-                if (!item.MustChange || ((prevValue ??= self.GetFlag(flag)) != setTo))
-                    item.OnSet(setTo);
+            if (item.Flag is null || flag == item.Flag) {
+                if (!item.MustChange || (prevValue != setTo))
+                    item.OnSet(self, flag, setTo);
             }  
         }
-
-        orig(self, flag, setTo);
     }
 
     [OnUnload]

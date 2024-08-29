@@ -481,6 +481,11 @@ entities.FrostHelper/BloomBlocker.placements.description.default=Blocks bloom (e
 entities.FrostHelper/BloomBlocker.attributes.description.alpha=How much this blocker should block bloom.\n1 Blocks bloom fully, 0 does nothing.
 entities.FrostHelper/BloomBlocker.attributes.description.windingOrder=The winding order of the polygon.\nIf your shape looks broken in-game, try changing this property until it looks correctly.
 
+entities.FrostHelper/FlagCounterController.placements.name.default=Flag To Counter Controller
+entities.FrostHelper/FlagCounterController.placements.description.default=Counts how many of the provided flags are set, and sets a Session Counter to that value.
+entities.FrostHelper/FlagCounterController.attributes.description.counter=The Session Counter which should be controlled by this entity.
+entities.FrostHelper/FlagCounterController.attributes.description.flags=List of flags to check, comma-seperated.\nWrite a '!' before the flag name to invert the condition.
+
 # -- Mod Names --
 # mods.modName.*
 mods.FrostHelper.name=Frost Helper
@@ -673,6 +678,34 @@ triggers.FrostHelper/OnCassetteSwapActivator.attributes.description.delay=How lo
 triggers.FrostHelper/OnCassetteSwapActivator.attributes.description.activationMode=How the activation should work:\nAll: All triggers get activated at once.\nCycle: When this trigger activates for the n-th time, the n-th trigger will be chosen.\nRandom: A random (seeded) trigger will be chosen.
 triggers.FrostHelper/OnCassetteSwapActivator.attributes.description.targetIndex=The cassette index to react to. Leave at -1 to trigger on every swap
 triggers.FrostHelper/OnCassetteSwapActivator.attributes.description.activateAfterDeath=Whether this activator can activate triggers even after the player dies.\nThis might cause crashes when used with certain triggers which assume the player is still alive.
+
+# On (Session) Counter
+triggers.FrostHelper/OnCounterActivator.placements.name.default=Activator (On Counter)
+triggers.FrostHelper/OnCounterActivator.placements.description.default=Activates triggers which intersect with the nodes of this trigger, once a Session Counter fulfills a specified condition.\nTriggers get activated the frame the condition got met, only if it wasn't met last frame.\nNOT COLLIDABLE, requires another Activator to activate this!\nUseful for more complicated systems.
+triggers.FrostHelper/OnCounterActivator.attributes.description.once=Whether this trigger should only activate once, and then get deleted.
+triggers.FrostHelper/OnCounterActivator.attributes.description.delay=How long to wait (in seconds) before actually activating the triggers.
+triggers.FrostHelper/OnCounterActivator.attributes.description.activationMode=How the activation should work:\nAll: All triggers get activated at once.\nCycle: When this trigger activates for the n-th time, the n-th trigger will be chosen.\nRandom: A random (seeded) trigger will be chosen.
+triggers.FrostHelper/OnCounterActivator.attributes.description.counter=The session counter to check.
+triggers.FrostHelper/OnCounterActivator.attributes.description.target=Target value of the counter. Can be an integer, OR the name of a different session counter.\nDecimal numbers are NOT supported.
+triggers.FrostHelper/OnCounterActivator.attributes.description.operation=The comparison operation to use to compare the counter to target.
+
+# If (Session) Counter
+triggers.FrostHelper/IfCounterActivator.placements.name.default=Activator (If Counter)
+triggers.FrostHelper/IfCounterActivator.placements.description.default=Activates triggers which intersect with the nodes of this trigger, if a Session Counter fulfills a specified condition when this trigger gets activated from an outside source.\nNOT COLLIDABLE, requires another Activator to activate this!\nUseful for more complicated systems.
+triggers.FrostHelper/IfCounterActivator.attributes.description.once=Whether this trigger should only activate once, and then get deleted.
+triggers.FrostHelper/IfCounterActivator.attributes.description.delay=How long to wait (in seconds) before actually activating the triggers.
+triggers.FrostHelper/IfCounterActivator.attributes.description.activationMode=How the activation should work:\nAll: All triggers get activated at once.\nCycle: When this trigger activates for the n-th time, the n-th trigger will be chosen.\nRandom: A random (seeded) trigger will be chosen.
+triggers.FrostHelper/IfCounterActivator.attributes.description.counter=The session counter to check.
+triggers.FrostHelper/IfCounterActivator.attributes.description.target=Target value of the counter.\nCan be an integer, OR the name of a different session counter.\nDecimal numbers are NOT supported.
+triggers.FrostHelper/IfCounterActivator.attributes.description.operation=The comparison operation to use to compare the counter to target.
+
+# Session Counter Trigger
+triggers.FrostHelper/SessionCounterTrigger.placements.name.default=Session Counter
+triggers.FrostHelper/SessionCounterTrigger.placements.description.default=Changes the value of a Session Counter, which is a 32-bit integer saved to session.
+triggers.FrostHelper/SessionCounterTrigger.attributes.description.counter=The session counter to change.
+triggers.FrostHelper/SessionCounterTrigger.attributes.description.value=The value to use for this operation.\nWhat this number means is dependant on 'Operation'.\nCan be an integer, OR the name of a different session counter.\nDecimal numbers are NOT supported.
+triggers.FrostHelper/SessionCounterTrigger.attributes.description.operation=Specifies which operation to use to manipulate the counter.\nSet - set the value of the counter to 'value'.\nIncrement - add 'value' to the current value of the counter.\nDecrement - subtract 'value' from the current value of the counter.\nMultiply - Multiply the current value of the counter by 'value'.\nDivide - Divide the current value of the counter by 'value' (Over integers, meaning 5 / 2 == 2)
+triggers.FrostHelper/SessionCounterTrigger.attributes.description.clearOnSpawn=Whether the counter should be set to 0 when the player spawns into the room.\nOtherwise, its value persists between deaths.
 
 # FrostHelper/NoMovementTrigger
 triggers.FrostHelper/NoMovementTrigger.placements.name.default=No Movement

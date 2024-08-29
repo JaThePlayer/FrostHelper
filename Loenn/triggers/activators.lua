@@ -22,74 +22,59 @@ local cassetteSwapActivatorOptionsInv = {
     [3] = "Malachite",
 }
 
+local counterOperations = {
+    "Equal",
+    "NotEqual",
+    "GreaterThan",
+    "LessThan",
+}
+
+local counterOperationToMathExpr = {
+    ["Equal"] = "==",
+    ["NotEqual"] = "!=",
+    ["GreaterThan"] = ">",
+    ["LessThan"] = "<",
+}
+
 local function makeActivator(name, placement, extTextCallback, extra)
     local h = {
         name = name,
         nodeLimits = {1, -1},
         nodeLineRenderType = "fan",
-        placements = {
-            placement
-        },
-        _lonnExt_extendedText = extTextCallback,
-        fieldInformation = {
-            activationMode = {
-                options = activationModes,
-                editable = false,
-            }
-        }
     }
 
     extra = extra or {}
 
+    table.insert(placement, 1, { "delay", "0" })
+    table.insert(placement, 1, { "activationMode", "All", activationModes })
     if extra.disableOnce ~= true then
-        h.placements[1].data.once = false
+        table.insert(placement, { "once", false })
     end
 
-    if extra.fieldInformation then
-        for key, value in pairs(extra.fieldInformation) do
-            h.fieldInformation[key] = value
-        end
-    end
-
-    h.placements[1].data.delay = 0.0
-    h.placements[1].data.activationMode = "All"
+    jautils.createPlacementsPreserveOrder(h, "default", placement, true)
+    jautils.addExtendedText(h, extTextCallback)
 
     return h
 end
 
 return {
     makeActivator("FrostHelper/OnPlayerEnterActivator", {
-        name = "default",
-        data = {
-        }
     }),
     makeActivator("FrostHelper/OnPlayerOnGroundActivator", {
-        name = "default",
-        data = {
-            onlyWhenJustLanded = true,
-        }
+        { "onlyWhenJustLanded", true }
     }),
     makeActivator("FrostHelper/OnPlayerDashingActivator", {
-        name = "default",
-        data = {
-            onlyWhenJustDashed = true,
-            hasToBeInside = false,
-        }
+        { "onlyWhenJustDashed", true },
+        { "hasToBeInside ", false },
     }),
     makeActivator("FrostHelper/OnSpawnActivator", {
-        name = "default",
-        data = {
-        }
     }),
     makeActivator("FrostHelper/OnFlagActivator", {
-        name = "default",
-        data = {
-            flag = "",
-            targetState = true,
-            mustChange = false,
-            triggerOnRoomBegin = true,
-            activateAfterDeath = false,
-        }
+        { "flag", "" },
+        { "targetState", true },
+        { "mustChange", false },
+        { "triggerOnRoomBegin", true },
+        { "activateAfterDeath", false },
     }, function (trigger)
         if trigger.targetState then
             return trigger.flag
@@ -98,28 +83,19 @@ return {
         end
     end),
     makeActivator("FrostHelper/IfActivator", {
-        name = "default",
-        data = {
-            condition = "",
-        }
+        { "condition", "" },
     },function (trigger)
         return trigger.condition
     end),
     makeActivator("FrostHelper/DelayActivator", {
-        name = "default",
-        data = {
-        }
     },function (trigger)
         return string.format("%.3f", trigger.delay)
     end),
     makeActivator("FrostHelper/LoopActivator",
         {
-            name = "default",
-            data = {
-                requireActivation = false,
-                loopTime = 1.0,
-                activateAfterDeath = false,
-            },
+            { "loopTime", 1.0 },
+            { "activateAfterDeath", false },
+            { "requireActivation", false },
         },
         function (trigger)
             return string.format("%.3f", trigger.loopTime or 0)
@@ -130,45 +106,41 @@ return {
     ),
     makeActivator("FrostHelper/OnEntityEnterActivator",
         {
-            name = "default",
-            data = {
-                cache = true,
-                types = "",
-                activateAfterDeath = false,
-            },
-        },
-        nil,
-        {
-            fieldInformation = {
-                types = jautils.typesListFieldInfo()
-            }
+            { "types", "", "typesList" },
+            { "cache", true },
+            { "activateAfterDeath", false },
         }
     ),
     makeActivator("FrostHelper/OnDeathActivator",
     {
-        name = "default",
-        data = {
-        }
     }),
     makeActivator("FrostHelper/OnCassetteSwapActivator",
         {
-            name = "default",
-            data = {
-                targetIndex = -1,
-                activateAfterDeath = false,
-            }
+            { "targetIndex", -1, "dropdown_int", cassetteSwapActivatorOptions },
+            { "activateAfterDeath", false },
         },
         function (trigger)
             return cassetteSwapActivatorOptionsInv[trigger.targetIndex] or tostring(trigger.targetIndex)
-        end,
+        end
+    ),
+    makeActivator("FrostHelper/IfCounterActivator",
         {
-            fieldInformation = {
-                targetIndex = {
-                    fieldType = "integer",
-                    options = cassetteSwapActivatorOptions,
-                    editable = false
-                }
-            }
-        }
+            { "counter", "", "sessionCounter" },
+            { "target", "0", "sessionCounter" },
+            { "operation", "Equal", counterOperations },
+        },
+        function (trigger)
+            return string.format("%s %s %s", trigger.counter, counterOperationToMathExpr[trigger.operation], trigger.target)
+        end
+    ),
+    makeActivator("FrostHelper/OnCounterActivator",
+        {
+            { "counter", "", "sessionCounter" },
+            { "target", "0", "sessionCounter" },
+            { "operation", "Equal", counterOperations },
+        },
+        function (trigger)
+            return string.format("%s %s %s", trigger.counter, counterOperationToMathExpr[trigger.operation], trigger.target)
+        end
     ),
 }

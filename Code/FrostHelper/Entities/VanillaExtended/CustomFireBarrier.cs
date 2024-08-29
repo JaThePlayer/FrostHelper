@@ -45,7 +45,7 @@ public class CustomFireBarrier : Entity {
         }
     }
 
-    private void onSilentFlagChange(bool value) {
+    private void onSilentFlagChange(Session session, string? flag, bool value) {
         // we need to delay adding/removing the sfx, because this func will be called in flagListener.EntityAwake, and the game will crash if something is added at that time :/
         Scene.OnEndOfFrame += () => {
             if (value) {

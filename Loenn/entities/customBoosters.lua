@@ -57,6 +57,7 @@ local dashIncrementBooster = createCustomBoosterHandler("FrostHelper/IncrementBo
     { "red", false },
     { "refillBeforeIncrementing", false},
     { "preserveSpeed", false },
+    { "staminaRecovery", true },
 },
 {
     { "red", true },
@@ -83,6 +84,7 @@ local grayBooster = createCustomBoosterHandler("FrostHelper/GrayBooster", {
     { "red", false },
     { "dashes", -1, dashesOptions },
     { "preserveSpeed", false },
+    { "staminaRecovery", true },
 },
 {
     { "red", true },
@@ -106,6 +108,7 @@ local blueBooster = createCustomBoosterHandler("FrostHelper/BlueBooster", {
     { "redBoostDashOutMode", "Default", dashOutModes },
     { "red", false },
     { "preserveSpeed", false },
+    { "staminaRecovery", true },
 })
 
 local yellowBooster = createCustomBoosterHandler("FrostHelper/YellowBooster", {
@@ -122,6 +125,7 @@ local yellowBooster = createCustomBoosterHandler("FrostHelper/YellowBooster", {
     -- { "redBoostDashOutMode", "Default", dashOutModes },
     { "dashes", -1, dashesOptions },
     { "preserveSpeed", false },
+    { "staminaRecovery", true },
 })
 
 return {
