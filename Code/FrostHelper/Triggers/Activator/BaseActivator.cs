@@ -9,6 +9,10 @@ internal class BaseActivator : Trigger {
 
     internal List<Trigger>? ToActivate;
 
+    internal List<Trigger>[]? ToActivatePerNode;
+
+    internal virtual bool NeedsNodeIndexes => false;
+
     // used by Random and Cycle modes to keep track of which trigger to call OnStay for.
     // For the 'all' setting, all triggers get activated instead (though this value is still used to keep track of whether anything got activated or not)
     private Trigger? lastActivatedTrigger;
@@ -32,7 +36,7 @@ internal class BaseActivator : Trigger {
 
     public override void Awake(Scene scene) {
         base.Awake(scene);
-        ToActivate ??= FastCollideAll<Trigger>();
+        ToActivate ??= FastCollideAll();
     }
 
     public void ActivateAll(Player player) {
@@ -40,6 +44,27 @@ internal class BaseActivator : Trigger {
             InstantActivateAll(player);
         } else {
             Add(new Coroutine(DelayedActivateAll(player)));
+        }
+
+        if (OnlyOnce)
+            RemoveSelf();
+    }
+
+    public void ActivateAtNode(Player player, int nodeIdx) {
+        ToActivate ??= FastCollideAll();
+
+        if (ToActivatePerNode is null)
+            throw new Exception(
+                $"ActivateAtNode called for an Activator [{GetType()}] which doesn't keep track of nodes. This is a Frost Helper bug!");
+
+        var toActivate = ToActivatePerNode.ElementAtOrDefault(nodeIdx);
+
+        if (toActivate is {Count: > 0 }) {
+            if (Delay == 0) {
+                InstantActivateAll(player, toActivate);
+            } else {
+                Add(new Coroutine(DelayedActivateAll(player, toActivate)));
+            }
         }
 
         if (OnlyOnce)
@@ -111,29 +136,35 @@ internal class BaseActivator : Trigger {
         yield return Delay;
         InstantActivateAll(player);
     }
+    
+    private IEnumerator DelayedActivateAll(Player player, List<Trigger> toActivate) {
+        yield return Delay;
+        InstantActivateAll(player, toActivate);
+    }
 
     public void InstantActivateAll(Player player) {
         // There's a chance for an activator to get triggered *before* Awake.
-        ToActivate ??= FastCollideAll<Trigger>();
+        ToActivate ??= FastCollideAll();
 
-        if (ToActivate.Count == 0 || ((player is null || player.Scene is null) && !ActivateAfterDeath))
+        InstantActivateAll(player, ToActivate);
+    }
+
+    internal void InstantActivateAll(Player player, List<Trigger> toActivate) {
+        if (toActivate.Count == 0 || ((player?.Scene is null) && !ActivateAfterDeath))
             return;
-
         CallOnLeave(player);
         switch (ActivationMode) {
             case ActivationModes.All:
-                foreach (var trigger in ToActivate) {
+                foreach (var trigger in toActivate) {
                     Activate(player!, trigger);
                 }
                 break;
             case ActivationModes.Cycle:
-                Activate(player!, ToActivate[_cycleModeIdx]);
-                _cycleModeIdx = (_cycleModeIdx + 1) % ToActivate.Count;
+                Activate(player!, toActivate[_cycleModeIdx]);
+                _cycleModeIdx = (_cycleModeIdx + 1) % toActivate.Count;
                 break;
             case ActivationModes.Random:
-                Activate(player!, ToActivate[Calc.Random.Next(0, ToActivate.Count)]);
-                break;
-            default:
+                Activate(player!, toActivate[Calc.Random.Next(0, toActivate.Count)]);
                 break;
         }
     }
@@ -157,26 +188,27 @@ internal class BaseActivator : Trigger {
     /// Struct containing a <typeparamref name="T"/> and an int index. Used because value tuples don't exist in framework :(
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    private struct Indexed<T> {
+    internal struct Indexed<T> {
         public T Value;
         public int Index;
     }
 
-    private List<T> FastCollideAll<T>() where T : Trigger {
+    internal List<Trigger> FastCollideAll() {
         // When we're cycling, the order of triggered triggers should be decided by node order, so that it's manipulatable easily.
         // In all other modes, order is not important, so we don't sort at all for better performance
         // Since the index is unnecessary on non-cycle modes, we'll create a List<T> directly, instead of going through Indexed<T> to then re-allocate it into List<T>.
         // TODO: maybe rewrite into storing the indexes separately, in a stack-allocated buffer??
-        List<T>? into = null;
-        List<Indexed<T>>? intoWithIndexes = null;
-        if (ActivationMode == ActivationModes.Cycle) {
+        List<Trigger>? into = null;
+        List<Indexed<Trigger>>? intoWithIndexes = null;
+        if (ActivationMode == ActivationModes.Cycle || NeedsNodeIndexes) {
             intoWithIndexes = [];
         } else {
             into = [];
         }
         var nodes = Nodes;
+        var maxNodeId = 0;
 
-        foreach (T entity in Scene.Tracker.GetEntities<T>()) {
+        foreach (Trigger entity in Scene.Tracker.GetEntities<Trigger>()) {
             var ePos = entity.Position;
 
             switch (entity.Collider)
@@ -193,6 +225,7 @@ internal class BaseActivator : Trigger {
                             && node.X > ePos.X
                             && node.Y < eBottom
                             && node.Y > ePos.Y) {
+                            maxNodeId = i;
                             if (into is { })
                                 into.Add(entity);
                             else
@@ -210,6 +243,7 @@ internal class BaseActivator : Trigger {
                     for (int i = 0; i < nodes.Length; i++) {
                         Vector2 node = nodes[i];
                         if (otherCollider.Collide(node)) {
+                            maxNodeId = i;
                             if (into is { })
                                 into.Add(entity);
                             else
@@ -229,6 +263,14 @@ internal class BaseActivator : Trigger {
         // If we have kept track of indexes, then we need to sort
         if (intoWithIndexes is { }) {
             intoWithIndexes.Sort((p1, p2) => p2.Index - p1.Index);
+
+            if (NeedsNodeIndexes) {
+                ToActivatePerNode = new List<Trigger>[maxNodeId + 1];
+                foreach (var item in intoWithIndexes) {
+                    ToActivatePerNode[item.Index] ??= new(1);
+                    ToActivatePerNode[item.Index].Add(item.Value);
+                }
+            }
 
             // Now, convert our list to just a List<T>.
             // Done manually for performance and less allocations.

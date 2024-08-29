@@ -699,6 +699,14 @@ triggers.FrostHelper/IfCounterActivator.attributes.description.counter=The sessi
 triggers.FrostHelper/IfCounterActivator.attributes.description.target=Target value of the counter.\nCan be an integer, OR the name of a different session counter.\nDecimal numbers are NOT supported.
 triggers.FrostHelper/IfCounterActivator.attributes.description.operation=The comparison operation to use to compare the counter to target.
 
+# Counter Switch Activator
+triggers.FrostHelper/SwitchOnCounterActivator.placements.name.default=Activator (Switch on Counter)
+triggers.FrostHelper/SwitchOnCounterActivator.placements.description.default=Activates triggers which intersect with one of the nodes of this trigger, depending on the value of the counter.\nBy default, if counter == 0, the first node will get activated, if counter == 1 then the 2nd, etc.\nThis mapping can be configured by the 'cases' property.\nNOT COLLIDABLE, requires another Activator to activate this!\nUseful for more complicated systems.
+triggers.FrostHelper/SwitchOnCounterActivator.attributes.description.once=Whether this trigger should only activate once, and then get deleted.
+triggers.FrostHelper/SwitchOnCounterActivator.attributes.description.delay=How long to wait (in seconds) before actually activating the triggers.
+triggers.FrostHelper/SwitchOnCounterActivator.attributes.description.counter=The session counter to check.
+triggers.FrostHelper/SwitchOnCounterActivator.attributes.description.cases=Comma-seperated list of switch cases.\nEach case should be a number or name of another counter.\nWhen this activator is activated, each case gets checked in-order, and the node corresponding to the first met condition will get activated.
+
 # Session Counter Trigger
 triggers.FrostHelper/SessionCounterTrigger.placements.name.default=Session Counter
 triggers.FrostHelper/SessionCounterTrigger.placements.description.default=Changes the value of a Session Counter, which is a 32-bit integer saved to session.

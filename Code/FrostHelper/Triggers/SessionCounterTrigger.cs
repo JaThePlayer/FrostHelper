@@ -1,11 +1,19 @@
-﻿namespace FrostHelper.Triggers;
+﻿using System.Globalization;
+
+namespace FrostHelper.Triggers;
 
 [CustomEntity("FrostHelper/SessionCounterTrigger")]
 internal sealed class SessionCounterTrigger : Trigger {
     public readonly string CounterName;
+    
     public readonly int Value;
+    public readonly string? ValueCounterName;
+    
     public readonly CounterOperation Operation;
     public readonly bool ClearOnSpawn;
+
+    private Session.Counter? _counter;
+    private Session.Counter? _valueCounter;
 
     public enum CounterOperation {
         Increment,
@@ -17,7 +25,10 @@ internal sealed class SessionCounterTrigger : Trigger {
     
     public SessionCounterTrigger(EntityData data, Vector2 offset) : base(data, offset) {
         CounterName = data.Attr("counter", "");
-        Value = data.Int("value", 0);
+        var valueStr = data.Attr("value", "");
+        if (!int.TryParse(valueStr, CultureInfo.InvariantCulture, out Value))
+            ValueCounterName = valueStr;
+        
         Operation = data.Enum("operation", CounterOperation.Set);
         ClearOnSpawn = data.Bool("clearOnSpawn", false);
     }
@@ -33,22 +44,25 @@ internal sealed class SessionCounterTrigger : Trigger {
         base.OnEnter(player);
 
         if (FrostModule.TryGetCurrentLevel() is { } lvl) {
-            var counter = lvl.Session.GetCounterObj(CounterName);
+            _counter ??= lvl.Session.GetCounterObj(CounterName);
+            var value = ValueCounterName is { }
+                ? (_valueCounter ??= lvl.Session.GetCounterObj(ValueCounterName)).Value
+                : Value;
             switch (Operation) {
                 case CounterOperation.Increment:
-                    counter.Value += Value;
+                    _counter.Value += value;
                     break;
                 case CounterOperation.Decrement:
-                    counter.Value -= Value;
+                    _counter.Value -= value;
                     break;
                 case CounterOperation.Multiply:
-                    counter.Value *= Value;
+                    _counter.Value *= value;
                     break;
                 case CounterOperation.Divide:
-                    counter.Value /= Value;
+                    _counter.Value /= value;
                     break;
                 case CounterOperation.Set:
-                    counter.Value = Value;
+                    _counter.Value = value;
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(Operation));

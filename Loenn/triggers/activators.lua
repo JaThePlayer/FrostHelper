@@ -57,6 +57,20 @@ local function makeActivator(name, placement, extTextCallback, extra)
     return h
 end
 
+local counterSwitchActivator = {
+    name = "FrostHelper/SwitchOnCounterActivator",
+    nodeLimits = {1, -1},
+    nodeLineRenderType = "line",
+}
+
+jautils.createPlacementsPreserveOrder(counterSwitchActivator, "default", {
+    { "delay", "0" },
+    { "counter", "", "sessionCounter" },
+    { "cases", "", "list" },
+    { "once", false },
+}, true)
+jautils.addExtendedText(counterSwitchActivator, function (trigger) return trigger.counter or "" end)
+
 return {
     makeActivator("FrostHelper/OnPlayerEnterActivator", {
     }),
@@ -65,7 +79,7 @@ return {
     }),
     makeActivator("FrostHelper/OnPlayerDashingActivator", {
         { "onlyWhenJustDashed", true },
-        { "hasToBeInside ", false },
+        { "hasToBeInside", false },
     }),
     makeActivator("FrostHelper/OnSpawnActivator", {
     }),
@@ -143,4 +157,5 @@ return {
             return string.format("%s %s %s", trigger.counter, counterOperationToMathExpr[trigger.operation], trigger.target)
         end
     ),
+    --counterSwitchActivator,
 }

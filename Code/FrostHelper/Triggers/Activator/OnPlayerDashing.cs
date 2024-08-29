@@ -11,13 +11,11 @@ internal sealed class OnPlayerDashing : BaseActivator {
     public OnPlayerDashing(EntityData data, Vector2 offset) : base(data, offset) {
         OnlyWhenJustDashed = data.Bool("onlyWhenJustDashed", true);
         HasToBeInside = data.Bool("hasToBeInside", true);
-
         if (OnlyWhenJustDashed || HasToBeInside) {
             Add(new DashListener((v) => {
                 if (HasToBeInside && !PlayerIsInside) {
                     return;
                 }
-
                 ActivateAll(Scene.Tracker.GetEntity<Player>());
             }));
         }
