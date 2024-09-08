@@ -24,7 +24,7 @@ jautils.createPlacementsPreserveOrder(cloud, "default", {
     { "textures", defaultTextures, "list" },
     { "cache", "Auto", cacheOptions },
     { "windingOrder", "Auto", jautils.windingOrders },
-    { "cloudTag", "", "FrostHelper.cloudTag" },
+    { "cloudTag", "", "cloudTag" },
     { "blockBloom", false },
     { "rainbow", false },
 })

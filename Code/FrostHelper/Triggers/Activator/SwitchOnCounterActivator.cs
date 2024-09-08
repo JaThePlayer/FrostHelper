@@ -18,7 +18,17 @@ internal sealed class SwitchOnCounterActivator : BaseActivator {
         CounterName = data.Attr("counter");
         _cases = [];
         foreach (var caseStr in data.Attr("cases").Split(',', StringSplitOptions.TrimEntries)) {
-            _cases.Add(new(CounterName, caseStr, SessionCounterComparer.CounterOperation.Equal));
+            var (caseVal, operation) = caseStr switch {
+                ['>', '=', .. var rest] => (rest.Trim(), SessionCounterComparer.CounterOperation.GreaterThanOrEqual),
+                ['<', '=', .. var rest] => (rest.Trim(), SessionCounterComparer.CounterOperation.LessThanOrEqual),
+                ['!', '=', .. var rest] => (rest.Trim(), SessionCounterComparer.CounterOperation.NotEqual),
+                ['=', '=', .. var rest] => (rest.Trim(), SessionCounterComparer.CounterOperation.Equal),
+                ['>', .. var rest] => (rest.Trim(), SessionCounterComparer.CounterOperation.GreaterThan),
+                ['<', .. var rest] => (rest.Trim(), SessionCounterComparer.CounterOperation.LessThan),
+                _ => (caseStr, SessionCounterComparer.CounterOperation.Equal),
+            };
+            
+            _cases.Add(new(CounterName, caseVal, operation));
         }
     }
 

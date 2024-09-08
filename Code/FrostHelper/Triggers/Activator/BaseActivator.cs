@@ -1,6 +1,6 @@
 ﻿namespace FrostHelper.Triggers.Activator;
 
-internal class BaseActivator : Trigger {
+public class BaseActivator : Trigger {
     public Vector2[] Nodes;
     public readonly bool OnlyOnce;
     public readonly float Delay;
@@ -21,9 +21,11 @@ internal class BaseActivator : Trigger {
     private int _cycleModeIdx;
 
     public enum ActivationModes {
-        All, // all triggers get activated at once
-        Cycle, // each time this activator gets triggered, the next trigger gets activated, wrapping over to the first one once all other ones have been triggered.
+        AllOrdered, // all triggers get activated at once, ordered by node id. Map editor default.
+        CycleCorrect, // each time this activator gets triggered, the next trigger gets activated, wrapping over to the first one once all other ones have been triggered.
+        Cycle, // CycleCorrect, but orders in the opposite direction, so the last node gets activated first...
         Random, // a random (seeded) trigger will be chosen.
+        All, // all triggers get activated at once - deprecated
     }
 
     public BaseActivator(EntityData data, Vector2 offset) : base(data, offset) {
@@ -159,7 +161,12 @@ internal class BaseActivator : Trigger {
                     Activate(player!, trigger);
                 }
                 break;
-            case ActivationModes.Cycle:
+            case ActivationModes.AllOrdered:
+                foreach (var trigger in toActivate) {
+                    Activate(player!, trigger);
+                }
+                break;
+            case ActivationModes.Cycle or ActivationModes.CycleCorrect:
                 Activate(player!, toActivate[_cycleModeIdx]);
                 _cycleModeIdx = (_cycleModeIdx + 1) % toActivate.Count;
                 break;
@@ -200,7 +207,7 @@ internal class BaseActivator : Trigger {
         // TODO: maybe rewrite into storing the indexes separately, in a stack-allocated buffer??
         List<Trigger>? into = null;
         List<Indexed<Trigger>>? intoWithIndexes = null;
-        if (ActivationMode == ActivationModes.Cycle || NeedsNodeIndexes) {
+        if (ActivationMode is ActivationModes.Cycle or ActivationModes.CycleCorrect or ActivationModes.AllOrdered || NeedsNodeIndexes) {
             intoWithIndexes = [];
         } else {
             into = [];
@@ -225,7 +232,7 @@ internal class BaseActivator : Trigger {
                             && node.X > ePos.X
                             && node.Y < eBottom
                             && node.Y > ePos.Y) {
-                            maxNodeId = i;
+                            maxNodeId = int.Max(maxNodeId, i);
                             if (into is { })
                                 into.Add(entity);
                             else
@@ -243,7 +250,7 @@ internal class BaseActivator : Trigger {
                     for (int i = 0; i < nodes.Length; i++) {
                         Vector2 node = nodes[i];
                         if (otherCollider.Collide(node)) {
-                            maxNodeId = i;
+                            maxNodeId = int.Max(maxNodeId, i);
                             if (into is { })
                                 into.Add(entity);
                             else
@@ -262,7 +269,13 @@ internal class BaseActivator : Trigger {
 
         // If we have kept track of indexes, then we need to sort
         if (intoWithIndexes is { }) {
-            intoWithIndexes.Sort((p1, p2) => p2.Index - p1.Index);
+            if (ActivationMode is ActivationModes.Cycle) {
+                // backwards compat: old 'Cycle' mode sorted in the wrong order:
+                intoWithIndexes.Sort((p1, p2) => p2.Index - p1.Index);
+            } else {
+                intoWithIndexes.Sort((p1, p2) => p1.Index - p2.Index);
+            }
+            
 
             if (NeedsNodeIndexes) {
                 ToActivatePerNode = new List<Trigger>[maxNodeId + 1];

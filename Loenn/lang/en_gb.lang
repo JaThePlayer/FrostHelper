@@ -486,6 +486,13 @@ entities.FrostHelper/FlagCounterController.placements.description.default=Counts
 entities.FrostHelper/FlagCounterController.attributes.description.counter=The Session Counter which should be controlled by this entity.
 entities.FrostHelper/FlagCounterController.attributes.description.flags=List of flags to check, comma-seperated.\nWrite a '!' before the flag name to invert the condition.
 
+entities.FrostHelper/FlagIfCounterController.placements.name.default=Flag If Counter Controller
+entities.FrostHelper/FlagIfCounterController.placements.description.default=Sets a flag if a Session Counter condition is met, and clears that flag otherwise.
+entities.FrostHelper/FlagIfCounterController.attributes.description.flag=The Session Flag which should be controlled by this entity.
+entities.FrostHelper/FlagIfCounterController.attributes.description.counter=The Session Counter which should be checked by this entity.
+entities.FrostHelper/FlagIfCounterController.attributes.description.target=Target value of the counter.\nCan be an integer, OR the name of a different session counter.\nDecimal numbers are NOT supported.
+entities.FrostHelper/FlagIfCounterController.attributes.description.operation=The comparison operation to use to compare the counter to target.
+
 # -- Mod Names --
 # mods.modName.*
 mods.FrostHelper.name=Frost Helper
@@ -588,7 +595,7 @@ triggers.FrostHelper/DelayActivator.placements.name.default=Activator (Delay)
 triggers.FrostHelper/DelayActivator.placements.description.default=Activates triggers which intersect with the nodes of this trigger, after a given delay.\nNOT COLLIDABLE, requires another Activator to activate this!\nUseful for more complicated systems.
 triggers.FrostHelper/DelayActivator.attributes.description.once=Whether this trigger should only activate once, and then get deleted.
 triggers.FrostHelper/DelayActivator.attributes.description.delay=How long to wait (in seconds) before actually activating the triggers.
-triggers.FrostHelper/DelayActivator.attributes.description.activationMode=How the activation should work:\nAll: All triggers get activated at once.\nCycle: When this trigger activates for the n-th time, the n-th trigger will be chosen.\nRandom: A random (seeded) trigger will be chosen.
+triggers.FrostHelper/DelayActivator.attributes.description.activationMode=How the activation should work:\nAll: All triggers get activated at once, in node order.\nCycle: When this trigger activates for the n-th time, the n-th trigger will be chosen.\nRandom: A random (seeded) trigger will be chosen.
 
 # Loop
 triggers.FrostHelper/LoopActivator.placements.name.default=Activator (Loop)
@@ -596,7 +603,7 @@ triggers.FrostHelper/LoopActivator.placements.description.default=Activates trig
 triggers.FrostHelper/LoopActivator.attributes.description.once=Whether this trigger should only activate once, and then get deleted.
 triggers.FrostHelper/LoopActivator.attributes.description.delay=How long to wait (in seconds) before the first iteration of the loop. After the first iteration, loopTime will be used instead.
 triggers.FrostHelper/LoopActivator.attributes.description.loopTime=How long to wait (in seconds) before each iteration of the loop.
-triggers.FrostHelper/LoopActivator.attributes.description.activationMode=How the activation should work:\nAll: All triggers get activated at once.\nCycle: When this trigger activates for the n-th time, the n-th trigger will be chosen.\nRandom: A random (seeded) trigger will be chosen.
+triggers.FrostHelper/LoopActivator.attributes.description.activationMode=How the activation should work:\nAll: All triggers get activated at once, in node order.\nCycle: When this trigger activates for the n-th time, the n-th trigger will be chosen.\nRandom: A random (seeded) trigger will be chosen.
 triggers.FrostHelper/LoopActivator.attributes.description.condition=The flag that needs to be set in order for this to trigger anything. Write a ! at the beginning of the flag name to invert this logic.
 triggers.FrostHelper/LoopActivator.attributes.description.requireActivation=Whether this activator needs to be activated by some other source before starting the loop. If off, the loop will begin as soon as the level begins.
 triggers.FrostHelper/LoopActivator.attributes.description.activateAfterDeath=Whether this activator can activate triggers even after the player dies.\nThis might cause crashes when used with certain triggers which assume the player is still alive.
@@ -606,7 +613,7 @@ triggers.FrostHelper/IfActivator.placements.name.default=Activator (If)
 triggers.FrostHelper/IfActivator.placements.description.default=Activates triggers which intersect with the nodes of this trigger, if a condition is met when this trigger gets triggered.\nNOT COLLIDABLE, requires another Activator to activate this!\nUseful for more complicated systems.
 triggers.FrostHelper/IfActivator.attributes.description.once=Whether this trigger should only activate once, and then get deleted.
 triggers.FrostHelper/IfActivator.attributes.description.delay=How long to wait (in seconds) before actually activating the triggers.
-triggers.FrostHelper/IfActivator.attributes.description.activationMode=How the activation should work:\nAll: All triggers get activated at once.\nCycle: When this trigger activates for the n-th time, the n-th trigger will be chosen.\nRandom: A random (seeded) trigger will be chosen.
+triggers.FrostHelper/IfActivator.attributes.description.activationMode=How the activation should work:\nAll: All triggers get activated at once, in node order.\nCycle: When this trigger activates for the n-th time, the n-th trigger will be chosen.\nRandom: A random (seeded) trigger will be chosen.
 triggers.FrostHelper/IfActivator.attributes.description.condition=The flag that needs to be set in order for this to trigger anything. Write a ! at the beginning of the flag name to invert this logic.
 
 # FrostHelper/OnPlayerEnterActivator
@@ -614,14 +621,14 @@ triggers.FrostHelper/OnPlayerEnterActivator.placements.name.default=Activator (O
 triggers.FrostHelper/OnPlayerEnterActivator.placements.description.default=When a player enters this, activates triggers which intersect with the nodes of this trigger, optionally after a given delay.
 triggers.FrostHelper/OnPlayerEnterActivator.attributes.description.once=Whether this trigger should only activate once, and then get deleted.
 triggers.FrostHelper/OnPlayerEnterActivator.attributes.description.delay=How long to wait (in seconds) before actually activating the triggers.
-triggers.FrostHelper/OnPlayerEnterActivator.attributes.description.activationMode=How the activation should work:\nAll: All triggers get activated at once.\nCycle: When this trigger activates for the n-th time, the n-th trigger will be chosen.\nRandom: A random (seeded) trigger will be chosen.
+triggers.FrostHelper/OnPlayerEnterActivator.attributes.description.activationMode=How the activation should work:\nAll: All triggers get activated at once, in node order.\nCycle: When this trigger activates for the n-th time, the n-th trigger will be chosen.\nRandom: A random (seeded) trigger will be chosen.
 
 # FrostHelper/OnPlayerDashingActivator
 triggers.FrostHelper/OnPlayerDashingActivator.placements.name.default=Activator (On Player Dashing)
 triggers.FrostHelper/OnPlayerDashingActivator.placements.description.default=While a player is dashing (or dashed, depending on settings) while inside of this trigger, activates triggers which intersect with the nodes of this trigger, optionally after a given delay.
 triggers.FrostHelper/OnPlayerDashingActivator.attributes.description.once=Whether this trigger should only activate once, and then get deleted.
 triggers.FrostHelper/OnPlayerDashingActivator.attributes.description.delay=How long to wait (in seconds) before actually activating the triggers.
-triggers.FrostHelper/OnPlayerDashingActivator.attributes.description.activationMode=How the activation should work:\nAll: All triggers get activated at once.\nCycle: When this trigger activates for the n-th time, the n-th trigger will be chosen.\nRandom: A random (seeded) trigger will be chosen.
+triggers.FrostHelper/OnPlayerDashingActivator.attributes.description.activationMode=How the activation should work:\nAll: All triggers get activated at once, in node order.\nCycle: When this trigger activates for the n-th time, the n-th trigger will be chosen.\nRandom: A random (seeded) trigger will be chosen.
 triggers.FrostHelper/OnPlayerDashingActivator.attributes.description.onlyWhenJustDashed=If enabled, then the trigger will only activate if the player has just dashed this frame. Otherwise, it'll activate the triggers each frame the player is dash attacking. (If disabled, you should probably make this one use)
 triggers.FrostHelper/OnPlayerDashingActivator.attributes.description.hasToBeInside=If enabled, the player has to be inside of this activator for it to activate.
 
@@ -630,7 +637,7 @@ triggers.FrostHelper/OnPlayerOnGroundActivator.placements.name.default=Activator
 triggers.FrostHelper/OnPlayerOnGroundActivator.placements.description.default=While a player is on the ground while inside of this trigger, activates triggers which intersect with the nodes of this trigger, optionally after a given delay.
 triggers.FrostHelper/OnPlayerOnGroundActivator.attributes.description.once=Whether this trigger should only activate once, and then get deleted.
 triggers.FrostHelper/OnPlayerOnGroundActivator.attributes.description.delay=How long to wait (in seconds) before actually activating the triggers.
-triggers.FrostHelper/OnPlayerOnGroundActivator.attributes.description.activationMode=How the activation should work:\nAll: All triggers get activated at once.\nCycle: When this trigger activates for the n-th time, the n-th trigger will be chosen.\nRandom: A random (seeded) trigger will be chosen.
+triggers.FrostHelper/OnPlayerOnGroundActivator.attributes.description.activationMode=How the activation should work:\nAll: All triggers get activated at once, in node order.\nCycle: When this trigger activates for the n-th time, the n-th trigger will be chosen.\nRandom: A random (seeded) trigger will be chosen.
 triggers.FrostHelper/OnPlayerOnGroundActivator.attributes.description.onlyWhenJustLanded=If enabled, then the trigger will only activate if the player has just landed this frame. Otherwise, it'll activate the triggers each frame the player is on the ground. (If disabled, you should probably make this one use)
 triggers.FrostHelper/OnPlayerOnGroundActivator.attributes.description.hasToBeInside=If enabled, the player has to be inside of this activator for it to activate.
 
@@ -639,21 +646,21 @@ triggers.FrostHelper/OnSpawnActivator.placements.name.default=Activator (On Spaw
 triggers.FrostHelper/OnSpawnActivator.placements.description.default=When you load into the room, activates triggers which intersect with the nodes of this trigger, optionally after a given delay.
 triggers.FrostHelper/OnSpawnActivator.attributes.description.once=Whether this trigger should only activate once, and then get deleted.
 triggers.FrostHelper/OnSpawnActivator.attributes.description.delay=How long to wait (in seconds) before actually activating the triggers.
-triggers.FrostHelper/OnSpawnActivator.attributes.description.activationMode=How the activation should work:\nAll: All triggers get activated at once.\nCycle: When this trigger activates for the n-th time, the n-th trigger will be chosen.\nRandom: A random (seeded) trigger will be chosen.
+triggers.FrostHelper/OnSpawnActivator.attributes.description.activationMode=How the activation should work:\nAll: All triggers get activated at once, in node order.\nCycle: When this trigger activates for the n-th time, the n-th trigger will be chosen.\nRandom: A random (seeded) trigger will be chosen.
 
 # FrostHelper/OnDeathActivator
 triggers.FrostHelper/OnDeathActivator.placements.name.default=Activator (On Death)
 triggers.FrostHelper/OnDeathActivator.placements.description.default=When a player dies, activates triggers which intersect with the nodes of this trigger, optionally after a given delay.
 triggers.FrostHelper/OnDeathActivator.attributes.description.once=Whether this trigger should only activate once, and then get deleted.
 triggers.FrostHelper/OnDeathActivator.attributes.description.delay=How long to wait (in seconds) before actually activating the triggers.
-triggers.FrostHelper/OnDeathActivator.attributes.description.activationMode=How the activation should work:\nAll: All triggers get activated at once.\nCycle: When this trigger activates for the n-th time, the n-th trigger will be chosen.\nRandom: A random (seeded) trigger will be chosen.
+triggers.FrostHelper/OnDeathActivator.attributes.description.activationMode=How the activation should work:\nAll: All triggers get activated at once, in node order.\nCycle: When this trigger activates for the n-th time, the n-th trigger will be chosen.\nRandom: A random (seeded) trigger will be chosen.
 
 # FrostHelper/OnEntityEnterActivator
 triggers.FrostHelper/OnEntityEnterActivator.placements.name.default=Activator (On Entity Enter)
 triggers.FrostHelper/OnEntityEnterActivator.placements.description.default=When an entity enters this trigger, activates triggers which intersect with the nodes of this trigger, optionally after a given delay.
 triggers.FrostHelper/OnEntityEnterActivator.attributes.description.once=Whether this trigger should only activate once, and then get deleted.
 triggers.FrostHelper/OnEntityEnterActivator.attributes.description.delay=How long to wait (in seconds) before actually activating the triggers.
-triggers.FrostHelper/OnEntityEnterActivator.attributes.description.activationMode=How the activation should work:\nAll: All triggers get activated at once.\nCycle: When this trigger activates for the n-th time, the n-th trigger will be chosen.\nRandom: A random (seeded) trigger will be chosen.
+triggers.FrostHelper/OnEntityEnterActivator.attributes.description.activationMode=How the activation should work:\nAll: All triggers get activated at once, in node order.\nCycle: When this trigger activates for the n-th time, the n-th trigger will be chosen.\nRandom: A random (seeded) trigger will be chosen.
 triggers.FrostHelper/OnEntityEnterActivator.attributes.description.types=A comma-seperated list of SID's (preferred) or C# type names that should be affected by this activator.\nWhen left blank, the activator will DO NOTHING!
 triggers.FrostHelper/OnEntityEnterActivator.attributes.description.cache=Whether to cache the list of possible entities that match the `types` list.\nDisabling this is horrible for performance, but will allow detecting entities that get added to the scene after loading.
 triggers.FrostHelper/OnEntityEnterActivator.attributes.description.activateAfterDeath=Whether this activator can activate triggers even after the player dies.\nThis might cause crashes when used with certain triggers which assume the player is still alive.
@@ -663,7 +670,7 @@ triggers.FrostHelper/OnFlagActivator.placements.name.default=Activator (On Flag)
 triggers.FrostHelper/OnFlagActivator.placements.description.default=As soon as the chosen flag is set, activates triggers which intersect with the nodes of this trigger, optionally after a given delay.\nWorks by listening to calls to Session.SetFlag.
 triggers.FrostHelper/OnFlagActivator.attributes.description.once=Whether this trigger should only activate once, and then get deleted.
 triggers.FrostHelper/OnFlagActivator.attributes.description.delay=How long to wait (in seconds) before actually activating the triggers.
-triggers.FrostHelper/OnFlagActivator.attributes.description.activationMode=How the activation should work:\nAll: All triggers get activated at once.\nCycle: When this trigger activates for the n-th time, the n-th trigger will be chosen.\nRandom: A random (seeded) trigger will be chosen.
+triggers.FrostHelper/OnFlagActivator.attributes.description.activationMode=How the activation should work:\nAll: All triggers get activated at once, in node order.\nCycle: When this trigger activates for the n-th time, the n-th trigger will be chosen.\nRandom: A random (seeded) trigger will be chosen.
 triggers.FrostHelper/OnFlagActivator.attributes.description.flag=Which flag to listen to.
 triggers.FrostHelper/OnFlagActivator.attributes.description.targetState=The state the flag has to be set to for this to activate triggers.
 triggers.FrostHelper/OnFlagActivator.attributes.description.mustChange=Whether the state of the flag must be changed for this to activate triggers.\nFor example if your flag is ON, then a trigger sets it to ON again, if this setting is disabled, then the activator will still trigger.\nHowever, if this setting is enabled, it will not trigger, because the value of this flag didn't change.
@@ -675,7 +682,7 @@ triggers.FrostHelper/OnCassetteSwapActivator.placements.name.default=Activator (
 triggers.FrostHelper/OnCassetteSwapActivator.placements.description.default=When the cassette blocks swap, activates triggers which intersect with the nodes of this trigger, optionally after a given delay.
 triggers.FrostHelper/OnCassetteSwapActivator.attributes.description.once=Whether this trigger should only activate once, and then get deleted.
 triggers.FrostHelper/OnCassetteSwapActivator.attributes.description.delay=How long to wait (in seconds) before actually activating the triggers.
-triggers.FrostHelper/OnCassetteSwapActivator.attributes.description.activationMode=How the activation should work:\nAll: All triggers get activated at once.\nCycle: When this trigger activates for the n-th time, the n-th trigger will be chosen.\nRandom: A random (seeded) trigger will be chosen.
+triggers.FrostHelper/OnCassetteSwapActivator.attributes.description.activationMode=How the activation should work:\nAll: All triggers get activated at once, in node order.\nCycle: When this trigger activates for the n-th time, the n-th trigger will be chosen.\nRandom: A random (seeded) trigger will be chosen.
 triggers.FrostHelper/OnCassetteSwapActivator.attributes.description.targetIndex=The cassette index to react to. Leave at -1 to trigger on every swap
 triggers.FrostHelper/OnCassetteSwapActivator.attributes.description.activateAfterDeath=Whether this activator can activate triggers even after the player dies.\nThis might cause crashes when used with certain triggers which assume the player is still alive.
 
@@ -684,7 +691,7 @@ triggers.FrostHelper/OnCounterActivator.placements.name.default=Activator (On Co
 triggers.FrostHelper/OnCounterActivator.placements.description.default=Activates triggers which intersect with the nodes of this trigger, once a Session Counter fulfills a specified condition.\nTriggers get activated the frame the condition got met, only if it wasn't met last frame.\nNOT COLLIDABLE, requires another Activator to activate this!\nUseful for more complicated systems.
 triggers.FrostHelper/OnCounterActivator.attributes.description.once=Whether this trigger should only activate once, and then get deleted.
 triggers.FrostHelper/OnCounterActivator.attributes.description.delay=How long to wait (in seconds) before actually activating the triggers.
-triggers.FrostHelper/OnCounterActivator.attributes.description.activationMode=How the activation should work:\nAll: All triggers get activated at once.\nCycle: When this trigger activates for the n-th time, the n-th trigger will be chosen.\nRandom: A random (seeded) trigger will be chosen.
+triggers.FrostHelper/OnCounterActivator.attributes.description.activationMode=How the activation should work:\nAll: All triggers get activated at once, in node order.\nCycle: When this trigger activates for the n-th time, the n-th trigger will be chosen.\nRandom: A random (seeded) trigger will be chosen.
 triggers.FrostHelper/OnCounterActivator.attributes.description.counter=The session counter to check.
 triggers.FrostHelper/OnCounterActivator.attributes.description.target=Target value of the counter. Can be an integer, OR the name of a different session counter.\nDecimal numbers are NOT supported.
 triggers.FrostHelper/OnCounterActivator.attributes.description.operation=The comparison operation to use to compare the counter to target.
@@ -694,7 +701,7 @@ triggers.FrostHelper/IfCounterActivator.placements.name.default=Activator (If Co
 triggers.FrostHelper/IfCounterActivator.placements.description.default=Activates triggers which intersect with the nodes of this trigger, if a Session Counter fulfills a specified condition when this trigger gets activated from an outside source.\nNOT COLLIDABLE, requires another Activator to activate this!\nUseful for more complicated systems.
 triggers.FrostHelper/IfCounterActivator.attributes.description.once=Whether this trigger should only activate once, and then get deleted.
 triggers.FrostHelper/IfCounterActivator.attributes.description.delay=How long to wait (in seconds) before actually activating the triggers.
-triggers.FrostHelper/IfCounterActivator.attributes.description.activationMode=How the activation should work:\nAll: All triggers get activated at once.\nCycle: When this trigger activates for the n-th time, the n-th trigger will be chosen.\nRandom: A random (seeded) trigger will be chosen.
+triggers.FrostHelper/IfCounterActivator.attributes.description.activationMode=How the activation should work:\nAll: All triggers get activated at once, in node order.\nCycle: When this trigger activates for the n-th time, the n-th trigger will be chosen.\nRandom: A random (seeded) trigger will be chosen.
 triggers.FrostHelper/IfCounterActivator.attributes.description.counter=The session counter to check.
 triggers.FrostHelper/IfCounterActivator.attributes.description.target=Target value of the counter.\nCan be an integer, OR the name of a different session counter.\nDecimal numbers are NOT supported.
 triggers.FrostHelper/IfCounterActivator.attributes.description.operation=The comparison operation to use to compare the counter to target.
@@ -707,12 +714,26 @@ triggers.FrostHelper/SwitchOnCounterActivator.attributes.description.delay=How l
 triggers.FrostHelper/SwitchOnCounterActivator.attributes.description.counter=The session counter to check.
 triggers.FrostHelper/SwitchOnCounterActivator.attributes.description.cases=Comma-seperated list of switch cases.\nEach case should be a number or name of another counter.\nWhen this activator is activated, each case gets checked in-order, and the node corresponding to the first met condition will get activated.
 
+# On Strawberry Collect
+triggers.FrostHelper/OnBerryCollectActivator.placements.name.default=Activator (On Berry Collect)
+triggers.FrostHelper/OnBerryCollectActivator.placements.description.default=Activates triggers which intersect with the nodes of this trigger when the player collects a berry.\nUseful for more complicated systems.
+triggers.FrostHelper/OnBerryCollectActivator.attributes.description.once=Whether this trigger should only activate once, and then get deleted.
+triggers.FrostHelper/OnBerryCollectActivator.attributes.description.delay=How long to wait (in seconds) before actually activating the triggers.
+triggers.FrostHelper/OnBerryCollectActivator.attributes.description.activationMode=How the activation should work:\nAll: All triggers get activated at once, in node order.\nCycle: When this trigger activates for the n-th time, the n-th trigger will be chosen.\nRandom: A random (seeded) trigger will be chosen.
+
+# On Elytra Wing
+triggers.FrostHelper/OnElytraRingActivator.placements.name.default=Activator (On Elytra Ring)
+triggers.FrostHelper/OnElytraRingActivator.placements.description.default=Activates triggers which intersect with the nodes of this trigger when the player enters a Communal Helper Elytra Ring.\nUseful for more complicated systems.
+triggers.FrostHelper/OnElytraRingActivator.attributes.description.once=Whether this trigger should only activate once, and then get deleted.
+triggers.FrostHelper/OnElytraRingActivator.attributes.description.delay=How long to wait (in seconds) before actually activating the triggers.
+triggers.FrostHelper/OnElytraRingActivator.attributes.description.activationMode=How the activation should work:\nAll: All triggers get activated at once, in node order.\nCycle: When this trigger activates for the n-th time, the n-th trigger will be chosen.\nRandom: A random (seeded) trigger will be chosen.
+
 # Session Counter Trigger
 triggers.FrostHelper/SessionCounterTrigger.placements.name.default=Session Counter
 triggers.FrostHelper/SessionCounterTrigger.placements.description.default=Changes the value of a Session Counter, which is a 32-bit integer saved to session.
 triggers.FrostHelper/SessionCounterTrigger.attributes.description.counter=The session counter to change.
 triggers.FrostHelper/SessionCounterTrigger.attributes.description.value=The value to use for this operation.\nWhat this number means is dependant on 'Operation'.\nCan be an integer, OR the name of a different session counter.\nDecimal numbers are NOT supported.
-triggers.FrostHelper/SessionCounterTrigger.attributes.description.operation=Specifies which operation to use to manipulate the counter.\nSet - set the value of the counter to 'value'.\nIncrement - add 'value' to the current value of the counter.\nDecrement - subtract 'value' from the current value of the counter.\nMultiply - Multiply the current value of the counter by 'value'.\nDivide - Divide the current value of the counter by 'value' (Over integers, meaning 5 / 2 == 2)
+triggers.FrostHelper/SessionCounterTrigger.attributes.description.operation=Specifies which operation to use to manipulate the counter.\nSet - set the value of the counter to 'value'.\nIncrement - add 'value' to the current value of the counter.\nDecrement - subtract 'value' from the current value of the counter.\nMultiply - Multiply the current value of the counter by 'value'.\nDivide - Divide the current value of the counter by 'value' (Over integers, meaning 5 / 2 == 2)\nRemainder - Gets the remainder of dividing the counter by value.\nPower - Raise the counter to the 'value'th power.\nMin/Max - Sets the counter to the smaller/larger value between the counter and `value`.\nDistance - Sets the counter to the distance between the counter and `value`, that is `counter = abs(counter - value)`
 triggers.FrostHelper/SessionCounterTrigger.attributes.description.clearOnSpawn=Whether the counter should be set to 0 when the player spawns into the room.\nOtherwise, its value persists between deaths.
 
 # FrostHelper/NoMovementTrigger
@@ -728,6 +749,8 @@ triggers.FrostHelper/Timer.attributes.description.iconColor=The color to use to 
 triggers.FrostHelper/Timer.attributes.description.icon=The path to the icon to use for this timer, relative to Graphics/Atlases/Gameplay. Leave blank for no icon.
 triggers.FrostHelper/Timer.attributes.description.visible=Whether this timer is visible once triggered.
 triggers.FrostHelper/Timer.attributes.description.timerId=The Timer ID, used by the Timer Change Trigger.
+triggers.FrostHelper/Timer.attributes.description.outputCounter=The Session Counter which should be set to the time of this Timer each frame.\nThe unit is chosen by the `Output Counter Unit` setting.
+triggers.FrostHelper/Timer.attributes.description.outputCounterUnit=The unit to use for the `Output Counter`.
 
 triggers.FrostHelper/IncrementingTimer.placements.name.default=Incrementing Timer
 triggers.FrostHelper/IncrementingTimer.placements.description.default=Creates a visible timer which counts up until stopped by a flag.
@@ -738,6 +761,17 @@ triggers.FrostHelper/IncrementingTimer.attributes.description.iconColor=The colo
 triggers.FrostHelper/IncrementingTimer.attributes.description.icon=The path to the icon to use for this timer, relative to Graphics/Atlases/Gameplay. Leave blank for no icon.
 triggers.FrostHelper/IncrementingTimer.attributes.description.visible=Whether this timer is visible once triggered.
 triggers.FrostHelper/IncrementingTimer.attributes.description.timerId=The Timer ID, used by the Timer Change Trigger.
+triggers.FrostHelper/IncrementingTimer.attributes.description.outputCounter=The Session Counter which should be set to the time of this Timer each frame.\nThe unit is chosen by the `Output Counter Unit` setting.
+triggers.FrostHelper/IncrementingTimer.attributes.description.outputCounterUnit=The unit to use for the `Output Counter`.
+
+triggers.FrostHelper/CounterDisplay.placements.name.default=Counter Display
+triggers.FrostHelper/CounterDisplay.placements.description.default=Creates a HUD display for a Session Counter, optionally with an icon.
+triggers.FrostHelper/CounterDisplay.attributes.description.counter=The Session Counter to track.
+triggers.FrostHelper/CounterDisplay.attributes.description.showOnRoomLoad=Whether the counter should be displayed on room load, not needing the player to enter the trigger to activate it.
+triggers.FrostHelper/CounterDisplay.attributes.description.textColor=The color to use for the text.
+triggers.FrostHelper/CounterDisplay.attributes.description.iconColor=The color to use to tint the icon.
+triggers.FrostHelper/CounterDisplay.attributes.description.icon=The path to the icon to use for this timer, relative to Graphics/Atlases/Gameplay. Leave blank for no icon.
+triggers.FrostHelper/CounterDisplay.attributes.description.removeFlag=The flag which removes this display from the screen.
 
 triggers.FrostHelper/TimerChange.placements.name.default=Timer Change
 triggers.FrostHelper/TimerChange.placements.description.default=Changes how much time is left on a timer started by the Timer trigger.

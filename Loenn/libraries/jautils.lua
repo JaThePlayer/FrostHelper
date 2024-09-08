@@ -7,6 +7,7 @@ local xnaColors = require("consts.xna_colors")
 local rainbowHelper = require("mods").requireFromPlugin("libraries.rainbowHelper")
 local compat = require("mods").requireFromPlugin("libraries.compat")
 local mapScanHelper = require("mods").requireFromPlugin("libraries.mapScanHelper")
+local easings = require("mods").requireFromPlugin("libraries.easings")
 
 local celesteDepths = --require("consts.object_depths")
 {
@@ -98,29 +99,53 @@ end
     PLACEMENTS
 ]]
 
-local entities = require("entities")
+local getAllSids = function ()
+    return {}
+end
 
-local _cachedAllSids = nil
-local _cachedAllSidsLen = 0
+-- Snowberry hard-crashes on boot if libraries crash, and the current public build doesn't implement `entities`.
+if not compat.inSnowberry then
+    local entities = require("entities")
 
-local function getAllSids()
-    if _cachedAllSids and _cachedAllSidsLen == #entities.registeredEntities then
-        return _cachedAllSids
+    getAllSids = function ()
+        local ret = {}
+        local amt = 0
+        for k,v in pairs(entities.registeredEntities) do
+            table.insert(ret, k)
+            amt = amt + 1
+        end
+
+        table.sort(ret)
+
+        return ret
     end
+end
 
-    local ret = {}
-    local amt = 0
-    for k,v in pairs(entities.registeredEntities) do
-        table.insert(ret, k)
-        amt = amt + 1
-    end
+local easingDict = {}
+for _, ease in ipairs(easings) do
+    easingDict[ease] = true
+end
 
-    table.sort(ret)
+jautils.counterOperations = {
+    "Equal",
+    "NotEqual",
+    "GreaterThan",
+    "GreaterThanOrEqual",
+    "LessThan",
+    "LessThanOrEqual",
+}
 
-    _cachedAllSids = ret
-    _cachedAllSidsLen = #entities.registeredEntities
+jautils.counterOperationToMathExpr = {
+    ["Equal"] = "==",
+    ["NotEqual"] = "!=",
+    ["GreaterThan"] = ">",
+    ["LessThan"] = "<",
+    ["GreaterThanOrEqual"] = ">=",
+    ["LessThanOrEqual"] = "<=",
+}
 
-    return ret
+function jautils.counterConditionToString(counter, operation, target)
+    return string.format("%s %s %s", counter, jautils.counterOperationToMathExpr[operation], target)
 end
 
 function jautils.typesListFieldInfo() return {
@@ -192,12 +217,58 @@ jautils.fieldTypeOverrides = {
             editable = true,
             searchable = true,
         }
+    end,
+    cloudTag = function (data)
+        return {
+            options = mapScanHelper.findAllCloudTagsInRoom(),
+            editable = true,
+            searchable = true,
+        }
+    end,
+    ["FrostHelper.stylegroundTag"] = function (data)
+        return {
+            options = mapScanHelper.findAllStylegroundTagsInMap(),
+            editable = false,
+            searchable = true,
+        }
+    end,
+    ["FrostHelper.easing"] = function (data)
+        return {
+            options = easings,
+            editable = true,
+            searchable = true,
+            validator = function(v)
+                if not v then
+                    return true
+                end
+
+                if easingDict[v] ~= nil then
+                    return easingDict[v]
+                end
+
+                -- Frost Helper allows using Lua functions for easings, we're in lua so we can check the syntax
+                local code = string.format("return function(p)%s %s end", string.find(v, "return", 1, true) and "" or " return", v)
+
+                local success, errorMsg = loadstring(code)
+                if success then
+                    easingDict[v] = true
+                    return true
+                else
+                    print(errorMsg)
+                    easingDict[v] = false
+                end
+
+                return false
+            end
+        }
     end
 }
 
 local fieldTypesWhichNeedLiveUpdate = {
     typesList = true,
     sessionCounter = true,
+    cloudTag = true,
+    ["FrostHelper.stylegroundTag"] = true,
 }
 
 local function createFieldInfoFromJaUtilsPlacement(placementData)

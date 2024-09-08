@@ -1,9 +1,11 @@
 local jautils = require("mods").requireFromPlugin("libraries.jautils")
 
 local activationModes = {
-    "All", -- all triggers get activated at once
-    "Cycle", -- each time this activator gets triggered, the next trigger gets activated, wrapping over to the first one once all other ones have been triggered.
-    "Random"
+    { "All", "AllOrdered" }, -- all triggers get activated at once
+    { "Cycle", "CycleCorrect" }, -- each time this activator gets triggered, the next trigger gets activated, wrapping over to the first one once all other ones have been triggered.
+    { "Random", "Random" },
+    { "All (Based on Trigger Load Order, DEPRECATED)", "All" }, -- just wrong, only exists for backwards compat.
+    { "Cycle (Reversed Node Order, DEPRECATED)", "Cycle" }, -- just wrong, only exists for backwards compat.
 }
 
 local cassetteSwapActivatorOptions = {
@@ -22,31 +24,24 @@ local cassetteSwapActivatorOptionsInv = {
     [3] = "Malachite",
 }
 
-local counterOperations = {
-    "Equal",
-    "NotEqual",
-    "GreaterThan",
-    "LessThan",
-}
-
-local counterOperationToMathExpr = {
-    ["Equal"] = "==",
-    ["NotEqual"] = "!=",
-    ["GreaterThan"] = ">",
-    ["LessThan"] = "<",
+local nodeLineRenderTypesPerActivationMode = {
+    ["AllOrdered"] = "line",
+    ["CycleCorrect"] = "line",
 }
 
 local function makeActivator(name, placement, extTextCallback, extra)
     local h = {
         name = name,
         nodeLimits = {1, -1},
-        nodeLineRenderType = "fan",
+        nodeLineRenderType = function (entity)
+            return nodeLineRenderTypesPerActivationMode[entity.activationMode] or "fan"
+        end
     }
 
     extra = extra or {}
 
     table.insert(placement, 1, { "delay", "0" })
-    table.insert(placement, 1, { "activationMode", "All", activationModes })
+    table.insert(placement, 1, { "activationMode", "AllOrdered", activationModes })
     if extra.disableOnce ~= true then
         table.insert(placement, { "once", false })
     end
@@ -70,6 +65,24 @@ jautils.createPlacementsPreserveOrder(counterSwitchActivator, "default", {
     { "once", false },
 }, true)
 jautils.addExtendedText(counterSwitchActivator, function (trigger) return trigger.counter or "" end)
+
+local ringTypes = {
+    "CommunalHelper/ElytraBoostRing",
+    "CommunalHelper/ElytraNoteRing",
+    "CommunalHelper/ElytraRefillRing",
+    "CommunalHelper/ElytraStopRing",
+}
+
+local elytraWingActivator = makeActivator("FrostHelper/OnElytraRingActivator", {
+    { "types", "", "list", {
+        elementOptions = {
+            options = ringTypes,
+            editable = false,
+        },
+        elementDefault = "",
+    }}
+})
+elytraWingActivator.associatedMods = { "FrostHelper", "CommunalHelper" }
 
 return {
     makeActivator("FrostHelper/OnPlayerEnterActivator", {
@@ -141,21 +154,25 @@ return {
         {
             { "counter", "", "sessionCounter" },
             { "target", "0", "sessionCounter" },
-            { "operation", "Equal", counterOperations },
+            { "operation", "Equal", jautils.counterOperations },
         },
         function (trigger)
-            return string.format("%s %s %s", trigger.counter, counterOperationToMathExpr[trigger.operation], trigger.target)
+            return jautils.counterConditionToString(trigger.counter, trigger.operation, trigger.target)
         end
     ),
     makeActivator("FrostHelper/OnCounterActivator",
         {
             { "counter", "", "sessionCounter" },
             { "target", "0", "sessionCounter" },
-            { "operation", "Equal", counterOperations },
+            { "operation", "Equal", jautils.counterOperations },
         },
         function (trigger)
-            return string.format("%s %s %s", trigger.counter, counterOperationToMathExpr[trigger.operation], trigger.target)
+            return jautils.counterConditionToString(trigger.counter, trigger.operation, trigger.target)
         end
     ),
     --counterSwitchActivator,
+    makeActivator("FrostHelper/OnBerryCollectActivator",
+    {
+    }),
+    elytraWingActivator,
 }

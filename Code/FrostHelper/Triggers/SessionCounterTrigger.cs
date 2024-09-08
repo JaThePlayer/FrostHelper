@@ -20,7 +20,19 @@ internal sealed class SessionCounterTrigger : Trigger {
         Decrement,
         Multiply,
         Divide,
+        Remainder,
+        Power,
         Set,
+        
+        Min,
+        Max,
+        Distance,
+        
+        BitwiseOr,
+        BitwiseAnd,
+        BitwiseXor,
+        BitwiseShiftLeft,
+        BitwiseShiftRight,
     }
     
     public SessionCounterTrigger(EntityData data, Vector2 offset) : base(data, offset) {
@@ -61,8 +73,38 @@ internal sealed class SessionCounterTrigger : Trigger {
                 case CounterOperation.Divide:
                     _counter.Value /= value;
                     break;
+                case CounterOperation.Remainder:
+                    _counter.Value %= value;
+                    break;
+                case CounterOperation.BitwiseOr:
+                    _counter.Value |= value;
+                    break;
+                case CounterOperation.BitwiseAnd:
+                    _counter.Value &= value;
+                    break;
+                case CounterOperation.BitwiseXor:
+                    _counter.Value ^= value;
+                    break;
+                case CounterOperation.BitwiseShiftLeft:
+                    _counter.Value <<= value;
+                    break;
+                case CounterOperation.BitwiseShiftRight:
+                    _counter.Value >>= value;
+                    break;
                 case CounterOperation.Set:
                     _counter.Value = value;
+                    break;
+                case CounterOperation.Max:
+                    _counter.Value = int.Max(_counter.Value, value);
+                    break;
+                case CounterOperation.Min:
+                    _counter.Value = int.Min(_counter.Value, value);
+                    break;
+                case CounterOperation.Distance:
+                    _counter.Value = int.Abs(_counter.Value - value);
+                    break;
+                case CounterOperation.Power:
+                    _counter.Value = (int)Math.Pow(_counter.Value, value);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(Operation));

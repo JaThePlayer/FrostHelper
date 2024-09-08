@@ -36,7 +36,9 @@ internal sealed class SessionCounterComparer {
             CounterOperation.Equal => _counter.Value == target,
             CounterOperation.NotEqual => _counter.Value != target,
             CounterOperation.GreaterThan => _counter.Value > target,
+            CounterOperation.GreaterThanOrEqual => _counter.Value >= target,
             CounterOperation.LessThan => _counter.Value < target,
+            CounterOperation.LessThanOrEqual => _counter.Value <= target,
             _ => throw new ArgumentOutOfRangeException()
         };
 
@@ -47,6 +49,8 @@ internal sealed class SessionCounterComparer {
         Equal,
         NotEqual,
         GreaterThan,
+        GreaterThanOrEqual,
         LessThan,
+        LessThanOrEqual,
     }
 }

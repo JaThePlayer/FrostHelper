@@ -22,8 +22,4 @@ jautils.createPlacementsPreserveOrder(controller, "default", {
     { "flags", "", "list" },
 })
 
-jautils.addExtendedText(controller, function (trigger)
-    return tostring(trigger.counter or "")
-end)
-
 return controller

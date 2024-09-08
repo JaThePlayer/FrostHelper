@@ -6,13 +6,31 @@ internal abstract class BaseTimerEntity : Trigger {
     protected readonly MTexture? Icon;
     
     protected float Alpha = 1f;
-    internal float TimeLeft;
+
+    private float _timeLeft;
+
+    internal float TimeLeft {
+        get => _timeLeft;
+        set {
+            _timeLeft = value;
+            UpdateTimeCounter();
+        }
+    }
     internal bool Started;
     protected Vector2 DrawPos;
 
     internal readonly string TimerId;
+
+    internal readonly string OutputCounterName;
+    internal readonly CouterUnits OutputCounterUnit;
+    private Session.Counter? _outputCounter;
+
+    internal enum CouterUnits {
+        Seconds,
+        Milliseconds,
+    }
     
-    protected string GetText() => TimeSpan.FromSeconds(TimeLeft).ShortGameplayFormat();
+    protected virtual string GetText() => TimeSpan.FromSeconds(TimeLeft).ShortGameplayFormat();
     
     protected BaseTimerEntity(EntityData data, Vector2 offset) : base(data, offset)
     {
@@ -21,7 +39,8 @@ internal abstract class BaseTimerEntity : Trigger {
         Visible = data.Bool("visible", true);
         TextColor = data.GetColor("textColor", "ffffff");
         IconColor = data.GetColor("iconColor", "ffffff");
-        
+        OutputCounterName = data.Attr("outputCounter");
+        OutputCounterUnit = data.Enum("outputCounterUnit", CouterUnits.Milliseconds);
         if (data.Attr("icon", "frostHelper/time") is { } iconPath && !string.IsNullOrWhiteSpace(iconPath))
             Icon = GFX.Game[iconPath];
         
@@ -74,6 +93,18 @@ internal abstract class BaseTimerEntity : Trigger {
             icon.DrawJustified(iconPos, new(1f, 0.5f), IconColor * Alpha);
         }
     }
+
+    protected void UpdateTimeCounter() {
+        if (!string.IsNullOrWhiteSpace(OutputCounterName) && Scene is Level level) {
+            _outputCounter ??= level.Session.GetCounterObj(OutputCounterName);
+
+            _outputCounter.Value = OutputCounterUnit switch {
+                CouterUnits.Seconds => (int)TimeLeft,
+                CouterUnits.Milliseconds => (int)(TimeLeft * 1000f),
+                _ => throw new ArgumentOutOfRangeException()
+            };
+        }
+    }
 }
 
 [CustomEntity("FrostHelper/Timer")]
@@ -91,6 +122,7 @@ internal sealed class TimerEntity : BaseTimerEntity {
         base.Added(scene);
 
         SceneAs<Level>()?.Session.SetFlag(Flag, false);
+        UpdateTimeCounter();
     }
     
     public override void Update() {
@@ -127,7 +159,12 @@ internal sealed class IncrementingTimerEntity : BaseTimerEntity {
             RemoveFlag = StopFlag;
         }
     }
-    
+
+    public override void Added(Scene scene) {
+        base.Added(scene);
+        UpdateTimeCounter();
+    }
+
     public override void Update() {
         base.Update();
 
@@ -137,6 +174,61 @@ internal sealed class IncrementingTimerEntity : BaseTimerEntity {
         if (!SceneAs<Level>().Session.GetFlag(StopFlag)) {
             TimeLeft += Engine.DeltaTime;
         }
+
+        if (SceneAs<Level>().Session.GetFlag(RemoveFlag)) {
+            _removed = true;
+            RemoveIfNeeded();
+        }
+    }
+}
+
+
+[CustomEntity("FrostHelper/CounterDisplay")]
+[Tracked]
+internal sealed class CounterDisplayEntity : BaseTimerEntity {
+    internal readonly string RemoveFlag;
+    private bool _removed;
+
+    private bool _showOnRoomLoad;
+
+    private readonly string _counterName;
+    private Session.Counter? _counter;
+    private int _lastValue = 0;
+    private string _lastValueStr = "0";
+
+    protected override string GetText() {
+        if (Scene is Level level) {
+            _counter ??= level.Session.GetCounterObj(_counterName);
+
+            if (_counter.Value == _lastValue)
+                return _lastValueStr;
+
+            _lastValue = _counter.Value;
+            _lastValueStr = _counter.Value.ToString();
+            return _lastValueStr;
+        }
+
+        return "";
+    }
+
+    public CounterDisplayEntity(EntityData data, Vector2 offset) : base(data, offset) {
+        _counterName = data.Attr("counter");
+        RemoveFlag = data.Attr("removeFlag", "");
+
+        _showOnRoomLoad = data.Bool("showOnRoomLoad", false);
+    }
+
+    public override void Added(Scene scene) {
+        base.Added(scene);
+        if (_showOnRoomLoad)
+            StartIfNeeded();
+    }
+
+    public override void Update() {
+        base.Update();
+
+        if (!Started || _removed)
+            return;
 
         if (SceneAs<Level>().Session.GetFlag(RemoveFlag)) {
             _removed = true;
@@ -179,9 +271,10 @@ static class TimerRenderHelper {
         CalculateBaseSizes();
 
         position -= GetTimeWidth(timeString) * Vector2.UnitX / 2;
+        var lang = Dialog.Languages["english"];
 
-        PixelFont font = Dialog.Languages["english"].Font;
-        float fontFaceSize = Dialog.Languages["english"].FontFaceSize;
+        PixelFont font = lang.Font;
+        float fontFaceSize = lang.FontFaceSize;
         float currentScale = scale;
         float currentX = position.X;
         float currentY = position.Y;

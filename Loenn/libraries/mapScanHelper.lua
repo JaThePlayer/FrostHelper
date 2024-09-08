@@ -1,4 +1,5 @@
 local compat = require("mods").requireFromPlugin("libraries.compat")
+local utils = require("utils")
 
 local loadedState = nil
 local loadedState_getSelectedRoom = nil
@@ -15,6 +16,10 @@ local function _findAllTagsScan(into, entities, tagPropName)
     end
 
     for _, en in ipairs(entities) do
+        if en._type == "apply" then
+            _findAllTagsScan(into, en.children, tagPropName)
+        end
+
         local tagStr = en[tagPropName]
         if tagStr then
             -- tags can be split by ','
@@ -30,6 +35,11 @@ end
 ---@param room table
 ---@return table<string>
 function mapScanHelper.findAllCloudTagsInRoom(room)
+    room = room or (loadedState_getSelectedRoom and loadedState_getSelectedRoom() or nil)
+    if not room then
+        return {}
+    end
+
     local ret = {}
     _findAllTagsScan(ret, room.entities, "cloudTag")
     _findAllTagsScan(ret, room.triggers, "cloudTag")
@@ -47,6 +57,11 @@ end
 ---@param map table
 ---@return table<string>
 function mapScanHelper.findAllStylegroundTagsInMap(map)
+    map = map or (loadedState and loadedState.map)
+    if not map then
+        return {}
+    end
+
     local ret = {}
     _findAllTagsScan(ret, map.stylesFg, "tag")
     _findAllTagsScan(ret, map.stylesBg, "tag")
@@ -61,10 +76,13 @@ function mapScanHelper.findAllStylegroundTagsInMap(map)
 end
 
 local entitiesUsingCounters = {
-    ["FrostHelper/SessionCounterTrigger"] = "value",
-    ["FrostHelper/OnCounterActivator"] = "target",
-    ["FrostHelper/SetCounterActivator"] = "target",
-    ["FrostHelper/FlagCounterController"] = "",
+    ["FrostHelper/SessionCounterTrigger"] = {"counter", "value" },
+    ["FrostHelper/OnCounterActivator"] = {"counter", "target" },
+    ["FrostHelper/SetCounterActivator"] = {"counter", "target" },
+    ["FrostHelper/FlagCounterController"] = { "counter" },
+    ["FrostHelper/Timer"] = { "outputCounter" },
+    ["FrostHelper/IncrementingTimer"] = { "outputCounter" },
+    ["FrostHelper/CounterDisplay"] = { "counter" },
 }
 
 local function _findAllCountersScan(into, entities)
@@ -73,16 +91,13 @@ local function _findAllCountersScan(into, entities)
     end
 
     for _, en in ipairs(entities) do
-        local targetValKey = entitiesUsingCounters[en._name]
-        if targetValKey then
-            local counter = en.counter
-            if counter and counter ~= "" then
-                into[counter] = true
-            end
-
-            local targetVal = en[targetValKey]
-            if targetVal and not tonumber(targetVal) then
-                into[targetVal] = true
+        local targetKeys = entitiesUsingCounters[en._name]
+        if targetKeys then
+            for _, key in ipairs(targetKeys) do
+                local counter = en[key]
+                if counter and counter ~= "" and not tonumber(counter) then
+                    into[counter] = true
+                end
             end
         end
     end

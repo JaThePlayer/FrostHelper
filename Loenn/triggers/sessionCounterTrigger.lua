@@ -10,6 +10,18 @@ local counterOperations = {
     "Decrement",
     "Multiply",
     "Divide",
+    "Remainder",
+    "Power",
+
+    "Min",
+    "Max",
+    "Distance",
+
+    "BitwiseOr",
+    "BitwiseAnd",
+    "BitwiseXor",
+    "BitwiseShiftLeft",
+    "BitwiseShiftRight",
 }
 
 local counterOperationToMathExpr = {
@@ -18,6 +30,18 @@ local counterOperationToMathExpr = {
     ["Decrement"] = "-=",
     ["Multiply"] = "*=",
     ["Divide"] = "/=",
+    ["Remainder"] = "%=",
+    ["Power"] = "^=",
+
+    ["BitwiseOr"] = "|=",
+    ["BitwiseAnd"] = "&=",
+    ["BitwiseXor"] = "xor=",
+    ["BitwiseShiftLeft"] = "<<=",
+    ["BitwiseShiftRight"] = ">>=",
+
+    ["Min"] = "min=",
+    ["Max"] = "max=",
+    ["Distance"] = "dist=",
 }
 
 jautils.createPlacementsPreserveOrder(sessionCounterTrigger, "default", {

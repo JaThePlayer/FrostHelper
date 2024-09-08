@@ -14,7 +14,7 @@ local function createHandler(name, fieldInfo, extendedText)
     fieldInfo =  jautils.union({
         { "width", 16 },
         { "height", 16 },
-        { "cloudTag", "", "FrostHelper.cloudTag" },
+        { "cloudTag", "", "cloudTag" },
     }, fieldInfo)
 
     jautils.createPlacementsPreserveOrder(h, "default", fieldInfo)
