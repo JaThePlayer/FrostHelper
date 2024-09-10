@@ -17,6 +17,11 @@ internal sealed class OnBerryCollectActivator : BaseActivator {
         orig(self, follower);
 
         if (follower.Entity is IStrawberry or IStrawberrySeeded && self.Entity is Player player) {
+            // Strawberry Detach Triggers set ReturnHomeWhenLost to false, we don't want to activate
+            // the activator for detached berries.
+            if (follower.Entity is Strawberry { ReturnHomeWhenLost: false })
+                return;
+            
             foreach (OnBerryCollectActivator activator in self.Scene.Tracker.SafeGetEntities<OnBerryCollectActivator>()) {
                 activator.OnBerryCollected(player);
             }
