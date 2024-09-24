@@ -1,5 +1,5 @@
 - Name: FrostHelper
-  Version: 1.54.1
+  Version: 1.55.0
   DLL: Code/FrostHelper/bin/FrostTempleHelper.dll
   Dependencies:
     - Name: Everest
@@ -13,3 +13,6 @@
       Version: 0.0.3
     - Name: ExtendedVariantMode
       Version: 0.19.8
+    # Make sure non-dummy versions of ColoredLights don't get loaded alongside new frost helper versions
+    - Name: ColoredLights
+      Version: 1.2.0

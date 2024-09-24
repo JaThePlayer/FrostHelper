@@ -50,16 +50,44 @@ jautils.windingOrders = {
 --[[
     Compatibility
 ]]
--- whether we're currently running in Lönn
 jautils.inLonn = compat.inLonn
--- whether we're currently running in Rysy
 jautils.inRysy = compat.inRysy
+jautils.inSnowberry = compat.inSnowberry
 
 jautils.easings = "FrostHelper.easing"
 jautils.tweenModes = require("mods").requireFromPlugin("libraries.tweenModes")
+
+---Tries to require a file, returns nil if it doesn't exist
+jautils.tryRequire = utils.tryrequire
+    and function (lib)
+            local success, ret = utils.tryrequire(lib, false)
+            if success then
+                return ret
+            else
+                return nil
+            end
+        end
+    or function (lib)
+            -- Fallback if utils.tryrequire doesn't exist (snowberry)
+            local success, ret = pcall(require, lib)
+            if success then
+                return ret
+            else
+                return nil
+            end
+        end
+
 --[[
     UTILS
 ]]
+
+---Creates a new table with the given size, if possible on the current lua runtime.
+---@param narr number number of integer keys
+---@param nhash number number of hash keys
+---@return table
+jautils.newTable = jautils.tryRequire("table.new") or function (narr, nhash)
+    return {}
+end
 
 ---Returns a table which contains all of the elements of all passed tables.
 ---Argument tables that have a _type field will be added to the returned table directly instead of being looped over
@@ -104,9 +132,8 @@ local getAllSids = function ()
 end
 
 -- Snowberry hard-crashes on boot if libraries crash, and the current public build doesn't implement `entities`.
-if not compat.inSnowberry then
-    local entities = require("entities")
-
+local entities = jautils.tryRequire("entities")
+if entities and entities.registeredEntities then
     getAllSids = function ()
         local ret = {}
         local amt = 0
@@ -396,12 +423,14 @@ function jautils.getOutlinedSpriteFromPath(data, spritePath, color, outlineColor
 end
 
 function jautils.getBorder(sprite, color)
+    color = color and utils.getColor(color) or {0, 0, 0, 1}
+
     local function get(xOffset,yOffset)
         local texture = drawableSpriteStruct.fromMeta(sprite.meta, sprite)
         texture.x += xOffset
         texture.y += yOffset
-        texture.depth = 2 -- fix preview depth
-        texture.color = color and utils.getColor(color) or {0, 0, 0, 1}
+        texture.depth = sprite.depth and sprite.depth + 2 or nil -- fix preview depth
+        texture.color = color
 
         return texture
     end
@@ -415,6 +444,10 @@ function jautils.getBorder(sprite, color)
 end
 
 function jautils.getBordersForAll(sprites, color)
+    if color == "00000000" then
+        return sprites
+    end
+
     -- manually iterate since we're changing the table
     local newSprites = {}
 
@@ -587,6 +620,36 @@ end
 
 function jautils.getLineSprite(x1, y1, x2, y2, color, thickness)
     return drawableLineStruct.fromPoints({x1, y1, x2, y2}, color or jautils.colorWhite, thickness or 1)
+end
+
+---Returns a sprite that renders a hollow ellipse
+---@param x number
+---@param y number
+---@param rx number
+---@param ry number
+---@param color color|nil
+---@return sprite
+function jautils.getEllipseSprite(x, y, rx, ry, color)
+    local segments = 24
+    local slice = math.pi * 2 / segments
+
+    local points = jautils.newTable(segments, 0)
+    for angle = 0, math.pi * 2, slice do
+        table.insert(points, math.cos(angle) * rx + x)
+        table.insert(points, math.sin(angle) * ry + y)
+    end
+
+    return drawableLineStruct.fromPoints(points, color or jautils.colorWhite)
+end
+
+---Returns a sprite that renders a hollow circle
+---@param x number
+---@param y number
+---@param r number
+---@param color color|nil
+---@return sprite
+function jautils.getCircleSprite(x, y, r, color)
+    return jautils.getEllipseSprite(x, y, r, r, color)
 end
 
 ---Calls jautils.getColor on all elements of the comma-seperated list and returns a table of results.
@@ -882,6 +945,19 @@ function jautils.getNameFlipHandler(rotations)
 
         return false
     end
+end
+
+---Creates a legacy handler from the given handler. Legacy handlers have a different SID and no placements.
+---This lets mappers still edit existing legacy entities, but not place new ones (without copy-pasting)
+---@param handler table
+---@param legacySid string
+---@return table
+function jautils.createLegacyHandler(handler, legacySid)
+    local legacy = utils.deepcopy(handler)
+    legacy.placements = nil
+    legacy.name = legacySid
+
+    return legacy
 end
 
 return jautils

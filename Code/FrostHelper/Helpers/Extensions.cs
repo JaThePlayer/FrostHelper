@@ -232,4 +232,27 @@ public static class Extensions {
         
         return ret;
     }
+
+    /// <summary>
+    /// Fastpath for Image.DrawOutline(1)
+    /// </summary>
+    public static void DrawOutlineFast(this Image img, Color color) {
+        var b = Draw.SpriteBatch;
+        var texture = img.Texture.Texture.Texture_Safe;
+
+        var drawPos = img.RenderPosition;
+        var clipRect = img.Texture.ClipRect;
+        var rot = img.Rotation;
+        var scaleFix = img.Texture.ScaleFix;
+        var origin = (img.Origin - img.Texture.DrawOffset) / scaleFix;
+        
+        b.Draw(texture, drawPos - Vector2.UnitY, clipRect, color, rot, origin, scaleFix, SpriteEffects.None, 0f);
+        b.Draw(texture, drawPos + Vector2.UnitY, clipRect, color, rot, origin, scaleFix, SpriteEffects.None, 0f);
+        b.Draw(texture, drawPos - Vector2.UnitX, clipRect, color, rot, origin, scaleFix, SpriteEffects.None, 0f);
+        b.Draw(texture, drawPos + Vector2.UnitX, clipRect, color, rot, origin, scaleFix, SpriteEffects.None, 0f);
+        b.Draw(texture, drawPos - Vector2.One, clipRect, color, rot, origin, scaleFix, SpriteEffects.None, 0f);
+        b.Draw(texture, drawPos + Vector2.One, clipRect, color, rot, origin, scaleFix, SpriteEffects.None, 0f);
+        b.Draw(texture, drawPos + new Vector2(-1f, 1f), clipRect, color, rot, origin, scaleFix, SpriteEffects.None, 0f);
+        b.Draw(texture, drawPos + new Vector2(1f, -1f), clipRect, color, rot, origin, scaleFix, SpriteEffects.None, 0f);
+    }
 }

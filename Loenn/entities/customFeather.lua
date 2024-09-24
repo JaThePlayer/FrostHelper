@@ -21,14 +21,11 @@ jautils.createPlacementsPreserveOrder(feather, "normal", {
     { "refillDashes", true },
 })
 
-function feather.draw(room, entity)
-    local featherSprite = jautils.getCustomSprite(entity, "spritePath", "idle00", fallback, "spriteColor")
-
-    if entity.shielded then
-        love.graphics.circle("line", entity.x, entity.y, 12)
-    end
-
-    featherSprite:draw()
+function feather.sprite(room, entity)
+    return jautils.union(
+        jautils.getCustomSprite(entity, "spritePath", "idle00", fallback, "spriteColor"),
+        entity.shielded and jautils.getCircleSprite(entity.x, entity.y, 12) or nil
+    )
 end
 
 function feather.selection(room, entity)

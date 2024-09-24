@@ -76,9 +76,10 @@ function mapScanHelper.findAllStylegroundTagsInMap(map)
 end
 
 local entitiesUsingCounters = {
-    ["FrostHelper/SessionCounterTrigger"] = {"counter", "value" },
-    ["FrostHelper/OnCounterActivator"] = {"counter", "target" },
-    ["FrostHelper/SetCounterActivator"] = {"counter", "target" },
+    ["FrostHelper/SessionCounterTrigger"] = { "counter", "value" },
+    ["FrostHelper/RandomizeSessionCounterTrigger"] = { "counter", "min", "max" },
+    ["FrostHelper/OnCounterActivator"] = { "counter", "target" },
+    ["FrostHelper/SetCounterActivator"] = { "counter", "target" },
     ["FrostHelper/FlagCounterController"] = { "counter" },
     ["FrostHelper/Timer"] = { "outputCounter" },
     ["FrostHelper/IncrementingTimer"] = { "outputCounter" },

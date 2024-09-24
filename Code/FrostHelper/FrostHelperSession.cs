@@ -19,6 +19,8 @@ public class FrostHelperSession : EverestModuleSession {
     /// </summary>
     public HashSet<EntityID> SoftDoNotLoad { get; set; } = new();
 
+    public Color? FlashlightColor { get; set; } = null;
+
     // everything below might get refactored later to be more general-usecase:
 
     // for anyone thinking about accessing this from another mod: don't even think about it, I will intentionally break your mod if you do that.

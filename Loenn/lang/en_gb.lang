@@ -493,6 +493,20 @@ entities.FrostHelper/FlagIfCounterController.attributes.description.counter=The 
 entities.FrostHelper/FlagIfCounterController.attributes.description.target=Target value of the counter.\nCan be an integer, OR the name of a different session counter.\nDecimal numbers are NOT supported.
 entities.FrostHelper/FlagIfCounterController.attributes.description.operation=The comparison operation to use to compare the counter to target.
 
+
+entities.coloredlights/hanginglamp.attributes.description.color=Color to use for the lamp's light.
+entities.coloredlights/hanginglamp.attributes.description.startFade=The disance from the center of this lamp's light at which the light starts fading.
+entities.coloredlights/hanginglamp.attributes.description.endFade=The radius of the lamp's light.
+entities.coloredlights/hanginglamp.attributes.description.alpha=Alpha value of the light. Between 0 and 1.
+entities.coloredlights/hanginglamp.attributes.description.sprite=Path to the sprite for this lamp, relative to Graphics/Atlases/Gameplay.
+
+entities.FrostHelper/ColoredHangingLamp.placements.name.default=Colored Hanging Lamp
+entities.FrostHelper/ColoredHangingLamp.attributes.description.color=Color to use for the lamp's light.
+entities.FrostHelper/ColoredHangingLamp.attributes.description.startFade=The disance from the center of this lamp's light at which the light starts fading.
+entities.FrostHelper/ColoredHangingLamp.attributes.description.endFade=The radius of the lamp's light.
+entities.FrostHelper/ColoredHangingLamp.attributes.description.alpha=Alpha value of the light. Between 0 and 1.
+entities.FrostHelper/ColoredHangingLamp.attributes.description.sprite=Path to the sprite for this lamp, relative to Graphics/Atlases/Gameplay.
+
 # -- Mod Names --
 # mods.modName.*
 mods.FrostHelper.name=Frost Helper
@@ -736,6 +750,14 @@ triggers.FrostHelper/SessionCounterTrigger.attributes.description.value=The valu
 triggers.FrostHelper/SessionCounterTrigger.attributes.description.operation=Specifies which operation to use to manipulate the counter.\nSet - set the value of the counter to 'value'.\nIncrement - add 'value' to the current value of the counter.\nDecrement - subtract 'value' from the current value of the counter.\nMultiply - Multiply the current value of the counter by 'value'.\nDivide - Divide the current value of the counter by 'value' (Over integers, meaning 5 / 2 == 2)\nRemainder - Gets the remainder of dividing the counter by value.\nPower - Raise the counter to the 'value'th power.\nMin/Max - Sets the counter to the smaller/larger value between the counter and `value`.\nDistance - Sets the counter to the distance between the counter and `value`, that is `counter = abs(counter - value)`
 triggers.FrostHelper/SessionCounterTrigger.attributes.description.clearOnSpawn=Whether the counter should be set to 0 when the player spawns into the room.\nOtherwise, its value persists between deaths.
 
+# Randomize Session Counter Trigger
+triggers.FrostHelper/RandomizeSessionCounterTrigger.placements.name.default=Randomize Session Counter
+triggers.FrostHelper/RandomizeSessionCounterTrigger.placements.description.default=Changes the value of a Session Counter to a random value within a range, which is a 32-bit integer saved to session.
+triggers.FrostHelper/RandomizeSessionCounterTrigger.attributes.description.counter=The session counter to change.
+triggers.FrostHelper/RandomizeSessionCounterTrigger.attributes.description.min=Minimum value to be generated (Inclusive).\nCan be an integer, OR the name of a different session counter.\nDecimal numbers are NOT supported.
+triggers.FrostHelper/RandomizeSessionCounterTrigger.attributes.description.max=Maximum value to be generated (Inclusive).\nCan be an integer, OR the name of a different session counter.\nDecimal numbers are NOT supported.
+triggers.FrostHelper/RandomizeSessionCounterTrigger.attributes.description.seeded=Whether the randomness should be seeded.\nWARNING: Disabling this option for gameplay-relevant mechanics makes the map un-TASable!
+
 # FrostHelper/NoMovementTrigger
 triggers.FrostHelper/NoMovementTrigger.placements.name.default=No Movement
 triggers.FrostHelper/NoMovementTrigger.placements.description.default=Disables walking.
@@ -818,6 +840,13 @@ triggers.FrostHelper/ArbitraryShapeCloudEditRainbow.placements.description.defau
 triggers.FrostHelper/ArbitraryShapeCloudEditRainbow.attributes.description.cloudTag=The cloud tag to edit.\nMake sure to set the Cloud Tag field on the clouds you want to edit with this trigger to be the same as this!
 triggers.FrostHelper/ArbitraryShapeCloudEditRainbow.attributes.description.enable=Whether the clouds should be rainbow or not.
 
+triggers.coloredlights/flashlightColorTrigger.attributes.description.color=Hex/XNA color to use for the players's flashlight. "Transparent" means that the flashlight is disabled.
+triggers.coloredlights/flashlightColorTrigger.attributes.description.time=How long the color change should last for.
+
+triggers.FrostHelper/FlashlightColorTrigger.placements.name.default=Player Flashlight Color
+triggers.FrostHelper/FlashlightColorTrigger.attributes.description.color=Hex/XNA color to use for the players's flashlight. "Transparent" means that the flashlight is disabled.
+triggers.FrostHelper/FlashlightColorTrigger.attributes.description.time=How long the color change should last for.
+triggers.FrostHelper/FlashlightColorTrigger.attributes.description.persistent=Whether the color change should persist between deaths.
 
 # effects
 style.effects.FrostHelper/ShaderWrapper.name=Shader Wrapper

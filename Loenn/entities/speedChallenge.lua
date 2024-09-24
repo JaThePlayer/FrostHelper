@@ -1,4 +1,6 @@
 local utils = require("utils")
+local jautils = require("mods").requireFromPlugin("libraries.jautils")
+
 local speedRingChallenge = {}
 speedRingChallenge.name = "FrostHelper/SpeedRingChallenge"
 speedRingChallenge.nodeLineRenderType = "line"
@@ -17,15 +19,8 @@ local ellipseColor = { 1, 1, 1, 1 }
 
 speedRingChallenge.nodeLimits = { 1, 255 }
 
-function speedRingChallenge.draw(room, entity)
-    local pr, pg, pb, pa = love.graphics.getColor()
-
-    love.graphics.setColor(ellipseColor)
-    love.graphics.ellipse("line", entity.x + entity.width / 2, entity.y + entity.height / 2, entity.width / 2, entity.height / 2)
-    for _,v in ipairs(entity.nodes) do
-        love.graphics.ellipse("line", v.x + entity.width / 2, v.y + entity.height / 2, entity.width / 2, entity.height / 2)
-    end
-    love.graphics.setColor(pr, pg, pb, pa)
+function speedRingChallenge.sprite(room, entity)
+    return jautils.getEllipseSprite(entity.x + entity.width / 2, entity.y + entity.height / 2, entity.width / 2, entity.height / 2, ellipseColor)
 end
 
 function speedRingChallenge.selection(room, entity)

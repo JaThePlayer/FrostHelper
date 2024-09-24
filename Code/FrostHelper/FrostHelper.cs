@@ -184,7 +184,7 @@ public class FrostModule : EverestModule {
             MonocleDrawShapeFixer.Load();
     }
 
-    private static List<ILHook> registeredHooks = new List<ILHook>();
+    private static List<ILHook> registeredHooks = [];
     public static void RegisterILHook(ILHook hook) {
         registeredHooks.Add(hook);
     }
@@ -194,9 +194,6 @@ public class FrostModule : EverestModule {
     public override void Load() {
         typeof(API.API).ModInterop();
 
-        // Custom dream blocks and feathers
-        On.Celeste.Player.UpdateSprite += Player_UpdateSprite;
-
         AttributeHelper.InvokeAllWithAttribute(typeof(OnLoad));
 
         if (!Settings.HookLazyLoading) {
@@ -204,7 +201,31 @@ public class FrostModule : EverestModule {
         }
         
         Everest.Events.Player.OnRegisterStates += PlayerOnOnRegisterStates;
+        On.Celeste.Player.UpdateSprite += Player_UpdateSprite;
         Everest.Content.OnUpdate += ContentOnOnUpdate;
+        Everest.Events.Player.OnSpawn += PlayerOnSpawn;
+    }
+    
+    // Unload the entirety of your mod's content, remove any event listeners and undo all hooks.
+    public override void Unload() {
+        foreach (var hook in registeredHooks) {
+            hook.Dispose();
+        }
+        registeredHooks = [];
+
+        AttributeHelper.InvokeAllWithAttribute(typeof(OnUnload));
+
+        OutlineHelper.Dispose();
+        
+        Everest.Events.Player.OnRegisterStates -= PlayerOnOnRegisterStates;
+        On.Celeste.Player.UpdateSprite -= Player_UpdateSprite;
+        Everest.Content.OnUpdate -= ContentOnOnUpdate;
+        Everest.Events.Player.OnSpawn -= PlayerOnSpawn;
+    }
+
+    // Implement player flashlight color persistence.
+    private void PlayerOnSpawn(Player player) {
+        player.Light.Color = Session.FlashlightColor ?? player.Light.Color;
     }
 
     internal delegate void OnSpriteChangedHandler(ModAsset old, ReadOnlySpan<char> texturePath);
@@ -380,28 +401,6 @@ public class FrostModule : EverestModule {
     }
 #endif
     #endregion
-
-    // Unload the entirety of your mod's content, remove any event listeners and undo all hooks.
-    public override void Unload() {
-        Everest.Events.Player.OnRegisterStates -= PlayerOnOnRegisterStates;
-
-        // For custom Boosters
-        //On.Celeste.Player.CallDashEvents -= Player_CallDashEvents;
-
-        // Custom dream blocks and feathers
-        On.Celeste.Player.UpdateSprite -= Player_UpdateSprite;
-
-        foreach (var hook in registeredHooks) {
-            hook.Dispose();
-        }
-        registeredHooks = [];
-
-        AttributeHelper.InvokeAllWithAttribute(typeof(OnUnload));
-
-        OutlineHelper.Dispose();
-        
-        Everest.Content.OnUpdate -= ContentOnOnUpdate;
-    }
 
     // Optional, initialize anything after Celeste has initialized itself properly.
     public override void Initialize() {
