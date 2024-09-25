@@ -54,14 +54,17 @@ internal sealed class ArbitraryLight : VertexLight {
         Vector3 center = self.GetCenter(index);
         
         radius = arbLight.Radius;
-        foreach (var v in arbLight.Fill) {
+        var lightPos = arbLight.Position + arbLight.Entity.Position;
+        
+        foreach (var vRelative in arbLight.Fill) {
             if (self.indexCount >= self.indices.Length)
                 return;
             self.indices[self.indexCount++] = self.vertexCount;
 
             if (self.vertexCount >= self.resultVerts.Length)
                 return;
-            
+
+            var v = new Vector3(vRelative.X + lightPos.X, vRelative.Y + lightPos.Y, vRelative.Z);
             ref var vert = ref self.resultVerts[self.vertexCount++];
             vert.Position = v;
             vert.Color = color;
@@ -113,7 +116,7 @@ internal sealed class ArbitraryLight : VertexLight {
         if (light is not ArbitraryLight arbitraryLight)
             return false;
 
-        return CameraCullHelper.IsRectangleVisible(arbitraryLight.Bounds) && arbitraryLight.Condition.Check();
+        return CameraCullHelper.IsRectangleVisible(arbitraryLight.Bounds.MovedBy(light.Position + light.Entity.Position)) && arbitraryLight.Condition.Check();
     }
 
     private static bool IsArbitraryLight(VertexLight light) => light is ArbitraryLight;
@@ -143,19 +146,18 @@ internal sealed class ArbitraryLight : VertexLight {
         
         Condition = condition;
         
-        var pos = new Vector3(position, 0f);
         var fill = new Vector3[nodes.Length * 3 - (connectFirstAndLastNode ? 0 : 3)];
         var fi = 0;
         for (int i = 0; i < nodes.Length - 1; i++) {
-            fill[fi++] = pos;
-            fill[fi++] = new(nodes[i], 0f);
-            fill[fi++] = new(nodes[i + 1], 0f);
+            fi++; // skip 1 vertex as it's placed on 0,0,0 which is default(Vector3)
+            fill[fi++] = new(nodes[i] - position, 0f);
+            fill[fi++] = new(nodes[i + 1] - position, 0f);
         }
         
         if (connectFirstAndLastNode) {
-            fill[fi++] = pos;
-            fill[fi++] = new(nodes[0], 0f);
-            fill[fi++] = new(nodes[^1], 0f);
+            fi++; // skip 1 vertex as it's placed on 0,0,0 which is default(Vector3)
+            fill[fi++] = new(nodes[0] - position, 0f);
+            fill[fi++] = new(nodes[^1] - position, 0f);
         }
 
         Fill = fill;
@@ -163,7 +165,7 @@ internal sealed class ArbitraryLight : VertexLight {
         Radius = radius;
 
         if (bloomAlpha > 0f) {
-            _bloom = new ArbitraryBloom(bloomAlpha, Fill);
+            _bloom = new ArbitraryBloom(bloomAlpha, Fill, () => Position + Entity.Position);
         }
     }
     
