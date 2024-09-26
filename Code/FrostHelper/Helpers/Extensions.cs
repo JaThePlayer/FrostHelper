@@ -245,15 +245,16 @@ public static class Extensions {
         var rot = img.Rotation;
         var scaleFix = img.Texture.ScaleFix;
         var origin = (img.Origin - img.Texture.DrawOffset) / scaleFix;
+        var scale = img.Scale * scaleFix;
         
-        b.Draw(texture, drawPos - Vector2.UnitY, clipRect, color, rot, origin, scaleFix, SpriteEffects.None, 0f);
-        b.Draw(texture, drawPos + Vector2.UnitY, clipRect, color, rot, origin, scaleFix, SpriteEffects.None, 0f);
-        b.Draw(texture, drawPos - Vector2.UnitX, clipRect, color, rot, origin, scaleFix, SpriteEffects.None, 0f);
-        b.Draw(texture, drawPos + Vector2.UnitX, clipRect, color, rot, origin, scaleFix, SpriteEffects.None, 0f);
-        b.Draw(texture, drawPos - Vector2.One, clipRect, color, rot, origin, scaleFix, SpriteEffects.None, 0f);
-        b.Draw(texture, drawPos + Vector2.One, clipRect, color, rot, origin, scaleFix, SpriteEffects.None, 0f);
-        b.Draw(texture, drawPos + new Vector2(-1f, 1f), clipRect, color, rot, origin, scaleFix, SpriteEffects.None, 0f);
-        b.Draw(texture, drawPos + new Vector2(1f, -1f), clipRect, color, rot, origin, scaleFix, SpriteEffects.None, 0f);
+        b.Draw(texture, drawPos - Vector2.UnitY, clipRect, color, rot, origin, scale, SpriteEffects.None, 0f);
+        b.Draw(texture, drawPos + Vector2.UnitY, clipRect, color, rot, origin, scale, SpriteEffects.None, 0f);
+        b.Draw(texture, drawPos - Vector2.UnitX, clipRect, color, rot, origin, scale, SpriteEffects.None, 0f);
+        b.Draw(texture, drawPos + Vector2.UnitX, clipRect, color, rot, origin, scale, SpriteEffects.None, 0f);
+        b.Draw(texture, drawPos - Vector2.One, clipRect, color, rot, origin, scale, SpriteEffects.None, 0f);
+        b.Draw(texture, drawPos + Vector2.One, clipRect, color, rot, origin, scale, SpriteEffects.None, 0f);
+        b.Draw(texture, drawPos + new Vector2(-1f, 1f), clipRect, color, rot, origin, scale, SpriteEffects.None, 0f);
+        b.Draw(texture, drawPos + new Vector2(1f, -1f), clipRect, color, rot, origin, scale, SpriteEffects.None, 0f);
     }
 
     public static Vector3 AddXY(this Vector3 a, Vector2 b) => new(a.X + b.X, a.Y + b.Y, a.Z);

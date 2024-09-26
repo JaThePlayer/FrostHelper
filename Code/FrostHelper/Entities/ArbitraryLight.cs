@@ -1,4 +1,5 @@
 ﻿using FrostHelper.Helpers;
+using System.Runtime.CompilerServices;
 using LightingRenderer = Celeste.LightingRenderer;
 
 namespace FrostHelper.Entities;
@@ -25,8 +26,9 @@ internal sealed class ArbitraryLight : VertexLight {
         
         On.Celeste.LightingRenderer.DrawLight += LightingRendererOnDrawLight;
         IL.Celeste.LightingRenderer.BeforeRender += LightingRendererOnBeforeRender;
+        IL.Celeste.LightingRenderer.DrawLightOccluders += LightingRendererOnDrawLightOccluders;
     }
-    
+
     [OnUnload]
     public static void UnloadHooks() {
         if (!_hooksLoaded)
@@ -35,6 +37,26 @@ internal sealed class ArbitraryLight : VertexLight {
         
         On.Celeste.LightingRenderer.DrawLight -= LightingRendererOnDrawLight;
         IL.Celeste.LightingRenderer.BeforeRender -= LightingRendererOnBeforeRender;
+        IL.Celeste.LightingRenderer.DrawLightOccluders -= LightingRendererOnDrawLightOccluders;
+    }
+    
+    // Get rid of occluder handling
+    private static void LightingRendererOnDrawLightOccluders(ILContext il) {
+        var cursor = new ILCursor(il);
+        
+        var vertexLightLoc = il.Body.Variables.First(v => v.Index == 6);
+        
+        ILLabel? dontRenderLabel = null;
+        
+        // - if (vertexLight != null && vertexLight.Dirty)
+        // + if (vertexLight != null && vertexLight.Dirty && vertexLight is not ArbitraryLight)
+        if (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdfld<VertexLight>(nameof(Dirty)))) {
+            if (cursor.TryGotoNext(MoveType.After, instr => instr.MatchBrfalse(out dontRenderLabel))) {
+                cursor.Emit(OpCodes.Ldloc, vertexLightLoc);
+                cursor.EmitCall(IsArbitraryLight);
+                cursor.Emit(OpCodes.Brtrue, dontRenderLabel!);
+            }
+        }
     }
 
     // Handle rendering
@@ -110,6 +132,17 @@ internal sealed class ArbitraryLight : VertexLight {
                 }
             }
         }
+        
+        // get rid of InSolid checks
+        // - if (vertexLight.LastPosition != vertexLight.Position || vertexLight.LastEntityPosition != vertexLight.Entity.Position || vertexLight.Dirty)
+        // + if (vertexLight.LastPosition != vertexLight.Position || vertexLight.LastEntityPosition != vertexLight.Entity.Position || vertexLight.Dirty) && vertexLight is not ArbitraryLight)
+        if (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdfld<VertexLight>(nameof(Dirty)))) {
+            if (cursor.TryGotoNext(MoveType.After, instr => instr.MatchBrfalse(out dontRenderLabel))) {
+                cursor.Emit(OpCodes.Ldloc, vertexLightLoc);
+                cursor.EmitCall(IsArbitraryLight);
+                cursor.Emit(OpCodes.Brtrue, dontRenderLabel!);
+            }
+        }
     }
 
     private static bool IsVisibleArbitraryLight(VertexLight light) {
@@ -119,6 +152,7 @@ internal sealed class ArbitraryLight : VertexLight {
         return CameraCullHelper.IsRectangleVisible(arbitraryLight.Bounds.MovedBy(light.Position + light.Entity.Position)) && arbitraryLight.Condition.Check();
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static bool IsArbitraryLight(VertexLight light) => light is ArbitraryLight;
     
     #endregion

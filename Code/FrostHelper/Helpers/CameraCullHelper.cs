@@ -86,6 +86,10 @@ public static class CameraCullHelper {
         return IsRectVisible(cam, left, top, right - left, bottom - top + heightIncrease);
     }
 
+
+    public static bool IsVisible(Sprite sprite)
+        => IsVisible(FrostModule.GetCurrentLevel().Camera.position, sprite);
+    
     /// <summary>
     /// Checks whether the <paramref name="sprite"/> is visible, taking account Scale and Origin.
     /// TODO: Justify, Rotation

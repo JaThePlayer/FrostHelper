@@ -1,4 +1,6 @@
-﻿namespace FrostHelper.Triggers;
+﻿using FrostHelper.Helpers;
+
+namespace FrostHelper.Triggers;
 
 [Tracked(true)]
 internal abstract class BaseTimerEntity : Trigger {
@@ -71,9 +73,10 @@ internal abstract class BaseTimerEntity : Trigger {
         if (!Started)
             return;
 
+        var startAlpha = Alpha;
         var tween = Tween.Create(Tween.TweenMode.Oneshot, Ease.Linear, duration: 1f, start: true);
         tween.OnComplete = (t) => RemoveSelf();
-        tween.OnUpdate = (t) => Alpha = 1f - t.Eased;
+        tween.OnUpdate = (t) => Alpha = float.Max(0f, startAlpha - t.Eased);
         Add(tween);
     }
     
@@ -186,7 +189,9 @@ internal sealed class IncrementingTimerEntity : BaseTimerEntity {
 [CustomEntity("FrostHelper/CounterDisplay")]
 [Tracked]
 internal sealed class CounterDisplayEntity : BaseTimerEntity {
-    internal readonly string RemoveFlag;
+    internal readonly ConditionHelper.Condition RemoveFlag;
+    internal readonly ConditionHelper.Condition VisibleFlag;
+    
     private bool _removed;
 
     private bool _showOnRoomLoad;
@@ -213,15 +218,22 @@ internal sealed class CounterDisplayEntity : BaseTimerEntity {
 
     public CounterDisplayEntity(EntityData data, Vector2 offset) : base(data, offset) {
         _counterName = data.Attr("counter");
-        RemoveFlag = data.Attr("removeFlag", "");
+        RemoveFlag = data.GetCondition("removeFlag", "");
+        VisibleFlag = data.GetCondition("visibleFlag", "");
 
         _showOnRoomLoad = data.Bool("showOnRoomLoad", false);
+    }
+
+    private float GetTargetAlpha() {
+        return VisibleFlag.Empty || VisibleFlag.Check() ? 1f : 0f;
     }
 
     public override void Added(Scene scene) {
         base.Added(scene);
         if (_showOnRoomLoad)
             StartIfNeeded();
+
+        Alpha = GetTargetAlpha();
     }
 
     public override void Update() {
@@ -230,9 +242,12 @@ internal sealed class CounterDisplayEntity : BaseTimerEntity {
         if (!Started || _removed)
             return;
 
-        if (SceneAs<Level>().Session.GetFlag(RemoveFlag)) {
+        var session = SceneAs<Level>().Session;
+        if (!RemoveFlag.Empty && RemoveFlag.Check(session)) {
             _removed = true;
             RemoveIfNeeded();
+        } else {
+            Alpha = Calc.Approach(Alpha, GetTargetAlpha(), Engine.DeltaTime);
         }
     }
 }

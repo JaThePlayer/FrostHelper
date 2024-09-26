@@ -44,6 +44,7 @@ jautils.createPlacementsPreserveOrder(incTimer, "default", {
 jautils.createPlacementsPreserveOrder(counterDisplay, "default", {
     { "counter", "", "sessionCounter" },
     { "removeFlag", "" },
+    { "visibleFlag", "" },
     { "icon", "" },
     { "iconColor", "ffffff", "color" },
     { "textColor", "ffffff", "color" },

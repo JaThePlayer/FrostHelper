@@ -212,7 +212,8 @@ jautils.fieldTypeOverrides = {
         return {
             options = data,
             editable = true,
-            searchable = true,
+            -- Searchable dropdowns mapping strings to ints crash lonn, so let's not do that
+            --searchable = true,
         }
     end,
     dropdown = function(data)

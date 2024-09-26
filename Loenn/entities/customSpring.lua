@@ -21,6 +21,15 @@ local function getSprite(entity)
     return sprite
 end
 
+local dashAndStaminaRecoveryOptions = {
+    fieldType = "integer",
+    options = {
+        ["10000 (Refill)"] = 10000,
+        ["10001 (No Change)"] = 10001,
+    },
+    maximumValue = 10001,
+}
+
 local function createSpringHandler(name, spriteRotation, speedAsVector)
     local handler = {
         name = name,
@@ -45,7 +54,7 @@ local function createSpringHandler(name, spriteRotation, speedAsVector)
             return nil
         end,
         selection = function(room, entity)
-            local sprite = getSprite(entity)
+            local sprite = drawableSpriteStruct.fromTexture("objects/spring/", entity)
             sprite:setJustification(0.5, 1.0)
             sprite.rotation = spriteRotation
             return sprite:getRectangle()
@@ -57,9 +66,14 @@ local function createSpringHandler(name, spriteRotation, speedAsVector)
 
     jautils.createPlacementsPreserveOrder(handler, "normal", {
         { "color", "ffffff", "color" },
-        { "directory", "objects/spring/" },
+        { "directory", "objects/spring/", "editableDropdown", {
+            "objects/spring/",
+            "objects/FrostHelper/whiteSpring/"
+        }},
         { "speedMult", speedAsVector and "1.0" or 1.0 },
         { "attachGroup", -1, "FrostHelper.attachGroup" },
+        { "dashRecovery", 10000, dashAndStaminaRecoveryOptions },
+        { "staminaRecovery", 10000, dashAndStaminaRecoveryOptions },
         { "version", 2, "integer" },
         { "oneUse", false },
         { "playerCanUse", true },

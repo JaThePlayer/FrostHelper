@@ -1,0 +1,43 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Sprites>
+
+  <keyice path="collectables/FrostHelper/keyice/" start="idle">
+    <Justify x=".5" y=".5" />
+    <Loop id="idle" path="idle" delay="0.1" frames="0-13"/>
+    <Anim id="enter" path="enter" delay="0.1"/>
+  </keyice>
+  <slowcrushblock_face path="objects/FrostHelper/slowcrushblock/" start="idle">
+      <Center/>
+      <Loop id="idle" path="idle_face" delay="0.08"/>
+      <Anim id="hurt" path="hurt" frames="3-12" delay="0.08" goto="idle"/>
+      <Anim id="hit" path="hit" delay="0.08"/>
+      <Loop id="left" path="hit_left" delay="0.08"/>
+      <Loop id="right" path="hit_right" delay="0.08"/>
+      <Loop id="up" path="hit_up" delay="0.08"/>
+      <Loop id="down" path="hit_down" delay="0.08"/>
+  </slowcrushblock_face>
+  <coldberry path="collectables/FrostHelper/CoreBerry/Cold/" start="idle">
+    <Center />
+    <Loop id="idle" path="ColdBerry_Cold" delay=".1" frames="0-6,0-6,0-6,0-6,0-7" />
+    <Loop id="noFlash" path="ColdBerry_Cold" delay=".1" frames="0-6"/>
+    <Anim id="collect" path="ColdBerry_Cold" delay=".07" frames="8-11"/>
+  </coldberry>
+  <coldberryghost path="collectables/FrostHelper/CoreBerry/Cold_Ghost/" start="idle">
+    <Center />
+    <Loop id="idle" path="CoreBerry_Cold_Ghost" delay=".1" frames="0-6,0-6,0-6,0-6,0-7" />
+    <Loop id="noFlash" path="CoreBerry_Cold_Ghost" delay=".1" frames="0-6"/>
+    <Anim id="collect" path="CoreBerry_Cold_Ghost" delay=".07" frames="8-11"/>
+  </coldberryghost>
+  <hotberry path="collectables/FrostHelper/CoreBerry/Hot/" start="idle">
+    <Center />
+    <Loop id="idle" path="normal" delay=".1" frames="0-6,0-6,0-6,0-6,0-7" />
+    <Loop id="noFlash" path="normal" delay=".1" frames="0-6"/>
+    <Anim id="collect" path="normal" delay=".07" frames="8-11"/>
+  </hotberry>
+  <hotberryghost path="collectables/FrostHelper/CoreBerry/Hot_Ghost/" start="idle">
+    <Center />
+    <Loop id="idle" path="CoreBerry_Hot_Ghost" delay=".1" frames="0-6,0-6,0-6,0-6,0-7" />
+    <Loop id="noFlash" path="CoreBerry_Hot_Ghost" delay=".1" frames="0-6"/>
+    <Anim id="collect" path="CoreBerry_Hot_Ghost" delay=".07" frames="8-11"/>
+  </hotberryghost>
+</Sprites>

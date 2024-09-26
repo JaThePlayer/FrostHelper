@@ -1,5 +1,5 @@
-﻿using FrostHelper.ModIntegration;
-using MonoMod;
+﻿using FrostHelper.Helpers;
+using FrostHelper.ModIntegration;
 
 namespace FrostHelper;
 
@@ -86,7 +86,7 @@ public class CustomSpring : Spring {
 
     public new CustomOrientations Orientation;
     public bool RenderOutline;
-    public Sprite Sprite;
+    public Sprite Sprite => sprite;
 
     string dir;
 
@@ -94,15 +94,26 @@ public class CustomSpring : Spring {
     private int Version;
 
     public bool MultiplyPlayerY;
+    
+    public bool OneUse;
 
-    private static Dictionary<string, CustomOrientations> EntityDataNameToOrientation = new Dictionary<string, CustomOrientations>() {
+    /// <summary>
+    /// Sentinel value for <see cref="DashRecovery"/> and <see cref="StaminaRecovery"/>,
+    /// which makes them refill your dashes/stamina instead of adding/removing from it.
+    /// </summary>
+    internal const int DashAndStaminaRecoveryIsARefill = 10000;
+    internal const int DashAndStaminaRecoveryIsIgnored = 10001;
+    internal readonly int DashRecovery;
+    internal readonly int StaminaRecovery;
+
+    private static readonly Dictionary<string, CustomOrientations> EntityDataNameToOrientation = new() {
         ["FrostHelper/SpringLeft"] = CustomOrientations.WallLeft,
         ["FrostHelper/SpringRight"] = CustomOrientations.WallRight,
         ["FrostHelper/SpringFloor"] = CustomOrientations.Floor,
         ["FrostHelper/SpringCeiling"] = CustomOrientations.Ceiling,
     };
 
-    private static Dictionary<CustomOrientations, Orientations> CustomToRegularOrientation = new Dictionary<CustomOrientations, Orientations>() {
+    private static readonly Dictionary<CustomOrientations, Orientations> CustomToRegularOrientation = new() {
         [CustomOrientations.WallLeft] = Orientations.WallLeft,
         [CustomOrientations.WallRight] = Orientations.WallRight,
         [CustomOrientations.Floor] = Orientations.Floor,
@@ -117,11 +128,14 @@ public class CustomSpring : Spring {
         // this class also has lazy hooks, and we don't want a lag spike when first hitting a spring
         TimeBasedClimbBlocker.LoadIfNeeded();
 
-        bool playerCanUse = data.Bool("playerCanUse", true);
+        playerCanUse = data.Bool("playerCanUse", true);
         dir = data.Attr("directory", "objects/spring/");
         RenderOutline = data.Bool("renderOutline", true);
 
-
+        
+        DashRecovery = data.Int("dashRecovery", DashAndStaminaRecoveryIsARefill);
+        StaminaRecovery = data.Int("staminaRecovery", DashAndStaminaRecoveryIsARefill);
+        
         //speedMult = FrostModule.StringToVec2(data.Attr("speedMult", "1"));
         // LEGACY BEHAVIOUR TIME!
         // there was a bug that made multiplying the Y speed of horizontal springs not work
@@ -132,48 +146,45 @@ public class CustomSpring : Spring {
             CustomOrientations.WallLeft or CustomOrientations.WallRight => data.GetVec2("speedMult", Vector2.One, true),
             _ => new(data.Float("speedMult", 1f)), // other orientations only care about the Y component anyway
         };*/
-        speedMult = data.GetVec2("speedMult", Vector2.One, false);
+        speedMult = data.GetVec2("speedMult", Vector2.One);
         MultiplyPlayerY = orientation switch {
-            CustomOrientations.WallLeft or CustomOrientations.WallRight => data.Attr("speedMult").IndexOf(',') != -1,
+            CustomOrientations.WallLeft or CustomOrientations.WallRight => data.Attr("speedMult").Contains(','),
             _ => true,
         };
 
-        Vector2 position = data.Position + offset;
         DisabledColor = Color.White;
         Orientation = orientation;
         base.Orientation = CustomToRegularOrientation[orientation];
-        this.playerCanUse = playerCanUse;
         Remove(Get<PlayerCollider>());
-        Add(new PlayerCollider(NewOnCollide, null, null));
+        Add(new PlayerCollider(NewOnCollide));
         Remove(Get<HoldableCollider>());
-        Add(new HoldableCollider(NewOnHoldable, null));
+        Add(new HoldableCollider(NewOnHoldable));
+        
         Remove(Get<PufferCollider>());
-        PufferCollider pufferCollider = new PufferCollider(NewOnPuffer, null);
+        var pufferCollider = new PufferCollider(NewOnPuffer);
         Add(pufferCollider);
-        DynData<Spring> dyndata = new DynData<Spring>(this);
 
-        var spr = sprite;
-        Remove(spr);
-        Add(Sprite = new Sprite(GFX.Game, dir) {
+        Remove(sprite);
+        Add(sprite = new Sprite(GFX.Game, dir) {
             Color = data.GetColor("color", "White"),
         });
-        Sprite.Add("idle", "", 0f, new int[1]);
-        Sprite.Add("bounce", "", 0.07f, "idle", 0, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 4, 5);
-        Sprite.Add("disabled", "white", 0.07f);
-        Sprite.Play("idle", false, false);
-        Sprite.Origin.X = Sprite.Width / 2f;
-        Sprite.Origin.Y = Sprite.Height;
+        sprite.Add("idle", "", 0f, new int[1]);
+        sprite.Add("bounce", "", 0.07f, "idle", 0, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 4, 5);
+        sprite.Add("disabled", "white", 0.07f);
+        sprite.Play("idle");
+        sprite.Origin.X = sprite.Width / 2f;
+        sprite.Origin.Y = sprite.Height;
 
         Depth = -8501;
 
         Add(Wiggler.Create(1f, 4f, delegate (float v) {
             Sprite.Scale.Y = 1f + v * 0.2f;
-        }, false, false));
+        }));
 
         var attachGroup = data.Int("attachGroup", -1);
         var oldMover = staticMover;
         var mover = attachGroup switch {
-            -1 => new StaticMover() {
+            -1 => new StaticMover {
                 OnAttach = oldMover.OnAttach,
             },
             _ => new GroupedStaticMover(attachGroup, true).SetOnAttach(oldMover.OnAttach)
@@ -214,17 +225,10 @@ public class CustomSpring : Spring {
         Add(mover);
         staticMover = mover;
 
-        dyndata.Set("sprite", Sprite);
-        OneUse = data.Bool("oneUse", false);
+        OneUse = data.Bool("oneUse");
         if (OneUse) {
             Add(new Coroutine(OneUseParticleRoutine()));
         }
-    }
-
-
-    [MonoModLinkTo("Celeste.Entity", "System.Void Render()")]
-    public void base_Render() {
-        base.Render();
     }
 
     public override void Update() {
@@ -234,15 +238,24 @@ public class CustomSpring : Spring {
     }
 
     public override void Render() {
-        if (Collidable && !RenderOutline) {
-            Sprite.Render();
-        } else {
-            base.Render();
-        }
+        if (!CameraCullHelper.IsVisible(sprite))
+            return;
+
+        if (Collidable && RenderOutline)
+            sprite.DrawOutlineFast(Color.Black);
+        sprite.Render();
     }
 
     private void NewOnCollide(Player player) {
         if (player.StateMachine.State == Player.StDreamDash || !playerCanUse)
+            return;
+
+        var prevDashes = player.Dashes;
+        var prevStamina = player.Stamina;
+        
+        if (DashRecovery < 0 && prevDashes < -DashRecovery)
+            return;
+        if (StaminaRecovery < 0 && prevStamina < -StaminaRecovery)
             return;
 
         if (Version == 0 && NewOnCollide_Version0(player)) {
@@ -276,7 +289,7 @@ public class CustomSpring : Spring {
 
                 player.varJumpSpeed = player.Speed.Y;
 
-                TryBreak();
+                OnSuccessfulPlayerHit(player, prevDashes, prevStamina);
 
                 if (playerInverted && Orientation == CustomOrientations.Floor || Orientation == CustomOrientations.Ceiling) {
                     TimeBasedClimbBlocker.NoClimbTimer = 4f / 60f;
@@ -290,7 +303,7 @@ public class CustomSpring : Spring {
                     player.Speed *= speedMult;
                     if (MultiplyPlayerY)
                         player.varJumpSpeed = player.Speed.Y;
-                    TryBreak();
+                    OnSuccessfulPlayerHit(player, prevDashes, prevStamina);
                 }
                 break;
             case CustomOrientations.WallRight:
@@ -300,7 +313,7 @@ public class CustomSpring : Spring {
                         player.varJumpSpeed = player.Speed.Y;
                     BounceAnimate();
 
-                    TryBreak();
+                    OnSuccessfulPlayerHit(player, prevDashes, prevStamina);
                 }
                 break;
             default:
@@ -312,6 +325,9 @@ public class CustomSpring : Spring {
     /// Old version of the NewOnCollide method before PR4. This has broken upside-down spring behaviour - it launches the player way too high.
     /// </summary>
     private bool NewOnCollide_Version0(Player player) {
+        var prevDashes = player.Dashes;
+        var prevStamina = player.Stamina;
+        
         switch (Orientation) {
             case CustomOrientations.Floor:
                 if (GravityHelperIntegration.InvertIfPlayerInverted(player.Speed.Y) >= 0f) {
@@ -319,7 +335,7 @@ public class CustomSpring : Spring {
                     GravityHelperIntegration.SuperBounce(player, Top);
                     player.Speed.Y *= speedMult.Y;
 
-                    TryBreak();
+                    OnSuccessfulPlayerHit(player, prevDashes, prevStamina);
                 }
                 return true;
             case CustomOrientations.Ceiling:
@@ -338,7 +354,7 @@ public class CustomSpring : Spring {
                     }
 
                     player.varJumpSpeed = player.Speed.Y;
-                    TryBreak();
+                    OnSuccessfulPlayerHit(player, prevDashes, prevStamina);
 
                     TimeBasedClimbBlocker.NoClimbTimer = 4f / 60f;
                     inactiveTimer = 6f * Engine.DeltaTime;
@@ -348,10 +364,47 @@ public class CustomSpring : Spring {
         return false;
     }
 
-
-    public void TryBreak() {
+    private void OnSuccessfulHit() {
         if (OneUse) {
             Add(new Coroutine(BreakRoutine()));
+        }
+    }
+
+    private void OnSuccessfulPlayerHit(Player player, int prevDashes, float prevStamina) {
+        OnSuccessfulHit();
+
+        switch (DashRecovery) {
+            case DashAndStaminaRecoveryIsARefill:
+                break;
+            case DashAndStaminaRecoveryIsIgnored:
+                player.Dashes = prevDashes;
+                break;
+            case > DashAndStaminaRecoveryIsIgnored:
+                NotificationHelper.Notify($"DashRecovery value of {DashRecovery} is invalid and reserved for future use.\nPlease use a different value!");
+                break;
+            case < 0:
+                player.Dashes = prevDashes + DashRecovery;
+                break;
+            default:
+                player.Dashes = DashRecovery;
+                break;
+        }
+        
+        switch (StaminaRecovery) {
+            case DashAndStaminaRecoveryIsARefill:
+                break;
+            case DashAndStaminaRecoveryIsIgnored:
+                player.Stamina = prevStamina;
+                break;
+            case > DashAndStaminaRecoveryIsIgnored:
+                NotificationHelper.Notify($"StaminaRecovery value of {StaminaRecovery} is invalid and reserved for future use.\nPlease use a different value!");
+                break;
+            case < 0:
+                player.Stamina = prevStamina + StaminaRecovery;
+                break;
+            default:
+                player.Stamina = StaminaRecovery;
+                break;
         }
     }
 
@@ -380,7 +433,7 @@ public class CustomSpring : Spring {
     private void NewOnHoldable(Holdable h) {
         if (h.HitSpring(this)) {
             BounceAnimate();
-            TryBreak();
+            OnSuccessfulHit();
 
             // Apply speed multiplier
             if (h is { SpeedGetter: { }, SpeedSetter: { } }) {
@@ -411,11 +464,11 @@ public class CustomSpring : Spring {
         if (p.HitSpring(this)) {
             p.hitSpeed *= speedMult;
             BounceAnimate();
-            TryBreak();
+            OnSuccessfulHit();
         }
     }
 
-    private static ParticleType P_Crumble_Up = new ParticleType {
+    private static readonly ParticleType P_Crumble_Up = new() {
         Color = Calc.HexToColor("847E87"),
         FadeMode = ParticleType.FadeModes.Late,
         Size = 1f,
@@ -427,7 +480,7 @@ public class CustomSpring : Spring {
         Acceleration = Vector2.UnitY * -20f
     };
 
-    private static ParticleType P_Crumble_Down = new ParticleType {
+    private static readonly ParticleType P_Crumble_Down = new() {
         Color = Calc.HexToColor("847E87"),
         FadeMode = ParticleType.FadeModes.Late,
         Size = 1f,
@@ -439,7 +492,7 @@ public class CustomSpring : Spring {
         Acceleration = Vector2.UnitY * 20f
     };
 
-    private static ParticleType P_Crumble_Left = new ParticleType {
+    private static readonly ParticleType P_Crumble_Left = new() {
         Color = Calc.HexToColor("847E87"),
         FadeMode = ParticleType.FadeModes.Late,
         Size = 1f,
@@ -451,7 +504,7 @@ public class CustomSpring : Spring {
         Acceleration = Vector2.UnitY * 20f
     };
 
-    private static ParticleType P_Crumble_Right = new ParticleType {
+    private static readonly ParticleType P_Crumble_Right = new() {
         Color = Calc.HexToColor("847E87"),
         FadeMode = ParticleType.FadeModes.Late,
         Size = 1f,
@@ -482,6 +535,4 @@ public class CustomSpring : Spring {
             yield return 0.25f;
         }
     }
-
-    public bool OneUse;
 }

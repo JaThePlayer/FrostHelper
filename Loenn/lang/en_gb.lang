@@ -122,24 +122,32 @@ entities.FrostHelper/SpringLeft.attributes.description.directory=Path to the dir
 entities.FrostHelper/SpringLeft.attributes.description.speedMult=The speed multiplier applied after using this spring
 entities.FrostHelper/SpringLeft.attributes.description.oneUse=Whether the spring should disappear after being used once
 entities.FrostHelper/SpringLeft.attributes.description.renderOutline=Whether this spring should render its outline
+entities.FrostHelper/SpringLeft.attributes.description.dashRecovery=Sets the player's dash count to this value upon use.\nNegative values are supported, and will take away dashes, preventing the player from using the spring if they don't have enough.\nA value of 10000 (default) makes it refill dashes to the current dash limit instead.\nA value of 10001 makes it leave dash count unchanged instead.
+entities.FrostHelper/SpringLeft.attributes.description.staminaRecovery=Sets the player's stamina to this value upon use.\nNegative values are supported, and will take away stamina, preventing the player from using the spring if they don't have enough.\nA value of 10000 (default) makes it refill stamina to the current stamina limit instead.\nA value of 10001 makes it leave stamina unchanged instead.
 
 entities.FrostHelper/SpringRight.attributes.description.playerCanUse=Whether the player can use this spring
 entities.FrostHelper/SpringRight.attributes.description.directory=Path to the directory containing the sprites for the spring, relative to Atlases/Gameplay
 entities.FrostHelper/SpringRight.attributes.description.speedMult=The speed multiplier applied after using this spring
 entities.FrostHelper/SpringRight.attributes.description.oneUse=Whether the spring should disappear after being used once
 entities.FrostHelper/SpringRight.attributes.description.renderOutline=Whether this spring should render its outline
+entities.FrostHelper/SpringRight.attributes.description.dashRecovery=Sets the player's dash count to this value upon use.\nNegative values are supported, and will take away dashes, preventing the player from using the spring if they don't have enough.\nA value of 10000 (default) makes it refill dashes to the current dash limit instead.\nA value of 10001 makes it leave dash count unchanged instead.
+entities.FrostHelper/SpringRight.attributes.description.staminaRecovery=Sets the player's stamina to this value upon use.\nNegative values are supported, and will take away stamina, preventing the player from using the spring if they don't have enough.\nA value of 10000 (default) makes it refill stamina to the current stamina limit instead.\nA value of 10001 makes it leave stamina unchanged instead.
 
 entities.FrostHelper/SpringFloor.attributes.description.playerCanUse=Whether the player can use this spring
 entities.FrostHelper/SpringFloor.attributes.description.directory=Path to the directory containing the sprites for the spring, relative to Atlases/Gameplay
 entities.FrostHelper/SpringFloor.attributes.description.speedMult=The speed multiplier applied after using this spring
 entities.FrostHelper/SpringFloor.attributes.description.oneUse=Whether the spring should disappear after being used once
 entities.FrostHelper/SpringFloor.attributes.description.renderOutline=Whether this spring should render its outline
+entities.FrostHelper/SpringFloor.attributes.description.dashRecovery=Sets the player's dash count to this value upon use.\nNegative values are supported, and will take away dashes, preventing the player from using the spring if they don't have enough.\nA value of 10000 (default) makes it refill dashes to the current dash limit instead.\nA value of 10001 makes it leave dash count unchanged instead.
+entities.FrostHelper/SpringFloor.attributes.description.staminaRecovery=Sets the player's stamina to this value upon use.\nNegative values are supported, and will take away stamina, preventing the player from using the spring if they don't have enough.\nA value of 10000 (default) makes it refill stamina to the current stamina limit instead.\nA value of 10001 makes it leave stamina unchanged instead.
 
 entities.FrostHelper/SpringCeiling.attributes.description.playerCanUse=Whether the player can use this spring
 entities.FrostHelper/SpringCeiling.attributes.description.directory=Path to the directory containing the sprites for the spring, relative to Atlases/Gameplay
 entities.FrostHelper/SpringCeiling.attributes.description.speedMult=The speed multiplier applied after using this spring
 entities.FrostHelper/SpringCeiling.attributes.description.oneUse=Whether the spring should disappear after being used once
 entities.FrostHelper/SpringCeiling.attributes.description.renderOutline=Whether this spring should render its outline
+entities.FrostHelper/SpringCeiling.attributes.description.dashRecovery=Sets the player's dash count to this value upon use.\nNegative values are supported, and will take away dashes, preventing the player from using the spring if they don't have enough.\nA value of 10000 (default) makes it refill dashes to the current dash limit instead.\nA value of 10001 makes it leave dash count unchanged instead.
+entities.FrostHelper/SpringCeiling.attributes.description.staminaRecovery=Sets the player's stamina to this value upon use.\nNegative values are supported, and will take away stamina, preventing the player from using the spring if they don't have enough.\nA value of 10000 (default) makes it refill stamina to the current stamina limit instead.\nA value of 10001 makes it leave stamina unchanged instead.
 
 # Custom Flutterbird
 entities.FrostHelper/CustomFlutterBird.placements.name.normal=Custom Flutterbird
@@ -567,6 +575,7 @@ triggers.FrostHelper/CustomRisingLavaStartHeightTrigger.placements.name.normal=C
 triggers.FrostHelper/DoorDisableTrigger.placements.name.default=Disable Door
 
 triggers.FrostHelper/FlagIfVisibleTrigger.placements.name.default=Flag If Visible
+triggers.FrostHelper/FlagIfVisibleTrigger.placements.description.default=Sets a flag if the trigger is in view.
 
 triggers.FrostHelper/FlagInvertTrigger.placements.name.default=Flag Invert
 triggers.FrostHelper/FlagInvertTrigger.placements.description.default=Inverts the value of a given flag.
@@ -794,6 +803,7 @@ triggers.FrostHelper/CounterDisplay.attributes.description.textColor=The color t
 triggers.FrostHelper/CounterDisplay.attributes.description.iconColor=The color to use to tint the icon.
 triggers.FrostHelper/CounterDisplay.attributes.description.icon=The path to the icon to use for this timer, relative to Graphics/Atlases/Gameplay. Leave blank for no icon.
 triggers.FrostHelper/CounterDisplay.attributes.description.removeFlag=The flag which removes this display from the screen.
+triggers.FrostHelper/CounterDisplay.attributes.description.visibleFlag=The flag which needs to be set for this display to be visible.\nDoes not actually remove the display.\nPut a '!' at the start to invert this logic.
 
 triggers.FrostHelper/TimerChange.placements.name.default=Timer Change
 triggers.FrostHelper/TimerChange.placements.description.default=Changes how much time is left on a timer started by the Timer trigger.
