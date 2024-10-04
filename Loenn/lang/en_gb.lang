@@ -492,7 +492,7 @@ entities.FrostHelper/BloomBlocker.attributes.description.windingOrder=The windin
 entities.FrostHelper/FlagCounterController.placements.name.default=Flag To Counter Controller
 entities.FrostHelper/FlagCounterController.placements.description.default=Counts how many of the provided flags are set, and sets a Session Counter to that value.
 entities.FrostHelper/FlagCounterController.attributes.description.counter=The Session Counter which should be controlled by this entity.
-entities.FrostHelper/FlagCounterController.attributes.description.flags=List of flags to check, comma-seperated.\nWrite a '!' before the flag name to invert the condition.
+entities.FrostHelper/FlagCounterController.attributes.description.flags=List of flags to check, comma-seperated.\nWrite a '!' before the flag name to invert the condition.\nWriting a flag in the format `flagName;value` will add `value` to the session counter if that flag is set, instead of the default 1.
 
 entities.FrostHelper/FlagIfCounterController.placements.name.default=Flag If Counter Controller
 entities.FrostHelper/FlagIfCounterController.placements.description.default=Sets a flag if a Session Counter condition is met, and clears that flag otherwise.

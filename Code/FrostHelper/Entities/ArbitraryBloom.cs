@@ -8,7 +8,7 @@ internal sealed class ArbitraryBloomEntity : Entity {
     public ArbitraryBloom Bloom { get; }
 
     public ArbitraryBloomEntity(EntityData data, Vector2 offset) : base(data.Position + offset) {
-        Bloom = new(data.Float("alpha", 1f), ArbitraryShapeEntityHelper.GetFillFromNodes(data, -(data.Position + offset)), () => Position);
+        Bloom = new(data.Float("alpha", 1f), ArbitraryShapeEntityHelper.GetFillFromNodes(data, offset), () => Position - (data.Position + offset));
     }
 
     public override void Added(Scene scene) {

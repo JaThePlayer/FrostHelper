@@ -40,11 +40,11 @@ public class RainbowTilesetController : Entity {
         }
     }
 
-    private static RainbowTilesetController getController() {
-        return Engine.Scene.Tracker.SafeGetEntity<RainbowTilesetController>()!;
+    private static RainbowTilesetController? getController() {
+        return Engine.Scene.Tracker.SafeGetEntity<RainbowTilesetController>();
     }
 
-    private static Color getColor(Color col, Vector2 position, MTexture texture, TileGrid self, RainbowTilesetController controller) {
+    private static Color getColor(Color col, Vector2 position, MTexture texture, TileGrid self, RainbowTilesetController? controller) {
         if (controller is { } && contains(controller.TilesetTextures, texture.Parent)) {
             return ColorHelper.GetHue(Engine.Scene, position) * self.Alpha;
         }
