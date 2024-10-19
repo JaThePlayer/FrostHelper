@@ -5,7 +5,9 @@ namespace FrostHelper.Triggers;
 [CustomEntity("FrostHelper/SessionCounterTrigger")]
 internal sealed class SessionCounterTrigger : Trigger {
     public readonly CounterOperation Operation;
-    public readonly bool ClearOnSpawn;
+    private readonly bool _clearOnSpawn;
+
+    private readonly bool _once;
 
     private readonly CounterAccessor _counter;
     private readonly CounterExpression _value;
@@ -35,12 +37,13 @@ internal sealed class SessionCounterTrigger : Trigger {
         _value = new(data.Attr("value", "0"));
         
         Operation = data.Enum("operation", CounterOperation.Set);
-        ClearOnSpawn = data.Bool("clearOnSpawn", false);
+        _clearOnSpawn = data.Bool("clearOnSpawn", false);
+        _once = data.Bool("once");
     }
 
     public override void Added(Scene scene) {
         base.Added(scene);
-        if (ClearOnSpawn && scene is Level level) {
+        if (_clearOnSpawn && scene is Level level) {
             _counter.Set(level.Session, 0);
         }
     }
@@ -101,6 +104,9 @@ internal sealed class SessionCounterTrigger : Trigger {
                 default:
                     throw new ArgumentOutOfRangeException(nameof(Operation));
             }
+            
+            if (_once)
+                RemoveSelf();
         }
     }
 }

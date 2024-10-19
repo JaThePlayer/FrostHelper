@@ -112,12 +112,13 @@ internal sealed class CustomDustGraphic : DustGraphic {
 
         var gd = Engine.Graphics.GraphicsDevice;
         var b = Draw.SpriteBatch;
+        var gb = GameplayBuffers.Gameplay;
 
         Vector2 cam = self.FlooredCamera();
         GFX.FxDust.Parameters["noiseEase"].SetValue(self.noiseEase);
-        GFX.FxDust.Parameters["noiseFromPos"].SetValue(self.noiseFromPos + new Vector2(cam.X / 320f, cam.Y / 180f));
-        GFX.FxDust.Parameters["noiseToPos"].SetValue(self.noiseToPos + new Vector2(cam.X / 320f, cam.Y / 180f));
-        GFX.FxDust.Parameters["pixel"].SetValue(new Vector2(0.003125f, 0.00555555569f));
+        GFX.FxDust.Parameters["noiseFromPos"].SetValue(self.noiseFromPos + new Vector2(cam.X / gb.Width, cam.Y / gb.Height));
+        GFX.FxDust.Parameters["noiseToPos"].SetValue(self.noiseToPos + new Vector2(cam.X / gb.Width, cam.Y / gb.Height));
+        GFX.FxDust.Parameters["pixel"].SetValue(new Vector2(0.003125f * 320f / gb.Width, 0.00555555569f * 180f / gb.Height));
 
         if (self.DustNoiseFrom == null || self.DustNoiseFrom.IsDisposed) {
             self.CreateTextures();

@@ -95,7 +95,7 @@ public class Bubbler : Entity {
     public override void Render() {
         base.Render();
 
-        if (previewSprite is { } && CameraCullHelper.IsVisible(FrostModule.GetCurrentLevel().Camera.Position, previewSprite)) {
+        if (previewSprite is { } && CameraCullHelper.IsVisible(previewSprite)) {
             DreamySpriteHelper.DrawDreamySprite(previewSprite, speed: 2f, maxOffset: 1.3f);
         }
     }

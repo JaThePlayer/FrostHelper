@@ -16,4 +16,28 @@ internal sealed class SealedImage : Image {
         base.JustifyOrigin(vec);
         return this;
     }
+
+    public new SealedImage SetOrigin(float x, float y) {
+        base.SetOrigin(x, y);
+        return this;
+    }
+    
+    public new SealedImage CenterOrigin() {
+        base.CenterOrigin();
+        return this;
+    }
+    
+    public override void Render()
+    {
+        float scaleFix = Texture.ScaleFix;
+        Draw.SpriteBatch.Draw(Texture.Texture.Texture_Safe, RenderPosition, Texture.ClipRect, Color, Rotation, 
+            (Origin - Texture.DrawOffset) / scaleFix, Scale * scaleFix, Effects, 0.0f);
+    }
+    
+    public void RenderWithColor(Color color)
+    {
+        float scaleFix = Texture.ScaleFix;
+        Draw.SpriteBatch.Draw(Texture.Texture.Texture_Safe, RenderPosition, Texture.ClipRect, color, Rotation, 
+            (Origin - Texture.DrawOffset) / scaleFix, Scale * scaleFix, Effects, 0.0f);
+    }
 }

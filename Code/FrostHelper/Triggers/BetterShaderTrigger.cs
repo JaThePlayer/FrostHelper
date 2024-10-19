@@ -51,10 +51,10 @@ public class BetterShaderTrigger : Trigger {
         VirtualRenderTarget tempA = GameplayBuffers.TempA;
 
         Engine.Instance.GraphicsDevice.SetRenderTarget(tempA);
+        Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
 
         Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone, null, Matrix.Identity);
 
-        Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
         Draw.SpriteBatch.Draw(source, Vector2.Zero, Color.White);
 
         GameplayRenderer.End();

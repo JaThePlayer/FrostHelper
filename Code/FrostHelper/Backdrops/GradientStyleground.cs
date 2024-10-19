@@ -36,6 +36,12 @@ internal sealed class GradientStyleground : Backdrop {
             shouldRerender = true;
             cachedPosition = Position;
         }
+
+        if (renderTarget is { } && GameplayBuffers.Gameplay.Width != renderTarget.Width) {
+            renderTarget.Dispose();
+            renderTarget = null;
+            shouldRerender = true;
+        }
         
         if (shouldRerender) {
             renderTarget ??= RenderTargetHelper.RentFullScreenBuffer();
@@ -53,8 +59,9 @@ internal sealed class GradientStyleground : Backdrop {
     public override void Render(Scene scene) {
         if (renderTarget is null)
             return;
-        
-        Draw.SpriteBatch.Draw(renderTarget, Vector2.Zero, Color.White);
+
+        var scale = scene is Level level ? 1f / level.Zoom : 1f;
+        Draw.SpriteBatch.Draw(renderTarget, default, null, Color.White, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
     }
 
     public override void Ended(Scene scene) {

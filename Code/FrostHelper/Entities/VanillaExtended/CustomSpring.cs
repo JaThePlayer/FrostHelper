@@ -97,6 +97,12 @@ public class CustomSpring : Spring {
     
     public bool OneUse;
 
+
+    /// <summary>
+    /// Whether the spring should always activate, regardless of the player's/holdable/fish speed.
+    /// </summary>
+    public bool AlwaysActivate;
+
     /// <summary>
     /// Sentinel value for <see cref="DashRecovery"/> and <see cref="StaminaRecovery"/>,
     /// which makes them refill your dashes/stamina instead of adding/removing from it.
@@ -229,6 +235,8 @@ public class CustomSpring : Spring {
         if (OneUse) {
             Add(new Coroutine(OneUseParticleRoutine()));
         }
+
+        AlwaysActivate = data.Bool("alwaysActivate", false);
     }
 
     public override void Update() {
@@ -267,8 +275,8 @@ public class CustomSpring : Spring {
             case CustomOrientations.Ceiling:
                 // weird check here to fix buffered spring cancels
                 var realY = GravityHelperIntegration.InvertIfPlayerInverted(player.Speed.Y);
-                if (Orientation == CustomOrientations.Floor && realY < 0 ||
-                    Orientation == CustomOrientations.Ceiling && (realY > 0 || realY == 0 && inactiveTimer > 0)) {
+                if (!AlwaysActivate && (Orientation == CustomOrientations.Floor && realY < 0 ||
+                    Orientation == CustomOrientations.Ceiling && (realY > 0 || realY == 0 && inactiveTimer > 0))) {
                     return;
                 }
 
@@ -298,6 +306,12 @@ public class CustomSpring : Spring {
 
                 break;
             case CustomOrientations.WallLeft:
+                // If AlwaysActivate is enabled, we'll set the player's speed to the target direction,
+                // to make the early return in player.SideBounce never activate.
+                // Alternatively, player.SideBounce could be hooked to do this, but that's more work and overhead :p
+                if (AlwaysActivate)
+                    player.Speed.X = 1;
+                
                 if (player.SideBounce(1, Right, CenterY)) {
                     BounceAnimate();
                     player.Speed *= speedMult;
@@ -307,6 +321,10 @@ public class CustomSpring : Spring {
                 }
                 break;
             case CustomOrientations.WallRight:
+                // read comment in case WallLeft
+                if (AlwaysActivate)
+                    player.Speed.X = -1;
+                
                 if (player.SideBounce(-1, Left, CenterY)) {
                     player.Speed *= speedMult;
                     if (MultiplyPlayerY)
@@ -330,7 +348,7 @@ public class CustomSpring : Spring {
         
         switch (Orientation) {
             case CustomOrientations.Floor:
-                if (GravityHelperIntegration.InvertIfPlayerInverted(player.Speed.Y) >= 0f) {
+                if (AlwaysActivate || GravityHelperIntegration.InvertIfPlayerInverted(player.Speed.Y) >= 0f) {
                     BounceAnimate();
                     GravityHelperIntegration.SuperBounce(player, Top);
                     player.Speed.Y *= speedMult.Y;
@@ -340,9 +358,10 @@ public class CustomSpring : Spring {
                 return true;
             case CustomOrientations.Ceiling:
                 // weird check here to fix buffered spring cancels
-                if (GravityHelperIntegration.InvertIfPlayerInverted(player.Speed.Y) < 0f
-                    || (player.Speed.Y == 0f && inactiveTimer <= 0f)
-                ) {
+                if (AlwaysActivate || (
+                        GravityHelperIntegration.InvertIfPlayerInverted(player.Speed.Y) < 0f
+                        || (player.Speed.Y == 0f && inactiveTimer <= 0f)
+                )) {
                     BounceAnimate();
 
                     if (GravityHelperIntegration.IsPlayerInverted?.Invoke() ?? false) {

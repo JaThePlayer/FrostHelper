@@ -228,7 +228,7 @@ public static class ShaderHelperIntegration {
 
         parameters["DeltaTime"]?.SetValue(Engine.DeltaTime);
         parameters["Time"]?.SetValue(Engine.Scene.TimeActive);
-        parameters["Dimensions"]?.SetValue(new Vector2(320, 180) * HDlesteCompat.Scale);
+        parameters["Dimensions"]?.SetValue(new Vector2(GameplayBuffers.Gameplay.Width, GameplayBuffers.Gameplay.Height));
         parameters["CamPos"]?.SetValue(level.Camera.Position);
         parameters["ColdCoreMode"]?.SetValue(level.CoreMode == Session.CoreModes.Cold);
 

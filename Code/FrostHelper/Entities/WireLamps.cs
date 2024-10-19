@@ -163,7 +163,7 @@ public class WireLamps : Entity {
 
         Curve.Control = (Curve.Begin + Curve.End) / 2f + new Vector2(0f, 24f) + (controlOffset * Wobbliness);
 
-        if (!CameraCullHelper.IsVisible(level.Camera.Position, Curve))
+        if (!CameraCullHelper.IsVisible(Curve))
             return;
 
         var start = Curve.Begin;

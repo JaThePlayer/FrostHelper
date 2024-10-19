@@ -180,11 +180,15 @@ internal static class DecalContainerHelpers {
 
         float lenienceX = hw;
         float lenienceY = hh;
+        
+        // todo: delay loading this gp buffer?
+        // todo: SIMD?
+        var gb = GameplayBuffers.Gameplay;
 
         return x + hw >= cam.X - lenienceX
-            && x - hw <= cam.X + 320f + lenienceX
+            && x - hw <= cam.X + gb.Width + lenienceX
             && y + hh >= cam.Y - lenienceY
-            && y - hh <= cam.Y + 180f + lenienceY;
+            && y - hh <= cam.Y + gb.Height + lenienceY;
     }
 
     internal static void SetScene(Decal item, Scene scene) {
@@ -277,10 +281,12 @@ public class DecalContainer {
 
         const float lenience = 64f;
 
+        var gb = GameplayBuffers.Gameplay;
+
         return x + w >= camX - lenience
-            && x <= camX + 320f + lenience
+            && x <= camX + gb.Width + lenience
             && y + h >= camY - lenience
-            && y <= camY + 180f + lenience;
+            && y <= camY + gb.Height + lenience;
     }
 
     public void Render(Level level) {

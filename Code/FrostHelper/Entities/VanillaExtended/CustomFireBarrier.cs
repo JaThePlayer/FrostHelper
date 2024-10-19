@@ -1,4 +1,6 @@
-﻿namespace FrostHelper;
+﻿using System.Runtime.CompilerServices;
+
+namespace FrostHelper;
 
 [CustomEntity("FrostHelper/CustomFireBarrier")]
 public class CustomFireBarrier : Entity {
@@ -112,10 +114,9 @@ public class CustomFireBarrier : Entity {
         player.Die((player.Center - Center).SafeNormalize(), false, true);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private bool InView() {
-        Camera camera = (Scene as Level)!.Camera;
-        //Logger.Log(lavaRect.Location.ToString(), new Point((int)camera.Position.X, (int)camera.Position.Y).ToString());
-        return lavaRect.Location.X + lavaRect.Width > camera.X - 16f && lavaRect.Location.Y + lavaRect.Height > camera.Y - 16f && lavaRect.Location.X < camera.X + 320f + 16f && lavaRect.Location.Y < camera.Y + 180f + 16f;//lavaRect.Contains(new Point((int)camera.Position.X, (int)camera.Position.Y));//
+        return CameraCullHelper.IsRectangleVisible(lavaRect, lenience: 16f);
     }
 
     public override void Update() {

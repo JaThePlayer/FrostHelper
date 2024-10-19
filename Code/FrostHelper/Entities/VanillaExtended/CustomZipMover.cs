@@ -571,7 +571,7 @@ public sealed class CustomZipMover : Solid {
                 // Set the pixel so that shapes we draw can be rendered in the same draw call
                 Draw.Pixel = zipper.CurrentSource.Pixel();
                 
-                if (CameraCullHelper.IsRectVisible(cam, from, to)) {
+                if (CameraCullHelper.IsLineVisible(from, to)) {
                     DrawCogs(zipper, Vector2.Zero, null);
                 }
 

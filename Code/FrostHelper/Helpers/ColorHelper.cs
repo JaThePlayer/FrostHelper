@@ -92,7 +92,7 @@ public static class ColorHelper {
     // Based on Communal Helper:
 
     // Used to maintain compatibility with Maddie's Helping Hand RainbowSpinnerColorController
-    private static CrystalStaticSpinner crystalSpinner;
+    private static CrystalStaticSpinner? crystalSpinner;
 
     public static void SetGetHueScene(Scene scene) {
         crystalSpinner ??= new CrystalStaticSpinner(Vector2.Zero, false, CrystalColor.Rainbow);
@@ -106,7 +106,7 @@ public static class ColorHelper {
     /// <param name="position"></param>
     /// <returns></returns>
     public static Color GetHue(Vector2 position) {
-        return crystalSpinner.GetHue(position);
+        return crystalSpinner!.GetHue(position);
     }
 
     public static Color GetHue(Scene scene, Vector2 position) {

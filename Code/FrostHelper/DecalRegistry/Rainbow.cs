@@ -21,20 +21,20 @@ internal sealed class RainbowDecalRegistryHandler : DecalRegistryHandler {
     }
 }
 
-internal sealed class RainbowDecalMarker() : Component(active: true, visible: false) {
+internal sealed class RainbowDecalMarker() : Component(active: false, visible: true) {
     public override void EntityAwake() {
         base.EntityAwake();
         UpdateHue();
     }
 
-    public override void Update() {
+    public override void Render() {
         UpdateHue();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void UpdateHue() {
         if (Entity is Decal d) {
-            d.Color = ColorHelper.GetHue(Scene, d.Position);
+            d.Color = ColorHelper.GetHue(d.Scene, d.Position);
         }
     }
 }

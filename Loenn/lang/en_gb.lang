@@ -765,7 +765,8 @@ triggers.FrostHelper/RandomizeSessionCounterTrigger.placements.description.defau
 triggers.FrostHelper/RandomizeSessionCounterTrigger.attributes.description.counter=The session counter to change.
 triggers.FrostHelper/RandomizeSessionCounterTrigger.attributes.description.min=Minimum value to be generated (Inclusive).\nCan be an integer, OR the name of a different session counter.\nDecimal numbers are NOT supported.
 triggers.FrostHelper/RandomizeSessionCounterTrigger.attributes.description.max=Maximum value to be generated (Inclusive).\nCan be an integer, OR the name of a different session counter.\nDecimal numbers are NOT supported.
-triggers.FrostHelper/RandomizeSessionCounterTrigger.attributes.description.seeded=Whether the randomness should be seeded.\nWARNING: Disabling this option for gameplay-relevant mechanics makes the map un-TASable!
+triggers.FrostHelper/RandomizeSessionCounterTrigger.attributes.description.seedMode=Determines how the RNG should be seeded.\n- SessionTime: Based on the session timer, great for TAS-friendly pseudo-rng that appears random to casuals.\n- RoomSeed: Random values will always be the same in the same room, even between deaths.\n-FullRandom: The RNG is completely random, not TAS-friendly.\n-Custom: Allows providing a custom seed via the `seed` parameter.
+triggers.FrostHelper/RandomizeSessionCounterTrigger.attributes.description.seed=If `Seed Mode` is `Custom`, specifies the custom seed to use for this trigger.
 
 # FrostHelper/NoMovementTrigger
 triggers.FrostHelper/NoMovementTrigger.placements.name.default=No Movement

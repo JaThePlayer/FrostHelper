@@ -1,7 +1,7 @@
 ﻿namespace FrostHelper.ModIntegration;
 
 public static class HDlesteCompat {
-    public static int Scale => GameplayBuffers.Gameplay.Width / 320;
+    public static int Scale => 1; //GameplayBuffers.Gameplay.Width / 320;
 
     public static Vector2 GameplayPosToHiResPos(Vector2 pos) {
         if (Engine.Scene is Level level)

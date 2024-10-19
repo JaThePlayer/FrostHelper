@@ -114,6 +114,8 @@ public class CustomSpinner : Entity {
 
     private readonly BloomPoint? _bloomPoint;
 
+    internal readonly List<SealedImage> _images = new();
+
     public CustomSpinner(EntityData data, Vector2 offset) : this(data, offset, data.Bool("attachToSolid", false), data.Attr("directory", "danger/FrostHelper/icecrystal"), data.Attr("destroyColor", "639bff"), data.Bool("isCore", false), data.Attr("tint", "ffffff")) { }
 
     public CustomSpinner(EntityData data, Vector2 position, bool attachToSolid, string directory, string destroyColor, bool isCore, string tint) : base(data.Position + position) {
@@ -211,7 +213,8 @@ public class CustomSpinner : Entity {
         UpdateController();
         
         base.Awake(scene);
-        if (InView()) {
+
+        if (GameplayBuffers.Gameplay is { } ? InView() : InView(new(320f, 180f))) {
             CreateSprites();
         }
     }
@@ -231,10 +234,8 @@ public class CustomSpinner : Entity {
 
     public void UpdateHue() {
         ColorHelper.SetGetHueScene(Scene);
-        foreach (Component component in Components) {
-            if (component is SealedImage image) {
-                image.Color = ColorHelper.GetHue(Position + image.Position);
-            }
+        foreach (var image in CollectionsMarshal.AsSpan(_images)) {
+            image.Color = ColorHelper.GetHue(Position + image.Position);
         }
         if (filler != null) {
             var fills = CollectionsMarshal.AsSpan(filler.Fills);
@@ -251,10 +252,8 @@ public class CustomSpinner : Entity {
 
         Tint = color;
 
-        foreach (Component component in Components) {
-            if (component is SealedImage image) {
-                image.Color = color;
-            }
+        foreach (var image in CollectionsMarshal.AsSpan(_images)) {
+            image.Color = color;
         }
 
         if (filler != null) {
@@ -287,7 +286,7 @@ public class CustomSpinner : Entity {
 
         expanded = false;
         SetVisible(false);
-        Components.RemoveAll<SealedImage>();
+        _images.Clear();
     }
 
 
@@ -351,16 +350,31 @@ public class CustomSpinner : Entity {
             return;
 
         base.Render();
+        foreach (var img in CollectionsMarshal.AsSpan(_images)) {
+            img.Render();
+        }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private bool InView() {
-        var camera = (Scene as Level)?.Camera;
-        if (camera is null)
-            return true;
+        var gp = GameplayBuffers.Gameplay;
+        
+        return InView(new(gp.Width, gp.Height));
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private bool InView(System.Numerics.Vector2 gpBufferSize) {
+        var camera = (Scene as Level)?.Camera!;
 
-        var diff = Position - camera.position;
-        return diff.X > -16f && diff.Y > -16f && diff.X < 336f && diff.Y < 196f;
+        var diff = Unsafe.As<Vector2, System.Numerics.Vector2>(ref Position);
+        diff -= Unsafe.As<Vector2, System.Numerics.Vector2>(ref camera.position);
+        diff += new System.Numerics.Vector2(16f, 16f);
+        if (diff.X <= 0f || diff.Y <= 0f)
+            return false;
+        diff -= gpBufferSize;
+        diff -= new System.Numerics.Vector2(32f, 32f);
+            
+        return diff.X < 0f && diff.Y < 0f;
     }
 
     private void UnregisterFromRenderers() {
@@ -385,6 +399,11 @@ public class CustomSpinner : Entity {
         }
     }
 
+    private void AddImage(SealedImage img) {
+        _images.Add(img);
+        img.Entity = this;
+    }
+    
     private bool ShouldUseHotSprites() => isCore && (Scene as Level)!.CoreMode == Session.CoreModes.Hot;
     
     private void CreateSprites() {
@@ -432,7 +451,7 @@ public class CustomSpinner : Entity {
             if (imgCount == 4) {
                 var image = new SealedImage(fgTexture).CenterOrigin();
                 image.Color = Tint;
-                Add(image);
+                AddImage(image);
                 image.Active = false;
             } else {
                 // only spawn quarter images if it's needed to avoid edge cases
@@ -458,24 +477,24 @@ public class CustomSpinner : Entity {
     }
 
     private void AddCornerImages(MTexture mtexture, bool topLeft, bool topRight, bool bottomLeft, bool bottomRight) {
-        Image image;
+        SealedImage image;
 
         if (topLeft && topRight) {
             image = new SealedImage(mtexture.GetSubtexture(0, 0, 28, 14, null)).SetOrigin(12f, 12f);
             image.Color = Tint;
-            Add(image);
+            AddImage(image);
             image.Active = false;
         } else {
             if (topLeft) {
                 image = new SealedImage(mtexture.GetSubtexture(0, 0, 14, 14, null)).SetOrigin(12f, 12f);
                 image.Color = Tint;
-                Add(image);
+                AddImage(image);
                 image.Active = false;
             }
             if (topRight) {
                 image = new SealedImage(mtexture.GetSubtexture(10, 0, 14, 14, null)).SetOrigin(2f, 12f);
                 image.Color = Tint;
-                Add(image);
+                AddImage(image);
                 image.Active = false;
             }
         }
@@ -483,19 +502,19 @@ public class CustomSpinner : Entity {
         if (bottomLeft && bottomRight) {
             image = new SealedImage(mtexture.GetSubtexture(0, 10, 28, 14, null)).SetOrigin(12f, 2f);
             image.Color = Tint;
-            Add(image);
+            AddImage(image);
             image.Active = false;
         } else {
             if (bottomLeft) {
                 image = new SealedImage(mtexture.GetSubtexture(10, 10, 14, 14, null)).SetOrigin(2f, 2f);
                 image.Color = Tint;
-                Add(image);
+                AddImage(image);
                 image.Active = false;
             }
             if (bottomRight) {
                 image = new SealedImage(mtexture.GetSubtexture(0, 10, 14, 14, null)).SetOrigin(12f, 2f);
                 image.Color = Tint;
-                Add(image);
+                AddImage(image);
                 image.Active = false;
             }
         }
@@ -578,11 +597,9 @@ public class CustomSpinner : Entity {
     internal Vector2 ShakeAmt;
     
     private void OnShake(Vector2 amount) {
-        foreach (Component component in Components) {
-            if (component is SealedImage image) {
-                // change from vanilla: instead of setting the position, add to it.
-                image.Position += amount;
-            }
+        foreach (var image in CollectionsMarshal.AsSpan(_images)) {
+            // change from vanilla: instead of setting the position, add to it.
+            image.Position += amount;
         }
 
         ShakeAmt += amount;
@@ -669,8 +686,6 @@ public class SpinnerConnectorRenderer : Entity {
     private void DrawFills<T>(T colorGetter) where T : struct, IFillColorGetter {
         var spinners = CollectionsMarshal.AsSpan(Spinners);
         var batch = Draw.SpriteBatch;
-        if (batch is null)
-            return;
         
         foreach (var spinner in spinners) {
             if (spinner is not { Visible: true, filler: { } filler })
@@ -806,23 +821,16 @@ public class SpinnerBorderRenderer : Entity {
             connectorRenderer?.ForceRender();
             
             foreach (var spinner in spinners) {
-                foreach (var component in CollectionsMarshal.AsSpan(spinner.Components.components)) {
-                    if (component is SealedImage img) {
-                        img.Render();
-                    }
+                foreach (var img in CollectionsMarshal.AsSpan(spinner._images)) {
+                    img.Render();
                 }
             }
         } else {
             connectorRenderer?.ForceRenderWithColor(borderColor);
             
             foreach (var spinner in spinners) {
-                foreach (var component in CollectionsMarshal.AsSpan(spinner.Components.components)) {
-                    if (component is SealedImage img) {
-                        var c = img.Color;
-                        img.Color = borderColor;
-                        img.Render();
-                        img.Color = c;
-                    }
+                foreach (var img in CollectionsMarshal.AsSpan(spinner._images)) {
+                    img.RenderWithColor(borderColor);
                 }
             }
         }
@@ -843,11 +851,10 @@ public class SpinnerBorderRenderer : Entity {
         var renderPos = cam.Position.Floor();
         var finalColor = useImageColor ? borderColor : Color.White;
 
-        float scale = 1f / HDlesteCompat.Scale;
-        batch.Draw(target, renderPos - Vector2.UnitY, null, finalColor, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
-        batch.Draw(target, renderPos + Vector2.UnitY, null, finalColor, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
-        batch.Draw(target, renderPos - Vector2.UnitX, null, finalColor, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
-        batch.Draw(target, renderPos + Vector2.UnitX, null, finalColor, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
+        batch.Draw(target, renderPos - Vector2.UnitY, null, finalColor);
+        batch.Draw(target, renderPos + Vector2.UnitY, null, finalColor);
+        batch.Draw(target, renderPos - Vector2.UnitX, null, finalColor);
+        batch.Draw(target, renderPos + Vector2.UnitX, null, finalColor);
 
         if (effect is { }) {
             GameplayRenderer.End();
@@ -855,7 +862,7 @@ public class SpinnerBorderRenderer : Entity {
         }
 
         if (blackOutlineOpt) {
-            batch.Draw(target, renderPos, null, Color.White, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
+            batch.Draw(target, renderPos, null, Color.White);
         }
         
         RenderTargetHelper.ReturnFullScreenBuffer(target);
@@ -867,13 +874,11 @@ public class SpinnerBorderRenderer : Entity {
         var spinners = CollectionsMarshal.AsSpan(Spinners);
         foreach (var item in spinners) {
             var color = item.BorderColor;
-            var spinnerComponents = item.Components.components;
+            var spinnerComponents = CollectionsMarshal.AsSpan(item._images);
 
-            foreach (var component in spinnerComponents) {
-                if (component is SealedImage img) {
-                    // todo: figure out the offsets properly so that OutlineHelper can be used
-                    DrawBorder(img, color);
-                }
+            foreach (var img in spinnerComponents) {
+                // todo: figure out the offsets properly so that OutlineHelper can be used
+                DrawBorder(img, color);
             }
 
             if (item.filler == null)

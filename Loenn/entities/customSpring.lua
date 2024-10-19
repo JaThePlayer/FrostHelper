@@ -78,6 +78,7 @@ local function createSpringHandler(name, spriteRotation, speedAsVector)
         { "oneUse", false },
         { "playerCanUse", true },
         { "renderOutline", true },
+        -- { "alwaysActivate", false }, --todo - puffers, holdables (if thats even possible???)
     })
 
     return handler

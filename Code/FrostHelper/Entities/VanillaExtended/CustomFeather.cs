@@ -349,7 +349,7 @@ public class CustomFeather : Entity {
         Collider = new Hitbox(20f, 20f, -10f, -10f);
         Add(new PlayerCollider(OnPlayer, null, null));
         string path = data.Attr("spritePath", "objects/flyFeather/").Replace('\\', '/');
-        if (path[path.Length - 1] != '/') {
+        if (!path.EndsWith('/')) {
             path += '/';
         }
         sprite = new Sprite(GFX.Game, path) {
@@ -369,12 +369,12 @@ public class CustomFeather : Entity {
         Add(bloom = new BloomPoint(0.5f, 20f));
         Add(light = new VertexLight(Color.White, 1f, 16, 48));
         Add(sine = new SineWave(0.6f, 0f).Randomize());
-        Add(outline = new Image(GFX.Game[data.Attr("outlinePath", "objects/flyFeather/outline")]));
+        Add(outline = new Image(GFX.Game[$"{path}outline"]));
         outline.CenterOrigin();
         outline.Visible = false;
-        shieldRadiusWiggle = Wiggler.Create(0.5f, 4f, null, false, false);
+        shieldRadiusWiggle = Wiggler.Create(0.5f, 4f);
         Add(shieldRadiusWiggle);
-        moveWiggle = Wiggler.Create(0.8f, 2f, null, false, false);
+        moveWiggle = Wiggler.Create(0.8f, 2f);
         moveWiggle.StartZero = true;
         Add(moveWiggle);
         UpdateY();

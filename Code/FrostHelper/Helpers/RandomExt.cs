@@ -8,7 +8,7 @@ public static class RandomExt {
         ulong ix = *(uint*) &x;//Unsafe.As<float, uint>(ref x);
         ulong iy = *(uint*) &y;//Unsafe.As<float, uint>(ref y);
 
-        return splitmix64(ix ^ iy << 32);
+        return Splitmix64(ix ^ iy << 32);
     }
 
     /// <summary>
@@ -36,6 +36,8 @@ public static class RandomExt {
 
         return values[pos.SeededRandomInclusive(0, len - 1)];
     }
+    
+    public static int RandomInclusive(ulong seed, int min, int max) => min + (int) (Splitmix64(seed) % (ulong) (max - min + 1));
 
     #region Splitmix64
     /*  Written in 2015 by Sebastiano Vigna (vigna@acm.org)
@@ -53,7 +55,7 @@ public static class RandomExt {
     It is a very fast generator passing BigCrush, and it can be useful if
     for some reason you absolutely want 64 bits of state.
     */
-    static ulong splitmix64(ulong seed) {
+    private static ulong Splitmix64(ulong seed) {
         ulong z = seed += 0x9e3779b97f4a7c15;
         z = (z ^ z >> 30) * 0xbf58476d1ce4e5b9;
         z = (z ^ z >> 27) * 0x94d049bb133111eb;
