@@ -153,6 +153,14 @@ for _, ease in ipairs(easings) do
     easingDict[ease] = true
 end
 
+
+jautils.counterTimeUnits = {
+    "Milliseconds",
+    "Seconds",
+    "Minutes",
+    "Hours"
+}
+
 jautils.counterOperations = {
     "Equal",
     "NotEqual",
@@ -884,7 +892,6 @@ local triggers = require("triggers")
 ---@return table triggerHandler
 function jautils.addExtendedText(triggerHandler, getter)
     if not getter then return triggerHandler end
-    --triggerHandler._lonnExt_extendedText = getter
 
     triggerHandler.triggerText = function (room, trigger)
         local text = triggers.getDrawableDisplayText(trigger)

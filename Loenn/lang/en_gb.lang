@@ -501,6 +501,11 @@ entities.FrostHelper/FlagIfCounterController.attributes.description.counter=The 
 entities.FrostHelper/FlagIfCounterController.attributes.description.target=Target value of the counter.\nCan be an integer, OR the name of a different session counter.\nDecimal numbers are NOT supported.
 entities.FrostHelper/FlagIfCounterController.attributes.description.operation=The comparison operation to use to compare the counter to target.
 
+entities.FrostHelper/TimeToCounterController.placements.name.default=Time To Counter Controller
+entities.FrostHelper/TimeToCounterController.placements.description.default=Sets a Session Counter to the value of the Session Timer or the Savefile Timer.
+entities.FrostHelper/TimeToCounterController.attributes.description.counter=The Session Counter which should be set by this entity.
+entities.FrostHelper/TimeToCounterController.attributes.description.unit=The time measurement unit to use.\nWARNING: If using milliseconds, the counter reaches its maximum value of 2147483647 at around 580 hours (it does NOT overflow).\nIf higher values are needed, use a larger unit, like seconds.
+entities.FrostHelper/TimeToCounterController.attributes.description.timerKind=Which timer to use.\n- Session: Uses the session timer\n- File: Uses the savefile timer.
 
 entities.coloredlights/hanginglamp.attributes.description.color=Color to use for the lamp's light.
 entities.coloredlights/hanginglamp.attributes.description.startFade=The disance from the center of this lamp's light at which the light starts fading.

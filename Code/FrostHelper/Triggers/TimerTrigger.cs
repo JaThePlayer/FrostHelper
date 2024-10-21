@@ -23,14 +23,8 @@ internal abstract class BaseTimerEntity : Trigger {
 
     internal readonly string TimerId;
 
-    internal readonly string OutputCounterName;
-    internal readonly CouterUnits OutputCounterUnit;
-    private Session.Counter? _outputCounter;
-
-    internal enum CouterUnits {
-        Seconds,
-        Milliseconds,
-    }
+    private readonly CounterAccessor? _outputCounter;
+    private readonly CounterAccessor.CounterTimeUnits _outputCounterUnit;
     
     protected virtual string GetText() => TimeSpan.FromSeconds(TimeLeft).ShortGameplayFormat();
     
@@ -41,8 +35,13 @@ internal abstract class BaseTimerEntity : Trigger {
         Visible = data.Bool("visible", true);
         TextColor = data.GetColor("textColor", "ffffff");
         IconColor = data.GetColor("iconColor", "ffffff");
-        OutputCounterName = data.Attr("outputCounter");
-        OutputCounterUnit = data.Enum("outputCounterUnit", CouterUnits.Milliseconds);
+        
+        var outputCounterName = data.Attr("outputCounter");
+        if (!string.IsNullOrWhiteSpace(outputCounterName)) {
+            _outputCounter = new CounterAccessor(outputCounterName);
+            _outputCounterUnit = data.Enum("outputCounterUnit", CounterAccessor.CounterTimeUnits.Milliseconds);
+        }
+        
         if (data.Attr("icon", "frostHelper/time") is { } iconPath && !string.IsNullOrWhiteSpace(iconPath))
             Icon = GFX.Game[iconPath];
         
@@ -98,14 +97,8 @@ internal abstract class BaseTimerEntity : Trigger {
     }
 
     protected void UpdateTimeCounter() {
-        if (!string.IsNullOrWhiteSpace(OutputCounterName) && Scene is Level level) {
-            _outputCounter ??= level.Session.GetCounterObj(OutputCounterName);
-
-            _outputCounter.Value = OutputCounterUnit switch {
-                CouterUnits.Seconds => (int)TimeLeft,
-                CouterUnits.Milliseconds => (int)(TimeLeft * 1000f),
-                _ => throw new ArgumentOutOfRangeException()
-            };
+        if (_outputCounter is { } counter && Scene is Level level) {
+            counter.SetTime(level.Session, TimeSpan.FromSeconds(TimeLeft), _outputCounterUnit);
         }
     }
 }

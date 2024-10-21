@@ -24,29 +24,53 @@ internal sealed class CounterExpression {
 }
 
 internal sealed class CounterAccessor {
-    private readonly string CounterName;
-    private Session.Counter? Counter;
+    private readonly string _counterName;
+    private Session.Counter? _counter;
+    
+    internal enum CounterTimeUnits {
+        Hours,
+        Minutes,
+        Seconds,
+        Milliseconds,
+    }
     
     public CounterAccessor(string counterName) {
-        CounterName = counterName;
+        _counterName = counterName;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Set(Session session, int value) {
-        Counter ??= session.GetCounterObj(CounterName);
+        _counter ??= session.GetCounterObj(_counterName);
 
-        Counter.Value = value;
+        _counter.Value = value;
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void SetTime(Session session, TimeSpan time, CounterTimeUnits unit) {
+        _counter ??= session.GetCounterObj(_counterName);
+
+        _counter.Value = unit switch {
+            CounterTimeUnits.Milliseconds => (int)time.TotalMilliseconds,
+            CounterTimeUnits.Seconds => (int)time.TotalSeconds,
+            CounterTimeUnits.Minutes => (int)time.TotalMinutes,
+            CounterTimeUnits.Hours => (int)time.TotalHours,
+            _ => throw new ArgumentOutOfRangeException(nameof(unit))
+        };
+
+        // On overflow, set the value to max instead of a negative value, so relative comparisons don't break.
+        if (_counter.Value < 0)
+            _counter.Value = int.MaxValue;
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int Get(Session session) {
-        Counter ??= session.GetCounterObj(CounterName);
+        _counter ??= session.GetCounterObj(_counterName);
 
-        return Counter.Value;
+        return _counter.Value;
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Session.Counter GetObj(Session session) {
-        return Counter ??= session.GetCounterObj(CounterName);
+        return _counter ??= session.GetCounterObj(_counterName);
     }
 }

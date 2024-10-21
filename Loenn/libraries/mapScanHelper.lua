@@ -84,6 +84,7 @@ local entitiesUsingCounters = {
     ["FrostHelper/Timer"] = { "outputCounter" },
     ["FrostHelper/IncrementingTimer"] = { "outputCounter" },
     ["FrostHelper/CounterDisplay"] = { "counter" },
+    ["FrostHelper/TimeToCounterController"] = { "counter" },
 }
 
 local function _findAllCountersScan(into, entities)

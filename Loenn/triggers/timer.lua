@@ -12,11 +12,6 @@ local counterDisplay = {
     name = "FrostHelper/CounterDisplay"
 }
 
-local units = {
-    "Milliseconds",
-    "Seconds",
-}
-
 jautils.createPlacementsPreserveOrder(timer, "default", {
     { "timerId", "" },
     { "flag", "" },
@@ -25,7 +20,7 @@ jautils.createPlacementsPreserveOrder(timer, "default", {
     { "iconColor", "ffffff", "color" },
     { "textColor", "ffffff", "color" },
     { "outputCounter", "", "sessionCounter" },
-    { "outputCounterUnit", "Milliseconds", units },
+    { "outputCounterUnit", "Milliseconds", jautils.counterTimeUnits },
     { "visible", true },
 })
 
@@ -37,7 +32,7 @@ jautils.createPlacementsPreserveOrder(incTimer, "default", {
     { "iconColor", "ffffff", "color" },
     { "textColor", "ffffff", "color" },
     { "outputCounter", "", "sessionCounter" },
-    { "outputCounterUnit", "Milliseconds", units },
+    { "outputCounterUnit", "Milliseconds", jautils.counterTimeUnits },
     { "visible", true },
 })
 

@@ -48,7 +48,8 @@ jautils.createPlacementsPreserveOrder(sessionCounterTrigger, "default", {
     { "counter", "", "sessionCounter" },
     { "value", "0", "sessionCounter" },
     { "operation", "Set", counterOperations },
-    { "clearOnSpawn", false }
+    { "clearOnSpawn", false },
+    { "once", false }
 }, true)
 
 jautils.addExtendedText(sessionCounterTrigger, function (trigger)
