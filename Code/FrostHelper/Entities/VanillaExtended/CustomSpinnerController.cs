@@ -45,37 +45,42 @@ public class CustomSpinnerController : Entity {
 }
 
 internal sealed class CustomSpinnerSpriteSource : ISavestatePersisted {
+    private static readonly object _lock = new();
     private static readonly Dictionary<(string dir, string suffix), CustomSpinnerSpriteSource> Cache = new();
     
     private static void OnContentChanged(ModAsset from, ReadOnlySpan<char> spritePath) {
-        foreach (var (k, v) in Cache) {
-            if (spritePath.StartsWith(k.dir)) {
-                Cache.Remove(k);
-            }
-
-            /*
-             doesn't quite work right
+        // using a lock instead of ConcurrentDictionary because we need to atomically remove multiple entries,
+        // which would require a lock anyway.
+        lock (_lock) {
+            foreach (var (k, v) in Cache.ToList()) {
+                if (spritePath.StartsWith(k.dir)) {
+                    Cache.Remove(k, out _);
+                }
+            } 
+            
+            // make sure spinners are using new textures
             if (FrostModule.TryGetCurrentLevel() is { } lvl) {
                 lvl.OnEndOfFrame += () => {
-
                     foreach (CustomSpinner s in lvl.Tracker.SafeGetEntities<CustomSpinner>()) {
                         s.ClearSprites();
+                        s.ResetSpriteSource();
                     }
                 };
             }
-            */
         }
     }
     
     public static CustomSpinnerSpriteSource Get(string dir, string suffix) {
         var key = (dir, suffix);
-        if (Cache.Count == 0)
-            FrostModule.OnSpriteChanged += OnContentChanged;
+        lock (_lock) {
+            if (Cache.Count == 0)
+                FrostModule.OnSpriteChanged += OnContentChanged;
 
-        if (Cache.TryGetValue(key, out var cached))
-            return cached;
+            if (Cache.TryGetValue(key, out var cached))
+                return cached;
 
-        return Cache[key] = new(dir, suffix);
+            return Cache[key] = new(dir, suffix);
+        }
     }
     
     public string Directory { get; }

@@ -244,7 +244,7 @@ jautils.fieldTypeOverrides = {
             options = celesteDepths,
             editable = true,
             fieldType = "integer",
-            searchable = true,
+            --searchable = true,
         }
     end,
     sessionCounter = function (data)

@@ -68,8 +68,8 @@ public class CustomSpinner : Entity {
 
         public Span<Fill> FillsSpan => CollectionsMarshal.AsSpan(Fills);
     }
-    
-    internal CustomSpinnerSpriteSource SpriteSource { get; }
+
+    private CustomSpinnerSpriteSource SpriteSource;
     
     // accessed by TAS-Helper via reflection
     internal CustomSpinnerController controller;
@@ -289,10 +289,8 @@ public class CustomSpinner : Entity {
         _images.Clear();
     }
 
-
-    public void ForceInstantiate() {
-        CreateSprites();
-        SetVisible(true);
+    internal void ResetSpriteSource() {
+        SpriteSource = CustomSpinnerSpriteSource.Get(SpriteSource.Directory, SpriteSource.SpritePathSuffix);
     }
 
     public override void Update() {
