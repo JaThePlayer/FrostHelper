@@ -6,33 +6,42 @@ namespace FrostHelper;
 public class CustomFireBarrier : Entity {
     public bool IsIce;
     public bool IgnoreCoreMode;
+    
+    private readonly bool CanBeCollidable;
 
+    internal readonly CustomLavaRect Lava;
+    
     public CustomFireBarrier(EntityData data, Vector2 offset) : base(data.Position + offset) {
         float width = data.Width;
         float height = data.Height;
         IsIce = data.Bool("isIce", false);
+        CanBeCollidable = data.Bool("canCollide", true);
+        
         Tag = Tags.TransitionUpdate;
-        Collider = new Hitbox(width, height, 0f, 0f);
         IgnoreCoreMode = data.Bool("ignoreCoreMode", false);
 
-        Add(new PlayerCollider(OnPlayer, null, null));
+        if (CanBeCollidable) {
+            Collider = new Hitbox(width, height);
+            Add(new PlayerCollider(OnPlayer));
+        }
 
         if (!IgnoreCoreMode) {
             Add(new CoreModeListener(OnChangeMode));
         }
 
-        Lava = new LavaRect(width, height, IsIce ? 2 : 4);
-        Add(Lava);
-        Lava.SurfaceColor = ColorHelper.GetColor(data.Attr("surfaceColor"));
-        Lava.EdgeColor = ColorHelper.GetColor(data.Attr("edgeColor"));
-        Lava.CenterColor = ColorHelper.GetColor(data.Attr("centerColor"));
-        Lava.SmallWaveAmplitude = 2f;
-        Lava.BigWaveAmplitude = 1f;
-        Lava.CurveAmplitude = 1f;
+        var lava = Lava = new CustomLavaRect(width, height, IsIce ? 2 : 4, data.Float("bubbleAmountMultiplier", 1f));
+        Add(lava);
+        lava.SurfaceColor = ColorHelper.GetColor(data.Attr("surfaceColor"));
+        lava.EdgeColor = ColorHelper.GetColor(data.Attr("edgeColor"));
+        lava.CenterColor = ColorHelper.GetColor(data.Attr("centerColor"));
+        lava.SmallWaveAmplitude = data.Float("smallWaveAmplitude", 2f);
+        lava.BigWaveAmplitude = data.Float("bigWaveAmplitude", 1f);
+        lava.CurveAmplitude = data.Float("curveAmplitude", 1f);
+        lava.OnlyMode = data.Enum("surfaces", CustomLavaRect.OnlyModes.All);
         if (IsIce) {
-            Lava.UpdateMultiplier = 0f;
-            Lava.Spikey = 3f;
-            Lava.SmallWaveAmplitude = 1f;
+            lava.UpdateMultiplier = 0f;
+            lava.Spikey = 3f;
+            lava.SmallWaveAmplitude /= 2f;
         }
 
         lavaRect = new Rectangle((int) (data.Position + offset).X, (int) (data.Position + offset).Y, (int) width, (int) height);
@@ -71,16 +80,19 @@ public class CustomFireBarrier : Entity {
             return;
         }
 
-        if (!IsIce) {
-            Collidable = solid.Collidable = SceneAs<Level>().CoreMode == Session.CoreModes.Hot;
-        } else {
-            Collidable = solid.Collidable = SceneAs<Level>().CoreMode == Session.CoreModes.Cold;
-        }
+        if (!IsIce)
+            Collidable = SceneAs<Level>().CoreMode == Session.CoreModes.Hot;
+        else
+            Collidable = SceneAs<Level>().CoreMode == Session.CoreModes.Cold;
+        
+        if (solid is { })
+            solid.Collidable = Collidable;
     }
 
     public override void Added(Scene scene) {
         base.Added(scene);
-        scene.Add(solid = new Solid(Position + new Vector2(2f, 3f), Width - 4f, Height - 5f, false));
+        if (CanBeCollidable)
+            scene.Add(solid = new Solid(Position + new Vector2(2f, 3f), Width - 4f, Height - 5f, false));
         SetCollidable();
 
         if (Collidable) {
@@ -129,14 +141,9 @@ public class CustomFireBarrier : Entity {
         }
     }
 
-    public override void Render() {
-        base.Render();
-    }
-
     private Rectangle lavaRect;
-    public LavaRect Lava;
 
-    private Solid solid;
+    private Solid? solid;
 
     private SoundSource idleSfx;
 }

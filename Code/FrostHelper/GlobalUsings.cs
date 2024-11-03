@@ -15,3 +15,5 @@ global using System.Linq;
 global using System.Reflection;
 
 global using Platform = Celeste.Platform;
+
+global using NumVector2 = System.Numerics.Vector2;

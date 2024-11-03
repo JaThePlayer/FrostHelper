@@ -11,6 +11,8 @@ public class FrostHelperSession : EverestModuleSession {
     public Color BloomColor { get; set; } = Color.White;
     public bool RainbowBloom { get; set; } = false;
     
+    public Color? LightingColor { get; set; } = null;
+    
     public float? NextDashSpeed { get; set; }
     public float? NextSuperJumpSpeed { get; set; }
 

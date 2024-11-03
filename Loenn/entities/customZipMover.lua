@@ -28,6 +28,7 @@ jautils.createPlacementsPreserveOrder(zipper, "custom_zip_mover", {
     { "isCore", false },
     { "showLine", true },
     { "fillMiddle", true },
+    { "rainbow", false },
 })
 
 jautils.addPlacement(zipper, "slow", {

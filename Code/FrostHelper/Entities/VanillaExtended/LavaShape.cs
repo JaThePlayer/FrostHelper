@@ -324,8 +324,18 @@ public class LavaShape : Component {
             dirty = false;
         }
         Camera camera = (Scene as Level)!.Camera;
-        GFX.DrawVertices(Matrix.CreateTranslation(new Vector3(Position + new Vector2(0.5f, 0.5f), 0f)) * camera.Matrix, verts, vertCount, null, null);
+        
+        var buffer = RenderTargetHelper.RentFullScreenBuffer();
+        var targets = Draw.SpriteBatch.GraphicsDevice.GetRenderTargets();
+        Draw.SpriteBatch.GraphicsDevice.SetRenderTarget(buffer);
+        Draw.SpriteBatch.GraphicsDevice.Clear(Color.Transparent);
+        
+        GFX.DrawVertices(Matrix.CreateTranslation(new Vector3(Position, 0f)) * camera.Matrix, verts, vertCount, null, BlendState.Opaque);
+        Draw.SpriteBatch.GraphicsDevice.SetRenderTargets(targets);
         GameplayRenderer.Begin();
+        Draw.SpriteBatch.Draw(buffer, camera.position, Color.White);
+        RenderTargetHelper.ReturnFullScreenBuffer(buffer);
+        
         Vector2 value = new Vector2(Entity.Position.X, MinY) + Position;
         MTexture mtexture = GFX.Game["particles/bubble"];
         for (int i = 0; i < bubbles.Length; i++) {

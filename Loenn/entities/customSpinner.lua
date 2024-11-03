@@ -1,22 +1,24 @@
 local utils = require("utils")
-local jautils = require("mods").requireFromPlugin("libraries.jautils")
-local frostSettings = require("mods").requireFromPlugin("libraries.settings")
-local bloomSprite = require("mods").requireFromPlugin("libraries.bloomSprite")
+local mods = require("mods")
+local jautils = mods.requireFromPlugin("libraries.jautils")
+local frostSettings = mods.requireFromPlugin("libraries.settings")
+local bloomSprite = mods.requireFromPlugin("libraries.bloomSprite")
 local drawableSpriteStruct = require("structs.drawable_sprite")
 
-local fallback = "danger/FrostHelper/icecrystal/fg03"
 local fallbackbg = "danger/FrostHelper/icecrystal/bg"
+local fallback = mods.internalModContent .. "/missing_image"
+
 local spinner = {}
 
 spinner.name = "FrostHelper/IceSpinner"
 spinner.depth = -8500
 
 jautils.createPlacementsPreserveOrder(spinner, "custom_spinner", {
-    { "tint", "ffffff", "color" },
-    { "destroyColor", "b0eaff", "color" },
-    { "borderColor", "000000", "color" },
     { "directory", "danger/crystal" },
     { "spritePathSuffix", "_white" },
+    { "tint", "ffffff", "color" },
+    { "borderColor", "000000", "color" },
+    { "destroyColor", "b0eaff", "color" },
     { "bloomAlpha", 0.0 },
     { "bloomRadius", 0.0 },
     { "debrisCount", 8, "integer" },
@@ -72,8 +74,8 @@ function spinner.sprite(room, entity)
     local cache = pathCache[d][pathSuffix]
     if not cache then
         cache = {
-            jautils.getCustomSpritePath(entity, "directory", "/fg" .. pathSuffix .. "03", fallback),
-            jautils.getCustomSpritePath(entity, "directory", "/bg" .. pathSuffix, fallbackbg)
+            jautils.getCustomSpritePath(entity, "directory", "/fg" .. pathSuffix .. "03") or jautils.getCustomSpritePath(entity, "directory", "/fg" .. pathSuffix .. "00") or fallback,
+            jautils.getCustomSpritePath(entity, "directory", "/bg" .. pathSuffix, fallback)
         }
 
         pathCache[d][pathSuffix] = cache

@@ -72,6 +72,11 @@ entities.FrostHelper/CustomFireBarrier.attributes.description.edgeColor=Hex colo
 entities.FrostHelper/CustomFireBarrier.attributes.description.centerColor=Hex color used for the center of this barrier.
 entities.FrostHelper/CustomFireBarrier.attributes.description.silent=Whether the barrier should never make sound.
 
+# Rainbow Fire Barrier
+entities.FrostHelper/RainbowFireBarrier.placements.name.default=Rainbow Fire Barrier
+entities.FrostHelper/RainbowFireBarrier.attributes.description.isIce=Whether this block should act like an ice barrier.
+entities.FrostHelper/RainbowFireBarrier.attributes.description.silent=Whether the barrier should never make sound.
+
 # Custom Rising Lava
 entities.FrostHelper/CustomRisingLava.placements.name.normal=Custom Rising Lava
 entities.FrostHelper/CustomRisingLava.attributes.description.intro=Determines whether the lava rises up from below the bottom of the screen or starts already present near the bottom.
@@ -519,6 +524,11 @@ entities.FrostHelper/ColoredHangingLamp.attributes.description.startFade=The dis
 entities.FrostHelper/ColoredHangingLamp.attributes.description.endFade=The radius of the lamp's light.
 entities.FrostHelper/ColoredHangingLamp.attributes.description.alpha=Alpha value of the light. Between 0 and 1.
 entities.FrostHelper/ColoredHangingLamp.attributes.description.sprite=Path to the sprite for this lamp, relative to Graphics/Atlases/Gameplay.
+
+# Switch Gate
+entities.FrostHelper/RainbowSwitchGate.placements.name.default=Rainbow Switch Gate
+entities.FrostHelper/RainbowSwitchGate.attributes.description.persistent=Will stay open once activated, even if the player dies.
+entities.FrostHelper/RainbowSwitchGate.attributes.description.sprite=Changes the visual appearance of the switch gate.
 
 # -- Mod Names --
 # mods.modName.*

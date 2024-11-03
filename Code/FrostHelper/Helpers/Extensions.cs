@@ -258,4 +258,31 @@ public static class Extensions {
     }
 
     public static Vector3 AddXY(this Vector3 a, Vector2 b) => new(a.X + b.X, a.Y + b.Y, a.Z);
+    
+    public static NumVector2 SafeNormalize(this NumVector2 vec) => vec.SafeNormalize(default(NumVector2));
+
+    public static NumVector2 SafeNormalize(this NumVector2 vec, float length)
+    {
+        return vec.SafeNormalize(default, length);
+    }
+
+    public static NumVector2 SafeNormalize(this NumVector2 vec, NumVector2 ifZero)
+    {
+        if (vec == default)
+            return ifZero;
+        return NumVector2.Normalize(vec);
+    }
+    
+    public static NumVector2 SafeNormalize(this NumVector2 vec, NumVector2 ifZero, float length)
+    {
+        if (vec == default)
+            return ifZero * length;
+        return NumVector2.Normalize(vec) * length;
+    }
+    
+    public static NumVector2 Perpendicular(this NumVector2 vector) => new(-vector.Y, vector.X);
+    
+    public static Vector2 Add(this Vector2 vector, NumVector2 other) => new(vector.X + other.X, vector.Y + other.Y);
+    
+    public static NumVector2 ToNumerics(this Vector2 vector) => new(vector.X, vector.Y);
 }

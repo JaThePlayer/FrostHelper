@@ -313,7 +313,7 @@ public class CustomSpinner : Entity {
             var scene = Scene;
             var offset = this.offset;
 
-            if (Rainbow && scene.OnInterval(0.08f, offset))
+            if (Rainbow && (controller.NoCycles || scene.OnInterval(0.08f, offset)))
                 UpdateHue();
 
             if (scene.OnInterval(0.25f, offset) && !InView()) {

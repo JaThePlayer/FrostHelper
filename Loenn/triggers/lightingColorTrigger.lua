@@ -7,6 +7,8 @@ local trigger = {
 
 jautils.createPlacementsPreserveOrder(trigger, "default", {
     { "color", "000000", "color" },
+    -- doesn't quite work yet iirc
+    -- { "persistent", false },
 })
 
 return trigger

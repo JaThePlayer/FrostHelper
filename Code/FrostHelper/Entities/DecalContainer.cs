@@ -234,10 +234,13 @@ public class DecalContainer {
         maxH = (int)Math.Max(maxH, h);
 
         // add some components to the renderer to work with decal registry
-        foreach (var comp in item) {
+        var comps = item.Components.components;
+        for (int i = 0; i < comps.Count; i++) {
+            Component? comp = comps[i];
             switch (comp) {
                 case VertexLight l:
-                    Renderer.Add(new VertexLight(l.Position + item.Position, l.Color, l.Alpha, (int)l.StartRadius, (int) l.EndRadius));
+                    Renderer.Add(new VertexLight(l.Position + item.Position, l.Color, l.Alpha, (int) l.StartRadius,
+                        (int) l.EndRadius));
                     break;
                 /* annoying
                 case LightOcclude l:
@@ -255,6 +258,15 @@ public class DecalContainer {
                     break;
 
                 default:
+                    /*
+                     // UNTESTED
+                    info.decal.Components.current.Remove(comp);
+                    comps.RemoveAt(i);
+                    i--;
+                    
+                    Renderer.Add(comp);
+                    comp.Entity = info.decal;
+                    */
                     break;
             }
         }
