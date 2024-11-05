@@ -234,9 +234,8 @@ public class DecalContainer {
         maxH = (int)Math.Max(maxH, h);
 
         // add some components to the renderer to work with decal registry
-        var comps = item.Components.components;
-        for (int i = 0; i < comps.Count; i++) {
-            Component? comp = comps[i];
+        foreach (var comp in item)
+        {
             switch (comp) {
                 case VertexLight l:
                     Renderer.Add(new VertexLight(l.Position + item.Position, l.Color, l.Alpha, (int) l.StartRadius,
