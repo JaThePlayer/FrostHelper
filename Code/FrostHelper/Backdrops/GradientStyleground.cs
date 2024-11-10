@@ -59,9 +59,12 @@ internal sealed class GradientStyleground : Backdrop {
     public override void Render(Scene scene) {
         if (renderTarget is null)
             return;
+        if (scene is not Level level)
+            return;
 
-        var scale = scene is Level level ? 1f / level.Zoom : 1f;
-        Draw.SpriteBatch.Draw(renderTarget, default, null, Color.White, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
+        var target = GameplayBuffers.Gameplay.Width / 320;
+        var scale = 1f / float.Min(level.Zoom, target);
+        Draw.SpriteBatch.Draw(renderTarget, default, null, Color.White, 0f, default, scale, SpriteEffects.None, 0f);
     }
 
     public override void Ended(Scene scene) {
