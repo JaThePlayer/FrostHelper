@@ -14,8 +14,14 @@ spinner.name = "FrostHelper/IceSpinner"
 spinner.depth = -8500
 
 jautils.createPlacementsPreserveOrder(spinner, "custom_spinner", {
-    { "directory", "danger/crystal" },
-    { "spritePathSuffix", "_white" },
+    { "directory", "danger/crystal>_white", "FrostHelper.texturePath", {
+        baseFolder = "danger",
+        pattern = "^(danger/.*)/fg(.-)%d+$",
+        captureConverter = function(dir, subdir) 
+            return dir .. ">" .. subdir
+        end,
+    }},
+    { "spritePathSuffix", "" },
     { "tint", "ffffff", "color" },
     { "borderColor", "000000", "color" },
     { "destroyColor", "b0eaff", "color" },
@@ -30,6 +36,14 @@ jautils.createPlacementsPreserveOrder(spinner, "custom_spinner", {
     { "drawOutline", true },
     { "singleFGImage", false }
 })
+
+function spinner.ignoredFields(entity)
+    if string.find(entity.directory or "", ">") then
+        return { "_name", "_id", "originX", "originY", "spritePathSuffix" }
+    end
+
+    return { "_name", "_id", "originX", "originY" }
+end
 
 local function createConnectorsForSpinner(room, entity, baseBGSprite)
     local sprites = {}
@@ -62,43 +76,58 @@ end
 
 local pathCache = {}
 
-function spinner.sprite(room, entity)
-    local pathSuffix = entity.spritePathSuffix or ""
-    local color = utils.getColor(entity.tint or "ffffff")
-
+local function getSpriteCache(entity)
     local d = entity.directory or ""
-    if not pathCache[d] then
-        pathCache[d] = {}
+    local subdir = nil
+    local cacheKey = nil
+
+    local subDirIdx = string.find(d, ">")
+    if subDirIdx then
+        cacheKey = d
+        subdir = string.sub(d, subDirIdx + 1)
+        d = string.sub(d, 1, subDirIdx - 1)
+    else
+        subdir = entity.spritePathSuffix or ""
+        cacheKey = d .. ">" .. subdir
     end
 
-    local cache = pathCache[d][pathSuffix]
-    if not cache then
+    local cache = pathCache[cacheKey]
+    if not pathCache[cacheKey] then
         cache = {
-            jautils.getCustomSpritePath(entity, "directory", "/fg" .. pathSuffix .. "03") or jautils.getCustomSpritePath(entity, "directory", "/fg" .. pathSuffix .. "00") or fallback,
-            jautils.getCustomSpritePath(entity, "directory", "/bg" .. pathSuffix, fallback)
+            jautils.getAtlasSubtextures(d .. "/fg" .. subdir, fallback),
+            jautils.getAtlasSubtextures(d .. "/bg" .. subdir, fallback)
         }
 
-        pathCache[d][pathSuffix] = cache
+        pathCache[cacheKey] = cache
     end
+
+    return cache
+end
+
+function spinner.associatedMods(entity)
+    local cache = getSpriteCache(entity)
+
+    return { "FrostHelper", unpack(jautils.associatedModsFromSprite(cache[2][1])) }
+end
+
+function spinner.sprite(room, entity)
+    local color = utils.getColor(entity.tint or "ffffff")
+    local cache = getSpriteCache(entity)
+
+    utils.setSimpleCoordinateSeed(entity.x, entity.y)
 
     local sprites
     if frostSettings.spinnersConnect() then
-        local baseSprite = drawableSpriteStruct.fromTexture(cache[2], entity)
+        local baseSprite = drawableSpriteStruct.fromTexture(cache[2][math.random(#cache[2])], entity)
         baseSprite:setColor(color)
         sprites = createConnectorsForSpinner(room, entity, baseSprite)
     else
         sprites = {}
     end
 
-    local fgSprite = drawableSpriteStruct.fromTexture(cache[1], entity)
+    local fgSprite = drawableSpriteStruct.fromTexture(cache[1][math.random(#cache[1])], entity)
     fgSprite:setColor(color)
     table.insert(sprites, fgSprite)
-
-    --local sprites = frostSettings.spinnersConnect()
-    --    and createConnectorsForSpinner(room, entity, jautils.getCustomSprite(entity, "directory", "/bg" .. pathSuffix, fallbackbg))
-    --    or {}
-
-    --table.insert(sprites, jautils.getCustomSprite(entity, "directory", "/fg" .. pathSuffix .. "03", fallback))
 
     if entity.rainbow then
         jautils.rainbowifyAll(room, sprites)

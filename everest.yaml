@@ -1,5 +1,5 @@
 - Name: FrostHelper
-  Version: 1.58.3
+  Version: 1.59.0
   DLL: Code/FrostHelper/bin/FrostTempleHelper.dll
   Dependencies:
     - Name: Everest

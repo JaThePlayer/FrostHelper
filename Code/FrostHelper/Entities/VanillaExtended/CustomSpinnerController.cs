@@ -71,6 +71,12 @@ internal sealed class CustomSpinnerSpriteSource : ISavestatePersisted {
     }
     
     public static CustomSpinnerSpriteSource Get(string dir, string suffix) {
+        var subDirIdx = dir.IndexOf('>', StringComparison.Ordinal);
+        if (subDirIdx >= 0) {
+            suffix = dir[(subDirIdx + 1)..];
+            dir = dir[..subDirIdx];
+        }
+        
         var key = (dir, suffix);
         lock (_lock) {
             if (Cache.Count == 0)

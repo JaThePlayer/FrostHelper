@@ -54,7 +54,7 @@ local function createSpringHandler(name, spriteRotation, speedAsVector)
             return nil
         end,
         selection = function(room, entity)
-            local sprite = drawableSpriteStruct.fromTexture("objects/spring/", entity)
+            local sprite = drawableSpriteStruct.fromTexture("objects/spring/00", entity)
             sprite:setJustification(0.5, 1.0)
             sprite.rotation = spriteRotation
             return sprite:getRectangle()

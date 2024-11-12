@@ -4,10 +4,11 @@ local drawableNinePatch = require("structs.drawable_nine_patch")
 local drawableLineStruct = require("structs.drawable_line")
 local utils = require("utils")
 local xnaColors = require("consts.xna_colors")
-local rainbowHelper = require("mods").requireFromPlugin("libraries.rainbowHelper")
-local compat = require("mods").requireFromPlugin("libraries.compat")
-local mapScanHelper = require("mods").requireFromPlugin("libraries.mapScanHelper")
-local easings = require("mods").requireFromPlugin("libraries.easings")
+local mods = require("mods")
+local rainbowHelper = mods.requireFromPlugin("libraries.rainbowHelper")
+local compat = mods.requireFromPlugin("libraries.compat")
+local mapScanHelper = mods.requireFromPlugin("libraries.mapScanHelper")
+local easings = mods.requireFromPlugin("libraries.easings")
 
 local celesteDepths = --require("consts.object_depths")
 {
@@ -55,7 +56,7 @@ jautils.inRysy = compat.inRysy
 jautils.inSnowberry = compat.inSnowberry
 
 jautils.easings = "FrostHelper.easing"
-jautils.tweenModes = require("mods").requireFromPlugin("libraries.tweenModes")
+jautils.tweenModes = mods.requireFromPlugin("libraries.tweenModes")
 
 ---Tries to require a file, returns nil if it doesn't exist
 jautils.tryRequire = utils.tryrequire
@@ -76,6 +77,8 @@ jautils.tryRequire = utils.tryrequire
                 return nil
             end
         end
+
+local atlases = jautils.tryRequire("atlases")
 
 --[[
     UTILS
@@ -335,7 +338,9 @@ local function createFieldInfoFromJaUtilsPlacement(placementData)
                     end
                 else
                     -- if you just pass a string, treat it as the field type
-                    fieldInformation[fieldName] = { fieldType = fieldType }
+                    local data = table.shallowcopy(fieldData or {})
+                    data.fieldType = fieldType
+                    fieldInformation[fieldName] = data
                 end
             end
         end
@@ -409,6 +414,46 @@ function jautils.addPlacement(handler, placementName, ...)
     table.insert(handler.placements, newPlacement)
 end
 
+local emptyTable = { }
+if atlases and mods.getModMetadataFromPath and mods.getModNamesFromMetadata then
+    local associatedModsFromSpriteCache = {}
+    function jautils.associatedModsFromSprite(path)
+        local gp = atlases.gameplay
+        if not gp then
+            return emptyTable
+        end
+
+        local cached = associatedModsFromSpriteCache[path]
+        if cached then
+            return cached
+        end
+    
+        local sprite = gp[path]
+        if (not sprite) or sprite.internalFile then
+            associatedModsFromSpriteCache[path] = emptyTable
+            return emptyTable
+        end
+    
+    
+        local filename = sprite.filename
+        local modMetadata = mods.getModMetadataFromPath(filename)
+        if not modMetadata then
+            associatedModsFromSpriteCache[path] = emptyTable
+            return emptyTable
+        end
+
+        local names = mods.getModNamesFromMetadata(modMetadata)
+    
+        associatedModsFromSpriteCache[path] = names
+    
+        return names
+    end
+else
+    function jautils.associatedModsFromSprite(path)
+        return emptyTable
+    end
+end
+
 
 --[[
     SPRITES
@@ -477,6 +522,37 @@ function jautils.copyTexture(baseTexture, x, y, relative)
 end
 
 local spritePathCache = {}
+
+function jautils.getSpritePathOrFallback(entity, customPath, fallback)
+    local sprite = nil
+
+    if customPath then
+        local cacheKey = customPath
+        local cached = spritePathCache[cacheKey]
+        if cached then
+            return cached, drawableSpriteStruct.fromTexture(cached, entity)
+        end
+
+        customPath = string.gsub(customPath, "//", "/")
+
+        sprite = drawableSpriteStruct.fromTexture(customPath, entity)
+        if sprite then
+            spritePathCache[cacheKey] = customPath
+            return customPath, sprite
+        end
+
+        -- Celeste will also try appending 00, let's try that
+        customPath = customPath .. "00"
+        sprite = drawableSpriteStruct.fromTexture(customPath, entity)
+        if sprite then
+            spritePathCache[cacheKey] = customPath
+            return customPath, sprite
+        end
+    end
+
+    return fallback, drawableSpriteStruct.fromTexture(fallback, entity)
+end
+
 function jautils.getCustomSpritePath(entity, spritePropertyName, spritePostfix, fallback)
     local sprite = nil
 
@@ -484,30 +560,46 @@ function jautils.getCustomSpritePath(entity, spritePropertyName, spritePostfix, 
     if path then
         local fullPath = path .. (spritePostfix or "")
 
-        local cacheKey = fullPath
-        local cached = spritePathCache[cacheKey]
-        if cached then
-            return cached, drawableSpriteStruct.fromTexture(cached, entity)
-        end
-
-        fullPath = string.gsub(fullPath, "//", "/")
-
-        sprite = drawableSpriteStruct.fromTexture(fullPath, entity)
-        if sprite then
-            spritePathCache[cacheKey] = fullPath
-            return fullPath, sprite
-        end
-
-        -- Celeste will also try appending 00, let's try that
-        fullPath = fullPath .. "00"
-        sprite = drawableSpriteStruct.fromTexture(fullPath, entity)
-        if sprite then
-            spritePathCache[cacheKey] = fullPath
-            return fullPath, sprite
-        end
+        return jautils.getSpritePathOrFallback(entity, fullPath, fallback)
     end
 
     return fallback, drawableSpriteStruct.fromTexture(fallback, entity)
+end
+
+local getAtlasSubtexturesCache = {}
+
+function jautils.getAtlasSubtextures(path, fallback)
+    if getAtlasSubtexturesCache[path] then
+        return getAtlasSubtexturesCache[path]
+    end
+
+    local atlas = atlases and atlases.Gameplay
+    if not atlas then
+        local ret = { jautils.getSpritePathOrFallback({}, path, fallback) }
+        getAtlasSubtexturesCache[path] = ret
+        return ret
+    end
+
+    local paths = {}
+    for i = 0, 99 do
+        local idx = tostring(i)
+        local frameId = path .. idx
+        if i < 10 and not atlas[frameId] then
+            idx = "0" .. tostring(i)
+            frameId = path .. idx
+        end
+
+        if not atlas[frameId] then
+            local ret = i == 0 and { (jautils.getSpritePathOrFallback({}, path, fallback)) } or paths
+            getAtlasSubtexturesCache[path] = ret
+            return ret
+        end
+
+        table.insert(paths, frameId)
+    end
+
+    getAtlasSubtexturesCache[path] = paths
+    return paths
 end
 
 ---Returns the custom sprite for an entity, retrieved from gfx.game[entity[spritePropertyName]], tinted with entity.tint, or gfx.game[fallback]
