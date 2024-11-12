@@ -116,6 +116,13 @@ entities.FrostHelper/IceSpinner.attributes.description.attachGroup=The group tha
 entities.FrostHelper/IceSpinner.attributes.description.debrisCount=The amount of debris created when this spinner is destroyed\nHigh values can cause huge lag!
 entities.FrostHelper/IceSpinner.attributes.description.singleFGImage=Use a single FG image, even if the spinner is partially in a wall. Improves performance, but can cause visual differences.
 
+FrostHelper.paths.customSpinner.danger/crystal>_white=Vanilla White
+FrostHelper.paths.customSpinner.danger/crystal>_red=Vanilla Red
+FrostHelper.paths.customSpinner.danger/crystal>_blue=Vanilla Blue
+FrostHelper.paths.customSpinner.danger/crystal>_purple=Vanilla Purple
+FrostHelper.paths.customSpinner.danger/FrostHelper/icecrystal=Ice (Old Default)
+FrostHelper.paths.customSpinner.danger/FrostHelper/icecrystal>=Ice (Old Default)
+
 # Custom Spring
 entities.FrostHelper/SpringLeft.placements.name.normal=Custom Spring (Right)
 entities.FrostHelper/SpringRight.placements.name.normal=Custom Spring (Left)

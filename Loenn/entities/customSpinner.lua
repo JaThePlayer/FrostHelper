@@ -17,9 +17,19 @@ jautils.createPlacementsPreserveOrder(spinner, "custom_spinner", {
     { "directory", "danger/crystal>_white", "FrostHelper.texturePath", {
         baseFolder = "danger",
         pattern = "^(danger/.*)/fg(.-)%d+$",
-        captureConverter = function(dir, subdir) 
+        captureConverter = function(dir, subdir)
             return dir .. ">" .. subdir
         end,
+        displayConverter = function(dir, subdir)
+            local humanizedDir = utils.humanizeVariableName(string.match(dir, "^.*/(.*/hot)$") or string.match(dir, "^.*/(.*)$") or dir)
+            if subdir and #subdir > 0 then
+                return humanizedDir .. " (" .. utils.humanizeVariableName(subdir) .. ")"
+            end
+
+            return humanizedDir
+        end,
+        vanillaSprites = { "danger/crystal/fg_white00", "danger/crystal/fg_red00", "danger/crystal/fg_blue00", "danger/crystal/fg_purple00" },
+        langDir = "customSpinner",
     }},
     { "spritePathSuffix", "" },
     { "tint", "ffffff", "color" },
