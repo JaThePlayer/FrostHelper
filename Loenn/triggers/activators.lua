@@ -110,7 +110,7 @@ return {
         end
     end),
     makeActivator("FrostHelper/IfActivator", {
-        { "condition", "" },
+        { "condition", "", "FrostHelper.condition" },
     },function (trigger)
         return trigger.condition
     end),

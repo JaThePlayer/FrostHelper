@@ -10,6 +10,7 @@ jautils.createPlacementsPreserveOrder(staticBumper, "normal", {
     { "moveTime", 1.81818187 },
     { "sprite", "bumper" },
     { "easing", "CubeInOut", jautils.easings },
+    { "hitbox", "C,12,0,0", "FrostHelper.collider" },
     { "wobble", false },
     { "notCoreMode", false },
 })

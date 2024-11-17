@@ -5,7 +5,6 @@ local frostSettings = mods.requireFromPlugin("libraries.settings")
 local bloomSprite = mods.requireFromPlugin("libraries.bloomSprite")
 local drawableSpriteStruct = require("structs.drawable_sprite")
 
-local fallbackbg = "danger/FrostHelper/icecrystal/bg"
 local fallback = mods.internalModContent .. "/missing_image"
 
 local spinner = {}
@@ -39,6 +38,9 @@ jautils.createPlacementsPreserveOrder(spinner, "custom_spinner", {
     { "bloomRadius", 0.0 },
     { "debrisCount", 8, "integer" },
     { "attachGroup", -1, "FrostHelper.attachGroup" },
+    { "hitbox", "C,6,0,0;R,16,4,-8,-3", "FrostHelper.collider"},
+    { "scale", 1 },
+    { "imageScale", 1 },
     { "attachToSolid", false },
     { "dashThrough", false },
     { "rainbow", false },
@@ -53,35 +55,6 @@ function spinner.ignoredFields(entity)
     end
 
     return { "_name", "_id", "originX", "originY" }
-end
-
-local function createConnectorsForSpinner(room, entity, baseBGSprite)
-    local sprites = {}
-
-    local name = entity._name
-    local attachGroup = entity.attachGroup
-    local attachToSolid = entity.attachToSolid or false
-    local x, y = entity.x, entity.y
-
-    for _, e2 in ipairs(room.entities) do
-        if e2 == entity then break end
-
-        if e2._name == name and e2.attachGroup == attachGroup and e2.attachToSolid == attachToSolid then
-            local e2x, e2y = e2.x, e2.y
-
-            if jautils.distanceSquared(x, y, e2x, e2y) < 576 then
-                local connector = jautils.copyTexture(baseBGSprite,
-                    math.floor((x + e2x) / 2),
-                    math.floor((y + e2y) / 2),
-                false)
-
-                connector.depth = -8499
-                table.insert(sprites, connector)
-            end
-        end
-    end
-
-    return sprites
 end
 
 local pathCache = {}
@@ -105,8 +78,11 @@ local function getSpriteCache(entity)
     if not pathCache[cacheKey] then
         cache = {
             jautils.getAtlasSubtextures(d .. "/fg" .. subdir, fallback),
-            jautils.getAtlasSubtextures(d .. "/bg" .. subdir, fallback)
+            jautils.getAtlasSubtextures(d .. "/bg" .. subdir, fallback),
+            nil
         }
+
+        cache[3] = drawableSpriteStruct.fromTexture(cache[1][1]).meta.realWidth
 
         pathCache[cacheKey] = cache
     end
@@ -114,29 +90,72 @@ local function getSpriteCache(entity)
     return cache
 end
 
+local function createConnectorsForSpinner(room, entity, baseBGSprite, cache)
+    local sprites = {}
+
+    local name = entity._name
+    local attachGroup = entity.attachGroup
+    local attachToSolid = entity.attachToSolid or false
+    local x, y = entity.x, entity.y
+    local imageScale = entity.imageScale or 1
+    local id = entity._id
+
+    local s = cache[3]
+
+    for _, e2 in ipairs(room.entities) do
+        if e2._id <= id then goto continue end
+
+        if e2._name == name and e2.attachGroup == attachGroup and e2.attachToSolid == attachToSolid then
+            local e2x, e2y = e2.x, e2.y
+            local scaleSum = (imageScale+(e2.imageScale or 1))
+            if jautils.distanceSquared(x, y, e2x, e2y) < s*getSpriteCache(e2)[3]*scaleSum*scaleSum/4 then
+                local connector = jautils.copyTexture(baseBGSprite,
+                    math.floor((x + e2x) / 2),
+                    math.floor((y + e2y) / 2),
+                false)
+                connector:setScale(imageScale, imageScale)
+
+                connector.depth = -8499
+                table.insert(sprites, connector)
+            end
+        end
+
+        ::continue::
+    end
+
+    return sprites
+end
+
 function spinner.associatedMods(entity)
     local cache = getSpriteCache(entity)
+    local fgSprite = cache[2][1]
+    if not fgSprite then
+        return { "FrostHelper" }
+    end
 
-    return { "FrostHelper", unpack(jautils.associatedModsFromSprite(cache[2][1])) }
+    return { "FrostHelper", unpack(jautils.associatedModsFromSprite(fgSprite)) }
 end
 
 function spinner.sprite(room, entity)
     local color = utils.getColor(entity.tint or "ffffff")
     local cache = getSpriteCache(entity)
+    local imageScale = entity.imageScale or 1
 
     utils.setSimpleCoordinateSeed(entity.x, entity.y)
+
+    local fgSprite = drawableSpriteStruct.fromTexture(cache[1][math.random(#cache[1])], entity)
+    fgSprite:setColor(color)
+    fgSprite:setScale(imageScale,imageScale)
 
     local sprites
     if frostSettings.spinnersConnect() then
         local baseSprite = drawableSpriteStruct.fromTexture(cache[2][math.random(#cache[2])], entity)
         baseSprite:setColor(color)
-        sprites = createConnectorsForSpinner(room, entity, baseSprite)
+        sprites = createConnectorsForSpinner(room, entity, baseSprite, cache)
     else
         sprites = {}
     end
 
-    local fgSprite = drawableSpriteStruct.fromTexture(cache[1][math.random(#cache[1])], entity)
-    fgSprite:setColor(color)
     table.insert(sprites, fgSprite)
 
     if entity.rainbow then
@@ -148,15 +167,19 @@ function spinner.sprite(room, entity)
         sprites = jautils.getBordersForAll(sprites, entity.borderColor)
     end
 
-    if frostSettings.spinnerBloom() and entity.bloomAlpha and entity.bloomAlpha > 0 then
-        table.insert(sprites, bloomSprite.getSprite(entity, entity.bloomAlpha, entity.bloomRadius or 1))
+    if frostSettings.spinnerBloom() then
+        local bloomAlpha = entity.bloomAlpha or 0
+        if bloomAlpha > 0 then
+            table.insert(sprites, bloomSprite.getSprite(entity, entity.bloomAlpha, entity.bloomRadius or 1))
+        end
     end
 
     return sprites
 end
 
 function spinner.selection(room, entity)
-    return utils.rectangle(entity.x - 8, entity.y - 8, 16, 16)
+    local scale = entity.scale or 1
+    return utils.rectangle(entity.x - 8 * scale, entity.y - 8 * scale, 16 * scale, 16 * scale)
 end
 
 return spinner

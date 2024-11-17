@@ -23,7 +23,7 @@ internal class ShaderFolder : Backdrop {
 
     public ShaderFolder(BinaryPacker.Element element, EffectRef effect) {
         Effect = effect;
-        Condition = new(element.Attr("shaderFlag"));
+        Condition = element.GetCondition("shaderFlag");
         
         Inner = [];
     }

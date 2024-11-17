@@ -35,7 +35,7 @@ public class JumpStar : Entity {
         Add(Sprite);
         Depth = 100;
 
-        Collider = new Hitbox(16, 16, -8, -8);
+        Collider = data.Collider("hitbox") ?? new Hitbox(16, 16, -8, -8);
         Add(new PlayerCollider(OnPlayer));
         Add(new BloomPoint(0.4f, 16f));
     }

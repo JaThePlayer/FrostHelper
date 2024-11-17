@@ -21,6 +21,7 @@ jautils.createPlacementsPreserveOrder(zipper, "custom_zip_mover", {
     { "coldLineLightColor", "0099ff", "color" },
     { "tint", "ffffff", "color" },
     { "directory", "objects/zipmover" },
+    { "canActivateFlag", "", "FrostHelper.condition" },
     { "speedMultiplier", 1.0 },
     { "coldSpeedMultiplier", 1 / 4 },
     { "bloomAlpha", 1.0 },

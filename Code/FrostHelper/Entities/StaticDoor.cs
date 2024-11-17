@@ -1,4 +1,6 @@
-﻿namespace FrostHelper;
+﻿using FrostHelper.Helpers;
+
+namespace FrostHelper;
 
 /// <summary>
 /// A door, but it's not an Actor and doesn't check for collisions with solids
@@ -31,7 +33,7 @@ public class StaticDoor : Entity {
         SolidIfDisabled = data.Bool("solidIfDisabled", false);
 
         Sprite.Play("idle", false, false);
-        Collider = new Hitbox(12f, 22f, -6f, -23f);
+        Collider = data.Collider("hitbox") ?? new Hitbox(12f, 22f, -6f, -23f);
         Add(Occlude = new LightOcclude(new(-1, -24, 2, 24), data.Float("lightOccludeAlpha", 1f)));
         Add(new PlayerCollider(HitPlayer, null, null));
     }

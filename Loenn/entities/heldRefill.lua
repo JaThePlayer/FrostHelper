@@ -13,6 +13,7 @@ jautils.createPlacementsPreserveOrder(heldRefill, "normal", {
     { "speed", 6 },
     { "directory", "objects/refill" },
     { "lineColor", "ffff00", "color" },
+    { "hitbox", "R,24,24,-12,-12", "FrostHelper.collider" },
 })
 
 function heldRefill.nodeSprite() end

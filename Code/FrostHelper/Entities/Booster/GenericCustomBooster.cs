@@ -146,7 +146,7 @@ namespace FrostHelper.Entities.Boosters {
             LoadIfNeeded();
 
             Depth = -8500;
-            Collider = new Circle(10f, 0f, 2f);
+            Collider = data.Collider("hitbox") ?? new Circle(10f, 0f, 2f);
             Directory = data.Attr("directory", "objects/FrostHelper/blueBooster/");
             sprite = new Sprite(GFX.Game, Directory) {
                 Visible = true

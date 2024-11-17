@@ -116,6 +116,8 @@ public sealed class CustomZipMover : Solid {
     
     private bool FillMiddle;
 
+    private ConditionHelper.Condition CanActivate;
+
     private SpriteSource HotSource { get; }
     private SpriteSource? ColdSource { get; }
 
@@ -250,6 +252,7 @@ public sealed class CustomZipMover : Solid {
         SpeedMult = SpeedMultNormal;
 
         FillMiddle = data.Bool("fillMiddle", true);
+        CanActivate = data.GetCondition("canActivateFlag");
     }
 
     public override void Added(Scene scene) {
@@ -443,7 +446,7 @@ public sealed class CustomZipMover : Solid {
     private IEnumerator Sequence() {
         Vector2 start = Position;
         while (true) {
-            if (HasPlayerRider()) {
+            if (CanActivate.Check() && HasPlayerRider()) {
                 sfx.Play("event:/game/01_forsaken_city/zip_mover", null, 0f);
                 Input.Rumble(RumbleStrength.Medium, RumbleLength.Short);
                 StartShaking(0.1f);

@@ -14,6 +14,7 @@ jautils.createPlacementsPreserveOrder(skateboard, "normal", {
     { "direction", "Right", directionsEnum },
     { "sprite", fallbackSprite },
     { "speed", 90.0 },
+    { "hitbox", "R,20,6,-10,-7", "FrostHelper.collider" },
     { "keepMoving", false }
 })
 

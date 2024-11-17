@@ -8,29 +8,21 @@ namespace FrostHelper.Helpers;
 internal sealed class SessionCounterComparer {
     public readonly string CounterName;
     
-    public readonly int Target;
-    public readonly string? TargetCounterName;
-    
     public readonly CounterOperation Operation;
 
     private Session.Counter? _counter;
-    private Session.Counter? _targetCounter;
+    private readonly CounterExpression _target;
 
     public SessionCounterComparer(string counterName, string target, CounterOperation operation) {
         CounterName = counterName;
-        if (!int.TryParse(target, CultureInfo.InvariantCulture, out Target))
-            TargetCounterName = target;
+        _target = new(target);
         Operation = operation;
     }
 
     public bool Check(Level level) {
         _counter ??= level.Session.GetCounterObj(CounterName);
 
-        var target = Target;
-        if (TargetCounterName != null) {
-            _targetCounter ??= level.Session.GetCounterObj(TargetCounterName);
-            target = _targetCounter.Value;
-        }
+        var target = _target.Get(level.Session);
         
         var met = Operation switch {
             CounterOperation.Equal => _counter.Value == target,

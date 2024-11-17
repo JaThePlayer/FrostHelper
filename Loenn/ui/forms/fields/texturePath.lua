@@ -3,13 +3,14 @@ local utils = require("utils")
 local mods = require("mods")
 local languageRegistry = require("language_registry")
 local jautils = mods.requireFromPlugin("libraries.jautils")
+local filesystem = require("utils.filesystem")
 
 local integerField = {}
 
 integerField.fieldType = "FrostHelper.texturePath"
 
 -- Fine tuned search for exactly one mod folder
-local function findModFolderFiletype(modFolderName, filenames, startFolder, fileType)
+local function findModFolderFiletype(modFolderName, filenames, startFolder, filetype)
     local path = utils.convertToUnixPath(utils.joinpath(
         string.format(mods.specificModContent, modFolderName),
         startFolder
@@ -46,6 +47,10 @@ local cache = {}
 local function createEntry(options, language, displayNameLangDir, nameNoExt, added, pattern, captureConverter, displayConverter, baseFolder)
     local d, s = string.match(nameNoExt, pattern)
     if not d then return end
+
+    if options.filter and (not options.filter(d, s)) then
+        return
+    end
 
     local k = captureConverter(d, s)
 
@@ -85,7 +90,7 @@ local function findSprites(options)
     local vanillaSprites = options.vanillaSprites or {}
 
     if cache[pattern] then
-        return cache[pattern]
+        --return cache[pattern]
     end
 
     local language = languageRegistry.getLanguage()

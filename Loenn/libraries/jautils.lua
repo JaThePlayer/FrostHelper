@@ -215,7 +215,7 @@ jautils.fieldTypeOverrides = {
     list = function (data) return {
         fieldType = "list",
         elementOptions = data and data.elementOptions,
-        elementSeparator = ",",
+        elementSeparator = data and data.elementSeparator or ",",
         elementDefault = data and data.elementDefault,
     } end,
     typesList = jautils.typesListFieldInfo,
@@ -300,6 +300,31 @@ jautils.fieldTypeOverrides = {
                 return false
             end
         }
+    end,
+    ["FrostHelper.texturePath"] = function (data)
+        if not compat.inSnowberry
+           -- Way too laggy for now
+           and not (compat.inLonn and (data.baseFolder == "objects" or data.baseFolder == "objects/switchgate")) then
+            data.fieldType = "FrostHelper.texturePath"
+            return data
+        end
+
+        if data.fallback then
+            return {
+                options = data.fallback,
+                editable = true,
+            }
+        end
+    end,
+    ["FrostHelper.collider"] = function (data)
+        return {
+            fieldType = "list",
+            elementSeparator = ";",
+        }
+    end,
+    ["FrostHelper.condition"] = function (data)
+        -- Fictional field type, for future-proofing
+        return nil
     end
 }
 

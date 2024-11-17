@@ -22,19 +22,19 @@ jautils.createPlacementsPreserveOrder(timer, "default", {
     { "outputCounter", "", "sessionCounter" },
     { "outputCounterUnit", "Milliseconds", jautils.counterTimeUnits },
     { "visible", true },
-})
+}, true)
 
 jautils.createPlacementsPreserveOrder(incTimer, "default", {
     { "timerId", "" },
-    { "stopFlag", "" },
-    { "removeFlag", "" },
+    { "stopFlag", "", "FrostHelper.condition" },
+    { "removeFlag", "", "FrostHelper.condition"  },
     { "icon", "frostHelper/time" },
     { "iconColor", "ffffff", "color" },
     { "textColor", "ffffff", "color" },
     { "outputCounter", "", "sessionCounter" },
     { "outputCounterUnit", "Milliseconds", jautils.counterTimeUnits },
     { "visible", true },
-})
+}, true)
 
 jautils.createPlacementsPreserveOrder(counterDisplay, "default", {
     { "counter", "", "sessionCounter" },
@@ -44,7 +44,7 @@ jautils.createPlacementsPreserveOrder(counterDisplay, "default", {
     { "iconColor", "ffffff", "color" },
     { "textColor", "ffffff", "color" },
     { "showOnRoomLoad", false },
-})
+}, true)
 
 return {
     timer,

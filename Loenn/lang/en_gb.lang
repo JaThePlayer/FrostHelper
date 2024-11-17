@@ -22,6 +22,7 @@ entities.FrostHelper/DustSprite.attributes.description.rainbowEyes=Whether the e
 entities.FrostHelper/DustSprite.attributes.description.hasEdges=Whether to render edges for this dust sprite.
 entities.FrostHelper/DustSprite.attributes.description.attachToSolid=Whether this dust sprite should attach to solids.
 entities.FrostHelper/DustSprite.attributes.description.attachGroup=The group that this entity is in. All entities with the same attach group will be attached to the same solid.
+entities.FrostHelper/DustSprite.attributes.description.hitbox=Controls the hitbox for this entity.\nRefer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Custom-Colliders
 
 # Badeline Chaser Block
 entities.FrostHelper/BadelineChaserBlock.placements.name.badeline_chaser_block=Badeline Chaser Block
@@ -38,6 +39,7 @@ entities.FrostHelper/BadelineChaserBlockActivator.attributes.description.solid=W
 entities.FrostHelper/Bubbler.placements.name.normal=Bubbler
 entities.FrostHelper/Bubbler.attributes.description.visible=Whether this bubbler is visible.
 entities.FrostHelper/Bubbler.attributes.description.color=The hex color used to tint the bubbler's sprite.
+entities.FrostHelper/Bubbler.attributes.description.hitbox=Controls the hitbox for this entity.\nRefer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Custom-Colliders
 
 # Core Berry
 entities.FrostHelper/CoreBerry.placements.name.normal=Core Berry
@@ -115,6 +117,9 @@ entities.FrostHelper/IceSpinner.attributes.description.renderOutline=Whether thi
 entities.FrostHelper/IceSpinner.attributes.description.attachGroup=The group that this entity is in. All entities with the same attach group will be attached to the same solid.
 entities.FrostHelper/IceSpinner.attributes.description.debrisCount=The amount of debris created when this spinner is destroyed\nHigh values can cause huge lag!
 entities.FrostHelper/IceSpinner.attributes.description.singleFGImage=Use a single FG image, even if the spinner is partially in a wall. Improves performance, but can cause visual differences.
+entities.FrostHelper/IceSpinner.attributes.description.scale=Scale applied to the hitbox, useful for making larger/smaller spinners.\nDoes NOT scale sprites.
+entities.FrostHelper/IceSpinner.attributes.description.imageScale=Scale applied to the images for this spinner, useful for creating bigger spinners with existing, smaller sprites.
+entities.FrostHelper/IceSpinner.attributes.description.hitbox=Controls the hitbox for this entity.\nRefer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Custom-Colliders
 
 FrostHelper.paths.customSpinner.danger/crystal>_white=Vanilla White
 FrostHelper.paths.customSpinner.danger/crystal>_red=Vanilla Red
@@ -136,6 +141,7 @@ entities.FrostHelper/SpringLeft.attributes.description.oneUse=Whether the spring
 entities.FrostHelper/SpringLeft.attributes.description.renderOutline=Whether this spring should render its outline
 entities.FrostHelper/SpringLeft.attributes.description.dashRecovery=Sets the player's dash count to this value upon use.\nNegative values are supported, and will take away dashes, preventing the player from using the spring if they don't have enough.\nA value of 10000 (default) makes it refill dashes to the current dash limit instead.\nA value of 10001 makes it leave dash count unchanged instead.
 entities.FrostHelper/SpringLeft.attributes.description.staminaRecovery=Sets the player's stamina to this value upon use.\nNegative values are supported, and will take away stamina, preventing the player from using the spring if they don't have enough.\nA value of 10000 (default) makes it refill stamina to the current stamina limit instead.\nA value of 10001 makes it leave stamina unchanged instead.
+entities.FrostHelper/SpringLeft.attributes.description.sfx=Sound effect to play on interaction.
 
 entities.FrostHelper/SpringRight.attributes.description.playerCanUse=Whether the player can use this spring
 entities.FrostHelper/SpringRight.attributes.description.directory=Path to the directory containing the sprites for the spring, relative to Atlases/Gameplay
@@ -144,6 +150,7 @@ entities.FrostHelper/SpringRight.attributes.description.oneUse=Whether the sprin
 entities.FrostHelper/SpringRight.attributes.description.renderOutline=Whether this spring should render its outline
 entities.FrostHelper/SpringRight.attributes.description.dashRecovery=Sets the player's dash count to this value upon use.\nNegative values are supported, and will take away dashes, preventing the player from using the spring if they don't have enough.\nA value of 10000 (default) makes it refill dashes to the current dash limit instead.\nA value of 10001 makes it leave dash count unchanged instead.
 entities.FrostHelper/SpringRight.attributes.description.staminaRecovery=Sets the player's stamina to this value upon use.\nNegative values are supported, and will take away stamina, preventing the player from using the spring if they don't have enough.\nA value of 10000 (default) makes it refill stamina to the current stamina limit instead.\nA value of 10001 makes it leave stamina unchanged instead.
+entities.FrostHelper/SpringRight.attributes.description.sfx=Sound effect to play on interaction.
 
 entities.FrostHelper/SpringFloor.attributes.description.playerCanUse=Whether the player can use this spring
 entities.FrostHelper/SpringFloor.attributes.description.directory=Path to the directory containing the sprites for the spring, relative to Atlases/Gameplay
@@ -152,6 +159,7 @@ entities.FrostHelper/SpringFloor.attributes.description.oneUse=Whether the sprin
 entities.FrostHelper/SpringFloor.attributes.description.renderOutline=Whether this spring should render its outline
 entities.FrostHelper/SpringFloor.attributes.description.dashRecovery=Sets the player's dash count to this value upon use.\nNegative values are supported, and will take away dashes, preventing the player from using the spring if they don't have enough.\nA value of 10000 (default) makes it refill dashes to the current dash limit instead.\nA value of 10001 makes it leave dash count unchanged instead.
 entities.FrostHelper/SpringFloor.attributes.description.staminaRecovery=Sets the player's stamina to this value upon use.\nNegative values are supported, and will take away stamina, preventing the player from using the spring if they don't have enough.\nA value of 10000 (default) makes it refill stamina to the current stamina limit instead.\nA value of 10001 makes it leave stamina unchanged instead.
+entities.FrostHelper/SpringFloor.attributes.description.sfx=Sound effect to play on interaction.
 
 entities.FrostHelper/SpringCeiling.attributes.description.playerCanUse=Whether the player can use this spring
 entities.FrostHelper/SpringCeiling.attributes.description.directory=Path to the directory containing the sprites for the spring, relative to Atlases/Gameplay
@@ -160,6 +168,7 @@ entities.FrostHelper/SpringCeiling.attributes.description.oneUse=Whether the spr
 entities.FrostHelper/SpringCeiling.attributes.description.renderOutline=Whether this spring should render its outline
 entities.FrostHelper/SpringCeiling.attributes.description.dashRecovery=Sets the player's dash count to this value upon use.\nNegative values are supported, and will take away dashes, preventing the player from using the spring if they don't have enough.\nA value of 10000 (default) makes it refill dashes to the current dash limit instead.\nA value of 10001 makes it leave dash count unchanged instead.
 entities.FrostHelper/SpringCeiling.attributes.description.staminaRecovery=Sets the player's stamina to this value upon use.\nNegative values are supported, and will take away stamina, preventing the player from using the spring if they don't have enough.\nA value of 10000 (default) makes it refill stamina to the current stamina limit instead.\nA value of 10001 makes it leave stamina unchanged instead.
+entities.FrostHelper/SpringCeiling.attributes.description.sfx=Sound effect to play on interaction.
 
 # Custom Flutterbird
 entities.FrostHelper/CustomFlutterBird.placements.name.normal=Custom Flutterbird
@@ -177,6 +186,7 @@ entities.FrostHelper/CustomFeather.attributes.description.maxSpeed=Max speed of 
 entities.FrostHelper/CustomFeather.attributes.description.lowSpeed=Minimum speed of this feather
 entities.FrostHelper/CustomFeather.attributes.description.neutralSpeed=Speed of this feather when the player is not holding any directional input
 entities.FrostHelper/CustomFeather.attributes.description.spritePath=Path to the directory containing the sprites for the feather, relative to Atlases/Gameplay
+entities.FrostHelper/CustomFeather.attributes.description.hitbox=Controls the hitbox for this entity.\nRefer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Custom-Colliders
 
 # Custom Zip Mover
 entities.FrostHelper/CustomZipMover.placements.name.custom_zip_mover=Custom Zip Mover
@@ -197,6 +207,7 @@ entities.FrostHelper/CustomZipMover.attributes.description.fillMiddle=Whether th
 entities.FrostHelper/CustomZipMover.attributes.description.bloomAlpha=If not zero, determines the alpha value for the bloom point of this zipper
 entities.FrostHelper/CustomZipMover.attributes.description.bloomRadius=The radius of the bloom point of this zipper.
 entities.FrostHelper/CustomZipMover.attributes.description.rainbow=Whether this zip mover should be rainbow. Supports Maddie's Helping Hand's rainbow spinner controller.
+entities.FrostHelper/CustomZipMover.attributes.description.canActivateFlag=Flag which needs to be set for this zipper to react to the player.\nUse a '!' before the flag name to invert the condition.\nSession expressions are supported, refer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Session-Expressions
 
 # Entity Mover
 entities.FrostHelper/EntityMover.placements.name.normal=Entity Mover
@@ -256,6 +267,7 @@ entities.FrostHelper/GrayBooster.attributes.description.boostSfx=SFX to play whe
 entities.FrostHelper/GrayBooster.attributes.description.red=Whether this booster should act like a red one, that has an unlimited range.
 entities.FrostHelper/GrayBooster.attributes.description.redBoostDashOutMode=When this is a red booster, decides whether the player can dash out of the booster early.\nDefault - Vanilla behaviour, player needs to have a dash.\nEvenAtZeroDashes - The player can dash out of the booster even without any dashes.\nNever - The player can't dash out of the booster.
 entities.FrostHelper/GrayBooster.attributes.description.dashes=How many dashes the player will have after leaving the booster.\nSet to -1 to simply refill dashes according to the current maximum dash count.\nSet to -2 to not change dash count in any way.\nOther positive values will set the dash count to the specified amount.\nOther negative values crash.
+entities.FrostHelper/GrayBooster.attributes.description.hitbox=Controls the hitbox for this entity.\nRefer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Custom-Colliders
 
 entities.FrostHelper/BlueBooster.attributes.description.directory=The directory from which the sprites are taken, relative to Atlases/Gameplay/
 entities.FrostHelper/BlueBooster.attributes.description.respawnTime=Time (in seconds) it takes the booster to respawn after being used. A number <= 0 will make the booster never respawn.
@@ -267,6 +279,7 @@ entities.FrostHelper/BlueBooster.attributes.description.reappearSfx=SFX to play 
 entities.FrostHelper/BlueBooster.attributes.description.boostSfx=SFX to play when the booster starts boosting the player
 entities.FrostHelper/BlueBooster.attributes.description.red=Whether this booster should act like a red one, that has an unlimited range.
 entities.FrostHelper/BlueBooster.attributes.description.redBoostDashOutMode=When this is a red booster, decides whether the player can dash out of the booster early.\nDefault - Vanilla behaviour, player needs to have a dash.\nEvenAtZeroDashes - The player can dash out of the booster even without any dashes.\nNever - The player can't dash out of the booster.
+entities.FrostHelper/BlueBooster.attributes.description.hitbox=Controls the hitbox for this entity.\nRefer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Custom-Colliders
 
 entities.FrostHelper/YellowBooster.attributes.description.directory=The directory from which the sprites are taken, relative to Atlases/Gameplay/
 entities.FrostHelper/YellowBooster.attributes.description.respawnTime=Time (in seconds) it takes the booster to respawn after being used. A number <= 0 will make the booster never respawn.
@@ -278,6 +291,7 @@ entities.FrostHelper/YellowBooster.attributes.description.reappearSfx=SFX to pla
 entities.FrostHelper/YellowBooster.attributes.description.boostSfx=SFX to play when the booster starts boosting the player
 entities.FrostHelper/YellowBooster.attributes.description.flashTint=The hex color to use when the booster flashes due to time running out
 entities.FrostHelper/YellowBooster.attributes.description.dashes=How many dashes the player will have after leaving the booster.\nSet to -1 to simply refill dashes according to the current maximum dash count.\nSet to -2 to not change dash count in any way.\nOther positive values will set the dash count to the specified amount.\nOther negative values crash.
+entities.FrostHelper/YellowBooster.attributes.description.hitbox=Controls the hitbox for this entity.\nRefer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Custom-Colliders
 
 entities.FrostHelper/IncrementBooster.attributes.description.directory=The directory from which the sprites are taken, relative to Atlases/Gameplay/
 entities.FrostHelper/IncrementBooster.attributes.description.respawnTime=Time (in seconds) it takes the booster to respawn after being used. A number <= 0 will make the booster never respawn.
@@ -292,6 +306,7 @@ entities.FrostHelper/IncrementBooster.attributes.description.redBoostDashOutMode
 entities.FrostHelper/IncrementBooster.attributes.description.dashCap=Maximum amount of dashes the player can have after leaving this booster. Leave at -1 for no cap.
 entities.FrostHelper/IncrementBooster.attributes.description.dashes=How many additional dashes the player will get after leaving the booster.
 entities.FrostHelper/IncrementBooster.attributes.description.refillBeforeIncrementing=Refills the player's dashes before incrementing the dash amount.
+entities.FrostHelper/IncrementBooster.attributes.description.hitbox=Controls the hitbox for this entity.\nRefer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Custom-Colliders
 
 # Ice Key
 entities.FrostHelper/KeyIce.placements.name.normal=Ice Key
@@ -311,6 +326,7 @@ entities.FrostHelper/PlusOneRefill.attributes.description.respawnTime=Time it ta
 entities.FrostHelper/PlusOneRefill.attributes.description.oneUse=Whether the refill should respawn after being used
 entities.FrostHelper/PlusOneRefill.attributes.description.particleColor=The color of particles emitted by this refill
 entities.FrostHelper/PlusOneRefill.attributes.description.recoverStamina=Whether this refill should also recover stamina
+entities.FrostHelper/PlusOneRefill.attributes.description.hitbox=Controls the hitbox for this entity.\nRefer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Custom-Colliders
 
 # Custom Kevin
 entities.FrostHelper/SlowCrushBlock.placements.name.both=Custom Kevin (Both)
@@ -333,6 +349,7 @@ entities.FrostHelper/StaticBumper.attributes.description.notCoreMode=If set, the
 entities.FrostHelper/StaticBumper.attributes.description.wobble=Whether the bumper should wobble like vanilla ones.
 entities.FrostHelper/StaticBumper.attributes.description.easing=The Easing type used for the movement. You can either pick one of the presets, or write lua code that returns a number (typically between 0.0 and 1.0).\nYour input will be converted to:\nreturn function(p){(name.Contains("return") ? "" : " return")} {name} end\nwhere 'p' is tween.Percent - a number between (0.0, 1.0), which is the percent/100 of the move time elapsed.
 entities.FrostHelper/StaticBumper.attributes.description.moveTime=How long (in seconds) it takes for this bumper to move to its destination
+entities.FrostHelper/StaticBumper.attributes.description.hitbox=Controls the hitbox for this entity.\nRefer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Custom-Colliders
 
 # Skateboard
 entities.FrostHelper/Skateboard.placements.name.normal=Skateboard
@@ -340,6 +357,7 @@ entities.FrostHelper/Skateboard.attributes.description.sprite=The path to the sp
 entities.FrostHelper/Skateboard.attributes.description.keepMoving=Whether this skateboard should keep moving after getting stepped on once, even if the player leaves the skateboard
 entities.FrostHelper/Skateboard.attributes.description.direction=The direction in which the skateboard moves
 entities.FrostHelper/Skateboard.attributes.description.speed=How fast the skateboard moves
+entities.FrostHelper/Skateboard.attributes.description.hitbox=Controls the hitbox for this entity.\nRefer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Custom-Colliders
 
 # Custom Lightbeam
 entities.FrostHelper/ColoredLightbeam.placements.name.normal=Custom Lightbeam
@@ -363,6 +381,7 @@ entities.FrostHelper/HeldRefill.placements.name.normal=Held Refill
 entities.FrostHelper/HeldRefill.attributes.description.speed=The speed multiplier applied when using this refill.
 entities.FrostHelper/HeldRefill.attributes.description.directory=Directory to take sprites from. It should have the same sprite filenames as a vanilla refill.
 entities.FrostHelper/HeldRefill.attributes.description.lineColor=The color to use for rendering the path of this refill.
+entities.FrostHelper/HeldRefill.attributes.description.hitbox=Controls the hitbox for this entity.\nRefer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Custom-Colliders
 
 entities.FrostHelper/Icicle.placements.name.normal=Icicle
 entities.FrostHelper/Icicle.attributes.description.directory=The directory containing an idle00.png file to use for the icicle. Additional animation frames can be added by creating idle01.png, idle02.png and so on. Must end with a /
@@ -430,6 +449,7 @@ entities.FrostHelper/JumpStar.placements.name.dash=Dash Star
 entities.FrostHelper/JumpStar.attributes.description.directory=The directory to grab sprites from. They will be retrieved like this: "$Directory/$Mode/$(Strength)star"
 entities.FrostHelper/JumpStar.attributes.description.strength=The strength of this star. For the Dash Mode, this is the amount of dashes the player will have. For Jump Mode, the player will get +1 jumps compared to this value.
 entities.FrostHelper/JumpStar.attributes.description.mode=The mode of this Star. Possible modes: Dash, Jump
+entities.FrostHelper/JumpStar.attributes.description.hitbox=Controls the hitbox for this entity.\nRefer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Custom-Colliders
 
 entities.FrostHelper/LineIndicator.placements.name.default=Line Indicator
 entities.FrostHelper/LineIndicator.attributes.description.color=The color of this line.
@@ -440,6 +460,7 @@ entities.FrostHelper/StaticDoor.attributes.description.type=Changes the door typ
 entities.FrostHelper/StaticDoor.attributes.description.openSfx=Overrides the sfx played when this door opens.
 entities.FrostHelper/StaticDoor.attributes.description.closeSfx=Overrides the sfx played when this door closes.
 entities.FrostHelper/StaticDoor.attributes.description.lightOccludeAlpha=The alpha value of the Light Occlude. Values below 1 mean that light will partially pass through the door even when it's closed.
+entities.FrostHelper/StaticDoor.attributes.description.hitbox=Controls the hitbox for this entity.\nRefer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Custom-Colliders
 
 entities.FrostHelper/ArbitraryShapeLightning.placements.name.default=Arbitrary Shape Lightning
 entities.FrostHelper/ArbitraryShapeLightning.attributes.description.windingOrder=The winding order of the polygon.\nIf your shape looks broken in-game, try changing this property until it looks correctly.
@@ -504,7 +525,7 @@ entities.FrostHelper/BloomBlocker.attributes.description.windingOrder=The windin
 entities.FrostHelper/FlagCounterController.placements.name.default=Flag To Counter Controller
 entities.FrostHelper/FlagCounterController.placements.description.default=Counts how many of the provided flags are set, and sets a Session Counter to that value.
 entities.FrostHelper/FlagCounterController.attributes.description.counter=The Session Counter which should be controlled by this entity.
-entities.FrostHelper/FlagCounterController.attributes.description.flags=List of flags to check, comma-seperated.\nWrite a '!' before the flag name to invert the condition.\nWriting a flag in the format `flagName;value` will add `value` to the session counter if that flag is set, instead of the default 1.
+entities.FrostHelper/FlagCounterController.attributes.description.flags=List of flags to check, comma-seperated.\nWrite a '!' before the flag name to invert the condition.\nWriting a flag in the format `flagName;value` will add `value` to the session counter if that flag is set, instead of the default 1.\nSession expressions are supported, refer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Session-Expressions
 
 entities.FrostHelper/FlagIfCounterController.placements.name.default=Flag If Counter Controller
 entities.FrostHelper/FlagIfCounterController.placements.description.default=Sets a flag if a Session Counter condition is met, and clears that flag otherwise.
@@ -512,6 +533,11 @@ entities.FrostHelper/FlagIfCounterController.attributes.description.flag=The Ses
 entities.FrostHelper/FlagIfCounterController.attributes.description.counter=The Session Counter which should be checked by this entity.
 entities.FrostHelper/FlagIfCounterController.attributes.description.target=Target value of the counter.\nCan be an integer, OR the name of a different session counter.\nDecimal numbers are NOT supported.
 entities.FrostHelper/FlagIfCounterController.attributes.description.operation=The comparison operation to use to compare the counter to target.
+
+entities.FrostHelper/FlagIfExpressionController.placements.name.default=Flag If Expression Controller
+entities.FrostHelper/FlagIfExpressionController.placements.description.default=Sets a flag if a Session Expression is met, and clears that flag otherwise.
+entities.FrostHelper/FlagIfExpressionController.attributes.description.flag=The Session Flag which should be controlled by this entity.
+entities.FrostHelper/FlagIfExpressionController.attributes.description.expression=The Session Expression which should be checked.\nIf it returns non-zero, the flag gets set.\nRefer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Session-Expressions
 
 entities.FrostHelper/TimeToCounterController.placements.name.default=Time To Counter Controller
 entities.FrostHelper/TimeToCounterController.placements.description.default=Sets a Session Counter to the value of the Session Timer or the Savefile Timer.
@@ -619,7 +645,7 @@ triggers.FrostHelper/BloomColorPulseTrigger.attributes.description.easing=The Ea
 
 triggers.FrostHelper/ScreenwideShaderTrigger.placements.name.default=Screenwide Shader
 triggers.FrostHelper/ScreenwideShaderTrigger.attributes.description.effects=A comma-seperated list of effect names that will be activated by this trigger. Effect names provided here should not start with "Effects/"
-triggers.FrostHelper/ScreenwideShaderTrigger.attributes.description.flag=The flag that needs to be enabled for this shader to be active. Write a '!' before the flag name to invert the condition.
+triggers.FrostHelper/ScreenwideShaderTrigger.attributes.description.flag=The flag that needs to be enabled for this shader to be active. Write a '!' before the flag name to invert the condition.\nSession expressions are supported, refer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Session-Expressions
 
 triggers.FrostHelper/EasedCameraZoomTrigger.placements.name.default=Eased Camera Zoom
 triggers.FrostHelper/EasedCameraZoomTrigger.attributes.description.easing=The Easing type used for the movement. You can either pick one of the presets, or write lua code that returns a number (typically between 0.0 and 1.0).\nYour input will be converted to:\nreturn function(p){(name.Contains("return") ? "" : " return")} {name} end\nwhere 'p' is tween.Percent - a number between (0.0, 1.0), which is the percent/100 of the move time elapsed.
@@ -649,7 +675,7 @@ triggers.FrostHelper/LoopActivator.attributes.description.once=Whether this trig
 triggers.FrostHelper/LoopActivator.attributes.description.delay=How long to wait (in seconds) before the first iteration of the loop. After the first iteration, loopTime will be used instead.
 triggers.FrostHelper/LoopActivator.attributes.description.loopTime=How long to wait (in seconds) before each iteration of the loop.
 triggers.FrostHelper/LoopActivator.attributes.description.activationMode=How the activation should work:\nAll: All triggers get activated at once, in node order.\nCycle: When this trigger activates for the n-th time, the n-th trigger will be chosen.\nRandom: A random (seeded) trigger will be chosen.
-triggers.FrostHelper/LoopActivator.attributes.description.condition=The flag that needs to be set in order for this to trigger anything. Write a ! at the beginning of the flag name to invert this logic.
+triggers.FrostHelper/LoopActivator.attributes.description.condition=The flag that needs to be set in order for this to trigger anything. Write a ! at the beginning of the flag name to invert this logic.\nSession expressions are supported, refer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Session-Expressions
 triggers.FrostHelper/LoopActivator.attributes.description.requireActivation=Whether this activator needs to be activated by some other source before starting the loop. If off, the loop will begin as soon as the level begins.
 triggers.FrostHelper/LoopActivator.attributes.description.activateAfterDeath=Whether this activator can activate triggers even after the player dies.\nThis might cause crashes when used with certain triggers which assume the player is still alive.
 
@@ -659,7 +685,7 @@ triggers.FrostHelper/IfActivator.placements.description.default=Activates trigge
 triggers.FrostHelper/IfActivator.attributes.description.once=Whether this trigger should only activate once, and then get deleted.
 triggers.FrostHelper/IfActivator.attributes.description.delay=How long to wait (in seconds) before actually activating the triggers.
 triggers.FrostHelper/IfActivator.attributes.description.activationMode=How the activation should work:\nAll: All triggers get activated at once, in node order.\nCycle: When this trigger activates for the n-th time, the n-th trigger will be chosen.\nRandom: A random (seeded) trigger will be chosen.
-triggers.FrostHelper/IfActivator.attributes.description.condition=The flag that needs to be set in order for this to trigger anything. Write a ! at the beginning of the flag name to invert this logic.
+triggers.FrostHelper/IfActivator.attributes.description.condition=The flag that needs to be set in order for this to trigger anything. Write a ! at the beginning of the flag name to invert this logic.\nSession expressions are supported, refer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Session-Expressions
 
 # FrostHelper/OnPlayerEnterActivator
 triggers.FrostHelper/OnPlayerEnterActivator.placements.name.default=Activator (On Player Enter)
@@ -819,14 +845,14 @@ triggers.FrostHelper/IncrementingTimer.attributes.description.outputCounter=The 
 triggers.FrostHelper/IncrementingTimer.attributes.description.outputCounterUnit=The unit to use for the `Output Counter`.
 
 triggers.FrostHelper/CounterDisplay.placements.name.default=Counter Display
-triggers.FrostHelper/CounterDisplay.placements.description.default=Creates a HUD display for a Session Counter, optionally with an icon.
-triggers.FrostHelper/CounterDisplay.attributes.description.counter=The Session Counter to track.
+triggers.FrostHelper/CounterDisplay.placements.description.default=Creates a HUD display for a Session Counter or Session Expression, optionally with an icon.
+triggers.FrostHelper/CounterDisplay.attributes.description.counter=The Session Counter to track.\nSession expressions are supported, refer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Session-Expressions
 triggers.FrostHelper/CounterDisplay.attributes.description.showOnRoomLoad=Whether the counter should be displayed on room load, not needing the player to enter the trigger to activate it.
 triggers.FrostHelper/CounterDisplay.attributes.description.textColor=The color to use for the text.
 triggers.FrostHelper/CounterDisplay.attributes.description.iconColor=The color to use to tint the icon.
 triggers.FrostHelper/CounterDisplay.attributes.description.icon=The path to the icon to use for this timer, relative to Graphics/Atlases/Gameplay. Leave blank for no icon.
 triggers.FrostHelper/CounterDisplay.attributes.description.removeFlag=The flag which removes this display from the screen.
-triggers.FrostHelper/CounterDisplay.attributes.description.visibleFlag=The flag which needs to be set for this display to be visible.\nDoes not actually remove the display.\nPut a '!' at the start to invert this logic.
+triggers.FrostHelper/CounterDisplay.attributes.description.visibleFlag=The flag which needs to be set for this display to be visible.\nDoes not actually remove the display.\nPut a '!' at the start to invert this logic.\nSession expressions are supported, refer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Session-Expressions
 
 triggers.FrostHelper/TimerChange.placements.name.default=Timer Change
 triggers.FrostHelper/TimerChange.placements.description.default=Changes how much time is left on a timer started by the Timer trigger.
@@ -885,12 +911,12 @@ triggers.FrostHelper/FlashlightColorTrigger.attributes.description.persistent=Wh
 style.effects.FrostHelper/ShaderWrapper.name=Shader Wrapper
 style.effects.FrostHelper/ShaderWrapper.description.wrappedTag=The tag which will be affected by this wrapper.
 style.effects.FrostHelper/ShaderWrapper.description.shader=The path to the shader to use with this backdrop, relative to the Effects/ folder
-style.effects.FrostHelper/ShaderWrapper.description.shaderFlag=Flag that needs to be enabled for the shader to be rendered.\nBegin the flag with ! to invert the condition.\nIf the shader doesn't get rendered, the affected stylegrounds will be rendered normally.\nIf VivHelper is an everest.yaml dependency, you can use !VH_Photosensitive to only run the shader if photosensitive mode is disabled.
+style.effects.FrostHelper/ShaderWrapper.description.shaderFlag=Flag that needs to be enabled for the shader to be rendered.\nBegin the flag with ! to invert the condition.\nIf the shader doesn't get rendered, the affected stylegrounds will be rendered normally.\nIf VivHelper is an everest.yaml dependency, you can use !VH_Photosensitive to only run the shader if photosensitive mode is disabled.\nSession expressions are supported, refer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Session-Expressions
 
 style.effects.FrostHelper/ShaderWrapperColorList.name=Shader Wrapper (Color List)
 style.effects.FrostHelper/ShaderWrapperColorList.description.wrappedTag=The tag which will be affected by this wrapper.
 style.effects.FrostHelper/ShaderWrapperColorList.description.shader=The path to the shader to use with this backdrop, relative to the Effects/ folder
-style.effects.FrostHelper/ShaderWrapperColorList.description.shaderFlag=Flag that needs to be enabled for the shader to be rendered.\nBegin the flag with ! to invert the condition.\nIf the shader doesn't get rendered, the affected stylegrounds will be rendered normally.\nIf VivHelper is an everest.yaml dependency, you can use !VH_Photosensitive to only run the shader if photosensitive mode is disabled.
+style.effects.FrostHelper/ShaderWrapperColorList.description.shaderFlag=Flag that needs to be enabled for the shader to be rendered.\nBegin the flag with ! to invert the condition.\nIf the shader doesn't get rendered, the affected stylegrounds will be rendered normally.\nIf VivHelper is an everest.yaml dependency, you can use !VH_Photosensitive to only run the shader if photosensitive mode is disabled.\nSession expressions are supported, refer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Session-Expressions
 style.effects.FrostHelper/ShaderWrapperColorList.description.colors=Comma-seperated list of hex colors, which will be passed to the `Colors` uniform on the provided shader.
 
 style.effects.FrostHelper/ColorgradeWrapper.name=Colorgrade Wrapper

@@ -13,10 +13,10 @@ internal sealed class FlagCounterController : Entity {
             var sepIndex = from.IndexOf(';');
             if (sepIndex < 0) {
                 Value = 1;
-                Condition = new(from);
+                Condition = ConditionHelper.CreateOrDefault(from, "");
             } else {
                 Value = int.Parse(from.AsSpan(sepIndex+1), CultureInfo.InvariantCulture);
-                Condition = new(from[..sepIndex]);
+                Condition = ConditionHelper.CreateOrDefault(from[..sepIndex], "");
             }
         }
     }
@@ -31,13 +31,27 @@ internal sealed class FlagCounterController : Entity {
             .Select(s => new Entry(s))
             .ToArray();
 
-        Active = false;
         Visible = false;
-        
-        Add(new FlagListener(flag: null, OnFlagSet, mustChange: true, triggerOnRoomBegin: true));
+
+        if (_conditions.All(c => c.Condition.OnlyChecksFlags())) {
+            Active = false;
+            Add(new FlagListener(flag: null, OnFlagSet, mustChange: true, triggerOnRoomBegin: true));
+        } else {
+            // Session counters are checked, we need to recalculate each frame :/
+            Active = true;
+        }
+    }
+
+    public override void Update() {
+        if (Engine.Scene is Level level)
+            UpdateCounter(level.Session);
     }
 
     private void OnFlagSet(Session session, string? flag, bool state) {
+        UpdateCounter(session);
+    }
+
+    private void UpdateCounter(Session session) {
         var amt = 0;
         foreach (var c in _conditions) {
             amt += c.Condition.Check(session) ? c.Value : 0;

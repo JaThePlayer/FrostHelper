@@ -16,6 +16,7 @@ jautils.createPlacementsPreserveOrder(jumpStar, "default", {
     { "directory", defaultDirectory },
     { "mode", "Jump", jumpStarModes },
     { "strength", 1, "integer" },
+    { "hitbox", "R,16,16,-8,-8", "FrostHelper.collider" },
 })
 
 jautils.addPlacement(jumpStar, "dash", {

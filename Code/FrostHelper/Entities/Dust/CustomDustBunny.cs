@@ -1,4 +1,5 @@
-﻿using FrostHelper.ModIntegration;
+﻿using FrostHelper.Helpers;
+using FrostHelper.ModIntegration;
 
 namespace FrostHelper.Entities;
 
@@ -12,6 +13,11 @@ internal sealed class CustomDustBunny : DustStaticSpinner {
 
     public CustomDustBunny(EntityData data, Vector2 offset) : base(data, offset) {
         CustomDustGraphic.LoadHooksIfNeeded();
+
+        if (data.Attr("hitbox", "C,6,0,0;R,16,4,-8,-3") != "C,6,0,0;R,16,4,-8,-3" 
+            && data.Collider("hitbox") is { } customCollider) {
+            Collider = customCollider;
+        }
 
         var edgeColorsString = data.Attr("edgeColors", "f25a10,ff0000,f21067");
         if (!ColorCache.TryGetValue(edgeColorsString, out var edgeColors)) {

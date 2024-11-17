@@ -5,14 +5,18 @@ namespace FrostHelper.Helpers;
 
 internal ref struct SpanParser(ReadOnlySpan<char> input)
 {
-    private ReadOnlySpan<char> Remaining = input;
+    private ReadOnlySpan<char> _remaining = input;
+    
+    public ReadOnlySpan<char> Remaining => _remaining;
+    
+    public bool IsEmpty => _remaining.IsEmpty;
 
     private Res<T> ReadSlice<T>(IFormatProvider? format, int len) where T : ISpanParsable<T>
     {
-        var success = T.TryParse(Remaining[..len], format ?? CultureInfo.InvariantCulture, out var ret);
+        var success = T.TryParse(_remaining[..len], format ?? CultureInfo.InvariantCulture, out var ret);
 
         //Remaining = Remaining.Length >= len ? Remaining[len..] : Remaining[(len + 1)..];
-        Remaining = Remaining[len..];
+        _remaining = _remaining[len..];
         
         if (!success)
         {
@@ -24,15 +28,15 @@ internal ref struct SpanParser(ReadOnlySpan<char> input)
     
     private ReadOnlySpan<char> ReadSliceStr(int len)
     {
-        var ret = Remaining[..len];
-        Remaining = Remaining[len..];
+        var ret = _remaining[..len];
+        _remaining = _remaining[len..];
 
         return ret;
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Res<T> Read<T>(IFormatProvider? format = null) where T : ISpanParsable<T>
-        => ReadSlice<T>(format, Remaining.Length);
+        => ReadSlice<T>(format, _remaining.Length);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryRead<T>(out T parsed, IFormatProvider? format = null) where T : ISpanParsable<T>
@@ -43,30 +47,43 @@ internal ref struct SpanParser(ReadOnlySpan<char> input)
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ReadOnlySpan<char> ReadStr()
-        => ReadSliceStr(Remaining.Length);
+        => ReadSliceStr(_remaining.Length);
 
     public Res<T> ReadUntil<T>(char until, IFormatProvider? format = null) where T : ISpanParsable<T>
     {
-        var rem = Remaining;
+        var rem = _remaining;
         var len = rem.IndexOf(until);
         if (len == -1)
             return ReadSlice<T>(format, rem.Length);
         
         var ret = ReadSlice<T>(format, len);
-        Remaining = Remaining[1..];
+        _remaining = _remaining[1..];
 
         return ret;
     }
     
     public ReadOnlySpan<char> ReadStrUntil(char until)
     {
-        var rem = Remaining;
+        var rem = _remaining;
         var len = rem.IndexOf(until);
         if (len == -1)
             return ReadSliceStr(rem.Length);
         
         var ret = ReadSliceStr(len);
-        Remaining = Remaining[1..];
+        _remaining = _remaining[1..];
+
+        return ret;
+    }
+    
+    public ReadOnlySpan<char> ReadStrUntilAny(ReadOnlySpan<char> until)
+    {
+        var rem = _remaining;
+        var len = rem.IndexOfAny(until);
+        if (len == -1)
+            return ReadSliceStr(rem.Length);
+        
+        var ret = ReadSliceStr(len);
+        _remaining = _remaining[1..];
 
         return ret;
     }
@@ -76,7 +93,7 @@ internal ref struct SpanParser(ReadOnlySpan<char> input)
     /// </summary>
     public ParserRes SliceUntil(char until)
     {
-        var rem = Remaining;
+        var rem = _remaining;
         if (rem.Length == 0)
             return ParserRes.Error();
         
@@ -84,22 +101,112 @@ internal ref struct SpanParser(ReadOnlySpan<char> input)
         if (len < 0)
         {
             // read until the end
-            Remaining = ReadOnlySpan<char>.Empty;
+            _remaining = ReadOnlySpan<char>.Empty;
             return ParserRes.Ok(new(rem));
         }
         
-        Remaining = rem[(len+1)..]; // +1 to skip past the 'until' character
+        _remaining = rem[(len+1)..]; // +1 to skip past the 'until' character
         return ParserRes.Ok(new(rem[..len]));
+    }
+    
+    /// <summary>
+    /// Returns a new parser, which contains a slice of the span from the current location to the location of the next <paramref name="until"/> character.
+    /// </summary>
+    public ParserRes SliceUntilAny(ReadOnlySpan<char> until, out char splitChar) {
+        splitChar = '\0';
+        var rem = _remaining;
+        if (rem.Length == 0)
+            return ParserRes.Error();
+        
+        var len = rem.IndexOfAny(until);
+        if (len < 0)
+        {
+            // read until the end
+            _remaining = ReadOnlySpan<char>.Empty;
+            return ParserRes.Ok(new(rem));
+        }
+
+        splitChar = rem[len];
+        _remaining = rem[(len+1)..]; // +1 to skip past the 'until' character
+        return ParserRes.Ok(new(rem[..len]));
+    }
+    
+    public ParserRes SliceUntilAnyOutsideBrackets(ReadOnlySpan<char> until, out char splitChar, int skipFirst = 0) {
+        splitChar = '\0';
+        var rem = _remaining[skipFirst..];
+        if (rem.Length == 0)
+            return ParserRes.Error();
+
+        var untilWithBrackets = $"{until}()";
+        var bracketDepth = 0;
+
+        var skipped = 0;
+        
+        while (true)
+        {
+            var len = rem.IndexOfAny(untilWithBrackets);
+            if (len < 0)
+            {
+                if (bracketDepth == 0) {
+                    // read until the end
+                    var result = _remaining;
+                    _remaining = ReadOnlySpan<char>.Empty;
+                    return ParserRes.Ok(new(result));
+                }
+                
+                return ParserRes.Error();
+            }
+
+            if (rem[len] == '(')
+            {
+                bracketDepth++;
+            } else if (rem[len] == ')')
+            {
+                bracketDepth--;
+            }
+            else
+            {
+                if (bracketDepth <= 0)
+                {
+                    splitChar = rem[len];
+
+                    var result = _remaining[..(len+skipped)];
+        
+                    _remaining = rem[(len+1)..]; // +1 to skip past the 'until' character
+                    return ParserRes.Ok(new(result));
+                }
+            }
+
+            skipped += len + 1;
+            rem = rem[(len + 1)..];
+        }
     }
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool StartsWith(ReadOnlySpan<char> prefix)
-        => Remaining.StartsWith(prefix);
+        => _remaining.StartsWith(prefix);
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool EndsWith(ReadOnlySpan<char> prefix)
+        => _remaining.EndsWith(prefix);
 
     public void TrimStart()
     {
-        Remaining = Remaining.TrimStart();
+        _remaining = _remaining.TrimStart();
+    }
+    
+    public void TrimEnd()
+    {
+        _remaining = _remaining.TrimEnd();
+    }
+
+    public void Skip(int chars) {
+        _remaining = _remaining[chars..];
+    }
+    
+    public void SkipEnd(int chars) {
+        _remaining = _remaining[..^chars];
     }
 }
 

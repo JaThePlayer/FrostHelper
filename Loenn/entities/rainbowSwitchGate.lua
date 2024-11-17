@@ -2,6 +2,7 @@ local drawableNinePatch = require("structs.drawable_nine_patch")
 local drawableSprite = require("structs.drawable_sprite")
 local enums = require("consts.celeste_enums")
 local utils = require("utils")
+local drawableSpriteStruct = require("structs.drawable_sprite")
 local jautils = require("mods").requireFromPlugin("libraries.jautils")
 
 local switchGate = {}
@@ -25,15 +26,24 @@ switchGate.fieldInformation = {
         options = textureOptions
     }
 }
-switchGate.placements = {
-    name = "default",
-    data = {
-        width = 16,
-        height = 16,
-        sprite = texture,
-        persistent = false
-    }
-}
+
+local frameTexture = "objects/switchgate/%s"
+
+jautils.createPlacementsPreserveOrder(switchGate, "default", {
+    { "sprite", "block", "FrostHelper.texturePath", {
+        baseFolder = "objects/switchgate",
+        pattern = "^objects/switchgate/(.*)$",
+        captureConverter = function(dir)
+            return dir
+        end,
+        displayConverter = function(dir)
+            return utils.humanizeVariableName(string.match(dir, "^.*/(.*)/$") or dir)
+        end,
+        vanillaSprites = { "objects/switchgate/icon00" },
+        langDir = "rainbowSwitchGate",
+    }},
+    { "persistent", false }
+}, true)
 
 local ninePatchOptions = {
     mode = "fill",
@@ -41,7 +51,7 @@ local ninePatchOptions = {
     fillMode = "repeat"
 }
 
-local frameTexture = "objects/switchgate/%s"
+
 local middleTexture = "objects/switchgate/icon00"
 
 function switchGate.sprite(room, entity)

@@ -15,6 +15,7 @@ jautils.createPlacementsPreserveOrder(feather, "normal", {
     { "lowSpeed", 140.0 },
     { "neutralSpeed", 91.0 },
     { "spritePath", "objects/flyFeather/" },
+    { "hitbox", "R,20,20,-10,-10", "FrostHelper.collider" },
     { "shielded", false },
     { "singleUse", false },
     { "refillStamina", true },

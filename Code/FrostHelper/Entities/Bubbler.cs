@@ -51,7 +51,7 @@ public class Bubbler : Entity {
     public Bubbler(EntityData data, Vector2 offset) : base(data.Position + offset) {
         LoadHooksIfNeeded();
 
-        Collider = new Hitbox(14f, 14f, 0f, 0f);
+        Collider = data.Collider("hitbox") ?? new Hitbox(14f, 14f, 0f, 0f);
         Collider.CenterOrigin();
         Add(new PlayerCollider(OnPlayer));
 

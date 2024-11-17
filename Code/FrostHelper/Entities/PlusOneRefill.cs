@@ -1,4 +1,6 @@
-﻿namespace FrostHelper;
+﻿using FrostHelper.Helpers;
+
+namespace FrostHelper;
 
 [CustomEntity("FrostHelper/PlusOneRefill")]
 public class PlusOneRefill : Entity {
@@ -17,16 +19,22 @@ public class PlusOneRefill : Entity {
         Initialize(true);
     }
 
-    public PlusOneRefill(EntityData data, Vector2 offset) : this(data.Position + offset, data.Bool("oneUse", false), data.Attr("directory", "objects/FrostHelper/plusOneRefill"), data.Int("dashCount", 1), data.Float("respawnTime", 2.5f), ColorHelper.GetColor(data.Attr("particleColor", "ffffff")), data.Bool("recoverStamina", false)) {
+    public PlusOneRefill(EntityData data, Vector2 offset) 
+        : this(data.Position + offset, data.Bool("oneUse", false), 
+            data.Attr("directory", "objects/FrostHelper/plusOneRefill"), 
+            data.Int("dashCount", 1), data.Float("respawnTime", 2.5f), 
+            ColorHelper.GetColor(data.Attr("particleColor", "ffffff")), data.Bool("recoverStamina", false)) {
+        Collider = data.Collider("hitbox") ?? new Hitbox(16f, 16f, -8f, -8f);
     }
 
+    // TODO: wtf is this???
     public void Initialize(bool fromcctor) {
         if (!fromcctor) {
             SceneAs<Level>().ParticlesFG.Emit(Refill.P_Regen, 5, Center, Vector2.One * 4f, particleColor);
             SceneAs<Level>().ParticlesFG.Emit(Refill.P_Regen, 5, Center, Vector2.One * 4f, particleColor);
         }
-        Collider = new Hitbox(16f, 16f, -8f, -8f);
-        Add(new PlayerCollider(new Action<Player>(OnPlayer), null, null));
+        Collider ??= new Hitbox(16f, 16f, -8f, -8f);
+        Add(new PlayerCollider(OnPlayer));
         Add(outline = new Image(GFX.Game[spritepath + "/outline"]));
         outline.CenterOrigin();
         outline.Visible = false;

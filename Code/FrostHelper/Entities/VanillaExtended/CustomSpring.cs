@@ -17,6 +17,7 @@ public class CustomSpring : Spring {
         On.Celeste.TheoCrystal.HitSpring += TheoCrystal_HitSpring;
         On.Celeste.Glider.HitSpring += Glider_HitSpring;
         On.Celeste.Puffer.HitSpring += Puffer_HitSpring;
+        IL.Celeste.Spring.BounceAnimate += SpringOnBounceAnimate;
     }
 
     [OnUnload]
@@ -28,6 +29,7 @@ public class CustomSpring : Spring {
         On.Celeste.TheoCrystal.HitSpring -= TheoCrystal_HitSpring;
         On.Celeste.Glider.HitSpring -= Glider_HitSpring;
         On.Celeste.Puffer.HitSpring -= Puffer_HitSpring;
+        IL.Celeste.Spring.BounceAnimate -= SpringOnBounceAnimate;
     }
 
     private static bool Puffer_HitSpring(On.Celeste.Puffer.orig_HitSpring orig, Puffer self, Spring spring) {
@@ -73,6 +75,25 @@ public class CustomSpring : Spring {
             return orig(self, spring);
         }
     }
+    
+    // Patch sfx
+    private static void SpringOnBounceAnimate(ILContext il) {
+        var cursor = new ILCursor(il);
+        while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdstr("event:/game/general/spring"))) {
+            cursor.Emit(OpCodes.Ldarg_0);
+            cursor.EmitDelegate(GetBounceSfx);
+        }
+    }
+
+    private static string GetBounceSfx(string orig, Spring spring) {
+        if (spring is not CustomSpring customSpring)
+            return orig;
+
+        return customSpring.BounceSfx;
+    }
+
+    public readonly string BounceSfx;
+
     #endregion
     
     public enum CustomOrientations {
@@ -237,6 +258,7 @@ public class CustomSpring : Spring {
         }
 
         AlwaysActivate = data.Bool("alwaysActivate", false);
+        BounceSfx = data.Attr("sfx", "event:/game/general/spring");
     }
 
     public override void Update() {

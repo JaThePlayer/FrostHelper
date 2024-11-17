@@ -3,6 +3,7 @@ using FrostHelper.Entities.Boosters;
 using FrostHelper.Helpers;
 using FrostHelper.ModIntegration;
 using MonoMod.ModInterop;
+using System.Diagnostics.CodeAnalysis;
 
 namespace FrostHelper.API;
 
@@ -304,5 +305,32 @@ public static class API {
     /// <param name="viewMatrix">The shader's ViewMatrix uniform will be set to this matrix. In most cases, this should be camera.Matrix</param>
     public static void ApplyStandardParameters(Effect effect, Matrix viewMatrix) {
         effect.ApplyStandardParameters(viewMatrix);
+    }
+
+    /// <summary>
+    /// Creates an object which can evaluate a Session Expression.
+    /// The returned object can be passed to <see cref="GetIntSessionExpressionValue"/>
+    /// Refer to https://github.com/JaThePlayer/FrostHelper/wiki/Session-Expressions
+    /// </summary>
+    public static bool TryCreateSessionExpression(string str, [NotNullWhen(true)] out object? expression) {
+        if (ConditionHelper.TryCreate(str, out var expr)) {
+            expression = expr;
+            return true;
+        }
+
+        expression = null;
+        return false;
+    }
+
+    /// <summary>
+    /// Returns the current value of a Session Expression as an integer.
+    /// The object passed as the 1st argument needs to be created via <see cref="TryCreateSessionExpression"/>
+    /// </summary>
+    public static int GetIntSessionExpressionValue(object expression, Session session) {
+        if (expression is not ConditionHelper.Condition expr) {
+            throw new ArgumentException($"Object '{expression}' is not of type {nameof(ConditionHelper.Condition)}!");
+        }
+
+        return expr.Get(session);
     }
 }

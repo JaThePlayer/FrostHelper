@@ -1,4 +1,6 @@
-﻿namespace FrostHelper;
+﻿using FrostHelper.Helpers;
+
+namespace FrostHelper;
 
 [Tracked(false)]
 [CustomEntity("FrostHelper/CustomFeather")]
@@ -85,10 +87,11 @@ public class CustomFeather : Entity {
             return;
         
         player.Sprite.Play("startStarFly", false, false);
-        data.Set("starFlyTransforming", true);
-        data.Set("starFlyTimer", feather.FlyTime);
-        data.Set("starFlySpeedLerp", 0f);
-        data.Set("jumpGraceTimer", 0f);
+        player.starFlyTransforming = true;
+        player.starFlyTimer = feather.FlyTime;
+        player.starFlySpeedLerp = 0f;
+        player.jumpGraceTimer = 0f;
+        
         BloomPoint? starFlyBloom = player.starFlyBloom;
         if (starFlyBloom == null) {
             player.Add(starFlyBloom = new BloomPoint(new Vector2(0f, -6f), 0f, 16f));
@@ -96,10 +99,10 @@ public class CustomFeather : Entity {
         starFlyBloom.Visible = true;
         starFlyBloom.Alpha = 0f;
         data.Set("starFlyBloom", starFlyBloom);
-        player.Collider = data.Get<Hitbox>("starFlyHitbox");
-        data.Set("hurtbox", data.Get("starFlyHurtbox"));
-        var starFlyLoopSfx = data.Get<SoundSource>("starFlyLoopSfx");
-        var starFlyWarningSfx = data.Get<SoundSource>("starFlyWarningSfx");
+        player.Collider = player.starFlyHitbox;
+        player.hurtbox = player.starFlyHurtbox;
+        var starFlyLoopSfx = player.starFlyLoopSfx;
+        var starFlyWarningSfx = player.starFlyWarningSfx;
         if (starFlyLoopSfx == null) {
             player.Add(starFlyLoopSfx = new SoundSource());
             starFlyLoopSfx.DisposeOnTransition = false;
@@ -108,8 +111,8 @@ public class CustomFeather : Entity {
         }
         starFlyLoopSfx.Play("event:/game/06_reflection/feather_state_loop", "feather_speed", 1f);
         starFlyWarningSfx?.Stop(true);
-        data.Set("starFlyLoopSfx", starFlyLoopSfx);
-        data.Set("starFlyWarningSfx", starFlyWarningSfx);
+        player.starFlyLoopSfx = starFlyLoopSfx;
+        player.starFlyWarningSfx = starFlyWarningSfx;
     }
     public static void CustomFeatherEnd(Entity e) {
         Player player = (e as Player)!;
@@ -346,7 +349,7 @@ public class CustomFeather : Entity {
         MaxSpeed = data.Float("maxSpeed", 190f);
         LowSpeed = data.Float("lowSpeed", 140f);
         NeutralSpeed = data.Float("neutralSpeed", 91f);
-        Collider = new Hitbox(20f, 20f, -10f, -10f);
+        Collider = data.Collider("hitbox") ?? new Hitbox(20f, 20f, -10f, -10f);
         Add(new PlayerCollider(OnPlayer, null, null));
         string path = data.Attr("spritePath", "objects/flyFeather/").Replace('\\', '/');
         if (!path.EndsWith('/')) {

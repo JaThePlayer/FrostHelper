@@ -1,4 +1,6 @@
-﻿namespace FrostHelper;
+﻿using FrostHelper.Helpers;
+
+namespace FrostHelper;
 
 [CustomEntity("FrostHelper/HeldRefill")]
 public class HeldRefill : Entity {
@@ -55,7 +57,7 @@ public class HeldRefill : Entity {
 
         Depth = -100;
 
-        Collider = new Hitbox(24f, 24, -12f, -12f);
+        Collider = data.Collider("hitbox") ?? new Hitbox(24f, 24, -12f, -12f);
         Add(new PlayerCollider(OnPlayer, null, null));
     }
 

@@ -19,6 +19,7 @@ jautils.createPlacementsPreserveOrder(staticDoor, "default", {
     { "openSfx", "" },
     { "closeSfx", "" },
     { "lightOccludeAlpha", 1.0 },
+    { "hitbox", "R,12,22,-6,-23", "FrostHelper.collider" },
     { "solidIfDisabled", false }
 })
 

@@ -20,6 +20,7 @@ jautils.createPlacementsPreserveOrder(dust, "default", {
     { "tint", "ffffff", "color" },
     { "eyeColor", "ff0000", "color" },
     { "attachGroup", -1, "FrostHelper.attachGroup" },
+    { "hitbox", "C,6,0,0;R,16,4,-8,-3", "FrostHelper.collider" },
     { "attachToSolid", false },
     { "rainbow", false },
     { "rainbowEyes", false },

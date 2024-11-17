@@ -1,4 +1,6 @@
-﻿namespace FrostHelper;
+﻿using FrostHelper.Helpers;
+
+namespace FrostHelper;
 
 [CustomEntity("FrostHelper/Skateboard")]
 public class Skateboard : JumpThru {
@@ -29,7 +31,7 @@ public class Skateboard : JumpThru {
             bodySprite.Scale = new Vector2(-1, 1);
         }
         bodySprite.Origin = new Vector2(bodySprite.Width / 2f, bodySprite.Height);
-        Collider = new Hitbox(20f, 6f, -10f, -7f);
+        Collider = entityData.Collider("hitbox") ?? new Hitbox(20f, 6f, -10f, -7f);
         targetSpeedX = entityData.Float("speed", 90f);
         if (dir == Directions.Left)
             targetSpeedX = -targetSpeedX;

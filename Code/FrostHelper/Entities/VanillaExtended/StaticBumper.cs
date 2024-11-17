@@ -1,4 +1,6 @@
-﻿namespace FrostHelper;
+﻿using FrostHelper.Helpers;
+
+namespace FrostHelper;
 
 [CustomEntity("FrostHelper/StaticBumper")]
 public class StaticBumper : Entity {
@@ -11,7 +13,7 @@ public class StaticBumper : Entity {
         Wobbling = data.Bool("wobble", false);
         NotCoreMode = data.Bool("notCoreMode", false);
         moveTime = data.Float("moveTime", MoveCycleTime);
-        Collider = new Circle(12f, 0f, 0f);
+        Collider = data.Collider("hitbox") ?? new Circle(12f);
         Add(new PlayerCollider(OnPlayer, null, null));
         Add(sine = new SineWave(0.44f, 0f).Randomize());
         Add(sprite = GFX.SpriteBank.Create(path));
@@ -67,8 +69,6 @@ public class StaticBumper : Entity {
         Position = anchor;
         if (Wobbling) {
             Position += new Vector2(sine.Value * 3f, sine.ValueOverTwo * 2f);
-            // .net core desync patch, todo: test
-            //Position = new Vector2((float) ((double) anchor.X + sine.Value * 3.0), (float) ((double) anchor.Y + sine.ValueOverTwo * 2.0));
         }
     }
 

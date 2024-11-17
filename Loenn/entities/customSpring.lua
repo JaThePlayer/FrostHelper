@@ -1,5 +1,6 @@
 local drawableSpriteStruct = require("structs.drawable_sprite")
 local jautils = require("mods").requireFromPlugin("libraries.jautils")
+local utils = require("utils")
 
 local springDepth = -8501
 local springTexture = "objects/spring/00"
@@ -61,19 +62,39 @@ local function createSpringHandler(name, spriteRotation, speedAsVector)
         end,
         rotate = jautils.getNameRotationHandler(rotations),
         flip = jautils.getNameFlipHandler(rotations),
-        ignoredFields = { "version" }
+        ignoredFields = { "_name", "_id", "version" }
     }
 
     jautils.createPlacementsPreserveOrder(handler, "normal", {
         { "color", "ffffff", "color" },
+        --[[
         { "directory", "objects/spring/", "editableDropdown", {
             "objects/spring/",
             "objects/FrostHelper/whiteSpring/"
+        }},
+        ]]
+        { "directory", "objects/spring/", "FrostHelper.texturePath", {
+            baseFolder = "objects",
+            pattern = "^(objects/.*/)00$",
+            filter = function(dir) return not not drawableSpriteStruct.fromTexture(dir .. "white", {}) end,
+            captureConverter = function(dir)
+                return dir
+            end,
+            displayConverter = function(dir)
+                return utils.humanizeVariableName(string.match(dir, "^.*/(.*)/$") or dir)
+            end,
+            vanillaSprites = { "objects/spring/white" },
+            langDir = "customSpring",
+            fallback = {
+                "objects/spring/",
+                "objects/FrostHelper/whiteSpring/",
+            }
         }},
         { "speedMult", speedAsVector and "1.0" or 1.0 },
         { "attachGroup", -1, "FrostHelper.attachGroup" },
         { "dashRecovery", 10000, dashAndStaminaRecoveryOptions },
         { "staminaRecovery", 10000, dashAndStaminaRecoveryOptions },
+        { "sfx", "event:/game/general/spring" },
         { "version", 2, "integer" },
         { "oneUse", false },
         { "playerCanUse", true },

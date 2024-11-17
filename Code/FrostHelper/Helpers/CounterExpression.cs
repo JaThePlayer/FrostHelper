@@ -4,22 +4,29 @@ using System.Runtime.CompilerServices;
 namespace FrostHelper.Helpers;
 
 internal sealed class CounterExpression {
-    private readonly int Value;
-    private readonly string? ValueCounterName;
-    private Session.Counter? _valueCounter;
+    private readonly int _value;
+    private readonly CounterAccessor? _valueCounter;
+    private readonly ConditionHelper.Condition? _valueCondition;
     
     public CounterExpression(string expr) {
-        if (!int.TryParse(expr, CultureInfo.InvariantCulture, out Value))
-            ValueCounterName = expr;
+        expr = expr.Trim();
+
+        if (!int.TryParse(expr, CultureInfo.InvariantCulture, out _value)) {
+            var parsed = ConditionHelper.CreateOrDefault(expr, "");
+            if (parsed.IsSimpleFlagCheck(out _))
+            {
+                // If this is just a simple flag check,
+                // then legacy support requires us to treat the name as a counter name, not as a flag!
+                _valueCounter = new(expr);
+            } else {
+                _valueCondition = parsed;
+            }
+        }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int Get(Session session) {
-        var value = ValueCounterName is { }
-            ? (_valueCounter ??= session.GetCounterObj(ValueCounterName)).Value
-            : Value;
-
-        return value;
+        return _valueCounter?.Get(session) ?? _valueCondition?.Get(session) ?? _value;
     }
 }
 

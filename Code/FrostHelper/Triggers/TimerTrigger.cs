@@ -188,21 +188,20 @@ internal sealed class CounterDisplayEntity : BaseTimerEntity {
     private bool _removed;
 
     private bool _showOnRoomLoad;
-
-    private readonly string _counterName;
-    private Session.Counter? _counter;
+    
+    private readonly CounterExpression _counter;
+    
     private int _lastValue = 0;
     private string _lastValueStr = "0";
 
     protected override string GetText() {
         if (Scene is Level level) {
-            _counter ??= level.Session.GetCounterObj(_counterName);
-
-            if (_counter.Value == _lastValue)
+            var value = _counter.Get(level.Session);
+            if (value == _lastValue)
                 return _lastValueStr;
 
-            _lastValue = _counter.Value;
-            _lastValueStr = _counter.Value.ToString();
+            _lastValue = value;
+            _lastValueStr = value.ToString();
             return _lastValueStr;
         }
 
@@ -210,7 +209,7 @@ internal sealed class CounterDisplayEntity : BaseTimerEntity {
     }
 
     public CounterDisplayEntity(EntityData data, Vector2 offset) : base(data, offset) {
-        _counterName = data.Attr("counter");
+        _counter = new(data.Attr("counter"));
         RemoveFlag = data.GetCondition("removeFlag", "");
         VisibleFlag = data.GetCondition("visibleFlag", "");
 

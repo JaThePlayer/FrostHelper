@@ -110,6 +110,10 @@ internal sealed class CustomSpinnerSpriteSource : ISavestatePersisted {
 
     private VirtualTexture? PackedTexture;
     private VirtualTexture? PackedDecoTexture;
+    
+    public NumVector2 CullingDistance { get; private set; }
+    
+    public float ConnectionWidth { get; private set; }
 
     ~CustomSpinnerSpriteSource() {
         PackedTexture?.Dispose();
@@ -150,6 +154,10 @@ internal sealed class CustomSpinnerSpriteSource : ISavestatePersisted {
 
             (FgDecoTextures, BgDecoTextures) = (packed[0], packed[1]);
         }
+
+        (CullingDistance, ConnectionWidth) = FgTextures is [var first, ..]
+            ? (new NumVector2(first.Width + 8f, first.Height + 8f) / 2f, first.Width)
+            : (new NumVector2(16f), 12);
     }
 
     private string GetBGSpritePath(bool hotCoreMode) {

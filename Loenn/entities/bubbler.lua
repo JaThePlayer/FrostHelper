@@ -17,7 +17,8 @@ local bubbler = {
 jautils.createPlacementsPreserveOrder(bubbler, "normal", {
     { "visible", true },
     { "showReturnIndicator", true },
-    { "color", "ffffff", "color"}
+    { "color", "ffffff", "color"},
+    { "hitbox", "R,14,14,0,0", "FrostHelper.collider" },
 })
 
 
