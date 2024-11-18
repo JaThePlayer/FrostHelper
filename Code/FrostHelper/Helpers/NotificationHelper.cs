@@ -1,12 +1,21 @@
-﻿namespace FrostHelper.Helpers;
+﻿using System.Globalization;
+using System.Runtime.CompilerServices;
+
+namespace FrostHelper.Helpers;
 public static class NotificationHelper {
     // note: used internally by lua badeline boss
     public static void NotifyInfo(string notif) {
         Notify(new Notification(LogLevel.Info, notif));
     }
     
-    public static void Notify(string notif, LogLevel logLevel = LogLevel.Error) {
+    public static void Notify(string notif, LogLevel logLevel) {
         Notify(new Notification(logLevel, notif));
+    }
+    
+    public static void Notify(string notif, LogLevel logLevel = LogLevel.Error, [CallerFilePath] string source = "", [CallerLineNumber] int lineNumber = 0) {
+        Notify(new Notification(logLevel, notif) {
+            Source = $" | {source[source.LastIndexOf("FrostHelper", StringComparison.Ordinal)..]}:{lineNumber}"
+        });
     }
 
     public static void Notify(Notification notification) {
@@ -33,10 +42,10 @@ public static class NotificationHelper {
         public override void Render() {
             base.Render();
 
-            const float notifHeight = 100;
+            const float minMotifHeight = 100;
             const float padding = 15;
 
-            var y = 1080 - notifHeight - padding;
+            var y = 1080 - padding;
             
 
             for (int i = Notifications.Count - 1; i >= 0; i--) {
@@ -44,16 +53,27 @@ public static class NotificationHelper {
                 notif.Alpha -= Engine.DeltaTime / 8f;
                 Notifications[i] = notif;
 
-                var realAlpha = Ease.ExpoIn(Math.Min(1f, notif.Alpha * 2.35f));
+                var realAlpha = Ease.ExpoInOut(Math.Min(1f, notif.Alpha * 2.35f));
 
                 var messageScale = Vector2.One / 3f * 2f;
-                var notifWidth = (ActiveFont.Measure(notif.Message) * messageScale).X;
-                var pos = new Vector2(1920 - notifWidth - padding, y);
+                var notifSize = (ActiveFont.Measure(notif.Message) * messageScale);
+                var notifWidth = notifSize.X + padding * 2;
+                var notifHeight = float.Max(notifSize.Y + 30, minMotifHeight);
+                var pos = new Vector2(1920 - notifWidth - padding, y - notifHeight);
 
-                Draw.Rect(pos.X, pos.Y, notifWidth, notifHeight, Color.Gray * 0.75f * realAlpha);
-                Draw.HollowRect(pos.X, pos.Y, notifWidth, notifHeight, Color.Gray * realAlpha);
-                ActiveFont.Draw(notif.Message, pos, Vector2.Zero, messageScale, Color.White * realAlpha);
-                ActiveFont.Draw(notif.Time.ToString(), pos + new Vector2(0f, notifHeight - 20f), Vector2.Zero, Vector2.One / 4f, Color.White * realAlpha);
+                var color = ColorHelper.GetColor("262626");
+                Draw.Rect(pos.X, pos.Y, notifWidth, notifHeight, color * 0.75f * realAlpha);
+                Draw.HollowRect(pos.X, pos.Y, notifWidth, notifHeight, color * realAlpha);
+                ActiveFont.Draw(notif.Message, pos + new Vector2(padding, 0), Vector2.Zero, messageScale, Color.White * realAlpha);
+
+                var timePos = pos + new Vector2(padding, notifHeight - 20f);
+                var timeStr = notif.Time.ToString(CultureInfo.CurrentCulture);
+                var timeScale = Vector2.One / 4f;
+                ActiveFont.Draw(timeStr, timePos, Vector2.Zero, timeScale, Color.White * realAlpha);
+                if (notif.Source is { } src) {
+                    var srcPos = timePos + new Vector2(ActiveFont.Measure(timeStr).X * timeScale.X, 0f);
+                    ActiveFont.Draw(src, srcPos, Vector2.Zero, timeScale, Color.White * realAlpha);
+                }
 
                 y -= notifHeight + padding;
             }
@@ -65,5 +85,6 @@ public static class NotificationHelper {
     public record struct Notification(LogLevel Level, string Message) {
         internal DateTime Time;
         internal float Alpha = 1f;
+        internal string? Source;
     }
 }

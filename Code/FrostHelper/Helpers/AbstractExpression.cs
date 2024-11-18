@@ -8,8 +8,9 @@ using System.Text.RegularExpressions;
 namespace FrostHelper.Helpers;
 
 internal sealed partial class AbstractExpression {
-    [GeneratedRegex(@"^[a-z0-9<>=!#&\|\(\)\+\-\*\/\%\$ ]*$", RegexOptions.CultureInvariant | RegexOptions.IgnoreCase | RegexOptions.Singleline)]
-    private static partial Regex ValidCharsRegex();
+    // ':' is not banned due to some vanilla flags using it - ternary operations will need something else
+    [GeneratedRegex(@"[\~\\@\^\[\]\{\};,\?""]", RegexOptions.CultureInvariant | RegexOptions.IgnoreCase | RegexOptions.Singleline)]
+    private static partial Regex ReservedCharsRegex();
     
     private static readonly JsonSerializerOptions JsonOptions = new() {
         WriteIndented = true,
@@ -38,11 +39,8 @@ internal sealed partial class AbstractExpression {
         ref var cacheRef = ref CollectionsMarshal.GetValueRefOrAddDefault(Cache, str, out _);
 
         if (cacheRef is null) {
-            if (!ValidCharsRegex().IsMatch(str)) {
-                NotificationHelper.Notify($"Expression {str} contains invalid characters.");
-                // Intentionally don't cache, to repeat this message each time
-                expression = null;
-                return false;
+            if (ReservedCharsRegex().IsMatch(str)) {
+                NotificationHelper.Notify($"Expression '{str}' contains reserved characters.\nIf this is an existing map, report this to JaThePlayer,\nor else the map might break in the future!\nIf you're making this map, please choose a different flag/session counter name!\nReserved chars: ^?,;~\"[]{{}}@");
             }
             
             var ret = Parse(str.AsSpan(), out expression);
