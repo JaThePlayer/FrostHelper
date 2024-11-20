@@ -511,29 +511,29 @@ public class CustomSpinner : Entity {
         var halfUnitY = mtexture.Height / 2; 
 
         if (topLeft && topRight) {
-            image = new SealedImage(mtexture.GetSubtexture(0, 0, mtexture.Width, halfUnitY, null)).SetOrigin(halfUnitX - 2f, halfUnitY - 2f);
+            image = new SealedImage(mtexture.GetSubtexture(0, 0, mtexture.Width + 4, halfUnitY + 2, null)).SetOrigin(halfUnitX, halfUnitY);
             AddImage(image);
         } else {
             if (topLeft) {
-                image = new SealedImage(mtexture.GetSubtexture(0, 0, halfUnitX, halfUnitY, null)).SetOrigin(halfUnitX - 2f, halfUnitY - 2f);
+                image = new SealedImage(mtexture.GetSubtexture(0, 0, halfUnitX + 2, halfUnitY + 2, null)).SetOrigin(halfUnitX, halfUnitY);
                 AddImage(image);
             }
             if (topRight) {
-                image = new SealedImage(mtexture.GetSubtexture(10, 0, halfUnitX, halfUnitY, null)).SetOrigin(2f, halfUnitY - 2f);
+                image = new SealedImage(mtexture.GetSubtexture(halfUnitX - 2, 0, halfUnitX + 2, halfUnitY + 2, null)).SetOrigin(2f, halfUnitY);
                 AddImage(image);
             }
         }
 
         if (bottomLeft && bottomRight) {
-            image = new SealedImage(mtexture.GetSubtexture(0, 10, mtexture.Width, halfUnitY, null)).SetOrigin(halfUnitX - 2f, 2f);
+            image = new SealedImage(mtexture.GetSubtexture(0, halfUnitY - 2, mtexture.Width + 4, halfUnitY + 2, null)).SetOrigin(halfUnitX, 2f);
             AddImage(image);
         } else {
             if (bottomLeft) {
-                image = new SealedImage(mtexture.GetSubtexture(10, 10, halfUnitX, halfUnitY, null)).SetOrigin(2f, 2f);
+                image = new SealedImage(mtexture.GetSubtexture(halfUnitX - 2, halfUnitY - 2, halfUnitX + 2, halfUnitY + 2, null)).SetOrigin(2f, 2f);
                 AddImage(image);
             }
             if (bottomRight) {
-                image = new SealedImage(mtexture.GetSubtexture(0, 10, halfUnitX, halfUnitY, null)).SetOrigin(halfUnitX - 2f, 2f);
+                image = new SealedImage(mtexture.GetSubtexture(0, halfUnitY - 2, halfUnitX + 2, halfUnitY + 2, null)).SetOrigin(halfUnitX, 2f);
                 AddImage(image);
             }
         }

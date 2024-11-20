@@ -156,8 +156,8 @@ internal sealed class CustomSpinnerSpriteSource : ISavestatePersisted {
         }
 
         (CullingDistance, ConnectionWidth) = FgTextures is [var first, ..]
-            ? (new NumVector2(first.Width + 8f, first.Height + 8f) / 2f, first.Width)
-            : (new NumVector2(16f), 12);
+            ? (new NumVector2(first.Width + 8f, first.Height + 8f) / 2f, (first.Width/12*12) + (first.Width%12>0 ? 12 : 0))
+            : (new NumVector2(16f), 24);
     }
 
     private string GetBGSpritePath(bool hotCoreMode) {
