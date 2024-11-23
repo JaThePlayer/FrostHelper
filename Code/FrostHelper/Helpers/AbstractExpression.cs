@@ -12,7 +12,7 @@ internal sealed partial class AbstractExpression {
     [GeneratedRegex(@"[\~\\@\^\[\]\{\};,\?""]", RegexOptions.CultureInvariant | RegexOptions.IgnoreCase | RegexOptions.Singleline)]
     private static partial Regex ReservedCharsRegex();
     
-    private static readonly JsonSerializerOptions JsonOptions = new() {
+    internal static readonly JsonSerializerOptions JsonOptions = new() {
         WriteIndented = true,
         Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
     };
@@ -146,6 +146,14 @@ internal sealed partial class AbstractExpression {
                     // no plus/minus
                     // Look for mult/div/modulo
                     leftAddMult.SliceUntilAnyOutsideBrackets("*/%", out var mathOp2).TryUnpack(out var leftMathMult2);
+
+                    var mathOp2Str = ToStringOrNullIfNullChar(mathOp2);
+                    
+                    if (mathOp2 == '/' && !leftAddMult.IsEmpty && leftAddMult.StartsWith("/")) {
+                        mathOp2Str = "//";
+                        leftAddMult.Skip(1);
+                    }
+                    
                     if (leftAddMult.IsEmpty)
                     {
                         // Look for unary ops
@@ -178,7 +186,7 @@ internal sealed partial class AbstractExpression {
                     expression = new() {
                         Left = left,
                         Right = right,
-                        Operator = ToStringOrNullIfNullChar(mathOp2)
+                        Operator = mathOp2Str
                     };
                     return true;
                 }

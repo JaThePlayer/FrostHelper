@@ -262,9 +262,6 @@ public static class TypeHelper {
             ["birdPathTrigger"] = typeof(BirdPathTrigger),
             ["spawnFacingTrigger"] = typeof(SpawnFacingTrigger),
             ["detachFollowersTrigger"] = typeof(DetachStrawberryTrigger),
-
-            // FROM MODS:
-            ["FrostHelper/CustomDreamBlock"] = typeof(CustomDreamBlockV2),
         };
 
         foreach (var type in FakeAssembly.GetFakeEntryAssembly().GetTypes()) {

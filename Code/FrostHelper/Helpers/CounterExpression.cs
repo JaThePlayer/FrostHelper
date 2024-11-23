@@ -26,7 +26,7 @@ internal sealed class CounterExpression {
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int Get(Session session) {
-        return _valueCounter?.Get(session) ?? _valueCondition?.Get(session) ?? _value;
+        return _valueCounter?.Get(session) ?? _valueCondition?.GetInt(session) ?? _value;
     }
 }
 

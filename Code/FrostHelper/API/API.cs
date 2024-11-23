@@ -323,14 +323,71 @@ public static class API {
     }
 
     /// <summary>
-    /// Returns the current value of a Session Expression as an integer.
+    /// Returns the current value of a Session Expression.
+    /// The object passed as the 1st argument needs to be created via <see cref="TryCreateSessionExpression"/>
+    /// </summary>
+    public static object GetSessionExpressionValue(object expression, Session session) {
+        var expr = AssertExpression(expression);
+
+        return expr.Get(session);
+    }
+    
+    /// <summary>
+    /// Returns the type that the given session expression will return, or typeof(object) if that's unknown.
+    /// The object passed as the 1st argument needs to be created via <see cref="TryCreateSessionExpression"/>
+    /// </summary>
+    public static Type GetSessionExpressionReturnedType(object expression) {
+        var expr = AssertExpression(expression);
+
+        return expr.ReturnType ?? typeof(object);
+    }
+    
+    /// <summary>
+    /// Returns the current value of a Session Expression as an integer, coercing it if needed.
     /// The object passed as the 1st argument needs to be created via <see cref="TryCreateSessionExpression"/>
     /// </summary>
     public static int GetIntSessionExpressionValue(object expression, Session session) {
+        var expr = AssertExpression(expression);
+
+        return expr.GetInt(session);
+    }
+    
+    /// <summary>
+    /// Returns the current value of a Session Expression as a float, coercing it if needed.
+    /// The object passed as the 1st argument needs to be created via <see cref="TryCreateSessionExpression"/>
+    /// </summary>
+    public static float GetFloatSessionExpressionValue(object expression, Session session) {
+        var expr = AssertExpression(expression);
+
+        return expr.GetFloat(session);
+    }
+    
+    /// <summary>
+    /// Returns the current value of a Session Expression as a boolean, coercing it if needed.
+    /// The object passed as the 1st argument needs to be created via <see cref="TryCreateSessionExpression"/>
+    /// </summary>
+    public static bool GetBoolSessionExpressionValue(object expression, Session session) {
+        var expr = AssertExpression(expression);
+
+        return expr.Check(session);
+    }
+
+    /// <summary>
+    /// Registers a simple Session Expression command, which will be accessible via $modName.cmdName in Session Expressions.
+    /// </summary>
+    /// <param name="modName">Name of the mod which registers this command. Will be used to prefix the command name.</param>
+    /// <param name="cmdName">Name of the command</param>
+    /// <param name="func">Function called each time the command needs to be evaluated</param>
+    public static void RegisterSimpleSessionExpressionCommand(string modName, string cmdName, Func<Session, object> func) {
+        ConditionHelper.RegisterSimpleCommand(modName, cmdName, func);
+    }
+
+    // NON-API!
+    private static ConditionHelper.Condition AssertExpression(object expression) {
         if (expression is not ConditionHelper.Condition expr) {
             throw new ArgumentException($"Object '{expression}' is not of type {nameof(ConditionHelper.Condition)}!");
         }
 
-        return expr.Get(session);
+        return expr;
     }
 }

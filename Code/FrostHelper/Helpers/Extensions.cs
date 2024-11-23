@@ -285,4 +285,18 @@ public static class Extensions {
     public static Vector2 Add(this Vector2 vector, NumVector2 other) => new(vector.X + other.X, vector.Y + other.Y);
     
     public static NumVector2 ToNumerics(this Vector2 vector) => new(vector.X, vector.Y);
+
+    public static bool ParsePair(this ReadOnlySpan<char> str, char splitOn, out ReadOnlySpan<char> left,
+        out ReadOnlySpan<char> right) {
+        var idx = str.IndexOf(splitOn);
+        if (idx == -1) {
+            left = str;
+            right = Span<char>.Empty;
+            return false;
+        }
+
+        left = str[..idx];
+        right = str[(idx + 1)..];
+        return true;
+    }
 }
