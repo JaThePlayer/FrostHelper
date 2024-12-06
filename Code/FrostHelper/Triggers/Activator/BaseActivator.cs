@@ -1,5 +1,9 @@
 ﻿namespace FrostHelper.Triggers.Activator;
 
+internal interface IIfActivator {
+    public bool IsElse { get; }
+}
+
 public class BaseActivator : Trigger {
     public Vector2[] Nodes;
     public readonly bool OnlyOnce;
@@ -7,10 +11,11 @@ public class BaseActivator : Trigger {
     public bool ActivateAfterDeath;
 
 
-    internal List<Trigger>? ToActivate;
+    internal (List<Trigger> main, List<Trigger> elseBranch)? ToActivate;
 
-    internal List<Trigger>[]? ToActivatePerNode;
-
+    internal List<Trigger>?[]? ToActivatePerNode;
+    internal List<Trigger>?[]? ToActivateElsePerNode;
+    
     internal virtual bool NeedsNodeIndexes => false;
 
     // used by Random and Cycle modes to keep track of which trigger to call OnStay for.
@@ -46,6 +51,17 @@ public class BaseActivator : Trigger {
             InstantActivateAll(player);
         } else {
             Add(new Coroutine(DelayedActivateAll(player)));
+        }
+
+        if (OnlyOnce)
+            RemoveSelf();
+    }
+
+    public void ActiveElseBlocks(Player player) {
+        if (Delay == 0) {
+            InstantActivateAll(player, activateElseBranch: true);
+        } else {
+            Add(new Coroutine(DelayedActivateAll(player, activateElseBranch: true)));
         }
 
         if (OnlyOnce)
@@ -92,7 +108,7 @@ public class BaseActivator : Trigger {
                 return;
 
             if (ActivationMode == ActivationModes.All) {
-                foreach (var trigger in ToActivate!) {
+                foreach (var trigger in ToActivate.Value.main) {
                     trigger.OnStay(player);
                 }
             } else {
@@ -122,7 +138,7 @@ public class BaseActivator : Trigger {
                 return;
 
             if (ActivationMode == ActivationModes.All) {
-                foreach (var trigger in ToActivate!) {
+                foreach (var trigger in ToActivate.Value.main) {
                     trigger.OnLeave(player);
                 }
             } else {
@@ -134,21 +150,22 @@ public class BaseActivator : Trigger {
 #pragma warning restore CS0162 // Unreachable code detected
     }
 
-    private IEnumerator DelayedActivateAll(Player player) {
+    private IEnumerator DelayedActivateAll(Player player, bool activateElseBranch = false) {
         yield return Delay;
-        InstantActivateAll(player);
+        InstantActivateAll(player, activateElseBranch);
     }
     
     private IEnumerator DelayedActivateAll(Player player, List<Trigger> toActivate) {
+        ToActivate ??= FastCollideAll();
         yield return Delay;
         InstantActivateAll(player, toActivate);
     }
 
-    public void InstantActivateAll(Player player) {
+    public void InstantActivateAll(Player player, bool activateElseBranch = false) {
         // There's a chance for an activator to get triggered *before* Awake.
         ToActivate ??= FastCollideAll();
 
-        InstantActivateAll(player, ToActivate);
+        InstantActivateAll(player, activateElseBranch ? ToActivate.Value.elseBranch : ToActivate.Value.main);
     }
 
     internal void InstantActivateAll(Player player, List<Trigger> toActivate) {
@@ -200,17 +217,42 @@ public class BaseActivator : Trigger {
         public int Index;
     }
 
-    internal List<Trigger> FastCollideAll() {
+    internal (List<Trigger> main, List<Trigger> elseBranch) FastCollideAll() {
+        static void Add(Trigger entity, int i, List<Trigger>? into, List<Trigger>? intoElse, List<Indexed<Trigger>>? intoWithIndexes, List<Indexed<Trigger>>? intoElseWithIndexes) {
+            if (entity is IIfActivator { IsElse: true }) {
+                if (intoElse is { })
+                    intoElse.Add(entity);
+                else
+                    intoElseWithIndexes!.Add(new() {
+                        Value = entity,
+                        Index = i,
+                    });
+            } else {
+                if (into is { })
+                    into.Add(entity);
+                else
+                    intoWithIndexes!.Add(new() {
+                        Value = entity,
+                        Index = i,
+                    });
+            }
+        }
+        
         // When we're cycling, the order of triggered triggers should be decided by node order, so that it's manipulatable easily.
         // In all other modes, order is not important, so we don't sort at all for better performance
         // Since the index is unnecessary on non-cycle modes, we'll create a List<T> directly, instead of going through Indexed<T> to then re-allocate it into List<T>.
         // TODO: maybe rewrite into storing the indexes separately, in a stack-allocated buffer??
         List<Trigger>? into = null;
+        List<Trigger>? intoElse = null;
+        
         List<Indexed<Trigger>>? intoWithIndexes = null;
+        List<Indexed<Trigger>>? intoElseWithIndexes = null;
         if (ActivationMode is ActivationModes.Cycle or ActivationModes.CycleCorrect or ActivationModes.AllOrdered || NeedsNodeIndexes) {
             intoWithIndexes = [];
+            intoElseWithIndexes = [];
         } else {
             into = [];
+            intoElse = [];
         }
         var nodes = Nodes;
         var maxNodeId = 0;
@@ -233,13 +275,7 @@ public class BaseActivator : Trigger {
                             && node.Y < eBottom
                             && node.Y > ePos.Y) {
                             maxNodeId = int.Max(maxNodeId, i);
-                            if (into is { })
-                                into.Add(entity);
-                            else
-                                intoWithIndexes!.Add(new() {
-                                    Value = entity,
-                                    Index = i,
-                                });
+                            Add(entity, i, into, intoElse, intoWithIndexes, intoElseWithIndexes);
                             break;
                         }
                     }
@@ -251,13 +287,7 @@ public class BaseActivator : Trigger {
                         Vector2 node = nodes[i];
                         if (otherCollider.Collide(node)) {
                             maxNodeId = int.Max(maxNodeId, i);
-                            if (into is { })
-                                into.Add(entity);
-                            else
-                                intoWithIndexes!.Add(new() {
-                                    Value = entity,
-                                    Index = i,
-                                });
+                            Add(entity, i, into, intoElse, intoWithIndexes, intoElseWithIndexes);
                             break;
                         }
                     }
@@ -272,27 +302,38 @@ public class BaseActivator : Trigger {
             if (ActivationMode is ActivationModes.Cycle) {
                 // backwards compat: old 'Cycle' mode sorted in the wrong order:
                 intoWithIndexes.Sort((p1, p2) => p2.Index - p1.Index);
+                intoElseWithIndexes!.Sort((p1, p2) => p2.Index - p1.Index);
             } else {
                 intoWithIndexes.Sort((p1, p2) => p1.Index - p2.Index);
+                intoElseWithIndexes!.Sort((p1, p2) => p1.Index - p2.Index);
             }
             
 
             if (NeedsNodeIndexes) {
-                ToActivatePerNode = new List<Trigger>[maxNodeId + 1];
+                ToActivatePerNode = new List<Trigger>?[maxNodeId + 1];
+                ToActivateElsePerNode = new List<Trigger>?[maxNodeId + 1];
                 foreach (var item in intoWithIndexes) {
                     ToActivatePerNode[item.Index] ??= new(1);
-                    ToActivatePerNode[item.Index].Add(item.Value);
+                    ToActivatePerNode[item.Index]!.Add(item.Value);
+                }
+                foreach (var item in intoElseWithIndexes) {
+                    ToActivateElsePerNode[item.Index] ??= new(1);
+                    ToActivateElsePerNode[item.Index]!.Add(item.Value);
                 }
             }
 
             // Now, convert our list to just a List<T>.
             // Done manually for performance and less allocations.
             into = new(intoWithIndexes.Count);
+            intoElse = new(intoElseWithIndexes.Count);
             foreach (var item in intoWithIndexes) {
                 into.Add(item.Value);
             }
+            foreach (var item in intoElseWithIndexes) {
+                intoElse.Add(item.Value);
+            }
         }
 
-        return into!;
+        return (into!, intoElse!);
     }
 }

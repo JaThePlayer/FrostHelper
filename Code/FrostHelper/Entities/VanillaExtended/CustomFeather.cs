@@ -137,6 +137,17 @@ public class CustomFeather : Entity {
         // reset to vanilla value
         player.starFlyColor = ColorHelper.GetColor("ffd65c");
     }
+
+    private Vector2 GetAim() {
+        var aim = Input.Feather.Value;
+        return _invertAim switch {
+            AimInvertions.InvertBoth => -aim,
+            AimInvertions.InvertX => new Vector2(-aim.X, aim.Y),
+            AimInvertions.InvertY => new Vector2(aim.X, -aim.Y),
+            _ => aim,
+        };
+    }
+    
     public static IEnumerator CustomFeatherCoroutine(Entity e) {
         Player player = (e as Player)!;
         var feather = DynamicData.For(player).Get<CustomFeather>("fh.customFeather");
@@ -157,13 +168,13 @@ public class CustomFeather : Entity {
         player.starFlyTransforming = false;
         player.starFlyTimer = feather.FlyTime;
 
-        if (feather.RefillDashes)
+        if (feather._refillDashes)
             player.RefillDash();
 
-        if (feather.RefillStamina)
+        if (feather._refillStamina)
             player.RefillStamina();
 
-        Vector2 dir = Input.Feather.Value;
+        Vector2 dir = feather.GetAim();
         if (dir == Vector2.Zero) {
             dir = Vector2.UnitX * (float) player.Facing;
         }
@@ -197,7 +208,7 @@ public class CustomFeather : Entity {
         if (player.starFlyTransforming) {
             player.Speed = Calc.Approach(player.Speed, Vector2.Zero, 1000f * Engine.DeltaTime);
         } else {
-            Vector2 aimValue = Input.Feather.Value;
+            Vector2 aimValue = feather.GetAim();
             bool notAiming = false;
             if (aimValue == Vector2.Zero) {
                 notAiming = true;
@@ -336,7 +347,16 @@ public class CustomFeather : Entity {
     /// </summary>
     public float NeutralSpeed;
 
-    bool RefillStamina, RefillDashes;
+    private readonly bool _refillStamina;
+    private readonly bool _refillDashes;
+    private readonly AimInvertions _invertAim;
+    
+    private enum AimInvertions {
+        None,
+        InvertY,
+        InvertX,
+        InvertBoth,
+    }
 
     public CustomFeather(EntityData data, Vector2 offset) : base(data.Position + offset) {
         LoadIfNeeded();
@@ -366,7 +386,7 @@ public class CustomFeather : Entity {
         sprite.Play("loop");
         Add(sprite);
 
-        Add(wiggler = Wiggler.Create(1f, 4f, delegate (float v) {
+        Add(wiggler = Wiggler.Create(1f, 4f, v => {
             sprite.Scale = Vector2.One * (1f + v * 0.2f);
         }, false, false));
         Add(bloom = new BloomPoint(0.5f, 20f));
@@ -395,8 +415,9 @@ public class CustomFeather : Entity {
             Color = FlyColor
         };
 
-        RefillStamina = data.Bool("refillStamina", true);
-        RefillDashes = data.Bool("refillDashes", true);
+        _refillStamina = data.Bool("refillStamina", true);
+        _refillDashes = data.Bool("refillDashes", true);
+        _invertAim = data.Enum("invertAim", AimInvertions.None);
     }
 
     public override void Added(Scene scene) {
@@ -478,7 +499,7 @@ public class CustomFeather : Entity {
     public float FlyTime;
 
     public bool StartStarFly(Player player) {
-        if (RefillStamina)
+        if (_refillStamina)
             player.RefillStamina();
 
         if (player.StateMachine.State == Player.StReflectionFall) {

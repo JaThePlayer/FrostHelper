@@ -1,4 +1,5 @@
 ﻿using FrostHelper.Helpers;
+using System.Globalization;
 
 namespace FrostHelper.Triggers;
 
@@ -191,17 +192,20 @@ internal sealed class CounterDisplayEntity : BaseTimerEntity {
     
     private readonly CounterExpression _counter;
     
-    private int _lastValue = 0;
+    private float _lastValue = 0;
     private string _lastValueStr = "0";
 
     protected override string GetText() {
         if (Scene is Level level) {
-            var value = _counter.Get(level.Session);
+            var value = _counter.GetFloat(level.Session);
             if (value == _lastValue)
                 return _lastValueStr;
 
             _lastValue = value;
-            _lastValueStr = value.ToString();
+            value = float.Round(value, 4);
+            _lastValueStr = float.IsInteger(value) 
+                ? ((int)value).ToString(CultureInfo.InvariantCulture)
+                : value.ToString(CultureInfo.InvariantCulture);
             return _lastValueStr;
         }
 

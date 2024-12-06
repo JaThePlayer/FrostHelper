@@ -2,6 +2,7 @@
 using FrostHelper.Entities.Boosters;
 using FrostHelper.Helpers;
 using FrostHelper.ModIntegration;
+using FrostHelper.SessionExpressions;
 using MonoMod.ModInterop;
 using System.Diagnostics.CodeAnalysis;
 
@@ -379,7 +380,7 @@ public static class API {
     /// <param name="cmdName">Name of the command</param>
     /// <param name="func">Function called each time the command needs to be evaluated</param>
     public static void RegisterSimpleSessionExpressionCommand(string modName, string cmdName, Func<Session, object> func) {
-        ConditionHelper.RegisterSimpleCommand(modName, cmdName, func);
+        SimpleCommands.RegisterSimpleCommand(modName, cmdName, func);
     }
 
     // NON-API!

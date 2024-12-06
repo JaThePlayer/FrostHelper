@@ -325,7 +325,17 @@ jautils.fieldTypeOverrides = {
     ["FrostHelper.condition"] = function (data)
         -- Fictional field type, for future-proofing
         return nil
-    end
+    end,
+    ["FrostHelper.randomMode"] = function (data)
+        return {
+            options = {
+                "SessionTime",
+                "RoomSeed",
+                "FullRandom",
+                "Custom",
+            },
+        }
+    end,
 }
 
 local fieldTypesWhichNeedLiveUpdate = {

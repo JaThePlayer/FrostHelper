@@ -9,7 +9,7 @@ namespace FrostHelper.Helpers;
 
 internal sealed partial class AbstractExpression {
     // ':' is not banned due to some vanilla flags using it - ternary operations will need something else
-    [GeneratedRegex(@"[\~\\@\^\[\]\{\};,\?""]", RegexOptions.CultureInvariant | RegexOptions.IgnoreCase | RegexOptions.Singleline)]
+    [GeneratedRegex(@"[\~\^\[\]\{\};,\?""]", RegexOptions.CultureInvariant | RegexOptions.IgnoreCase | RegexOptions.Singleline)]
     private static partial Regex ReservedCharsRegex();
     
     internal static readonly JsonSerializerOptions JsonOptions = new() {
@@ -28,6 +28,9 @@ internal sealed partial class AbstractExpression {
     
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public AbstractExpression? Right { get; set; }
+    
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public IList<AbstractExpression>? Arguments { get; set; }
 
     private static readonly Dictionary<string, AbstractExpression> Cache = [];
 
@@ -40,7 +43,14 @@ internal sealed partial class AbstractExpression {
 
         if (cacheRef is null) {
             if (ReservedCharsRegex().IsMatch(str)) {
-                NotificationHelper.Notify($"Expression '{str}' contains reserved characters.\nIf this is an existing map, report this to JaThePlayer,\nor else the map might break in the future!\nIf you're making this map, please choose a different flag/session counter name!\nReserved chars: ^?,;~\"[]{{}}@");
+                NotificationHelper.Notify(
+                    $$"""
+                      Expression '{{str}}' contains reserved characters.
+                      If this is an existing map, report this to JaThePlayer,
+                      or else the map might break in the future!
+                      If you're making this map, please choose a different flag/session counter name!
+                      Reserved chars: ^?,;~"[]{}
+                      """);
             }
             
             var ret = Parse(str.AsSpan(), out expression);
@@ -158,9 +168,33 @@ internal sealed partial class AbstractExpression {
                     {
                         // Look for unary ops
                         var r = leftMathMult2.Remaining.Trim();
-                        if (r is ['!' or '#' or '$', .. var remaining]) {
+                        if (r is ['!' or '#' or '$' or '@', .. var remaining]) {
                             if (!Parse(remaining, out left))
                                 return false;
+
+                            // Find function calls with $name(...)
+                            if (r[0] is '$' && left is { StringValue: {} cmd }) {
+                                var bracketIdx = cmd.IndexOf('(');
+                                if (bracketIdx != -1) {
+                                    var funcName = cmd[..bracketIdx];
+                                    if (cmd[(bracketIdx + 1)..] is [.. var allArgsStr, ')']) {
+                                        List<AbstractExpression> args = [];
+                                        var argsParser = new SpanParser(allArgsStr);
+                                        while (argsParser.SliceUntilAnyOutsideBrackets(",", out _, 0).TryUnpack(out var arg)) {
+                                            if (!Parse(arg.Remaining, out var expr))
+                                                return false;
+                                            args.Add(expr);
+                                        }
+                                    
+                                        expression = new() {
+                                            Arguments = args,
+                                            StringValue = funcName,
+                                            Operator = "$call"
+                                        };
+                                        return true;
+                                    }
+                                }
+                            }
                             
                             expression = new() {
                                 Left = left,

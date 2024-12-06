@@ -22,7 +22,7 @@ internal sealed class SessionCounterComparer {
     public bool Check(Level level) {
         _counter ??= level.Session.GetCounterObj(CounterName);
 
-        var target = _target.Get(level.Session);
+        var target = _target.GetInt(level.Session);
         
         var met = Operation switch {
             CounterOperation.Equal => _counter.Value == target,

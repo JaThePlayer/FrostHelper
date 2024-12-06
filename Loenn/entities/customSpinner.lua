@@ -10,7 +10,10 @@ local fallback = mods.internalModContent .. "/missing_image"
 local spinner = {}
 
 spinner.name = "FrostHelper/IceSpinner"
-spinner.depth = -8500
+
+function spinner.depth(room, entity)
+    return entity.depth or -8500
+end
 
 jautils.createPlacementsPreserveOrder(spinner, "custom_spinner", {
     { "directory", "danger/crystal>_white", "FrostHelper.texturePath", {
@@ -41,6 +44,7 @@ jautils.createPlacementsPreserveOrder(spinner, "custom_spinner", {
     { "hitbox", "C,6,0,0;R,16,4,-8,-3", "FrostHelper.collider"},
     { "scale", 1 },
     { "imageScale", 1 },
+    { "depth", -8500, "depth" },
     { "attachToSolid", false },
     { "dashThrough", false },
     { "rainbow", false },
@@ -79,7 +83,8 @@ local function getSpriteCache(entity)
         cache = {
             jautils.getAtlasSubtextures(d .. "/fg" .. subdir, fallback),
             jautils.getAtlasSubtextures(d .. "/bg" .. subdir, fallback),
-            nil
+            nil, -- width
+            nil, -- associatedMods
         }
 
         cache[3] = drawableSpriteStruct.fromTexture(cache[1][1]).meta.realWidth
@@ -128,12 +133,18 @@ end
 
 function spinner.associatedMods(entity)
     local cache = getSpriteCache(entity)
-    local fgSprite = cache[2][1]
-    if not fgSprite then
-        return { "FrostHelper" }
+    if cache[4] then
+        return cache[4]
     end
 
-    return { "FrostHelper", unpack(jautils.associatedModsFromSprite(fgSprite)) }
+    local fgSprite = cache[2][1]
+    if not fgSprite then
+        cache[4] = { "FrostHelper" }
+        return cache[4]
+    end
+
+    cache[4] = { "FrostHelper", unpack(jautils.associatedModsFromSprite(fgSprite)) }
+    return cache[4]
 end
 
 function spinner.sprite(room, entity)

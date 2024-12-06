@@ -114,6 +114,23 @@ return {
     },function (trigger)
         return trigger.condition
     end),
+    makeActivator("FrostHelper/IfCounterActivator",
+        {
+            { "counter", "", "sessionCounter" },
+            { "target", "0", "sessionCounter" },
+            { "operation", "Equal", jautils.counterOperations },
+        },
+        function (trigger)
+            return jautils.counterConditionToString(trigger.counter, trigger.operation, trigger.target)
+        end
+    ),
+    makeActivator("FrostHelper/IfRandomActivator", {
+        { "chance", "50", "FrostHelper.condition" },
+        { "seedMode", "SessionTime", "FrostHelper.randomMode" },
+        { "seed", 0, "integer" },
+    }),
+    makeActivator("FrostHelper/ElseActivator", {
+    }),
     makeActivator("FrostHelper/DelayActivator", {
     },function (trigger)
         return string.format("%.3f", trigger.delay)
@@ -150,7 +167,7 @@ return {
             return cassetteSwapActivatorOptionsInv[trigger.targetIndex] or tostring(trigger.targetIndex)
         end
     ),
-    makeActivator("FrostHelper/IfCounterActivator",
+    makeActivator("FrostHelper/OnCounterActivator",
         {
             { "counter", "", "sessionCounter" },
             { "target", "0", "sessionCounter" },
@@ -160,14 +177,12 @@ return {
             return jautils.counterConditionToString(trigger.counter, trigger.operation, trigger.target)
         end
     ),
-    makeActivator("FrostHelper/OnCounterActivator",
+    makeActivator("FrostHelper/OnExpressionActivator",
         {
-            { "counter", "", "sessionCounter" },
-            { "target", "0", "sessionCounter" },
-            { "operation", "Equal", jautils.counterOperations },
+            { "expression", "", "FrostHelper.condition" }
         },
         function (trigger)
-            return jautils.counterConditionToString(trigger.counter, trigger.operation, trigger.target)
+            return trigger.expression
         end
     ),
     --counterSwitchActivator,

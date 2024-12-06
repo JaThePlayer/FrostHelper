@@ -120,6 +120,7 @@ entities.FrostHelper/IceSpinner.attributes.description.singleFGImage=Use a singl
 entities.FrostHelper/IceSpinner.attributes.description.scale=Scale applied to the hitbox, useful for making larger/smaller spinners.\nDoes NOT scale sprites.
 entities.FrostHelper/IceSpinner.attributes.description.imageScale=Scale applied to the images for this spinner, useful for creating bigger spinners with existing, smaller sprites.
 entities.FrostHelper/IceSpinner.attributes.description.hitbox=Controls the hitbox for this entity.\nRefer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Custom-Colliders
+entities.FrostHelper/IceSpinner.attributes.description.depth=Depth at which this spinner gets rendered.\nWarning: Using too many different depths of spinners in the same room can cause performance issues.
 
 FrostHelper.paths.customSpinner.danger/crystal>_white=Vanilla White
 FrostHelper.paths.customSpinner.danger/crystal>_red=Vanilla Red
@@ -187,6 +188,7 @@ entities.FrostHelper/CustomFeather.attributes.description.lowSpeed=Minimum speed
 entities.FrostHelper/CustomFeather.attributes.description.neutralSpeed=Speed of this feather when the player is not holding any directional input
 entities.FrostHelper/CustomFeather.attributes.description.spritePath=Path to the directory containing the sprites for the feather, relative to Atlases/Gameplay
 entities.FrostHelper/CustomFeather.attributes.description.hitbox=Controls the hitbox for this entity.\nRefer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Custom-Colliders
+entities.FrostHelper/CustomFeather.attributes.description.invertAim=Inverts the player aim while using this feather.
 
 # Custom Zip Mover
 entities.FrostHelper/CustomZipMover.placements.name.custom_zip_mover=Custom Zip Mover
@@ -687,6 +689,24 @@ triggers.FrostHelper/IfActivator.attributes.description.delay=How long to wait (
 triggers.FrostHelper/IfActivator.attributes.description.activationMode=How the activation should work:\nAll: All triggers get activated at once, in node order.\nCycle: When this trigger activates for the n-th time, the n-th trigger will be chosen.\nRandom: A random (seeded) trigger will be chosen.
 triggers.FrostHelper/IfActivator.attributes.description.condition=The flag that needs to be set in order for this to trigger anything. Write a ! at the beginning of the flag name to invert this logic.\nSession expressions are supported, refer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Session-Expressions
 
+# If Random
+triggers.FrostHelper/IfRandomActivator.placements.name.default=Activator (If Random)
+triggers.FrostHelper/IfRandomActivator.placements.description.default=Activates triggers which intersect with the nodes of this trigger, if a random chance is met when this trigger gets triggered.\nNOT COLLIDABLE, requires another Activator to activate this!\nUseful for more complicated systems.
+triggers.FrostHelper/IfRandomActivator.attributes.description.once=Whether this trigger should only activate once, and then get deleted.
+triggers.FrostHelper/IfRandomActivator.attributes.description.delay=How long to wait (in seconds) before actually activating the triggers.
+triggers.FrostHelper/IfRandomActivator.attributes.description.activationMode=How the activation should work:\nAll: All triggers get activated at once, in node order.\nCycle: When this trigger activates for the n-th time, the n-th trigger will be chosen.\nRandom: A random (seeded) trigger will be chosen.
+triggers.FrostHelper/IfRandomActivator.attributes.description.chance=Percent chance of this Activator activating triggers.\nSession expressions are supported, refer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Session-Expressions
+triggers.FrostHelper/IfRandomActivator.attributes.description.seedMode=Determines how the RNG should be seeded.\n- SessionTime: Based on the session timer, great for TAS-friendly pseudo-rng that appears random to casuals.\n- RoomSeed: Random values will always be the same in the same room, even between deaths.\n- FullRandom: The RNG is completely random, not TAS-friendly.\n- Custom: Allows providing a custom seed via the `seed` parameter.
+triggers.FrostHelper/IfRandomActivator.attributes.description.seed=If `Seed Mode` is `Custom`, specifies the custom seed to use for this trigger.
+
+# Else
+triggers.FrostHelper/ElseActivator.placements.name.default=Activator (Else)
+triggers.FrostHelper/ElseActivator.placements.description.default=When an If-style Activator points to this,\nactivates triggers which intersect with the nodes of this trigger,\nif the condition of that other activator was NOT met.\nNOT COLLIDABLE, requires another If-Activator to activate this!\nUseful for more complicated systems.
+triggers.FrostHelper/ElseActivator.attributes.description.once=Whether this trigger should only activate once, and then get deleted.
+triggers.FrostHelper/ElseActivator.attributes.description.delay=How long to wait (in seconds) before actually activating the triggers.
+triggers.FrostHelper/ElseActivator.attributes.description.activationMode=How the activation should work:\nAll: All triggers get activated at once, in node order.\nCycle: When this trigger activates for the n-th time, the n-th trigger will be chosen.\nRandom: A random (seeded) trigger will be chosen.
+
+
 # FrostHelper/OnPlayerEnterActivator
 triggers.FrostHelper/OnPlayerEnterActivator.placements.name.default=Activator (On Player Enter)
 triggers.FrostHelper/OnPlayerEnterActivator.placements.description.default=When a player enters this, activates triggers which intersect with the nodes of this trigger, optionally after a given delay.
@@ -767,6 +787,14 @@ triggers.FrostHelper/OnCounterActivator.attributes.description.counter=The sessi
 triggers.FrostHelper/OnCounterActivator.attributes.description.target=Target value of the counter. Can be an integer, OR the name of a different session counter.\nDecimal numbers are NOT supported.
 triggers.FrostHelper/OnCounterActivator.attributes.description.operation=The comparison operation to use to compare the counter to target.
 
+# On Expression Counter
+triggers.FrostHelper/OnExpressionActivator.placements.name.default=Activator (On Session Expression)
+triggers.FrostHelper/OnExpressionActivator.placements.description.default=Activates triggers which intersect with the nodes of this trigger, as soon as a Session Expression gets met.\nTriggers get activated the frame the condition got met, only if it wasn't met last frame.\nNOT COLLIDABLE, requires another Activator to activate this!\nUseful for more complicated systems.
+triggers.FrostHelper/OnExpressionActivator.attributes.description.once=Whether this trigger should only activate once, and then get deleted.
+triggers.FrostHelper/OnExpressionActivator.attributes.description.delay=How long to wait (in seconds) before actually activating the triggers.
+triggers.FrostHelper/OnExpressionActivator.attributes.description.activationMode=How the activation should work:\nAll: All triggers get activated at once, in node order.\nCycle: When this trigger activates for the n-th time, the n-th trigger will be chosen.\nRandom: A random (seeded) trigger will be chosen.
+triggers.FrostHelper/OnExpressionActivator.attributes.description.expression=Session Expression to react to, refer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Session-Expressions
+
 # If (Session) Counter
 triggers.FrostHelper/IfCounterActivator.placements.name.default=Activator (If Counter)
 triggers.FrostHelper/IfCounterActivator.placements.description.default=Activates triggers which intersect with the nodes of this trigger, if a Session Counter fulfills a specified condition when this trigger gets activated from an outside source.\nNOT COLLIDABLE, requires another Activator to activate this!\nUseful for more complicated systems.
@@ -813,7 +841,7 @@ triggers.FrostHelper/RandomizeSessionCounterTrigger.placements.description.defau
 triggers.FrostHelper/RandomizeSessionCounterTrigger.attributes.description.counter=The session counter to change.
 triggers.FrostHelper/RandomizeSessionCounterTrigger.attributes.description.min=Minimum value to be generated (Inclusive).\nCan be an integer, OR the name of a different session counter.\nDecimal numbers are NOT supported.
 triggers.FrostHelper/RandomizeSessionCounterTrigger.attributes.description.max=Maximum value to be generated (Inclusive).\nCan be an integer, OR the name of a different session counter.\nDecimal numbers are NOT supported.
-triggers.FrostHelper/RandomizeSessionCounterTrigger.attributes.description.seedMode=Determines how the RNG should be seeded.\n- SessionTime: Based on the session timer, great for TAS-friendly pseudo-rng that appears random to casuals.\n- RoomSeed: Random values will always be the same in the same room, even between deaths.\n-FullRandom: The RNG is completely random, not TAS-friendly.\n-Custom: Allows providing a custom seed via the `seed` parameter.
+triggers.FrostHelper/RandomizeSessionCounterTrigger.attributes.description.seedMode=Determines how the RNG should be seeded.\n- SessionTime: Based on the session timer, great for TAS-friendly pseudo-rng that appears random to casuals.\n- RoomSeed: Random values will always be the same in the same room, even between deaths.\n- FullRandom: The RNG is completely random, not TAS-friendly.\n- Custom: Allows providing a custom seed via the `seed` parameter.
 triggers.FrostHelper/RandomizeSessionCounterTrigger.attributes.description.seed=If `Seed Mode` is `Custom`, specifies the custom seed to use for this trigger.
 
 # FrostHelper/NoMovementTrigger

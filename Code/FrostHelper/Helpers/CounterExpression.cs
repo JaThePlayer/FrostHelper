@@ -25,14 +25,30 @@ internal sealed class CounterExpression {
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public int Get(Session session) {
+    public int GetInt(Session session) {
         return _valueCounter?.Get(session) ?? _valueCondition?.GetInt(session) ?? _value;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public float GetFloat(Session session) {
+        return (float?)_valueCounter?.Get(session) ?? _valueCondition?.GetFloat(session) ?? _value;
+    }
+
+    public ConditionHelper.Condition ToCondition() {
+        if (_valueCondition is { })
+            return _valueCondition;
+        if (_valueCounter is { })
+            return ConditionHelper.CreateOrDefault($"#{_valueCounter.CounterName}", "");
+
+        return ConditionHelper.CreateOrDefault(_value.ToString(), "");
     }
 }
 
 internal sealed class CounterAccessor {
     private readonly string _counterName;
     private Session.Counter? _counter;
+
+    public string CounterName => _counterName;
     
     internal enum CounterTimeUnits {
         Hours,

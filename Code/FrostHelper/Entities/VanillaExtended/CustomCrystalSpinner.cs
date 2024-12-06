@@ -179,7 +179,7 @@ public class CustomSpinner : Entity {
         } else {
             Collidable = false;
         }
-        Depth = -8500;
+        Depth = data.Int("depth", -8500);
         AttachToSolid = attachToSolid;
         AttachGroup = data.Int("attachGroup", -1);
         if (AttachToSolid) {
@@ -216,20 +216,15 @@ public class CustomSpinner : Entity {
         SpriteSource = CustomSpinnerSpriteSource.Get(directory, spritePathSuffix);
     }
 
-    public static bool ConnectorRendererJustAdded = false;
     public override void Added(Scene scene) {
         base.Added(scene);
-        if (!ConnectorRendererJustAdded) {
-            GetConnectorRenderer();
-            GetBorderRenderer();
-            if (SpriteSource.HasDeco)
-                GetDecoRenderer();
-            ConnectorRendererJustAdded = true;
-        }
+        CreateController<SpinnerConnectorRenderer>();
+        CreateController<SpinnerBorderRenderer>();
+        if (SpriteSource.HasDeco)
+            CreateController<SpinnerDecoRenderer>();
     }
 
     public override void Awake(Scene scene) {
-        ConnectorRendererJustAdded = false;
         controller = ControllerHelper<CustomSpinnerController>.AddToSceneIfNeeded(scene);
         UpdateController();
         
@@ -399,24 +394,33 @@ public class CustomSpinner : Entity {
         return diff.X < 0f && diff.Y < 0f;
     }
 
+    internal static T? GetRendererFromTracker<T>(Scene scene, int depth) where T : Entity, ISpinnerRenderer<T> {
+        foreach (T e in scene.Tracker.SafeGetEntities<T>()) {
+            if (e.BaseDepth == depth)
+                return e;
+        }
+
+        return null;
+    }
+    
     private void UnregisterFromRenderers() {
         if (RegisteredToRenderers) {
-            Scene.Tracker.SafeGetEntity<SpinnerConnectorRenderer>()?.Remove(this);
+            GetRendererFromTracker<SpinnerConnectorRenderer>(Scene, Depth)?.Remove(this);
             if (RenderBorder)
-                Scene.Tracker.SafeGetEntity<SpinnerBorderRenderer>()?.Remove(this);
+                GetRendererFromTracker<SpinnerBorderRenderer>(Scene, Depth)?.Remove(this);
             if (SpriteSource.HasDeco)
-                Scene.Tracker.SafeGetEntity<SpinnerDecoRenderer>()?.Spinners.Remove(this);
+                GetRendererFromTracker<SpinnerDecoRenderer>(Scene, Depth)?.Spinners.Remove(this);
             RegisteredToRenderers = false;
         }
     }
 
     private void RegisterToRenderers() {
         if (!RegisteredToRenderers) {
-            Scene.Tracker.SafeGetEntity<SpinnerConnectorRenderer>()?.Add(this);
+            GetRendererFromTracker<SpinnerConnectorRenderer>(Scene, Depth)?.Add(this);
             if (RenderBorder)
-                Scene.Tracker.SafeGetEntity<SpinnerBorderRenderer>()?.Add(this);
+                GetRendererFromTracker<SpinnerBorderRenderer>(Scene, Depth)?.Add(this);
             if (SpriteSource.HasDeco)
-                Scene.Tracker.SafeGetEntity<SpinnerDecoRenderer>()?.Spinners.Add(this);
+                GetRendererFromTracker<SpinnerDecoRenderer>(Scene, Depth)?.Spinners.Add(this);
             RegisteredToRenderers = true;
         }
     }
@@ -540,31 +544,8 @@ public class CustomSpinner : Entity {
 
     }
 
-    public SpinnerConnectorRenderer GetConnectorRenderer() {
-        var renderer = Scene.Tracker.SafeGetEntity<SpinnerConnectorRenderer>();
-        if (renderer is null) {
-            renderer = new SpinnerConnectorRenderer();
-            Scene.Add(renderer);
-        }
-        return renderer;
-    }
-
-    public SpinnerDecoRenderer GetDecoRenderer() {
-        var renderer = Scene.Tracker.SafeGetEntity<SpinnerDecoRenderer>();
-        if (renderer is null) {
-            renderer = new SpinnerDecoRenderer();
-            Scene.Add(renderer);
-        }
-        return renderer;
-    }
-
-    public SpinnerBorderRenderer GetBorderRenderer() {
-        var renderer = Scene.Tracker.SafeGetEntity<SpinnerBorderRenderer>();
-        if (renderer is null) {
-            renderer = new SpinnerBorderRenderer();
-            Scene.Add(renderer);
-        }
-        return renderer;
+    private T CreateController<T>() where T : Entity, ISpinnerRenderer<T> {
+        return ControllerHelper<T>.AddToSceneIfNeeded(Scene, filter: x => x.BaseDepth == Depth, factory: () => T.Create(Depth));
     }
 
     private static Vector2 FixPos(Vector2 pos, Vector2 origin, float rotation) {
@@ -605,10 +586,10 @@ public class CustomSpinner : Entity {
         if (AttachToSolid || MoveWithWind) {
             return false;
         }
-        foreach (var a in Scene.CollideAll<Solid>(position)) {
-            if (a is SolidTiles) {
+        foreach (var a in Scene.CollideAll<SolidTiles>(position)) {
+            // Don't collide with tiles that render below the spinner - that just looks really bad
+            if (a.Depth <= Depth)
                 return true;
-            }
         }
         return false;
     }
@@ -660,21 +641,31 @@ public class CustomSpinner : Entity {
     }
 }
 
-[Tracked]
-public class SpinnerConnectorRenderer : Entity {
-    private List<CustomSpinner> Spinners = new();
+internal interface ISpinnerRenderer<TSelf> where TSelf : Entity, ISpinnerRenderer<TSelf> {
+    public int BaseDepth { get; }
 
-    public SpinnerConnectorRenderer() : base() {
+    public static abstract TSelf Create(int depth);
+}
+
+[Tracked]
+public class SpinnerConnectorRenderer : Entity, ISpinnerRenderer<SpinnerConnectorRenderer> {
+    private readonly List<CustomSpinner> _spinners = [];
+
+    int ISpinnerRenderer<SpinnerConnectorRenderer>.BaseDepth => Depth - 1;
+
+    public static SpinnerConnectorRenderer Create(int depth) => new(depth);
+
+    private SpinnerConnectorRenderer(int depth) {
         Active = false;
-        Depth = -8500 + 1;
+        Depth = depth + 1;
         Tag = Tags.Persistent;
     }
 
     public override void Render() {
-        if (Spinners.Count == 0)
+        if (_spinners.Count == 0)
             return;
 
-        if (Spinners[0].controller is { } b && b.CanUseBlackOutlineRenderTargetOpt && b.CanUseRenderTargetRender)
+        if (_spinners[0].controller is { CanUseBlackOutlineRenderTargetOpt: true, CanUseRenderTargetRender: true })
             return;
 
         ForceRender();
@@ -703,7 +694,7 @@ public class SpinnerConnectorRenderer : Entity {
     }
 
     private void DrawFills<T>(T colorGetter) where T : struct, IFillColorGetter {
-        var spinners = CollectionsMarshal.AsSpan(Spinners);
+        var spinners = CollectionsMarshal.AsSpan(_spinners);
         var batch = Draw.SpriteBatch;
         
         foreach (var spinner in spinners) {
@@ -730,21 +721,24 @@ public class SpinnerConnectorRenderer : Entity {
     }
 
     public void Add(CustomSpinner spinner) {
-        Spinners.Add(spinner);
+        _spinners.Add(spinner);
     }
 
     public void Remove(CustomSpinner spinner) {
-        Spinners.Remove(spinner);
+        _spinners.Remove(spinner);
     }
 }
 
 [Tracked]
-public class SpinnerDecoRenderer : Entity {
-    public List<CustomSpinner> Spinners = new();
+public class SpinnerDecoRenderer : Entity, ISpinnerRenderer<SpinnerDecoRenderer> {
+    public readonly List<CustomSpinner> Spinners = [];
+    private int _baseDepth;
 
-    public SpinnerDecoRenderer() : base() {
+    private SpinnerDecoRenderer(int depth) {
         Active = false;
         Depth = -10000 - 1;
+        _baseDepth = depth;
+        
         Tag = Tags.Persistent;
     }
 
@@ -753,31 +747,44 @@ public class SpinnerDecoRenderer : Entity {
             item.deco?.Render();
         }
     }
+
+    int ISpinnerRenderer<SpinnerDecoRenderer>.BaseDepth => _baseDepth;
+
+    static SpinnerDecoRenderer ISpinnerRenderer<SpinnerDecoRenderer>.Create(int depth) {
+        return new(depth);
+    }
 }
 
 [Tracked]
-public class SpinnerBorderRenderer : Entity {
-    public List<CustomSpinner> Spinners = new();
+public class SpinnerBorderRenderer : Entity, ISpinnerRenderer<SpinnerBorderRenderer> {
+    private readonly List<CustomSpinner> _spinners = [];
+    private SpinnerConnectorRenderer? _connectorRenderer;
+    private int BaseDepth => Depth - 2;
+    
+    int ISpinnerRenderer<SpinnerBorderRenderer>.BaseDepth => BaseDepth;
+
+    static SpinnerBorderRenderer ISpinnerRenderer<SpinnerBorderRenderer>.Create(int depth)
+        => new(depth);
 
     public void Add(CustomSpinner item) {
-        Spinners.Add(item);
+        _spinners.Add(item);
     }
 
     public void Remove(CustomSpinner item) {
-        Spinners.Remove(item);
+        _spinners.Remove(item);
     }
 
-    public SpinnerBorderRenderer() : base() {
+    private SpinnerBorderRenderer(int depth) {
         Active = false;
-        Depth = -8500 + 2;
+        Depth = depth + 2;
         Tag = Tags.Persistent;
     }
 
     public override void Render() {
-        if (Spinners.Count == 0)
+        if (_spinners.Count == 0)
             return;
 
-        var controller = Spinners[0].controller;
+        var controller = _spinners[0].controller;
 
         if (controller.OutlineShader is { } outlineShader) {
             var cam = GameplayRenderer.instance.Camera;
@@ -817,7 +824,7 @@ public class SpinnerBorderRenderer : Entity {
         // Renders all spinners into a render target, then renders that target 4 times, massively reducing the amount of sprites drawn.
 
         var target = RenderTargetHelper.RentFullScreenBuffer();
-        var connectorRenderer = Scene.Tracker.SafeGetEntity<SpinnerConnectorRenderer>();
+        var connectorRenderer = _connectorRenderer ??= CustomSpinner.GetRendererFromTracker<SpinnerConnectorRenderer>(Scene, BaseDepth);
         var batch = Draw.SpriteBatch;
         var borderColor = controller.FirstBorderColor!.Value;
 
@@ -836,7 +843,7 @@ public class SpinnerBorderRenderer : Entity {
 
         GameplayRenderer.Begin();
 
-        var spinners = CollectionsMarshal.AsSpan(Spinners);
+        var spinners = CollectionsMarshal.AsSpan(_spinners);
         if (useImageColor) {
             connectorRenderer?.ForceRender();
             
@@ -891,7 +898,7 @@ public class SpinnerBorderRenderer : Entity {
     private void NormalRender() {
         var batch = Draw.SpriteBatch;
         
-        var spinners = CollectionsMarshal.AsSpan(Spinners);
+        var spinners = CollectionsMarshal.AsSpan(_spinners);
         foreach (var item in spinners) {
             var color = item.BorderColor;
             var spinnerComponents = CollectionsMarshal.AsSpan(item._images);

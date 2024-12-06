@@ -54,7 +54,7 @@ internal sealed class SessionCounterTrigger : Trigger {
         if (FrostModule.TryGetCurrentLevel() is { } lvl) {
             var counter = _counter.GetObj(lvl.Session);
             
-            var value = _value.Get(lvl.Session);
+            var value = _value.GetInt(lvl.Session);
             switch (Operation) {
                 case CounterOperation.Increment:
                     counter.Value += value;

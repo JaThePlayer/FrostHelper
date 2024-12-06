@@ -3,7 +3,7 @@
 namespace FrostHelper.Triggers.Activator;
 
 [CustomEntity("FrostHelper/IfCounterActivator")]
-internal sealed class IfCounterActivator : BaseActivator {
+internal sealed class IfCounterActivator : BaseActivator, IIfActivator {
     private readonly SessionCounterComparer _comparer;
     
     public IfCounterActivator(EntityData data, Vector2 offset) : base(data, offset) {
@@ -13,6 +13,7 @@ internal sealed class IfCounterActivator : BaseActivator {
             data.Attr("counter"),
             data.Attr("target"),
             data.Enum("operation", SessionCounterComparer.CounterOperation.Equal));
+        IsElse = data.Bool("isElse", false);
     }
 
     public override void OnEnter(Player player) {
@@ -22,8 +23,11 @@ internal sealed class IfCounterActivator : BaseActivator {
         if (level is null)
             return; // Shouldn't happen, but just in case
 
-        if (_comparer.Check(level)) {
+        if (_comparer.Check(level))
             ActivateAll(player);
-        }
+        else
+            ActiveElseBlocks(player);
     }
+
+    public bool IsElse { get; }
 }

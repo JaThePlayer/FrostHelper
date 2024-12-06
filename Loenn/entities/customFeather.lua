@@ -6,6 +6,13 @@ local feather = {}
 feather.name = "FrostHelper/CustomFeather"
 feather.depth = 0
 
+local aimInvertions = {
+    "None",
+    "InvertX",
+    "InvertY",
+    "InvertBoth",
+}
+
 jautils.createPlacementsPreserveOrder(feather, "normal", {
     { "flyColor", "ffd65c", "color" },
     { "spriteColor", "ffffff", "color" },
@@ -16,6 +23,7 @@ jautils.createPlacementsPreserveOrder(feather, "normal", {
     { "neutralSpeed", 91.0 },
     { "spritePath", "objects/flyFeather/" },
     { "hitbox", "R,20,20,-10,-10", "FrostHelper.collider" },
+    { "invertAim", "None", aimInvertions },
     { "shielded", false },
     { "singleUse", false },
     { "refillStamina", true },

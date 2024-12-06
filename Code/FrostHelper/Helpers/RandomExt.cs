@@ -39,6 +39,13 @@ public static class RandomExt {
     
     public static int RandomInclusive(ulong seed, int min, int max) => min + (int) (Splitmix64(seed) % (ulong) (max - min + 1));
 
+    public static float RandomFloat(ulong seed, float min, float max) {
+        var i = Splitmix64(seed);
+        var f = float.Abs((float)(i * (1.0 / ulong.MaxValue)));
+        
+        return min + (max - min) * f;
+    }
+
     #region Splitmix64
     /*  Written in 2015 by Sebastiano Vigna (vigna@acm.org)
 

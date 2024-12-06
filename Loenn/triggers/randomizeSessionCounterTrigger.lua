@@ -4,18 +4,11 @@ local sessionCounterTrigger = {
     name = "FrostHelper/RandomizeSessionCounterTrigger",
 }
 
-local seedModes = {
-    "SessionTime",
-    "RoomSeed",
-    "FullRandom",
-    "Custom",
-}
-
 jautils.createPlacementsPreserveOrder(sessionCounterTrigger, "default", {
     { "counter", "", "sessionCounter" },
     { "min", "0", "sessionCounter" },
     { "max", "0", "sessionCounter" },
-    { "seedMode", "SessionTime", seedModes },
+    { "seedMode", "SessionTime", "FrostHelper.randomMode" },
     { "seed", 0, "integer" }
 }, true)
 
