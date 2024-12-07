@@ -2,18 +2,23 @@
 
 namespace FrostHelper.Components;
 
-internal sealed class ExpressionListener(ConditionHelper.Condition cond, Action<Entity> onCondition)
+internal sealed class ExpressionListener(ConditionHelper.Condition cond, Action<Entity, object?, object> onCondition, bool activateOnStart)
     : Component(true, false) {
 
-    private bool _lastConditionMet;
+    private object? _lastValue;
     
     public override void Update() {
-        var met = cond.Check();
-        if (met && !_lastConditionMet) {
-            onCondition(Entity);
+        var value = cond.Get(FrostModule.GetCurrentLevel().Session);
+        if (_lastValue is null) {
+            if (activateOnStart) {
+                onCondition(Entity, _lastValue, value);
+            }
+            _lastValue = value;
         }
-        _lastConditionMet = met;
-        
-        base.Update();
+
+        if (!value.Equals(_lastValue)) {
+            onCondition(Entity, _lastValue, value);
+            _lastValue = value;
+        }
     }
 }

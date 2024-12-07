@@ -554,7 +554,7 @@ public static class ConditionHelper {
 
         public abstract bool OnlyChecksFlags();
         
-        protected bool CoerceToBool(object obj) {
+        public static bool CoerceToBool(object obj) {
             return obj switch {
                 bool b => b,
                 int i => i != 0,
