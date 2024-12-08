@@ -179,7 +179,17 @@ return {
     ),
     makeActivator("FrostHelper/OnExpressionActivator",
         {
-            { "expression", "", "FrostHelper.condition" }
+            { "expression", "", "FrostHelper.condition" },
+            { "activateAfterDeath", false },
+        },
+        function (trigger)
+            return trigger.expression
+        end
+    ),
+    makeActivator("FrostHelper/OnExpressionChangedActivator",
+        {
+            { "expression", "", "FrostHelper.condition" },
+            { "activateAfterDeath", false },
         },
         function (trigger)
             return trigger.expression

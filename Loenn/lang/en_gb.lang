@@ -789,11 +789,21 @@ triggers.FrostHelper/OnCounterActivator.attributes.description.operation=The com
 
 # On Expression Counter
 triggers.FrostHelper/OnExpressionActivator.placements.name.default=Activator (On Session Expression)
-triggers.FrostHelper/OnExpressionActivator.placements.description.default=Activates triggers which intersect with the nodes of this trigger, as soon as a Session Expression gets met.\nTriggers get activated the frame the condition got met, only if it wasn't met last frame.\nNOT COLLIDABLE, requires another Activator to activate this!\nUseful for more complicated systems.
+triggers.FrostHelper/OnExpressionActivator.placements.description.default=Activates triggers which intersect with the nodes of this trigger, as soon as a Session Expression gets met.\nTriggers get activated the frame the condition got met, only if it wasn't met last frame.
 triggers.FrostHelper/OnExpressionActivator.attributes.description.once=Whether this trigger should only activate once, and then get deleted.
 triggers.FrostHelper/OnExpressionActivator.attributes.description.delay=How long to wait (in seconds) before actually activating the triggers.
 triggers.FrostHelper/OnExpressionActivator.attributes.description.activationMode=How the activation should work:\nAll: All triggers get activated at once, in node order.\nCycle: When this trigger activates for the n-th time, the n-th trigger will be chosen.\nRandom: A random (seeded) trigger will be chosen.
 triggers.FrostHelper/OnExpressionActivator.attributes.description.expression=Session Expression to react to, refer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Session-Expressions
+triggers.FrostHelper/OnExpressionActivator.attributes.description.activateAfterDeath=Whether this activator can activate triggers even after the player dies.\nThis might cause crashes when used with certain triggers which assume the player is still alive.
+
+# On Expression Changed Counter
+triggers.FrostHelper/OnExpressionChangedActivator.placements.name.default=Activator (On Expression Changed)
+triggers.FrostHelper/OnExpressionChangedActivator.placements.description.default=Activates triggers which intersect with the nodes of this trigger, as soon as a Session Expression's value changes compared to last frame.
+triggers.FrostHelper/OnExpressionChangedActivator.attributes.description.once=Whether this trigger should only activate once, and then get deleted.
+triggers.FrostHelper/OnExpressionChangedActivator.attributes.description.delay=How long to wait (in seconds) before actually activating the triggers.
+triggers.FrostHelper/OnExpressionChangedActivator.attributes.description.activationMode=How the activation should work:\nAll: All triggers get activated at once, in node order.\nCycle: When this trigger activates for the n-th time, the n-th trigger will be chosen.\nRandom: A random (seeded) trigger will be chosen.
+triggers.FrostHelper/OnExpressionChangedActivator.attributes.description.expression=Session Expression to react to, refer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Session-Expressions
+triggers.FrostHelper/OnExpressionChangedActivator.attributes.description.activateAfterDeath=Whether this activator can activate triggers even after the player dies.\nThis might cause crashes when used with certain triggers which assume the player is still alive.
 
 # If (Session) Counter
 triggers.FrostHelper/IfCounterActivator.placements.name.default=Activator (If Counter)
