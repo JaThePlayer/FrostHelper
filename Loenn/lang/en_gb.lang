@@ -845,6 +845,14 @@ triggers.FrostHelper/SessionCounterTrigger.attributes.description.value=The valu
 triggers.FrostHelper/SessionCounterTrigger.attributes.description.operation=Specifies which operation to use to manipulate the counter.\nSet - set the value of the counter to 'value'.\nIncrement - add 'value' to the current value of the counter.\nDecrement - subtract 'value' from the current value of the counter.\nMultiply - Multiply the current value of the counter by 'value'.\nDivide - Divide the current value of the counter by 'value' (Over integers, meaning 5 / 2 == 2)\nRemainder - Gets the remainder of dividing the counter by value.\nPower - Raise the counter to the 'value'th power.\nMin/Max - Sets the counter to the smaller/larger value between the counter and `value`.\nDistance - Sets the counter to the distance between the counter and `value`, that is `counter = abs(counter - value)`
 triggers.FrostHelper/SessionCounterTrigger.attributes.description.clearOnSpawn=Whether the counter should be set to 0 when the player spawns into the room.\nOtherwise, its value persists between deaths.
 
+# Session Slider Trigger
+triggers.FrostHelper/SessionSliderTrigger.placements.name.default=Session Slider
+triggers.FrostHelper/SessionSliderTrigger.placements.description.default=Changes the value of a Session Slider, which is a float saved to session.
+triggers.FrostHelper/SessionSliderTrigger.attributes.description.slider=The session slider to change.
+triggers.FrostHelper/SessionSliderTrigger.attributes.description.value=The value to use for this operation.\nWhat this number means is dependant on 'Operation'.\nCan be a number, or a Session Expression.
+triggers.FrostHelper/SessionSliderTrigger.attributes.description.operation=Specifies which operation to use to manipulate the counter.\nSet - set the value of the counter to 'value'.\nIncrement - add 'value' to the current value of the slider.\nDecrement - subtract 'value' from the current value of the slider.\nMultiply - Multiply the current value of the slider by 'value'.\nDivide - Divide the current value of the slider\nRemainder - Gets the remainder of dividing the slider by value.\nPower - Raise the slider to the 'value'th power.\nMin/Max - Sets the slider to the smaller/larger value between the counter and `value`.\nDistance - Sets the slider to the distance between the slider and `value`, that is `slider = abs(slider - value)`
+triggers.FrostHelper/SessionSliderTrigger.attributes.description.clearOnSpawn=Whether the slider should be set to 0 when the player spawns into the room.\nOtherwise, its value persists between deaths.
+
 # Randomize Session Counter Trigger
 triggers.FrostHelper/RandomizeSessionCounterTrigger.placements.name.default=Randomize Session Counter
 triggers.FrostHelper/RandomizeSessionCounterTrigger.placements.description.default=Changes the value of a Session Counter to a random value within a range, which is a 32-bit integer saved to session.

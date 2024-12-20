@@ -257,6 +257,9 @@ jautils.fieldTypeOverrides = {
             searchable = true,
         }
     end,
+    sessionSlider = function (data)
+        return {}
+    end,
     cloudTag = function (data)
         return {
             options = mapScanHelper.findAllCloudTagsInRoom(),

@@ -303,6 +303,8 @@ public class CustomSpinner : Entity {
         expanded = false;
         SetVisible(false);
         _images.Clear();
+        filler = null;
+
     }
 
     internal void ResetSpriteSource() {
@@ -912,6 +914,8 @@ public class SpinnerBorderRenderer : Entity, ISpinnerRenderer<SpinnerBorderRende
                 continue;
             
             var fillerComponents = item.filler.FillsSpan;
+            if (fillerComponents.Length == 0)
+                continue;
 
             ref var image = ref fillerComponents[0];
             var mtexture = image.Texture;

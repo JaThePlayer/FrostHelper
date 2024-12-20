@@ -48,25 +48,31 @@ internal sealed class CustomSpinnerSpriteSource : ISavestatePersisted {
     private static readonly object _lock = new();
     private static readonly Dictionary<(string dir, string suffix), CustomSpinnerSpriteSource> Cache = new();
     
-    private static void OnContentChanged(ModAsset from, ReadOnlySpan<char> spritePath) {
-        // using a lock instead of ConcurrentDictionary because we need to atomically remove multiple entries,
-        // which would require a lock anyway.
-        lock (_lock) {
-            foreach (var (k, v) in Cache.ToList()) {
-                if (spritePath.StartsWith(k.dir)) {
-                    Cache.Remove(k, out _);
-                }
-            } 
-            
-            // make sure spinners are using new textures
-            if (FrostModule.TryGetCurrentLevel() is { } lvl) {
-                lvl.OnEndOfFrame += () => {
-                    foreach (CustomSpinner s in lvl.Tracker.SafeGetEntities<CustomSpinner>()) {
-                        s.ClearSprites();
-                        s.ResetSpriteSource();
+    private static void OnContentChanged(ModAsset from, ReadOnlySpan<char> spritePathSpan) {
+        var spritePath = spritePathSpan.ToString();
+        
+        if (FrostModule.TryGetCurrentLevel() is { } lvl) {
+            Everest.Events.AssetReload.ReloadHandler dele = null!;
+            dele = x => {
+                // using a lock instead of ConcurrentDictionary because we need to atomically remove multiple entries,
+                // which would require a lock anyway.
+                lock (_lock)
+                    foreach (var (k, v) in Cache.ToList()) {
+                        if (spritePath.StartsWith(k.dir)) {
+                            Cache.Remove(k, out _);
+                        }
                     }
-                };
-            }
+                
+                // make sure spinners are using new textures
+                foreach (CustomSpinner s in lvl.Tracker.SafeGetEntities<CustomSpinner>()) {
+                    s.ClearSprites();
+                    s.ResetSpriteSource();
+                }
+                
+                Everest.Events.AssetReload.OnAfterReload -= dele;
+            };
+            Everest.Events.AssetReload.OnAfterReload += dele;
+
         }
     }
     

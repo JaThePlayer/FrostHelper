@@ -60,9 +60,7 @@ public static class ConditionHelper {
                     NotificationHelper.Notify($"Unnecessary '#' operator: '{expr}'");
                     return TryCreate(unaryLeft, out condition);
                 case ("@", {} sliderName): {
-                    //condition = new SliderAccessor(sliderName);
-                    NotificationHelper.Notify($"The '@' operator is not yet supported\n(will read Sliders when they reach stable): '{expr}'");
-                    condition = new FlagAccessor(@$"@{sliderName}", inverted: true);
+                    condition = new SliderAccessor(sliderName);
                     return true;
                 }
                 case ("@", _):
@@ -439,9 +437,8 @@ public static class ConditionHelper {
         protected override IEnumerable<object> GetArgsForDebugPrint() => [prop.Name];
     }
     
-    /*
     private sealed class SliderAccessor(string name) : Condition {
-        private Session.Slider? _slider;
+        private WeakReference<Session.Slider>? _slider;
         private WeakReference<Session>? _lastSession;
         
         public override object Get(Session session) {
@@ -449,17 +446,19 @@ public static class ConditionHelper {
                 _slider = null;
                 _lastSession = null;
             }
-
-            _lastSession ??= new WeakReference<Session>(session);
             
-            _slider ??= session.GetSliderObject(name);
+            _lastSession ??= new WeakReference<Session>(session);
 
-            return _slider.Value;
+            if (_slider?.TryGetTarget(out var slider) is not true) {
+                slider = session.GetSliderObject(name);
+                _slider = new(slider); 
+            }
+
+            return slider.Value;
         }
 
         public override bool OnlyChecksFlags() => false;
     }
-    */
     
     private sealed class CounterAccessor(string name) : Condition {
         private Session.Counter? _valueCounter;
@@ -552,7 +551,7 @@ public static class ConditionHelper {
             return false;
         }
 
-        public abstract bool OnlyChecksFlags();
+        public virtual bool OnlyChecksFlags() => false;
         
         public static bool CoerceToBool(object obj) {
             return obj switch {
