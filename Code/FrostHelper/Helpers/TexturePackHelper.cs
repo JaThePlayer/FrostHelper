@@ -23,6 +23,25 @@ internal static class TexturePackHelper {
     }
     
     /// <summary>
+    /// Packs all textures in the given groups into a single texture, then gives back groups of new textures that point to that new texture,
+    /// in the same order as provided. Allows carrying additional data to the new textures.
+    /// </summary>
+    public static List<(List<MTexture>, T)> CreatePackedGroupsWithData<T>(List<(List<MTexture>, T)> inputTextureGroups, string debugName,
+        out VirtualTexture? virtTexture) {
+        var allPacked = CreatePacked(inputTextureGroups.SelectMany(e => e.Item1).ToList(), debugName, out virtTexture);
+        var i = 0;
+
+        List<(List<MTexture>, T)> output = new(inputTextureGroups.Count);
+        foreach (var group in inputTextureGroups)
+        {
+            output.Add((allPacked.Take(i .. (i + group.Item1.Count)).ToList(), group.Item2));
+            i += group.Item1.Count;
+        }
+
+        return output;
+    }
+    
+    /// <summary>
     /// Packs the input texture into a new texture, then returns a new list of mtextures in the same order, which points to a packed texture.
     /// Used for improving rendering performance.
     /// virtTexture is null if the textures are too big to be packed, or there's only 1 input texture

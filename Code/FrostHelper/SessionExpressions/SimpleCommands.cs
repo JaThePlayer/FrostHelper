@@ -29,52 +29,56 @@ internal static class SimpleCommands {
     };
 
     // Exposed via API
-    internal static void RegisterSimpleCommand(string modName, string cmdName, Func<Session, object> func) {
+    internal static void RegisterSimpleCommand(string modName, string cmdName, Func<Session, object?, object> func) {
         var key = $"{modName}.{cmdName}";
         if (Registry.TryGetValue(key, out var existing)) {
             Logger.Warn("FrostHelper.ConditionHelper", $"Replacing simple command '${key}'");
         }
 
-        Registry[key] = new ModApiSimpleCommand(modName, cmdName, func);
+        Registry[key] = new ModApiSimpleCommand(func);
     }
 
-    private sealed class ModApiSimpleCommand(string modName, string cmdName, Func<Session, object> func) : Condition {
-        public override object Get(Session session) {
-            var ret = func(session);
+    internal static Condition CreateCommandFromModFunc(Func<Session, object?, object> func) {
+        return new ModApiSimpleCommand(func);
+    }
+
+    private sealed class ModApiSimpleCommand(Func<Session, object?, object> func) : Condition {
+        public override object Get(Session session, object? userdata) {
+            var ret = func(session, userdata);
             if (ret is bool b)
                 return b ? 1 : 0;
             return ret;
         }
 
-        protected override IEnumerable<object> GetArgsForDebugPrint() => [modName, cmdName, func];
+        protected override IEnumerable<object> GetArgsForDebugPrint() => [func];
     }
 
     private sealed class DeathsAccessor(bool inCurrentLevel) : Condition {
-        public override object Get(Session session) => inCurrentLevel ? session.DeathsInCurrentLevel : session.Deaths;
+        public override object Get(Session session, object? userdata) => inCurrentLevel ? session.DeathsInCurrentLevel : session.Deaths;
 
         protected internal override Type ReturnType => typeof(int);
     }
 
     private sealed class HasGoldenAccessor : Condition {
-        public override object Get(Session session) => session.GrabbedGolden ? 1 : 0;
+        public override object Get(Session session, object? userdata) => session.GrabbedGolden ? 1 : 0;
 
         protected internal override Type ReturnType => typeof(int);
     }
     
     private sealed class PiAccessor : Condition {
-        public override object Get(Session session) => float.Pi;
+        public override object Get(Session session, object? userdata) => float.Pi;
 
         protected internal override Type ReturnType => typeof(float);
     }
     
     private sealed class DeltaTimeAccessor : Condition {
-        public override object Get(Session session) => Engine.DeltaTime;
+        public override object Get(Session session, object? userdata) => Engine.DeltaTime;
 
         protected internal override Type ReturnType => typeof(float);
     }
 
     private sealed class RestartedFromGoldenAccessor : Condition {
-        public override object Get(Session session) => session.RestartedFromGolden ? 1 : 0;
+        public override object Get(Session session, object? userdata) => session.RestartedFromGolden ? 1 : 0;
 
         public override bool OnlyChecksFlags() => false;
 
@@ -82,7 +86,7 @@ internal static class SimpleCommands {
     }
 
     private sealed class CoreModeAccessor : Condition {
-        public override object Get(Session session) {
+        public override object Get(Session session, object? userdata) {
             return (int) session.CoreMode;
         }
 
@@ -92,7 +96,7 @@ internal static class SimpleCommands {
     }
 
     private sealed class PhotosensitiveAccessor : Condition {
-        public override object Get(Session session) {
+        public override object Get(Session session, object? userdata) {
             return Settings.Instance.DisableFlashes ? 1 : 0;
         }
 
@@ -102,7 +106,7 @@ internal static class SimpleCommands {
     }
     
     private sealed class AllowLightningAccessor : Condition {
-        public override object Get(Session session) {
+        public override object Get(Session session, object? userdata) {
             return CoreModule.Settings.AllowLightning ? 1 : 0;
         }
 
@@ -112,7 +116,7 @@ internal static class SimpleCommands {
     }
     
     private sealed class AllowDistortAccessor : Condition {
-        public override object Get(Session session) {
+        public override object Get(Session session, object? userdata) {
             return CoreModule.Settings.AllowDistort ? 1 : 0;
         }
 
@@ -122,7 +126,7 @@ internal static class SimpleCommands {
     }
     
     private sealed class AllowGlitchAccessor : Condition {
-        public override object Get(Session session) {
+        public override object Get(Session session, object? userdata) {
             return CoreModule.Settings.AllowGlitch ? 1 : 0;
         }
 
@@ -132,7 +136,7 @@ internal static class SimpleCommands {
     }
     
     private sealed class AllowScreenFlashAccessor : Condition {
-        public override object Get(Session session) {
+        public override object Get(Session session, object? userdata) {
             return CoreModule.Settings.AllowScreenFlash ? 1 : 0;
         }
 
@@ -142,7 +146,7 @@ internal static class SimpleCommands {
     }
     
     private sealed class AllowTextHighlightAccessor : Condition {
-        public override object Get(Session session) {
+        public override object Get(Session session, object? userdata) {
             return CoreModule.Settings.AllowTextHighlight ? 1 : 0;
         }
 
@@ -176,7 +180,7 @@ internal static class SimpleCommands {
 
         protected abstract T GetFromPlayer(Player player);
 
-        public override object Get(Session session) {
+        public override object Get(Session session, object? userdata) {
             if (Engine.Scene.Tracker.SafeGetEntity<Player>() is { } player)
                 return _lastValue = GetFromPlayer(player);
 

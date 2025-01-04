@@ -20,9 +20,16 @@ jautils.createPlacementsPreserveOrder(spinner, "custom_spinner", {
         baseFolder = "danger",
         pattern = "^(danger/.*)/fg(.-)%d+$",
         captureConverter = function(dir, subdir)
+            local animationless = string.match(dir, "(.-)/%d%d$")
+            if animationless then
+                return animationless .. ">" .. subdir .. "!"
+            end
+
             return dir .. ">" .. subdir
         end,
         displayConverter = function(dir, subdir)
+            dir = string.match(dir, "(.-)/%d%d$") or dir
+
             local humanizedDir = utils.humanizeVariableName(string.match(dir, "^.*/(.*/hot)$") or string.match(dir, "^.*/(.*)$") or dir)
             if subdir and #subdir > 0 then
                 return humanizedDir .. " (" .. utils.humanizeVariableName(subdir) .. ")"
@@ -68,18 +75,27 @@ local function getSpriteCache(entity)
     local subdir = nil
     local cacheKey = nil
 
+    local origDir = d
+
+    local unanimated = string.match(d, "^(.-)!$")
+    d = unanimated or d
+
     local subDirIdx = string.find(d, ">")
     if subDirIdx then
-        cacheKey = d
+        cacheKey = origDir
         subdir = string.sub(d, subDirIdx + 1)
         d = string.sub(d, 1, subDirIdx - 1)
     else
         subdir = entity.spritePathSuffix or ""
-        cacheKey = d .. ">" .. subdir
+        cacheKey = origDir .. ">" .. subdir
     end
 
     local cache = pathCache[cacheKey]
     if not pathCache[cacheKey] then
+        if unanimated then
+            d = d .. "/00"
+        end
+
         cache = {
             jautils.getAtlasSubtextures(d .. "/fg" .. subdir, fallback),
             jautils.getAtlasSubtextures(d .. "/bg" .. subdir, fallback),

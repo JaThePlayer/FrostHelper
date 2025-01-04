@@ -628,8 +628,14 @@ namespace FrostHelper.Entities.Boosters {
 
         public static void BoostBegin(Entity e) {
             Player player = (e as Player)!;
-            GetBoosterThatIsBoostingPlayer(player)?.HandleBoostBegin(player);
+            if (GetBoosterThatIsBoostingPlayer(player) is { } booster) {
+                booster.HandleBoostBegin(player);
+                OnBoostBegin?.Invoke(player, booster);
+            }
         }
+
+        // Exposed via Api
+        public static event Action<Player, Entity>? OnBoostBegin;
 
         public static int BoostUpdate(Entity e) {
             Player player = (e as Player)!;

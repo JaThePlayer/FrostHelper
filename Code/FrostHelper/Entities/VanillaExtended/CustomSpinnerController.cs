@@ -29,6 +29,8 @@ public class CustomSpinnerController : Entity {
     /// </summary>
     internal bool CanUseBlackOutlineRenderTargetOpt = true;
 
+    internal float TimeUnpaused;
+
     public CustomSpinnerController() { }
 
     public CustomSpinnerController(EntityData data, Vector2 offset) : base() {
@@ -42,11 +44,15 @@ public class CustomSpinnerController : Entity {
 
         Player = scene.Tracker.SafeGetEntity<Player>();
     }
+
+    public override void Update() {
+        TimeUnpaused += Engine.DeltaTime;
+    }
 }
 
 internal sealed class CustomSpinnerSpriteSource : ISavestatePersisted {
     private static readonly object _lock = new();
-    private static readonly Dictionary<(string dir, string suffix), CustomSpinnerSpriteSource> Cache = new();
+    private static readonly Dictionary<(string dir, string suffix, bool animated), CustomSpinnerSpriteSource> Cache = new();
     
     private static void OnContentChanged(ModAsset from, ReadOnlySpan<char> spritePathSpan) {
         var spritePath = spritePathSpan.ToString();
@@ -58,7 +64,7 @@ internal sealed class CustomSpinnerSpriteSource : ISavestatePersisted {
                 // which would require a lock anyway.
                 lock (_lock)
                     foreach (var (k, v) in Cache.ToList()) {
-                        if (spritePath.StartsWith(k.dir)) {
+                        if (spritePath.StartsWith(k.dir) || spritePath.Contains("fhAnimation")) {
                             Cache.Remove(k, out _);
                         }
                     }
@@ -76,14 +82,19 @@ internal sealed class CustomSpinnerSpriteSource : ISavestatePersisted {
         }
     }
     
-    public static CustomSpinnerSpriteSource Get(string dir, string suffix) {
+    public static CustomSpinnerSpriteSource Get(string dir, string suffix, bool animated = false) {
+        if (dir.EndsWith('!')) {
+            animated = true;
+            dir = dir[..^1];
+        }
+        
         var subDirIdx = dir.IndexOf('>', StringComparison.Ordinal);
         if (subDirIdx >= 0) {
             suffix = dir[(subDirIdx + 1)..];
             dir = dir[..subDirIdx];
         }
         
-        var key = (dir, suffix);
+        var key = (dir, suffix, animated);
         lock (_lock) {
             if (Cache.Count == 0)
                 FrostModule.OnSpriteChanged += OnContentChanged;
@@ -91,12 +102,14 @@ internal sealed class CustomSpinnerSpriteSource : ISavestatePersisted {
             if (Cache.TryGetValue(key, out var cached))
                 return cached;
 
-            return Cache[key] = new(dir, suffix);
+            return Cache[key] = new(dir, suffix, animated);
         }
     }
     
     public string Directory { get; }
     public string SpritePathSuffix { get; }
+    
+    public bool Animated { get; }
     
     internal bool HasDeco { get; }
     
@@ -129,9 +142,10 @@ internal sealed class CustomSpinnerSpriteSource : ISavestatePersisted {
         PackedDecoTexture = null;
     }
     
-    private CustomSpinnerSpriteSource(string dir, string suffix) {
+    private CustomSpinnerSpriteSource(string dir, string suffix, bool animated) {
         Directory = dir;
         SpritePathSuffix = suffix;
+        Animated = animated;
 
         BgSpritePath = $"{Directory}/bg{SpritePathSuffix}";
         HotBgSpritePath = $"{Directory}/hot/bg{SpritePathSuffix}";
@@ -144,16 +158,64 @@ internal sealed class CustomSpinnerSpriteSource : ISavestatePersisted {
         }
         
         // Atlas pack textures for better rendering perf
-        
-        var packed = TexturePackHelper.CreatePackedGroups([
-                GFX.Game.GetAtlasSubtextures(GetFGSpritePath(false)),
-                GFX.Game.GetAtlasSubtextures(GetBGSpritePath(false)),
-            ], $"spinner.{dir}.{suffix}", out PackedTexture);
+        if (Animated) {
+            List<(List<MTexture>, (bool bg, AnimationMetaYaml yaml))> groups = [];
+            var atlas = GFX.Game;
+            var fgSpriteAmt = 0;
+            var bgSpriteAmt = 0;
+            var i = 0;
+            while (true) {
+                var anyFound = false;
 
-        (FgTextures, BgTextures) = (packed[0], packed[1]);
+                var nextDir = $"{Directory}/{(i <= 9 ? $"0{i}" : i)}";
+                var fallbackPath = $"{nextDir}/";
+                var suffixedFallbackPath = $"{nextDir}/{SpritePathSuffix}";
+                
+                if (atlas.Has($"{nextDir}/fg{SpritePathSuffix}00")) {
+                    fgSpriteAmt++;
+                    anyFound = true;
+                    var fgSpritePath = $"{nextDir}/fg{SpritePathSuffix}";
+                    groups.Add((GFX.Game.GetAtlasSubtextures(fgSpritePath), (false, AnimationMetaYaml.GetForTexture(fgSpritePath, $"{nextDir}/fg", suffixedFallbackPath, fallbackPath))));
+                }
+                if (atlas.Has($"{nextDir}/bg{SpritePathSuffix}00")) {
+                    bgSpriteAmt++;
+                    anyFound = true;
+                    var bgSpritePath = $"{nextDir}/bg{SpritePathSuffix}";
+                    groups.Add((GFX.Game.GetAtlasSubtextures(bgSpritePath), (true, AnimationMetaYaml.GetForTexture(bgSpritePath, $"{nextDir}/bg", suffixedFallbackPath, fallbackPath))));
+                }
+
+                if (!anyFound)
+                    break;
+                i++;
+            }
+
+            if (fgSpriteAmt == 0) {
+                NotificationHelper.Notify($"No fg Animated Spinner sprites found, searched at:\n{Directory}/00/{SpritePathSuffix}fg00.png");
+                groups.Add(([GFX.Game.DefaultFallback], (false, AnimationMetaYaml.Default)));
+            }
+            if (bgSpriteAmt == 0) {
+                NotificationHelper.Notify($"No bg Animated Spinner sprites found, searched at:\n{Directory}/00/{SpritePathSuffix}bg00.png");
+                groups.Add(([GFX.Game.DefaultFallback], (true, AnimationMetaYaml.Default)));
+            }
+            
+            var packed = TexturePackHelper.CreatePackedGroupsWithData(groups, $"spinner.{dir}.{suffix}", out PackedTexture);
+
+            FgTextures = [];
+            BgTextures = [];
+            foreach (var (textures, (bg, yaml)) in packed) {
+                (bg ? BgTextures : FgTextures).Add(new AnimatedMTexture(textures, yaml));
+            }
+        } else {
+            var packed = TexturePackHelper.CreatePackedGroups([
+                    GFX.Game.GetAtlasSubtexturesWithNotif(GetFGSpritePath(false)),
+                    GFX.Game.GetAtlasSubtexturesWithNotif(GetBGSpritePath(false)),
+                ], $"spinner.{dir}.{suffix}", out PackedTexture);
+
+            (FgTextures, BgTextures) = (packed[0], packed[1]);
+        }
 
         if (HasDeco) {
-            packed = TexturePackHelper.CreatePackedGroups([
+            var packed = TexturePackHelper.CreatePackedGroups([
                     GFX.Game.GetAtlasSubtextures(GetFGSpritePath(false) + "Deco"),
                     GFX.Game.GetAtlasSubtextures(GetBGSpritePath(false) + "Deco"),
                 ], $"spinner.deco.{dir}.{suffix}", out PackedDecoTexture);

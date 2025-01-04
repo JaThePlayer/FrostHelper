@@ -288,6 +288,12 @@ jautils.fieldTypeOverrides = {
                     return easingDict[v]
                 end
 
+                -- Session Expression validation doesn't exist yet
+                if string.find(v, "^expr:") then
+                    easingDict[v] = true
+                    return true
+                end
+
                 -- Frost Helper allows using Lua functions for easings, we're in lua so we can check the syntax
                 local code = string.format("return function(p)%s %s end", string.find(v, "return", 1, true) and "" or " return", v)
 

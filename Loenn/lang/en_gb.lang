@@ -51,7 +51,7 @@ entities.FrostHelper/CoreBerry.attributes.description.order=Manually determine w
 entities.FrostHelper/CustomDreamBlock.placements.name.custom_dream_block=Custom Dream Block
 entities.FrostHelper/CustomDreamBlock.attributes.description.old=Reverts the physics to how they used to be in older versions of Frost Helper. Exists for backwards compatibility reasons, not recommended.
 entities.FrostHelper/CustomDreamBlock.attributes.description.moveSpeedMult=The multiplier to use for the speed the block moves at. Fast Moving blocks use 3.0
-entities.FrostHelper/CustomDreamBlock.attributes.description.moveEase=The Easing type used for the movement. You can either pick one of the presets, or write lua code that returns a number (typically between 0.0 and 1.0).\nYour input will be converted to:\nreturn function(p){(name.Contains("return") ? "" : " return")} {name} end\nwhere 'p' is tween.Percent - a number between (0.0, 1.0), which is the percent/100 of the move time elapsed.
+entities.FrostHelper/CustomDreamBlock.attributes.description.moveEase=The Easing type used for the movement.\nYou can either pick one of the presets, or use a Session Expression returning a number, typically between 0 and 1, by prefixing it with `expr:`\n The $p command can be used to access tween.Percent - a number between (0.0, 1.0), which is the percent/100 of the move time elapsed.\nOr, you can write lua code that returns a number (typically between 0.0 and 1.0).\n In this case, your input will be converted to:\n return function(p){(name.Contains("return") ? "" : " return")} {name} end\n where 'p' is tween.Percent - a number between (0.0, 1.0), which is the percent/100 of the move time elapsed.
 entities.FrostHelper/CustomDreamBlock.attributes.description.speed=The speed the player moves with inside of the block.
 entities.FrostHelper/CustomDreamBlock.attributes.description.fastMoving=Triples the speed the block moves with. For backwards compatibility reasons.
 entities.FrostHelper/CustomDreamBlock.attributes.description.allowRedirects=Whether the player should be able to change the movement direction inside of the block if they have an extra dash.
@@ -101,7 +101,7 @@ entities.FrostHelper/CustomRisingLava.attributes.description.doRubberbanding=Whe
 # Custom Spinner
 entities.FrostHelper/IceSpinner.placements.name.custom_spinner=Custom Spinner
 entities.FrostHelper/IceSpinner.placements.name.rainbowTexture=Custom Spinner (Rainbow Spinner Texture)
-entities.FrostHelper/IceSpinner.attributes.description.directory=Path relative to Atlases/Gameplay to the directory containing the sprites for the spinner. Refer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Custom-Spinners
+entities.FrostHelper/IceSpinner.attributes.description.directory=Path relative to Atlases/Gameplay to the directory containing the sprites for the spinner.\nAnimations are supported with very specific file structure.\nRefer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Custom-Spinners
 entities.FrostHelper/IceSpinner.attributes.description.tint=Hex color to use to tint the sprites.
 entities.FrostHelper/IceSpinner.attributes.description.borderColor=Hex color to use to render the borders.
 entities.FrostHelper/IceSpinner.attributes.description.destroyColor=Hex color to use for particles which appear when the spinner is destroyed.
@@ -650,7 +650,7 @@ triggers.FrostHelper/ScreenwideShaderTrigger.attributes.description.effects=A co
 triggers.FrostHelper/ScreenwideShaderTrigger.attributes.description.flag=The flag that needs to be enabled for this shader to be active. Write a '!' before the flag name to invert the condition.\nSession expressions are supported, refer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Session-Expressions
 
 triggers.FrostHelper/EasedCameraZoomTrigger.placements.name.default=Eased Camera Zoom
-triggers.FrostHelper/EasedCameraZoomTrigger.attributes.description.easing=The Easing type used for the movement. You can either pick one of the presets, or write lua code that returns a number (typically between 0.0 and 1.0).\nYour input will be converted to:\nreturn function(p){(name.Contains("return") ? "" : " return")} {name} end\nwhere 'p' is tween.Percent - a number between (0.0, 1.0), which is the percent/100 of the move time elapsed.
+triggers.FrostHelper/EasedCameraZoomTrigger.attributes.description.easing=The Easing type used for the movement.\nYou can either pick one of the presets, or use a Session Expression returning a number, typically between 0 and 1, by prefixing it with `expr:`\n The $p command can be used to access tween.Percent - a number between (0.0, 1.0), which is the percent/100 of the move time elapsed.\nOr, you can write lua code that returns a number (typically between 0.0 and 1.0).\n In this case, your input will be converted to:\n return function(p){(name.Contains("return") ? "" : " return")} {name} end\n where 'p' is tween.Percent - a number between (0.0, 1.0), which is the percent/100 of the move time elapsed.
 
 triggers.FrostHelper/StylegroundMoveTrigger.placements.name.default=Styleground Move Trigger
 triggers.FrostHelper/StylegroundMoveTrigger.attributes.description.tag=Only stylegrounds with this tag will be affected.

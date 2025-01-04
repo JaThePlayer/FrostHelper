@@ -65,7 +65,13 @@ public class CustomSpinner : Entity {
     internal sealed class SpinnerFills {
         public List<Fill> Fills { get; } = [];
 
-        public record struct Fill(MTexture Texture, Texture2D Texture2D, Color Color, Vector2 Position, float Rotation);
+        public record struct Fill(MTexture Texture, float AnimOffset, Color Color, Vector2 Position, float Rotation) {
+            public MTexture GetTextureAnimated(float time) {
+                if (Texture is AnimatedMTexture anim)
+                    return anim.GetAnim(time, AnimOffset);
+                return Texture;
+            }
+        }
 
         public Span<Fill> FillsSpan => CollectionsMarshal.AsSpan(Fills);
     }
@@ -115,7 +121,7 @@ public class CustomSpinner : Entity {
 
     private readonly BloomPoint? _bloomPoint;
 
-    internal readonly List<SealedImage> _images = new();
+    internal readonly List<Image> _images = new();
 
     internal readonly float Scale;
     internal readonly float ImageScale;
@@ -212,7 +218,7 @@ public class CustomSpinner : Entity {
             Add(_bloomPoint = new BloomPoint(Collidable ? Collider.Center : Position + new Vector2(8f, 8f), bloomAlpha, data.Float("bloomRadius", 0f)));
 
         SetVisible(false);
-        
+
         SpriteSource = CustomSpinnerSpriteSource.Get(directory, spritePathSuffix);
     }
 
@@ -308,7 +314,7 @@ public class CustomSpinner : Entity {
     }
 
     internal void ResetSpriteSource() {
-        SpriteSource = CustomSpinnerSpriteSource.Get(SpriteSource.Directory, SpriteSource.SpritePathSuffix);
+        SpriteSource = CustomSpinnerSpriteSource.Get(SpriteSource.Directory, SpriteSource.SpritePathSuffix, SpriteSource.Animated);
     }
 
     public override void Update() {
@@ -367,7 +373,7 @@ public class CustomSpinner : Entity {
 
         base.Render();
         foreach (var img in CollectionsMarshal.AsSpan(_images)) {
-            img.Render();
+            img.RenderMaybeAnimated(controller.TimeUnpaused);
         }
     }
 
@@ -427,7 +433,7 @@ public class CustomSpinner : Entity {
         }
     }
 
-    private void AddImage(SealedImage img) {
+    private void AddImage(Image img) {
         _images.Add(img);
         img.Entity = this;
         img.Color = Tint;
@@ -484,7 +490,7 @@ public class CustomSpinner : Entity {
             }
 
             if (imgCount == 4) {
-                var image = new SealedImage(fgTexture).CenterOrigin();
+                Image image = SpriteSource.Animated ? new AnimatedImage((AnimatedMTexture)fgTexture).CenterOrigin() : new SealedImage(fgTexture).CenterOrigin();
                 AddImage(image);
             } else {
                 // only spawn quarter images if it's needed to avoid edge cases
@@ -511,39 +517,39 @@ public class CustomSpinner : Entity {
     }
 
     private void AddCornerImages(MTexture mtexture, bool topLeft, bool topRight, bool bottomLeft, bool bottomRight) {
-        SealedImage image;
-
         var halfUnitX = mtexture.Width / 2;
-        var halfUnitY = mtexture.Height / 2; 
+        var halfUnitY = mtexture.Height / 2;
+        var offset = mtexture is AnimatedMTexture a ? a.CreateRandomAnimOffset() : 0f;
 
         if (topLeft && topRight) {
-            image = new SealedImage(mtexture.GetSubtexture(0, 0, mtexture.Width + 4, halfUnitY + 2, null)).SetOrigin(halfUnitX, halfUnitY);
-            AddImage(image);
+            Add(0, 0, mtexture.Width + 4, halfUnitY + 2, halfUnitX, halfUnitY);
         } else {
             if (topLeft) {
-                image = new SealedImage(mtexture.GetSubtexture(0, 0, halfUnitX + 2, halfUnitY + 2, null)).SetOrigin(halfUnitX, halfUnitY);
-                AddImage(image);
+                Add(0, 0, halfUnitX + 2, halfUnitY + 2, halfUnitX, halfUnitY);
             }
             if (topRight) {
-                image = new SealedImage(mtexture.GetSubtexture(halfUnitX - 2, 0, halfUnitX + 2, halfUnitY + 2, null)).SetOrigin(2f, halfUnitY);
-                AddImage(image);
+                Add(halfUnitX - 2, 0, halfUnitX + 2, halfUnitY + 2, 2f, halfUnitY);
             }
         }
 
         if (bottomLeft && bottomRight) {
-            image = new SealedImage(mtexture.GetSubtexture(0, halfUnitY - 2, mtexture.Width + 4, halfUnitY + 2, null)).SetOrigin(halfUnitX, 2f);
-            AddImage(image);
+            Add(0, halfUnitY - 2, mtexture.Width + 4, halfUnitY + 2, halfUnitX, 2f);
         } else {
             if (bottomLeft) {
-                image = new SealedImage(mtexture.GetSubtexture(halfUnitX - 2, halfUnitY - 2, halfUnitX + 2, halfUnitY + 2, null)).SetOrigin(2f, 2f);
-                AddImage(image);
+                Add(halfUnitX - 2, halfUnitY - 2, halfUnitX + 2, halfUnitY + 2, 2f, 2f);
             }
             if (bottomRight) {
-                image = new SealedImage(mtexture.GetSubtexture(0, halfUnitY - 2, halfUnitX + 2, halfUnitY + 2, null)).SetOrigin(halfUnitX, 2f);
-                AddImage(image);
+                Add(0, halfUnitY - 2, halfUnitX + 2, halfUnitY + 2, halfUnitX, 2f);
             }
         }
 
+        void Add(int x, int y, int w, int h, float ox, float oy) {
+            if (mtexture is AnimatedMTexture anim) {
+                AddImage(new AnimatedImage(anim.GetSubtextureCached(x, y, w, h), offset).SetOrigin(ox, oy));
+            } else {
+                AddImage(new SealedImage(mtexture.GetSubtexture(x, y, w, h)).SetOrigin(ox, oy));
+            }
+        }
     }
 
     private T CreateController<T>() where T : Entity, ISpinnerRenderer<T> {
@@ -565,7 +571,7 @@ public class CustomSpinner : Entity {
         var color = Rainbow ? ColorHelper.GetHue(Scene, Position + offset) : Tint;
         var texture = Calc.Random.Choose(atlasSubtextures);
         var rotation = Calc.Random.Choose(0, 1, 2, 3) * 1.57079637f;
-        var image = new SpinnerFills.Fill(texture, texture.Texture.Texture_Safe, color, FixPos(offset, texture.Center, rotation), rotation);
+        var image = new SpinnerFills.Fill(texture, texture.CreateRandomAnimOffset(), color, FixPos(offset, texture.Center, rotation), rotation);
         filler.Fills.Add(image);
 
         if (SpriteSource.HasDeco) {
@@ -709,8 +715,8 @@ public class SpinnerConnectorRenderer : Entity, ISpinnerRenderer<SpinnerConnecto
                 continue;
 
             ref var image = ref fillerComponents[0];
-            var mtexture = image.Texture;
-            Texture2D texture = image.Texture2D;
+            var mtexture = image.GetTextureAnimated(spinner.controller.TimeUnpaused);
+            Texture2D texture = image.Texture.Texture.Texture;
             Rectangle? clipRect = new Rectangle?(mtexture.ClipRect);
             float scaleFix = mtexture.ScaleFix;
             Vector2 origin = (mtexture.Center - mtexture.DrawOffset) / scaleFix;
@@ -761,6 +767,8 @@ public class SpinnerDecoRenderer : Entity, ISpinnerRenderer<SpinnerDecoRenderer>
 public class SpinnerBorderRenderer : Entity, ISpinnerRenderer<SpinnerBorderRenderer> {
     private readonly List<CustomSpinner> _spinners = [];
     private SpinnerConnectorRenderer? _connectorRenderer;
+    private float _unpausedTime;
+    
     private int BaseDepth => Depth - 2;
     
     int ISpinnerRenderer<SpinnerBorderRenderer>.BaseDepth => BaseDepth;
@@ -777,9 +785,12 @@ public class SpinnerBorderRenderer : Entity, ISpinnerRenderer<SpinnerBorderRende
     }
 
     private SpinnerBorderRenderer(int depth) {
-        Active = false;
         Depth = depth + 2;
         Tag = Tags.Persistent;
+    }
+
+    public override void Update() {
+        _unpausedTime += Engine.DeltaTime;
     }
 
     public override void Render() {
@@ -851,7 +862,7 @@ public class SpinnerBorderRenderer : Entity, ISpinnerRenderer<SpinnerBorderRende
             
             foreach (var spinner in spinners) {
                 foreach (var img in CollectionsMarshal.AsSpan(spinner._images)) {
-                    img.Render();
+                    img.RenderMaybeAnimated(_unpausedTime);
                 }
             }
         } else {
@@ -859,7 +870,7 @@ public class SpinnerBorderRenderer : Entity, ISpinnerRenderer<SpinnerBorderRende
             
             foreach (var spinner in spinners) {
                 foreach (var img in CollectionsMarshal.AsSpan(spinner._images)) {
-                    img.RenderWithColor(borderColor);
+                    img.RenderMaybeAnimated(borderColor, _unpausedTime);
                 }
             }
         }
@@ -903,9 +914,8 @@ public class SpinnerBorderRenderer : Entity, ISpinnerRenderer<SpinnerBorderRende
         var spinners = CollectionsMarshal.AsSpan(_spinners);
         foreach (var item in spinners) {
             var color = item.BorderColor;
-            var spinnerComponents = CollectionsMarshal.AsSpan(item._images);
 
-            foreach (var img in spinnerComponents) {
+            foreach (var img in CollectionsMarshal.AsSpan(item._images)) {
                 // todo: figure out the offsets properly so that OutlineHelper can be used
                 DrawBorder(img, color, item.ImageScale);
             }
@@ -918,9 +928,9 @@ public class SpinnerBorderRenderer : Entity, ISpinnerRenderer<SpinnerBorderRende
                 continue;
 
             ref var image = ref fillerComponents[0];
-            var mtexture = image.Texture;
-            Texture2D texture = image.Texture2D;
-            Rectangle? clipRect = new Rectangle?(mtexture.ClipRect);
+            var mtexture = image.GetTextureAnimated(item.controller.TimeUnpaused);
+            Texture2D texture = image.Texture.Texture.Texture;
+            Rectangle? clipRect = mtexture.ClipRect;
             float scaleFix = mtexture.ScaleFix;
             Vector2 origin = (mtexture.Center - mtexture.DrawOffset) / scaleFix;
             scaleFix *= item.ImageScale;
@@ -938,11 +948,13 @@ public class SpinnerBorderRenderer : Entity, ISpinnerRenderer<SpinnerBorderRende
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static void DrawBorder(SealedImage image, Color color, float imgScale) {
-        Texture2D texture = image.Texture.Texture.Texture_Safe;
-        Rectangle? clipRect = new Rectangle?(image.Texture.ClipRect);
-        float scaleFix = image.Texture.ScaleFix;
-        Vector2 origin = (image.Origin - image.Texture.DrawOffset) / scaleFix;
+    private void DrawBorder(Image image, Color color, float imgScale) {
+        var mtexture = image.GetTextureMaybeAnimated(_unpausedTime);
+        
+        Texture2D texture = mtexture.Texture.Texture_Safe;
+        Rectangle? clipRect = mtexture.ClipRect;
+        float scaleFix = mtexture.ScaleFix;
+        Vector2 origin = (image.Origin - mtexture.DrawOffset) / scaleFix;
         Vector2 drawPos = image.RenderPosition;
         float rotation = image.Rotation;
         scaleFix *= imgScale;

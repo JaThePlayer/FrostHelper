@@ -1,5 +1,6 @@
 ﻿using Celeste.Mod.Helpers;
 using FrostHelper.Helpers;
+using FrostHelper.SessionExpressions;
 
 namespace FrostHelper;
 
@@ -15,12 +16,38 @@ public static class EaseHelper {
     // exposed via the api
     public static Ease.Easer GetEase(string name, Ease.Easer? defaultValue = null) {
         if (!Easers.TryGetValue(name, out var ease)) {
-            ease = TryLoadLuaEaser(name, ease);
+            if (name.StartsWith("expr:", StringComparison.Ordinal)) {
+                ease = TryLoadSessionExpressionEaser(name["expr:".Length..]);
+            } else {
+                ease = TryLoadLuaEaser(name, ease);
+            }
 
             Easers[name] = ease;
         }
 
         return ease ?? defaultValue ?? Ease.Linear;
+    }
+
+    
+    private static readonly ExpressionContext ExprCtx = new(
+        simpleCommands: new() {
+            ["p"] = SimpleCommands.CreateCommandFromModFunc(static (s, userdata) => userdata ?? 0f)
+        }, 
+        functions: new()
+    );
+    
+    private static Ease.Easer? TryLoadSessionExpressionEaser(string name) {
+        if (!ConditionHelper.TryCreate(name, ExprCtx, out var cond)) {
+            return null;
+        }
+
+        return p => {
+            var session = FrostModule.TryGetCurrentLevel()?.Session;
+            if (session is null)
+                return 0f;
+
+            return cond.GetFloat(session, p);
+        };
     }
 
     private static Ease.Easer? TryLoadLuaEaser(string name, Ease.Easer? ease) {

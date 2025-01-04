@@ -9,22 +9,13 @@ using System.Diagnostics.CodeAnalysis;
 namespace FrostHelper.API;
 
 [ModExportName("FrostHelper")]
-public static class API {
+public static partial class API {
+    /*
+     * Many other API functions got moved to other files in this directory for organisation purposes.
+     * They're still accessed by the same ModExprortName.
+     */
+    
     public static int Version => 1;
-
-    public static void SetCustomBoostState(Player player, GenericCustomBooster booster) {
-        player.SetAttached(booster);
-        player.StateMachine.State = GenericCustomBooster.CustomBoostState;
-    }
-
-    public static bool IsInCustomBoostState(Player player) {
-        return player.StateMachine.State == GenericCustomBooster.CustomBoostState;
-    }
-
-    public static int GetCustomFeatherStateId() => CustomFeather.CustomFeatherState;
-    public static int GetCustomBoostStateId() => GenericCustomBooster.CustomBoostState;
-    public static int GetCustomRedBoostStateId() => GenericCustomBooster.CustomRedBoostState;
-    public static int GetHeldDashStateId() => HeldRefill.HeldDashState;
 
     /// <summary>
     /// Converts an entity name to a Type.
@@ -306,89 +297,5 @@ public static class API {
     /// <param name="viewMatrix">The shader's ViewMatrix uniform will be set to this matrix. In most cases, this should be camera.Matrix</param>
     public static void ApplyStandardParameters(Effect effect, Matrix viewMatrix) {
         effect.ApplyStandardParameters(viewMatrix);
-    }
-
-    /// <summary>
-    /// Creates an object which can evaluate a Session Expression.
-    /// The returned object can be passed to <see cref="GetIntSessionExpressionValue"/>
-    /// Refer to https://github.com/JaThePlayer/FrostHelper/wiki/Session-Expressions
-    /// </summary>
-    public static bool TryCreateSessionExpression(string str, [NotNullWhen(true)] out object? expression) {
-        if (ConditionHelper.TryCreate(str, out var expr)) {
-            expression = expr;
-            return true;
-        }
-
-        expression = null;
-        return false;
-    }
-
-    /// <summary>
-    /// Returns the current value of a Session Expression.
-    /// The object passed as the 1st argument needs to be created via <see cref="TryCreateSessionExpression"/>
-    /// </summary>
-    public static object GetSessionExpressionValue(object expression, Session session) {
-        var expr = AssertExpression(expression);
-
-        return expr.Get(session);
-    }
-    
-    /// <summary>
-    /// Returns the type that the given session expression will return, or typeof(object) if that's unknown.
-    /// The object passed as the 1st argument needs to be created via <see cref="TryCreateSessionExpression"/>
-    /// </summary>
-    public static Type GetSessionExpressionReturnedType(object expression) {
-        var expr = AssertExpression(expression);
-
-        return expr.ReturnType ?? typeof(object);
-    }
-    
-    /// <summary>
-    /// Returns the current value of a Session Expression as an integer, coercing it if needed.
-    /// The object passed as the 1st argument needs to be created via <see cref="TryCreateSessionExpression"/>
-    /// </summary>
-    public static int GetIntSessionExpressionValue(object expression, Session session) {
-        var expr = AssertExpression(expression);
-
-        return expr.GetInt(session);
-    }
-    
-    /// <summary>
-    /// Returns the current value of a Session Expression as a float, coercing it if needed.
-    /// The object passed as the 1st argument needs to be created via <see cref="TryCreateSessionExpression"/>
-    /// </summary>
-    public static float GetFloatSessionExpressionValue(object expression, Session session) {
-        var expr = AssertExpression(expression);
-
-        return expr.GetFloat(session);
-    }
-    
-    /// <summary>
-    /// Returns the current value of a Session Expression as a boolean, coercing it if needed.
-    /// The object passed as the 1st argument needs to be created via <see cref="TryCreateSessionExpression"/>
-    /// </summary>
-    public static bool GetBoolSessionExpressionValue(object expression, Session session) {
-        var expr = AssertExpression(expression);
-
-        return expr.Check(session);
-    }
-
-    /// <summary>
-    /// Registers a simple Session Expression command, which will be accessible via $modName.cmdName in Session Expressions.
-    /// </summary>
-    /// <param name="modName">Name of the mod which registers this command. Will be used to prefix the command name.</param>
-    /// <param name="cmdName">Name of the command</param>
-    /// <param name="func">Function called each time the command needs to be evaluated</param>
-    public static void RegisterSimpleSessionExpressionCommand(string modName, string cmdName, Func<Session, object> func) {
-        SimpleCommands.RegisterSimpleCommand(modName, cmdName, func);
-    }
-
-    // NON-API!
-    private static ConditionHelper.Condition AssertExpression(object expression) {
-        if (expression is not ConditionHelper.Condition expr) {
-            throw new ArgumentException($"Object '{expression}' is not of type {nameof(ConditionHelper.Condition)}!");
-        }
-
-        return expr;
     }
 }

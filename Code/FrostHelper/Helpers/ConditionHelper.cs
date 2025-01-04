@@ -12,38 +12,40 @@ namespace FrostHelper.Helpers;
 public static class ConditionHelper {
     private static readonly Condition EmptyCondition = new Empty();
 
-    internal static Condition CreateOrDefault(string txt, string defaultValue) {
-        if (TryCreate(txt, out var cond))
+    internal static Condition CreateOrDefault(string txt, string defaultValue, ExpressionContext? ctx = null) {
+        ctx ??= ExpressionContext.Default;
+        
+        if (TryCreate(txt, ctx, out var cond))
             return cond;
-        if (TryCreate(defaultValue, out cond))
+        if (TryCreate(defaultValue, ctx, out cond))
             return cond;
         
         NotificationHelper.Notify($"Default condition is malformed, this is a Frost Helper bug!\n{defaultValue}\n{new StackTrace()}");
         return EmptyCondition;
     }
     
-    internal static bool TryCreate(string str, [NotNullWhen(true)] out Condition? condition) {
+    internal static bool TryCreate(string str, ExpressionContext ctx, [NotNullWhen(true)] out Condition? condition) {
         if (string.IsNullOrWhiteSpace(str)) {
             condition = EmptyCondition;
             return true;
         }
 
         if (AbstractExpression.TryParseCached(str, out var expr)) {
-            return TryCreate(expr, out condition);
+            return TryCreate(expr, ctx, out condition);
         }
 
         condition = null;
         return false;
     }
 
-    private static bool TryCreate(AbstractExpression expr, [NotNullWhen(true)] out Condition? condition) {
+    private static bool TryCreate(AbstractExpression expr, ExpressionContext ctx, [NotNullWhen(true)] out Condition? condition) {
         if (expr is { Operator: "!" or "#" or "$" or "@", Right: null, Left: { } unaryLeft }) {
             switch (expr.Operator, unaryLeft.StringValue)
             {
                 case ("!", {} flagName):
                     condition = new FlagAccessor(flagName, inverted: true);
                     return true;
-                case ("!", _) when TryCreate(unaryLeft, out var toInvert):
+                case ("!", _) when TryCreate(unaryLeft, ctx, out var toInvert):
                     if (toInvert is IInvertible invertible)
                         condition = invertible.CreateInverted();
                     else
@@ -58,7 +60,7 @@ public static class ConditionHelper {
                     return true;
                 case ("#", _):
                     NotificationHelper.Notify($"Unnecessary '#' operator: '{expr}'");
-                    return TryCreate(unaryLeft, out condition);
+                    return TryCreate(unaryLeft, ctx, out condition);
                 case ("@", {} sliderName): {
                     condition = new SliderAccessor(sliderName);
                     return true;
@@ -71,8 +73,14 @@ public static class ConditionHelper {
                     return InputCommands.TryParseInput(rest, out condition);
                 }
                 case ("$", _):
+                    // Try simple commands from the context
+                    if (ctx.SimpleCommands.TryGetValue(unaryLeft.StringValue ?? "", out var cond)) {
+                        condition = cond;
+                        return true;
+                    }
+                    
                     // Try simple commands
-                    if (SimpleCommands.Registry.TryGetValue(unaryLeft.StringValue ?? "", out var cond)) {
+                    if (SimpleCommands.Registry.TryGetValue(unaryLeft.StringValue ?? "", out cond)) {
                         condition = cond;
                         return true;
                     }
@@ -86,13 +94,13 @@ public static class ConditionHelper {
         if (expr is { Operator: "$call", StringValue: { } funcName, Arguments: { } args }) {
             var argConds = new List<Condition>(args.Count);
             foreach (var argExpr in args) {
-                if (!TryCreate(argExpr, out var argCond)) {
+                if (!TryCreate(argExpr, ctx, out var argCond)) {
                     condition = null;
                     return false;
                 }
                 argConds.Add(argCond);
             }
-            return FunctionCommands.TryCreate(funcName, argConds, out condition);
+            return FunctionCommands.TryCreate(funcName, argConds, ctx, out condition);
         }
         
         if (expr.StringValue is { } c) {
@@ -117,11 +125,11 @@ public static class ConditionHelper {
         }
 
         if (expr is { Left: { } left, Right: { } right }) {
-            if (!TryCreate(left, out var leftExpr)) {
+            if (!TryCreate(left, ctx, out var leftExpr)) {
                 condition = null;
                 return false;
             }
-            if (!TryCreate(right, out var rightExpr)) {
+            if (!TryCreate(right, ctx, out var rightExpr)) {
                 condition = null;
                 return false;
             }
@@ -160,8 +168,8 @@ public static class ConditionHelper {
     }
 
     private sealed class OperatorAnd(Condition a, Condition b) : Condition {
-        public override object Get(Session session) {
-            return CoerceToBool(a.Get(session)) && CoerceToBool(b.Get(session)) ? 1 : 0;
+        public override object Get(Session session, object? userdata) {
+            return CoerceToBool(a.Get(session, userdata)) && CoerceToBool(b.Get(session, userdata)) ? 1 : 0;
         }
         
         public override bool OnlyChecksFlags() => a.OnlyChecksFlags() && b.OnlyChecksFlags();
@@ -172,8 +180,8 @@ public static class ConditionHelper {
     }
     
     private sealed class OperatorOr(Condition a, Condition b) : Condition {
-        public override object Get(Session session) {
-            return CoerceToBool(a.Get(session)) || CoerceToBool(b.Get(session)) ? 1 : 0;
+        public override object Get(Session session, object? userdata) {
+            return CoerceToBool(a.Get(session, userdata)) || CoerceToBool(b.Get(session, userdata)) ? 1 : 0;
         }
         
         public override bool OnlyChecksFlags() => a.OnlyChecksFlags() && b.OnlyChecksFlags();
@@ -345,9 +353,9 @@ public static class ConditionHelper {
     }
     
     private abstract class BinaryOperator(Condition condA, Condition condB) : Condition {
-        public override object Get(Session session) {
-            var a = condA.Get(session);
-            var b = condB.Get(session);
+        public override object Get(Session session, object? userdata) {
+            var a = condA.Get(session, userdata);
+            var b = condB.Get(session, userdata);
 
             if (a is bool ab)
                 a = ab ? 1 : 0;
@@ -370,8 +378,8 @@ public static class ConditionHelper {
     }
 
     private sealed class OperatorInvert(Condition x) : Condition {
-        public override object Get(Session session) {
-            return CoerceToBool(x.Get(session)) ? 0 : 1;
+        public override object Get(Session session, object? userdata) {
+            return CoerceToBool(x.Get(session, userdata)) ? 0 : 1;
         }
         
         public override bool OnlyChecksFlags() => x.OnlyChecksFlags();
@@ -382,17 +390,19 @@ public static class ConditionHelper {
     }
 
     private sealed class ConstInt(int x) : Condition {
-        public override object Get(Session session) => x;
+        private readonly object _boxed = x;
+        
+        public override object Get(Session session, object? userdata) => _boxed;
         
         public override bool OnlyChecksFlags() => true;
         
         protected internal override Type ReturnType => typeof(int);
 
-        protected override IEnumerable<object> GetArgsForDebugPrint() => [x];
+        protected override IEnumerable<object> GetArgsForDebugPrint() => [ _boxed ];
     }
     
     private sealed class ConstFloat(float x) : Condition {
-        public override object Get(Session session) => x;
+        public override object Get(Session session, object? userdata) => x;
         
         public override bool OnlyChecksFlags() => true;
         
@@ -415,7 +425,7 @@ public static class ConditionHelper {
             return new FlagAccessor(Flag, !Inverted);
         }
         
-        public override object Get(Session session) {
+        public override object Get(Session session, object? userdata) {
             return session.GetFlag(name) != inverted ? 1 : 0;
         }
     }
@@ -424,7 +434,7 @@ public static class ConditionHelper {
         // todo: MethodInvoker in .net8+
         private FastReflectionHelper.FastInvoker? _invoker;
         
-        public override object Get(Session session) {
+        public override object Get(Session session, object? userdata) {
             _invoker ??= prop.GetGetMethod()!.GetFastInvoker();
             
             return _invoker(target) ?? 0;
@@ -441,7 +451,7 @@ public static class ConditionHelper {
         private WeakReference<Session.Slider>? _slider;
         private WeakReference<Session>? _lastSession;
         
-        public override object Get(Session session) {
+        public override object Get(Session session, object? userdata) {
             if ((_lastSession?.TryGetTarget(out var last) ?? false) && last != session) {
                 _slider = null;
                 _lastSession = null;
@@ -464,7 +474,7 @@ public static class ConditionHelper {
         private Session.Counter? _valueCounter;
         private WeakReference<Session>? _lastSession;
         
-        public override object Get(Session session) {
+        public override object Get(Session session, object? userdata) {
             if ((_lastSession?.TryGetTarget(out var last) ?? false) && last != session) {
                 _valueCounter = null;
                 _lastSession = null;
@@ -484,7 +494,7 @@ public static class ConditionHelper {
     }
     
     private sealed class Empty : Condition {
-        public override object Get(Session session) {
+        public override object Get(Session session, object? userdata) {
             return 1;
         }
 
@@ -496,22 +506,22 @@ public static class ConditionHelper {
     }
 
     public abstract class Condition : ISavestatePersisted {
-        public abstract object Get(Session session);
+        public abstract object Get(Session session, object? userdata);
 
         protected virtual IEnumerable<object> GetArgsForDebugPrint() => [];
 
         protected internal virtual Type? ReturnType => null;
 
-        internal int GetInt(Session session) {
-            return GetNumber<int>(session);
+        internal int GetInt(Session session, object? userdata = null) {
+            return GetNumber<int>(session, userdata);
         }
         
-        internal float GetFloat(Session session) {
-            return GetNumber<float>(session);
+        internal float GetFloat(Session session, object? userdata = null) {
+            return GetNumber<float>(session, userdata);
         }
 
-        internal T GetNumber<T>(Session session) where T : struct, INumber<T> {
-            var obj = Get(session);
+        internal T GetNumber<T>(Session session, object? userdata = null) where T : struct, INumber<T> {
+            var obj = Get(session, userdata);
 
             if (obj is T t)
                 return t;
@@ -534,10 +544,10 @@ public static class ConditionHelper {
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool Check() => Check(FrostModule.GetCurrentLevel().Session);
+        public bool Check(object? userdata = null) => Check(FrostModule.GetCurrentLevel().Session, userdata);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool Check(Session session) => CoerceToBool(Get(session));
+        public bool Check(Session session, object? userdata = null) => CoerceToBool(Get(session, userdata));
 
         public bool Empty => this is Empty;
 
@@ -586,15 +596,19 @@ public static class ConditionHelper {
         }
     }
 
-    public static Condition GetCondition(this EntityData data, string name, string def = "") {
-        return GetConditionCore(data.Values, name, def);
-    }
+    public static Condition GetCondition(this EntityData data, string name, string def = "")
+        => GetConditionCore(data.Values, ExpressionContext.Default, name, def);
     
-    public static Condition GetCondition(this BinaryPacker.Element data, string name, string def = "") {
-        return GetConditionCore(data.Attributes, name, def);
-    }
+    public static Condition GetCondition(this EntityData data, ExpressionContext ctx, string name, string def = "")
+        => GetConditionCore(data.Values, ctx, name, def);
+    
+    public static Condition GetCondition(this BinaryPacker.Element data, string name, string def = "")
+        => GetConditionCore(data.Attributes, ExpressionContext.Default, name, def);
+    
+    public static Condition GetCondition(this BinaryPacker.Element data, ExpressionContext ctx, string name, string def = "")
+        => GetConditionCore(data.Attributes, ctx, name, def);
 
-    private static Condition GetConditionCore(Dictionary<string, object> dict, string name, string def = "") {
+    private static Condition GetConditionCore(Dictionary<string, object> dict, ExpressionContext ctx, string name, string def = "") {
         Condition? condition = null;
         if (dict.TryGetValue(name, out var cond)) {
             switch (cond) {
@@ -602,14 +616,14 @@ public static class ConditionHelper {
                     condition = fullCondition;
                     break;
                 case string str:
-                    if (TryCreate(str, out condition)) {
+                    if (TryCreate(str, ctx, out condition)) {
                         dict[name] = condition; // cache the parsed condition
                     }
                     break;
             }
         }
 
-        if (condition is null && TryCreate(def, out condition)) {
+        if (condition is null && TryCreate(def, ctx, out condition)) {
             return condition;
         }
         

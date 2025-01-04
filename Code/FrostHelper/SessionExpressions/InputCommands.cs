@@ -156,7 +156,7 @@ internal static class InputCommands {
 
 
     private sealed class OperatorCheckButton(VirtualButton button, OperatorCheckButton.Modes mode) : Condition {
-        public override object Get(Session session) {
+        public override object Get(Session session, object? userdata) {
             return mode switch {
                 Modes.Check => button.Check ? 1 : 0,
                 Modes.Repeating => button.Repeating ? 1 : 0,
@@ -178,7 +178,7 @@ internal static class InputCommands {
     }
     
     private sealed class OperatorCheckJoystick(VirtualJoystick joystick, OperatorCheckJoystick.Modes mode) : Condition {
-        public override object Get(Session session) {
+        public override object Get(Session session, object? userdata) {
             return mode switch {
                 Modes.X => joystick.Value.X,
                 Modes.Y => joystick.Value.Y,

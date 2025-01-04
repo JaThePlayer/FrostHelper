@@ -88,3 +88,14 @@ public static class NotificationHelper {
         internal string? Source;
     }
 }
+
+internal static class NotificationExt {
+    public static List<MTexture> GetAtlasSubtexturesWithNotif(this Atlas atlas, string key) {
+        var res = atlas.GetAtlasSubtextures(key);
+
+        if (res is [var only] && only == atlas.GetFallback())
+            NotificationHelper.Notify($"Requested atlas subtextures but none were found: {atlas.RelativeDataPath}{key}");
+        
+        return res;
+    }
+}

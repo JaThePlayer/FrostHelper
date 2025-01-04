@@ -9,7 +9,7 @@ namespace FrostHelper.Helpers;
 
 internal sealed partial class AbstractExpression {
     // ':' is not banned due to some vanilla flags using it - ternary operations will need something else
-    [GeneratedRegex(@"[\~\^\[\]\{\};,\?""]", RegexOptions.CultureInvariant | RegexOptions.IgnoreCase | RegexOptions.Singleline)]
+    [GeneratedRegex(@"[\~\^\[\]\{\};\?""]", RegexOptions.CultureInvariant | RegexOptions.IgnoreCase | RegexOptions.Singleline)]
     private static partial Regex ReservedCharsRegex();
     
     internal static readonly JsonSerializerOptions JsonOptions = new() {
@@ -49,7 +49,7 @@ internal sealed partial class AbstractExpression {
                       If this is an existing map, report this to JaThePlayer,
                       or else the map might break in the future!
                       If you're making this map, please choose a different flag/session counter name!
-                      Reserved chars: ^?,;~"[]{}
+                      Reserved chars: ^?;~"[]{}
                       """);
             }
             

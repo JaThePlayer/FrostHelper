@@ -25,13 +25,13 @@ internal sealed class CounterExpression {
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public int GetInt(Session session) {
-        return _valueCounter?.Get(session) ?? _valueCondition?.GetInt(session) ?? _value;
+    public int GetInt(Session session, object? userdata = null) {
+        return _valueCounter?.Get(session) ?? _valueCondition?.GetInt(session, userdata) ?? _value;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public float GetFloat(Session session) {
-        return (float?)_valueCounter?.Get(session) ?? _valueCondition?.GetFloat(session) ?? _value;
+    public float GetFloat(Session session, object? userdata = null) {
+        return (float?)_valueCounter?.Get(session) ?? _valueCondition?.GetFloat(session, userdata) ?? _value;
     }
 
     public ConditionHelper.Condition ToCondition() {

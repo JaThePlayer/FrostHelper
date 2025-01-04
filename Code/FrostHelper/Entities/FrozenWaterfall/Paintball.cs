@@ -2,27 +2,28 @@
 
 [Tracked]
 [CustomEntity("fh/blah")]
-public class Paintball : Actor {
-    public bool tutorial;
-    bool bubble;
-    SineWave bubbleWave;
+internal sealed class Paintball : Actor {
+    private readonly bool _tutorial;
+    private bool _bubble;
+    private readonly SineWave _bubbleWave;
+    public readonly Color Color;
 
     public Paintball(EntityData data, Vector2 offset) : base(data.Position + offset) {
-        tutorial = data.Bool("tutorial", false);
-        color = ColorHelper.GetColor(data.Attr("color", "87CEFA"));
-        bubble = data.Bool("bubble", false);
+        _tutorial = data.Bool("tutorial", false);
+        Color = ColorHelper.GetColor(data.Attr("color", "87CEFA"));
+        _bubble = data.Bool("bubble", false);
 
-        if (bubble) {
-            bubbleWave = new SineWave(0.3f, 0f);
-            Add(bubbleWave);
+        if (_bubble) {
+            _bubbleWave = new SineWave(0.3f, 0f);
+            Add(_bubbleWave);
         }
         hardVerticalHitSoundCooldown = 0f;
         tutorialTimer = 0f;
         Depth = 100;
         Collider = new Hitbox(8f, 10f, -4f, -2f); // -10f
         Add(Sprite = GFX.SpriteBank.Create("snowball"));
-        Sprite.Color = color;
-        if (color == Color.Black)
+        Sprite.Color = Color;
+        if (Color == Color.Black)
             Sprite.Color = new Color(0.15f, 0.15f, 0.15f);
         Sprite.Scale.X = -1f;
         Sprite.Play("spin");
@@ -55,12 +56,10 @@ public class Paintball : Actor {
         base.Added(scene);
         Level = SceneAs<Level>();
 
-        if (tutorial) {
-            tutorialGui = new BirdTutorialGui(this, new Vector2(0f, -10f), Dialog.Clean("tutorial_carry", null), new object[]
-            {
-                    Dialog.Clean("tutorial_hold", null),
-                    Input.Grab
-            });
+        if (_tutorial) {
+            tutorialGui = new BirdTutorialGui(this, new Vector2(0f, -10f), Dialog.Clean("tutorial_carry", null), 
+                Dialog.Clean("tutorial_hold", null), 
+                Input.Grab);
             tutorialGui.Open = false;
             Scene.Add(tutorialGui);
         }
@@ -71,16 +70,16 @@ public class Paintball : Actor {
         Sprite.DrawOutline(1);
         base.Render();
 
-        if (bubble) {
-            Sprite.Position.Y = bubbleWave.Value + 1f;
+        if (_bubble) {
+            Sprite.Position.Y = _bubbleWave.Value + 1f;
             for (int i = 0; i < 24; i++) {
-                Draw.Point(Position + Vector2.UnitY * (8f + bubbleWave.Value) + PlatformAdd(i), PlatformColor(i));
+                Draw.Point(Position + Vector2.UnitY * (8f + _bubbleWave.Value) + PlatformAdd(i), PlatformColor(i));
             }
         }
     }
 
     private Color PlatformColor(int num) {
-        if (num <= 1 || num >= 22) {
+        if (num is <= 1 or >= 22) {
             return Color.White * 0.4f;
         } else {
             return Color.White * 0.8f;
@@ -91,8 +90,7 @@ public class Paintball : Actor {
         return new Vector2(-12 + num, -5 + (int) Math.Round(Math.Sin(Scene.TimeActive + num * 0.2f) * 1.7999999523162842));
     }
     #endregion
-
-    public Color color;
+    
     public override void Update() {
         /*
         foreach (ColoredWaterfall water in Scene.Tracker.GetEntities<ColoredWaterfall>()) {
@@ -140,7 +138,7 @@ public class Paintball : Actor {
 
             if (OnPedestal) {
                 Depth = 8999;
-            } else if (bubble) {
+            } else if (_bubble) {
                 Depth = 100;
             } else {
                 Depth = 100;
@@ -378,28 +376,7 @@ public class Paintball : Actor {
                 positionRange = Vector2.UnitX * 6f;
                 break;
         }
-        /*
-        if (dir.X > 0f) {
-            direction = MathHelper.Pi;
-            position = new Vector2(Right, Y - 4f);
-            positionRange = Vector2.UnitY * 6f;
-        } else {
-            if (dir.X < 0f) {
-                direction = 0f;
-                position = new Vector2(Left, Y - 4f);
-                positionRange = Vector2.UnitY * 6f;
-            } else {
-                if (dir.Y > 0f) {
-                    direction = -MathHelper.PiOver2;
-                    position = new Vector2(X, Bottom);
-                    positionRange = Vector2.UnitX * 6f;
-                } else {
-                    direction = MathHelper.PiOver2;
-                    position = new Vector2(X, Top);
-                    positionRange = Vector2.UnitX * 6f;
-                }
-            }
-        }*/
+
         Level.Particles.Emit(TheoCrystal.P_Impact, 12, position, positionRange, direction);
     }
 
@@ -414,11 +391,11 @@ public class Paintball : Actor {
     }
 
     private void OnPickup() {
-        if (bubble) {
+        if (_bubble) {
             for (int i = 0; i < 24; i++) {
-                SceneAs<Level>().Particles.Emit(Glider.P_Platform, Position + PlatformAdd(i) + Vector2.UnitY * (8f + bubbleWave.Value), PlatformColor(i));
+                SceneAs<Level>().Particles.Emit(Glider.P_Platform, Position + PlatformAdd(i) + Vector2.UnitY * (8f + _bubbleWave.Value), PlatformColor(i));
             }
-            bubble = false;
+            _bubble = false;
             Sprite.Position.Y = 1f;
         }
         Speed = Vector2.Zero;
@@ -442,8 +419,6 @@ public class Paintball : Actor {
             Add(new Coroutine(Shatter()));
         }
     }
-
-    public static ParticleType P_Impact;
 
     public Vector2 Speed;
 
