@@ -31,7 +31,14 @@ public class CustomSpinnerController : Entity {
 
     internal float TimeUnpaused;
 
-    public CustomSpinnerController() { }
+    /// <summary>
+    /// Level name this controller comes from, used to avoid using the controller in new rooms on room transition.
+    /// </summary>
+    internal readonly string? Level;
+
+    public CustomSpinnerController() {
+        Level = FrostModule.TryGetCurrentLevel()?.Session.Level;
+    }
 
     public CustomSpinnerController(EntityData data, Vector2 offset) : base() {
         NoCycles = !data.Bool("cycles", true);
@@ -83,6 +90,8 @@ internal sealed class CustomSpinnerSpriteSource : ISavestatePersisted {
     }
     
     public static CustomSpinnerSpriteSource Get(string dir, string suffix, bool animated = false) {
+        var origDirStr = dir;
+        
         if (dir.EndsWith('!')) {
             animated = true;
             dir = dir[..^1];
@@ -102,10 +111,13 @@ internal sealed class CustomSpinnerSpriteSource : ISavestatePersisted {
             if (Cache.TryGetValue(key, out var cached))
                 return cached;
 
-            return Cache[key] = new(dir, suffix, animated);
+            return Cache[key] = new(dir, suffix, animated) {
+                OrigDirectoryString = origDirStr
+            };
         }
     }
     
+    public string OrigDirectoryString { get; init; }
     public string Directory { get; }
     public string SpritePathSuffix { get; }
     

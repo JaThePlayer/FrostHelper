@@ -48,6 +48,13 @@ internal ref struct SpanParser(ReadOnlySpan<char> input)
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ReadOnlySpan<char> ReadStr()
         => ReadSliceStr(_remaining.Length);
+    
+    /// <summary>
+    /// Reads the next 'len' chars, returning that span.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ReadOnlySpan<char> ReadStr(int len)
+        => ReadSliceStr(len);
 
     public Res<T> ReadUntil<T>(char until, IFormatProvider? format = null) where T : ISpanParsable<T>
     {
@@ -194,6 +201,15 @@ internal ref struct SpanParser(ReadOnlySpan<char> input)
     public void TrimStart()
     {
         _remaining = _remaining.TrimStart();
+    }
+    
+    public bool TryTrimPrefix(ReadOnlySpan<char> prefix)
+    {
+        if (!StartsWith(prefix))
+            return false;
+
+        Skip(prefix.Length);
+        return true;
     }
     
     public void TrimEnd()

@@ -1,4 +1,6 @@
-﻿namespace FrostHelper;
+﻿using System.Runtime.InteropServices;
+
+namespace FrostHelper;
 
 [CustomEntity("FrostHelper/RainbowTilesetController")]
 [Tracked]
@@ -45,17 +47,14 @@ public class RainbowTilesetController : Entity {
     }
 
     private static Color getColor(Color col, Vector2 position, MTexture texture, TileGrid self, RainbowTilesetController? controller) {
-        if (controller is { } && contains(controller.TilesetTextures, texture.Parent)) {
+        if (controller is { } && ContainsTexture(CollectionsMarshal.AsSpan(controller.TilesetTextures), texture.Parent)) {
             return ColorHelper.GetHue(Engine.Scene, position) * self.Alpha;
         }
 
         return col;
     }
 
-    private static bool contains(MTexture?[]? arr, MTexture check) {
-        if (arr is null)
-            return false;
-        
+    internal static bool ContainsTexture(Span<MTexture?> arr, MTexture check) {
         for (int i = 0; i < arr.Length; i++) {
             //if (ReferenceEquals(arr[i], check))
             // SpeedrunTool's savestates will clone the tilegrid, desyncing the MTexture instances
@@ -78,8 +77,15 @@ public class RainbowTilesetController : Entity {
     #endregion
 
     // Nullable because missing textures can result in nulls here
-    public MTexture?[] TilesetTextures;
-    public bool BG;
+    private List<MTexture?> TilesetTextures;
+    private bool BG;
+
+    internal RainbowTilesetController(params List<MTexture?> textures) {
+        LoadHooksIfNeeded();
+        
+        TilesetTextures = textures;
+        BG = false;
+    }
 
     public RainbowTilesetController(EntityData data, Vector2 offset) : base(data.Position + offset) {
         LoadHooksIfNeeded();
@@ -92,17 +98,17 @@ public class RainbowTilesetController : Entity {
         if (!all) {
             var tilesetIDs = FrostModule.GetCharArrayFromCommaSeparatedList(data.Attr("tilesets"));
 
-            TilesetTextures = new MTexture[tilesetIDs.Length];
-            for (int i = 0; i < TilesetTextures.Length; i++) {
-                TilesetTextures[i] = autotiler.GenerateMap(new VirtualMap<char>(new char[,] { { tilesetIDs[i] } }), true).TileGrid.Tiles[0, 0].Parent;
+            TilesetTextures = new(tilesetIDs.Length);
+            for (int i = 0; i < TilesetTextures.Capacity; i++) {
+                TilesetTextures.Add(autotiler.GenerateMap(new VirtualMap<char>(new char[,] { { tilesetIDs[i] } }), true).TileGrid.Tiles[0, 0].Parent);
             }
         } else {
             var autotilerLookupKeys = autotiler.lookup;
-            TilesetTextures = new MTexture[autotilerLookupKeys.Count];
+            TilesetTextures = new(autotilerLookupKeys.Count);
             var enumerator = autotilerLookupKeys.GetEnumerator();
-            for (int i = 0; i < TilesetTextures.Length; i++) {
+            for (int i = 0; i < TilesetTextures.Capacity; i++) {
                 enumerator.MoveNext();
-                TilesetTextures[i] = autotiler.GenerateMap(new VirtualMap<char>(new[,] { { enumerator.Current.Key } }), true).TileGrid.Tiles[0, 0].Parent;
+                TilesetTextures.Add(autotiler.GenerateMap(new VirtualMap<char>(new[,] { { enumerator.Current.Key } }), true).TileGrid.Tiles[0, 0].Parent);
             }
         }
     }
@@ -113,9 +119,25 @@ public class RainbowTilesetController : Entity {
         if (controllers.Count > 1) {
             var first = controllers.First(c => c.Scene == scene) as RainbowTilesetController;
             if (first != this) {
-                first!.TilesetTextures = first.TilesetTextures.Union(TilesetTextures).ToArray();
+                first!.TilesetTextures = first.TilesetTextures.Union(TilesetTextures).ToList();
                 RemoveSelf();
             }
+        }
+    }
+
+    internal static void RainbowifyTexture(Scene scene, MTexture texture) {
+        // Check if its already rainbowified
+        if (ControllerHelper<RainbowTilesetController>.FindFirst(scene,
+                c => ContainsTexture(CollectionsMarshal.AsSpan(c.TilesetTextures), texture)) is { }) {
+            return;
+        }
+        
+        var c = ControllerHelper<RainbowTilesetController>.AddToSceneIfNeeded(scene,
+            (c) => true,
+            () => new RainbowTilesetController(texture));
+
+        if (!ContainsTexture(CollectionsMarshal.AsSpan(c.TilesetTextures), texture)) {
+            c.TilesetTextures.Add(texture);
         }
     }
 }

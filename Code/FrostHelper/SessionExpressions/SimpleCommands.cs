@@ -22,10 +22,13 @@ internal static class SimpleCommands {
         ["dashes"] = new DashAccessor(),
         ["maxDashes"] = new MaxDashAccessor(),
         ["stamina"] = new StaminaAccessor(),
+        ["player"] = new PlayerAccessor(),
+        ["speed"] = new PlayerSpeedAccessor(),
         ["speed.x"] = new PlayerSpeedXAccessor(),
         ["speed.y"] = new PlayerSpeedYAccessor(),
         ["pi"] = new PiAccessor(),
         ["dtime"] = new DeltaTimeAccessor(),
+        ["roomName"] = new RoomNameAccessor(),
     };
 
     // Exposed via API
@@ -75,6 +78,12 @@ internal static class SimpleCommands {
         public override object Get(Session session, object? userdata) => Engine.DeltaTime;
 
         protected internal override Type ReturnType => typeof(float);
+    }
+    
+    private sealed class RoomNameAccessor : Condition {
+        public override object Get(Session session, object? userdata) => session.Level;
+
+        protected internal override Type ReturnType => typeof(string);
     }
 
     private sealed class RestartedFromGoldenAccessor : Condition {
@@ -163,6 +172,14 @@ internal static class SimpleCommands {
         protected override int GetFromPlayer(Player player) => player.MaxDashes;
     }
 
+    private sealed class PlayerAccessor : PlayerGetterCondition<Player> {
+        protected override Player GetFromPlayer(Player player) => player;
+    }
+    
+    private sealed class PlayerSpeedAccessor : PlayerGetterCondition<Vector2> {
+        protected override Vector2 GetFromPlayer(Player player) => player.Speed;
+    }
+    
     private sealed class PlayerSpeedXAccessor : PlayerGetterCondition<float> {
         protected override float GetFromPlayer(Player player) => player.Speed.X;
     }

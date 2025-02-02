@@ -7,6 +7,8 @@ internal sealed class AnimationMetaYaml {
     public float Speed { get; set; } = 12f;
 
     public bool RandomizeStartFrame { get; set; } = true;
+    
+    public LoopModes Mode { get; set; } = LoopModes.Loop;
 
     private string? _frames;
     public string? Frames {
@@ -39,6 +41,11 @@ internal sealed class AnimationMetaYaml {
 
         return Default;
     }
+
+    public enum LoopModes {
+        Loop,
+        Once
+    }
 }
 
 internal sealed class AnimatedMTexture(List<MTexture> sourceTextures, AnimationMetaYaml yaml) 
@@ -46,7 +53,7 @@ internal sealed class AnimatedMTexture(List<MTexture> sourceTextures, AnimationM
 
     public AnimatedMTexture(AnimatedMTexture parent, int x, int y, int width, int height)
     : this(parent.SourceTextures.Select(t => new MTexture(t, x, y, width, height)).ToList(), parent.Meta) {
-        
+        Parent = parent;
     }
 
     private Dictionary<(int, int, int, int), AnimatedMTexture>? _subtextureCache;
@@ -72,11 +79,32 @@ internal sealed class AnimatedMTexture(List<MTexture> sourceTextures, AnimationM
     }
     
     public float Speed => yaml.Speed;
+
+    public int GetAnimFrame(float time, float offset, float speed) {
+        var idx = (int) (time * speed + offset);
+
+        switch (Meta.Mode) {
+            case AnimationMetaYaml.LoopModes.Loop:
+                idx %= Textures.Count;
+                break;
+            default:
+                idx = int.Min(idx, Textures.Count - 1);
+                break;
+        }
+
+        return int.Max(idx, 0);
+    }
+    
+    public int GetAnimFrame(float time, float offset) {
+        return GetAnimFrame(time, offset, Speed);
+    }
+    
+    public MTexture GetAnim(float time, float offset, float speed) {
+        return Textures[GetAnimFrame(time, offset, speed)];
+    }
     
     public MTexture GetAnim(float time, float offset) {
-        var idx = (int)(time * Speed + offset) % Textures.Count;
-
-        return Textures[int.Max(idx, 0)];
+        return Textures[GetAnimFrame(time, offset, Speed)];
     }
     
     public AnimatedMTexture GetSubtexture(int x, int y, int width, int height)

@@ -2,13 +2,14 @@
 using FrostHelper.Components;
 using FrostHelper.Helpers;
 using FrostHelper.ModIntegration;
+using FrostHelper.Triggers.Spinner;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace FrostHelper;
 
 [CustomEntity("FrostHelper/IceSpinner", "FrostHelperExt/CustomBloomSpinner")]
-[Tracked(false)]
+[Tracked(true)]
 public class CustomSpinner : Entity {
     #region Hooks
     private static bool _hooksLoaded;
@@ -66,23 +67,49 @@ public class CustomSpinner : Entity {
         public List<Fill> Fills { get; } = [];
 
         public record struct Fill(MTexture Texture, float AnimOffset, Color Color, Vector2 Position, float Rotation) {
+            private float _initialOffset = AnimOffset;
+            public float Speed = Texture is AnimatedMTexture anim ? anim.Speed : 0f;
+            
             public MTexture GetTextureAnimated(float time) {
                 if (Texture is AnimatedMTexture anim)
-                    return anim.GetAnim(time, AnimOffset);
+                    return anim.GetAnim(time, AnimOffset, Speed);
                 return Texture;
+            }
+
+            public void ResetAnimation(float time) {
+                AnimOffset = (-time * Speed) + _initialOffset;
+            }
+            
+            public void ResetAnimationAndCompleteIn(float time, float timeToCompleteIn) {
+                Speed = Texture is AnimatedMTexture anim ? anim.Textures.Count / timeToCompleteIn : 0f;
+                AnimOffset = (-time * Speed) + _initialOffset;
             }
         }
 
         public Span<Fill> FillsSpan => CollectionsMarshal.AsSpan(Fills);
     }
 
-    private CustomSpinnerSpriteSource SpriteSource;
+    internal CustomSpinnerSpriteSource SpriteSource;
     
     // accessed by TAS-Helper via reflection
     internal CustomSpinnerController controller;
     
     public bool MoveWithWind;
-    public bool DashThrough;
+
+    protected internal enum CollisionModes {
+        Kill         = 0, // Kill the thing that collided with the spinner
+        PassThrough  = 1, // nothing
+        Shatter      = 2, // shatter this spinner
+        ShatterGroup = 3,
+        
+        Activate     = 4, // For Trigger Spinners, activate this spinner.
+        
+        LeaveUnchanged = int.MaxValue, // For Change Spinners Trigger, should never be set on a spinner.
+    }
+    
+    internal CollisionModes DashThrough;
+    internal CollisionModes HoldableCollisionMode;
+    
     
     // used by maddie's helping hand
     public Color Tint;
@@ -126,6 +153,27 @@ public class CustomSpinner : Entity {
     internal readonly float Scale;
     internal readonly float ImageScale;
 
+    internal bool ShouldBeCollidable = true;
+
+    internal bool ColliderDisabledExternally = false;
+
+    private string hitboxStr;
+
+    internal void CreateCollider() {
+        if (Collider is { })
+            return;
+
+        HasCollider = true;
+        
+        Collider = Scale == 1f && hitboxStr == "C,6,0,0;R,16,4,-8,-3"
+            ? new SpinnerCollider()
+            : CustomHitbox.CreateFrom(hitboxStr, Scale);
+
+        Add(new PlayerCollider(OnPlayer, null, null));
+        Add(new HoldableCollider(OnHoldable, null));
+        Add(new LedgeBlocker(null));
+    }
+    
     public CustomSpinner(EntityData data, Vector2 offset) : this(data, offset, data.Bool("attachToSolid", false), data.Attr("directory", "danger/FrostHelper/icecrystal"), data.Attr("destroyColor", "639bff"), data.Bool("isCore", false), data.Attr("tint", "ffffff")) { }
 
     public CustomSpinner(EntityData data, Vector2 position, bool attachToSolid, string directory, string destroyColor, bool isCore, string tint) : base(data.Position + position) {
@@ -138,9 +186,18 @@ public class CustomSpinner : Entity {
         Rainbow = data.Bool("rainbow", false);
         RenderBorder = data.Bool("drawOutline", true);
         BorderColor = RenderBorder ? ColorHelper.GetColor(data.Attr("borderColor", "000000")) : Color.Transparent;
+        RenderBorder = BorderColor != Color.Transparent;
 
         DestroyDebrisCount = data.Int("debrisCount", 8);
-        DashThrough = data.Bool("dashThrough", false);
+        
+        DashThrough = data.Values.TryGetValue("dashThrough", out var dashThrough) 
+                ? dashThrough switch {
+                    true => CollisionModes.PassThrough,
+                    string s when Enum.TryParse(s, ignoreCase: true, out CollisionModes dashThroughMode) => dashThroughMode,
+                    _ => CollisionModes.Kill,
+                } : CollisionModes.Kill;
+        HoldableCollisionMode = data.Enum("onHoldable", CollisionModes.PassThrough);
+        
         Tint = ColorHelper.GetColor(tint);
         // for VivHelper compatibility
         var spritePathSuffix = data.Attr("spritePathSuffix", "");
@@ -170,20 +227,16 @@ public class CustomSpinner : Entity {
         Tag = Tags.TransitionUpdate;
 
         HasCollider = data.Bool("collidable", true) && Scale > 0f;
-        var hitboxStr = data.Attr("hitbox", "C,6,0,0;R,16,4,-8,-3");
+        hitboxStr = data.Attr("hitbox", "C,6,0,0;R,16,4,-8,-3");
         if (string.IsNullOrWhiteSpace(hitboxStr))
             HasCollider = false;
 
         if (HasCollider) {
-            Collider = Scale == 1f && hitboxStr == "C,6,0,0;R,16,4,-8,-3"
-                ? new SpinnerCollider()
-                : CustomHitbox.CreateFrom(hitboxStr, Scale);
-
-            Add(new PlayerCollider(OnPlayer, null, null));
-            Add(new HoldableCollider(OnHoldable, null));
-            Add(new LedgeBlocker(null));
+            CreateCollider();
         } else {
+            ShouldBeCollidable = false;
             Collidable = false;
+            ColliderDisabledExternally = true;
         }
         Depth = data.Int("depth", -8500);
         AttachToSolid = attachToSolid;
@@ -200,10 +253,12 @@ public class CustomSpinner : Entity {
             mover.OnDisable = () => {
                 if (Visible)
                     UnregisterFromRenderers();
-                Active = Visible = Collidable = false;
+                Active = Visible = Collidable = ShouldBeCollidable = false;
             };
             mover.OnEnable = () => {
-                Active = Collidable = true;
+                Active = ShouldBeCollidable = true;
+                if (!ColliderDisabledExternally)
+                    Collidable = true;
             };
 
             Add(mover);
@@ -224,14 +279,12 @@ public class CustomSpinner : Entity {
 
     public override void Added(Scene scene) {
         base.Added(scene);
-        CreateController<SpinnerConnectorRenderer>();
-        CreateController<SpinnerBorderRenderer>();
-        if (SpriteSource.HasDeco)
-            CreateController<SpinnerDecoRenderer>();
+        CreateRenderersIfNeeded();
     }
 
     public override void Awake(Scene scene) {
-        controller = ControllerHelper<CustomSpinnerController>.AddToSceneIfNeeded(scene);
+        controller = ControllerHelper<CustomSpinnerController>.AddToSceneIfNeeded(scene,
+            x => x.Level == FrostModule.TryGetCurrentLevel()?.Session.Level, () => new()); //ControllerHelper<CustomSpinnerController>.AddToSceneIfNeeded(scene);
         UpdateController();
         
         base.Awake(scene);
@@ -268,8 +321,8 @@ public class CustomSpinner : Entity {
     }
 
     // exposed via the API
-    internal void SetColor(Color color) {
-        if (Tint == color)
+    internal void SetColor(Color color, bool force = false) {
+        if (Tint == color && !force)
             return;
 
         Tint = color;
@@ -301,6 +354,21 @@ public class CustomSpinner : Entity {
         if (_bloomPoint is { } p)
             p.Visible = visible;
     }
+
+    internal void SetDepth(int newDepth) {
+        if (newDepth == Depth)
+            return;
+        
+        UnregisterFromRenderers();
+        Depth = newDepth;
+        CreateRenderersIfNeeded();
+        RegisterToRenderers();
+        
+        // Make sure the new renderers get added in immediately, before the next Render call.
+        Scene.OnEndOfFrame += () => {
+            Scene.Entities.UpdateLists();
+        };
+    }
     
     internal void ClearSprites() {
         if (!expanded)
@@ -317,9 +385,77 @@ public class CustomSpinner : Entity {
         SpriteSource = CustomSpinnerSpriteSource.Get(SpriteSource.Directory, SpriteSource.SpritePathSuffix, SpriteSource.Animated);
     }
 
+    internal void ChangeSprites(CustomSpinnerSpriteSource newSource, 
+        ChangeSpinnersTrigger.AnimationBehavior animationBehavior, float finishAnimsIn = 0f) {
+        var prevSource = SpriteSource;
+        SpriteSource = newSource;
+
+        void UpdateImage(Image img, MTexture texture) {
+            img.Texture = texture;
+            if (img is not AnimatedImage anim)
+                return;
+            
+            anim.SetImage(img.Texture as AnimatedMTexture);
+            switch (animationBehavior)
+            {
+                case ChangeSpinnersTrigger.AnimationBehavior.Reset:
+                    anim.ResetAnimation(controller.TimeUnpaused);
+                    break;
+                case ChangeSpinnersTrigger.AnimationBehavior.ResetAndCompleteIn:
+                    anim.ResetAndFinishIn(controller.TimeUnpaused, finishAnimsIn);
+                    break;
+            }
+        }
+
+        if (_images is { }) {
+            var prevFgTextures = prevSource.GetFgTextures(false);
+            var currFgTextures = SpriteSource.GetFgTextures(false);
+            
+            foreach (var img in _images) {
+                var idx = prevFgTextures.IndexOf(img.Texture);
+                if (idx != -1) {
+                    UpdateImage(img, currFgTextures[idx % currFgTextures.Count]);
+                    continue;
+                }
+                idx = prevFgTextures.IndexOf(img.Texture.Parent);
+                if (idx != -1) {
+                    var sourceFg = currFgTextures[idx % currFgTextures.Count];
+                    MTexture subtext = sourceFg is AnimatedMTexture anim 
+                        ? anim.GetSubtextureCached(
+                            img.Texture.ClipRect.X - img.Texture.Parent.ClipRect.X, img.Texture.ClipRect.Y - img.Texture.Parent.ClipRect.Y, 
+                            img.Texture.Width, img.Texture.Height) 
+                        : sourceFg.GetSubtexture(img.Texture.ClipRect.X - img.Texture.Parent.ClipRect.X, img.Texture.ClipRect.Y - img.Texture.Parent.ClipRect.Y, 
+                            img.Texture.Width, img.Texture.Height);
+                    UpdateImage(img, subtext);
+                    continue;
+                }
+            }
+        }
+
+        if (filler is { } fill) {
+            var prevBgTextures = prevSource.GetBgTextures(false);
+            var currBgTextures = SpriteSource.GetBgTextures(false);
+            
+            foreach (ref var f in fill.FillsSpan) {
+                var idx = prevBgTextures.IndexOf(f.Texture);
+                if (idx != -1) {
+                    f.Texture = currBgTextures[idx % currBgTextures.Count];
+                    switch (animationBehavior) {
+                        case ChangeSpinnersTrigger.AnimationBehavior.Reset:
+                            f.ResetAnimation(controller.TimeUnpaused);
+                            break;
+                        case ChangeSpinnersTrigger.AnimationBehavior.ResetAndCompleteIn:
+                            f.ResetAnimationAndCompleteIn(controller.TimeUnpaused, finishAnimsIn);
+                            break;
+                    }
+                }
+            }
+        }
+    }
+
     public override void Update() {
         if (!Visible) {
-            Collidable = false;
+            ShouldBeCollidable = Collidable = false;
             if (InView()) {
                 RegisterToRenderers();
                 SetVisible(true);
@@ -348,7 +484,8 @@ public class CustomSpinner : Entity {
             if (HasCollider && (controller.NoCycles || scene.OnInterval(0.05f, offset))) {
                 // grabbing the cached player from the controller is faster than the tracker.
                 if ((controller.Player ??= scene.Tracker.SafeGetEntity<Player>()) is { } player) {
-                    Collidable = Math.Abs(player.X - X) < 128f && Math.Abs(player.Y - Y) < 128f;
+                    ShouldBeCollidable = Math.Abs(player.X - X) < 128f && Math.Abs(player.Y - Y) < 128f;
+                    Collidable = !ColliderDisabledExternally && ShouldBeCollidable;
                 }
             }
         }
@@ -403,21 +540,17 @@ public class CustomSpinner : Entity {
     }
 
     internal static T? GetRendererFromTracker<T>(Scene scene, int depth) where T : Entity, ISpinnerRenderer<T> {
-        foreach (T e in scene.Tracker.SafeGetEntities<T>()) {
-            if (e.BaseDepth == depth)
-                return e;
-        }
-
-        return null;
+        return ControllerHelper<T>.FindFirst(scene, depth, static (x, depth) => x.BaseDepth == depth);
     }
     
-    private void UnregisterFromRenderers() {
+    private void UnregisterFromRenderers(Scene? scene = null) {
+        scene ??= Scene;
         if (RegisteredToRenderers) {
-            GetRendererFromTracker<SpinnerConnectorRenderer>(Scene, Depth)?.Remove(this);
+            GetRendererFromTracker<SpinnerConnectorRenderer>(scene, Depth)?.Remove(this);
             if (RenderBorder)
-                GetRendererFromTracker<SpinnerBorderRenderer>(Scene, Depth)?.Remove(this);
+                GetRendererFromTracker<SpinnerBorderRenderer>(scene, Depth)?.Remove(this);
             if (SpriteSource.HasDeco)
-                GetRendererFromTracker<SpinnerDecoRenderer>(Scene, Depth)?.Spinners.Remove(this);
+                GetRendererFromTracker<SpinnerDecoRenderer>(scene, Depth)?.Spinners.Remove(this);
             RegisteredToRenderers = false;
         }
     }
@@ -490,7 +623,7 @@ public class CustomSpinner : Entity {
             }
 
             if (imgCount == 4) {
-                Image image = SpriteSource.Animated ? new AnimatedImage((AnimatedMTexture)fgTexture).CenterOrigin() : new SealedImage(fgTexture).CenterOrigin();
+                Image image = AnimatedImage.CreateAnimatedOrNot(fgTexture).CenterOrigin();
                 AddImage(image);
             } else {
                 // only spawn quarter images if it's needed to avoid edge cases
@@ -555,6 +688,13 @@ public class CustomSpinner : Entity {
     private T CreateController<T>() where T : Entity, ISpinnerRenderer<T> {
         return ControllerHelper<T>.AddToSceneIfNeeded(Scene, filter: x => x.BaseDepth == Depth, factory: () => T.Create(Depth));
     }
+    
+    private void CreateRenderersIfNeeded() {
+        CreateController<SpinnerConnectorRenderer>();
+        CreateController<SpinnerBorderRenderer>();
+        if (SpriteSource.HasDeco)
+            CreateController<SpinnerDecoRenderer>();
+    }
 
     private static Vector2 FixPos(Vector2 pos, Vector2 origin, float rotation) {
         Vector2 vector = origin.Rotate(rotation.ToRad());
@@ -617,25 +757,51 @@ public class CustomSpinner : Entity {
         return CollideCheck(solid);
     }
 
-    private void OnPlayer(Player player) {
-        if (!(DashThrough && player.DashAttacking)) {
-            player.Die((player.Position - Position).SafeNormalize(), false, true);
+    protected bool DispatchStandardCollisionMode(CollisionModes mode) {
+        switch (mode) {
+            case CollisionModes.PassThrough:
+                return true;
+            case CollisionModes.Shatter:
+                Destroy();
+                return true;
+            case CollisionModes.ShatterGroup:
+                ShatterGroup();
+                return true;
         }
 
+        return false;
     }
 
-    private void OnHoldable(Holdable h) {
-        h.HitSpinner(this);
+    protected virtual void OnPlayer(Player player) {
+        if (player.DashAttacking) {
+            if (DispatchStandardCollisionMode(DashThrough))
+                return;
+        }
+        
+        player.Die((player.Position - Position).SafeNormalize(), false, true);
+    }
+
+    protected virtual void OnHoldable(Holdable h) {
+        switch (HoldableCollisionMode) {
+            case CollisionModes.PassThrough:
+                h.HitSpinner(this);
+                break;
+            case CollisionModes.Kill:
+                throw new Exception("Kill mode not supported for holdables!");
+            default:
+                DispatchStandardCollisionMode(HoldableCollisionMode);
+                break;
+        }
     }
 
     public override void Removed(Scene scene) {
-        UnregisterFromRenderers();
+        UnregisterFromRenderers(scene);
         base.Removed(scene);
     }
 
     public override void SceneEnd(Scene scene) {
         base.SceneEnd(scene);
-        UnregisterFromRenderers();
+        UnregisterFromRenderers(scene);
     }
 
     public void Destroy(bool boss = false) {
@@ -646,6 +812,13 @@ public class CustomSpinner : Entity {
             FastCrystalDebris.Burst(Position, color, boss, DestroyDebrisCount);
         }
         RemoveSelf();
+    }
+
+    protected void ShatterGroup(bool boss = false) {
+        foreach (CustomSpinner spinner in Scene.Tracker.SafeGetEntities<CustomSpinner>()) {
+            if (spinner.AttachGroup == AttachGroup)
+                spinner.Destroy(boss);
+        }
     }
 }
 
@@ -767,7 +940,6 @@ public class SpinnerDecoRenderer : Entity, ISpinnerRenderer<SpinnerDecoRenderer>
 public class SpinnerBorderRenderer : Entity, ISpinnerRenderer<SpinnerBorderRenderer> {
     private readonly List<CustomSpinner> _spinners = [];
     private SpinnerConnectorRenderer? _connectorRenderer;
-    private float _unpausedTime;
     
     private int BaseDepth => Depth - 2;
     
@@ -789,15 +961,11 @@ public class SpinnerBorderRenderer : Entity, ISpinnerRenderer<SpinnerBorderRende
         Tag = Tags.Persistent;
     }
 
-    public override void Update() {
-        _unpausedTime += Engine.DeltaTime;
-    }
-
     public override void Render() {
         if (_spinners.Count == 0)
             return;
 
-        var controller = _spinners[0].controller;
+        var controller = _spinners[^1].controller;
 
         if (controller.OutlineShader is { } outlineShader) {
             var cam = GameplayRenderer.instance.Camera;
@@ -856,13 +1024,15 @@ public class SpinnerBorderRenderer : Entity, ISpinnerRenderer<SpinnerBorderRende
 
         GameplayRenderer.Begin();
 
+        var unpausedTime = controller.TimeUnpaused;
+
         var spinners = CollectionsMarshal.AsSpan(_spinners);
         if (useImageColor) {
             connectorRenderer?.ForceRender();
             
             foreach (var spinner in spinners) {
                 foreach (var img in CollectionsMarshal.AsSpan(spinner._images)) {
-                    img.RenderMaybeAnimated(_unpausedTime);
+                    img.RenderMaybeAnimated(unpausedTime);
                 }
             }
         } else {
@@ -870,7 +1040,7 @@ public class SpinnerBorderRenderer : Entity, ISpinnerRenderer<SpinnerBorderRende
             
             foreach (var spinner in spinners) {
                 foreach (var img in CollectionsMarshal.AsSpan(spinner._images)) {
-                    img.RenderMaybeAnimated(borderColor, _unpausedTime);
+                    img.RenderMaybeAnimated(borderColor, unpausedTime);
                 }
             }
         }
@@ -903,6 +1073,8 @@ public class SpinnerBorderRenderer : Entity, ISpinnerRenderer<SpinnerBorderRende
 
         if (blackOutlineOpt) {
             batch.Draw(target, renderPos, null, Color.White);
+            GameplayRenderer.End();
+            GameplayRenderer.Begin();
         }
         
         RenderTargetHelper.ReturnFullScreenBuffer(target);
@@ -914,10 +1086,11 @@ public class SpinnerBorderRenderer : Entity, ISpinnerRenderer<SpinnerBorderRende
         var spinners = CollectionsMarshal.AsSpan(_spinners);
         foreach (var item in spinners) {
             var color = item.BorderColor;
+            var unpausedTime = item.controller.TimeUnpaused;
 
             foreach (var img in CollectionsMarshal.AsSpan(item._images)) {
                 // todo: figure out the offsets properly so that OutlineHelper can be used
-                DrawBorder(img, color, item.ImageScale);
+                DrawBorder(img, color, item.ImageScale, unpausedTime);
             }
 
             if (item.filler == null)
@@ -928,7 +1101,7 @@ public class SpinnerBorderRenderer : Entity, ISpinnerRenderer<SpinnerBorderRende
                 continue;
 
             ref var image = ref fillerComponents[0];
-            var mtexture = image.GetTextureAnimated(item.controller.TimeUnpaused);
+            var mtexture = image.GetTextureAnimated(unpausedTime);
             Texture2D texture = image.Texture.Texture.Texture;
             Rectangle? clipRect = mtexture.ClipRect;
             float scaleFix = mtexture.ScaleFix;
@@ -948,8 +1121,8 @@ public class SpinnerBorderRenderer : Entity, ISpinnerRenderer<SpinnerBorderRende
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void DrawBorder(Image image, Color color, float imgScale) {
-        var mtexture = image.GetTextureMaybeAnimated(_unpausedTime);
+    private void DrawBorder(Image image, Color color, float imgScale, float unpausedTime) {
+        var mtexture = image.GetTextureMaybeAnimated(unpausedTime);
         
         Texture2D texture = mtexture.Texture.Texture_Safe;
         Rectangle? clipRect = mtexture.ClipRect;

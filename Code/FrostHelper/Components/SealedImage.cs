@@ -46,18 +46,43 @@ internal sealed class SealedImage : Image {
 }
 
 internal sealed class AnimatedImage : Image {
-    public readonly AnimatedMTexture AnimatedTexture;
+    public AnimatedMTexture? AnimatedTexture;
 
     public float Offset;
+    public float Speed;
+
+    private float _initialOffset;
+
+    public void SetImage(AnimatedMTexture? newImg) {
+        AnimatedTexture = newImg;
+        Speed = newImg?.Speed ?? 0;
+    }
+
+    public void ResetAnimation(float time) {
+        Offset = (-time * Speed) + _initialOffset;
+    }
+    
+    public void ResetAndFinishIn(float time, float timeToFinishIn) {
+        Speed = (AnimatedTexture?.Textures.Count ?? 1) / timeToFinishIn;
+        ResetAnimation(time);
+    }
     
     public AnimatedImage(AnimatedMTexture texture) : base(texture) {
         AnimatedTexture = texture;
         Offset = texture.CreateRandomAnimOffset();
+        _initialOffset = Offset;
+        Speed = texture.Speed;
     }
     
     public AnimatedImage(AnimatedMTexture texture, float offset) : base(texture) {
         AnimatedTexture = texture;
         Offset = offset;
+        _initialOffset = offset;
+        Speed = texture.Speed;
+    }
+
+    public static Image CreateAnimatedOrNot(MTexture texture) {
+        return texture is AnimatedMTexture anim ? new AnimatedImage(anim) : new SealedImage(texture);
     }
 
     public new AnimatedImage JustifyOrigin(Vector2 vec) {
@@ -76,7 +101,10 @@ internal sealed class AnimatedImage : Image {
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public MTexture GetTexture(float time) => AnimatedTexture.GetAnim(time, Offset);
+    public MTexture GetTexture(float time) => AnimatedTexture?.GetAnim(time, Offset, Speed) ?? Texture;
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public int GetAnimFrame(float time) => AnimatedTexture?.GetAnimFrame(time, Offset, Speed) ?? 0;
     
     public override void Render()
     {

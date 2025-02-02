@@ -1,6 +1,11 @@
 local jautils = require("mods").requireFromPlugin("libraries.jautils")
 
 local trigger = {
+    name = "FrostHelper/LightingBaseColorTrigger",
+    category = "visual",
+}
+
+local misnamedVersion = {
     name = "FrostHelper/LightningBaseColorTrigger",
     category = "visual",
 }
@@ -11,4 +16,9 @@ jautils.createPlacementsPreserveOrder(trigger, "default", {
     -- { "persistent", false },
 })
 
-return trigger
+misnamedVersion.fieldInformation = trigger.fieldInformation
+
+return {
+    trigger,
+    misnamedVersion,
+}

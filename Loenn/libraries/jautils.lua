@@ -1,3 +1,12 @@
+--[[
+
+---- READ THIS ----
+
+jautils (and all other libraries in frost helper) are **NOT** a public api for use in other mods.
+
+If you need something from here, contact me or copy them to your own mod.
+]]
+
 local drawableSpriteStruct = require("structs.drawable_sprite")
 local drawableRectangleStruct = require("structs.drawable_rectangle")
 local drawableNinePatch = require("structs.drawable_nine_patch")
@@ -182,6 +191,31 @@ jautils.counterOperationToMathExpr = {
     ["LessThanOrEqual"] = "<=",
 }
 
+jautils.spinnerDirectoryFieldData = {
+    baseFolder = "danger",
+    pattern = "^(danger/.*)/fg(.-)%d+$",
+    captureConverter = function(dir, subdir)
+        local animationless = string.match(dir, "(.-)/%d%d$")
+        if animationless then
+            return animationless .. ">" .. subdir .. "!"
+        end
+
+        return dir .. ">" .. subdir
+    end,
+    displayConverter = function(dir, subdir)
+        dir = string.match(dir, "(.-)/%d%d$") or dir
+
+        local humanizedDir = utils.humanizeVariableName(string.match(dir, "^.*/(.*/hot)$") or string.match(dir, "^.*/(.*)$") or dir)
+        if subdir and #subdir > 0 then
+            return humanizedDir .. " (" .. utils.humanizeVariableName(subdir) .. ")"
+        end
+
+        return humanizedDir
+    end,
+    vanillaSprites = { "danger/crystal/fg_white00", "danger/crystal/fg_red00", "danger/crystal/fg_blue00", "danger/crystal/fg_purple00" },
+    langDir = "customSpinner",
+}
+
 function jautils.counterConditionToString(counter, operation, target)
     return string.format("%s %s %s", counter, jautils.counterOperationToMathExpr[operation], target)
 end
@@ -201,6 +235,12 @@ jautils.fieldTypeOverrides = {
         fieldType = "color",
         allowXNAColors = true,
         useAlpha = true,
+    } end,
+    colorOrEmpty =  function (data) return {
+        fieldType = "color",
+        allowXNAColors = true,
+        useAlpha = true,
+        allowEmpty = true,
     } end,
     colorList = function (data) return {
         fieldType = "list",
@@ -247,6 +287,15 @@ jautils.fieldTypeOverrides = {
             options = celesteDepths,
             editable = true,
             fieldType = "integer",
+            --searchable = true,
+        }
+    end,
+    depthOrEmpty = function (data)
+        return {
+            options = celesteDepths,
+            editable = true,
+            fieldType = "integer",
+            allowEmpty = true,
             --searchable = true,
         }
     end,

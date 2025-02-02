@@ -32,6 +32,7 @@ jautils.createPlacementsPreserveOrder(customFireBarrier, "normal", {
     { "isIce", false },
     { "ignoreCoreMode", false },
     { "canCollide", true },
+    { "hasSolid", true },
 })
 
 jautils.addPlacement(customFireBarrier, "ice", {

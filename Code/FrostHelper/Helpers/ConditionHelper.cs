@@ -6,6 +6,7 @@ using System.Globalization;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Text;
+using Vector2 = Microsoft.Xna.Framework.Vector2;
 
 namespace FrostHelper.Helpers;
 
@@ -38,133 +39,199 @@ public static class ConditionHelper {
         return false;
     }
 
+    private static bool CreateList(IList<AbstractExpression> args, ExpressionContext ctx, out List<Condition> conditions) {
+        conditions = new List<Condition>(args.Count);
+        foreach (var argExpr in args) {
+            if (!TryCreate(argExpr, ctx, out var argCond)) {
+                return false;
+            }
+            conditions.Add(argCond);
+        }
+
+        return true;
+    }
+    
     private static bool TryCreate(AbstractExpression expr, ExpressionContext ctx, [NotNullWhen(true)] out Condition? condition) {
-        if (expr is { Operator: "!" or "#" or "$" or "@", Right: null, Left: { } unaryLeft }) {
-            switch (expr.Operator, unaryLeft.StringValue)
-            {
-                case ("!", {} flagName):
-                    condition = new FlagAccessor(flagName, inverted: true);
-                    return true;
-                case ("!", _) when TryCreate(unaryLeft, ctx, out var toInvert):
-                    if (toInvert is IInvertible invertible)
-                        condition = invertible.CreateInverted();
-                    else
-                        condition = new OperatorInvert(toInvert);
-                    return true;
-                case ("!", _):
-                    NotificationHelper.Notify($"'!' operator with invalid operator: '{expr}'");
-                    condition = null;
-                    return false;
-                case ("#", {} flagName):
-                    condition = new CounterAccessor(flagName);
-                    return true;
-                case ("#", _):
-                    NotificationHelper.Notify($"Unnecessary '#' operator: '{expr}'");
-                    return TryCreate(unaryLeft, ctx, out condition);
-                case ("@", {} sliderName): {
-                    condition = new SliderAccessor(sliderName);
-                    return true;
-                }
-                case ("@", _):
-                    NotificationHelper.Notify($"Invalid use of the '@' operator: '{expr}'");
-                    condition = null;
-                    return false;
-                case ("$", ['i', 'n', 'p', 'u', 't', '.', .. var rest]): {
-                    return InputCommands.TryParseInput(rest, out condition);
-                }
-                case ("$", _):
+        
+        switch (expr)
+        {
+            case SimpleCommandExpression simpleCmd when simpleCmd.Name.StartsWith("input."):
+                return InputCommands.TryParseInput(simpleCmd.Name["input.".Length..], out condition);
+            case SimpleCommandExpression simpleCmd: {
+                var remaining = simpleCmd.Name;
+                List<string>? fields = null;
+                condition = null;
+                while (true) {
                     // Try simple commands from the context
-                    if (ctx.SimpleCommands.TryGetValue(unaryLeft.StringValue ?? "", out var cond)) {
+                    if (ctx.SimpleCommands.TryGetValue(remaining, out var cond)) {
                         condition = cond;
-                        return true;
+                        break;
                     }
                     
                     // Try simple commands
-                    if (SimpleCommands.Registry.TryGetValue(unaryLeft.StringValue ?? "", out cond)) {
+                    if (SimpleCommands.Registry.TryGetValue(remaining, out cond)) {
                         condition = cond;
-                        return true;
+                        break;
                     }
                     
-                    NotificationHelper.Notify($"Unknown use of the $ operator: {expr}");
-                    condition = null;
-                    return false;
-            }
-        }
+                    var lastDotIdx = remaining.LastIndexOf('.');
+                    if (lastDotIdx == -1)
+                        break;
+                    fields ??= [];
+                    fields.Add(remaining[(lastDotIdx+1)..]);
+                    remaining = remaining[..lastDotIdx];
+                }
 
-        if (expr is { Operator: "$call", StringValue: { } funcName, Arguments: { } args }) {
-            var argConds = new List<Condition>(args.Count);
-            foreach (var argExpr in args) {
-                if (!TryCreate(argExpr, ctx, out var argCond)) {
+                if (condition is null) {
+                    NotificationHelper.Notify($"Unknown use of the $ operator: {expr}");
+                    return false;
+                }
+
+                while (fields?.Count > 0) {
+                    condition = FieldAccessCommands.Create(fields[^1], condition, ctx);
+                    fields.RemoveAt(fields.Count - 1);
+                }
+
+                return true;
+            }
+            case GetSessionVariableExpression sessVarExpr:
+            {
+                if (!TryCreate(sessVarExpr.Name, ctx, out var nameCond)) {
                     condition = null;
                     return false;
                 }
-                argConds.Add(argCond);
-            }
-            return FunctionCommands.TryCreate(funcName, argConds, ctx, out condition);
-        }
-        
-        if (expr.StringValue is { } c) {
-            if (expr.Operator is not null) {
-                NotificationHelper.Notify($"Unknown operator: {expr.Operator} [in: {expr}]");
-                condition = null;
-                return false;
-            }
             
-            if (int.TryParse(c, CultureInfo.InvariantCulture, out var i)) {
-                condition = new ConstInt(i);
+                switch (sessVarExpr.VariableType) {
+                    case GetSessionVariableExpression.Types.Flag:
+                        condition = new FlagAccessor(nameCond, inverted: false);
+                        return true;
+                    case GetSessionVariableExpression.Types.Counter:
+                        condition = nameCond is ConstString { Value: var n } ? new CounterAccessor(n) : new IndirectCounterAccessor(nameCond);
+                        return true;
+                    case GetSessionVariableExpression.Types.Slider:
+                        condition = nameCond is ConstString { Value: var sn } ? new SliderAccessor(sn) : new IndirectSliderAccessor(nameCond);
+                        return true;
+                }
+
+                break;
+            }
+            case InvertExpression invertExpression:
+            {
+                if (!TryCreate(invertExpression.Expression, ctx, out var invertCond)) {
+                    condition = null;
+                    return false;
+                }
+            
+                if (invertCond is IInvertible invertible)
+                    condition = invertible.CreateInverted();
+                else
+                    condition = new OperatorInvert(invertCond);
                 return true;
             }
+            case FunctionCommandExpression { Name: { } funcName, Arguments: { } args }:
+            {
+                if (!CreateList(args, ctx, out var argConds)) {
+                    condition = null;
+                    return false;
+                }
             
-            if (float.TryParse(c, CultureInfo.InvariantCulture, out var f)) {
-                condition = new ConstFloat(f);
+                return FunctionCommands.TryCreate(funcName, argConds, ctx, out condition);
+            }
+            case InterpolatedStringExpression { Arguments: { } strArgs }:
+            {
+                if (!CreateList(strArgs, ctx, out var argConds)) {
+                    condition = null;
+                    return false;
+                }
+
+                condition = new StringInterpolationOperator(argConds);
                 return true;
             }
+            case LiteralExpression<string> stringLit:
+                condition = new ConstString(stringLit.Value);
+                return true;
+            case LiteralExpression<int> intLit:
+                condition = new ConstInt(intLit.Value);
+                return true;
+            case LiteralExpression<float> floatLit:
+                condition = new ConstFloat(floatLit.Value);
+                return true;
+            case BinOpExpression { Left: { } left, Right: { } right } binExpr:
+            {
+                if (!TryCreate(left, ctx, out var leftExpr)) {
+                    condition = null;
+                    return false;
+                }
+                if (!TryCreate(right, ctx, out var rightExpr)) {
+                    condition = null;
+                    return false;
+                }
 
-            condition = new FlagAccessor(c, false);
-            return true;
+                condition = binExpr.Operator switch {
+                    BinOpExpression.Operators.And => new OperatorAnd(leftExpr, rightExpr),
+                    BinOpExpression.Operators.Or => new OperatorOr(leftExpr, rightExpr),
+                    BinOpExpression.Operators.BitwiseAnd => new OperatorBitwiseAnd(leftExpr, rightExpr),
+                    BinOpExpression.Operators.BitwiseOr => new OperatorBitwiseOr(leftExpr, rightExpr),
+                    BinOpExpression.Operators.Add => new OperatorAdd(leftExpr, rightExpr),
+                    BinOpExpression.Operators.Sub => new OperatorSub(leftExpr, rightExpr),
+                    BinOpExpression.Operators.Mul => new OperatorMul(leftExpr, rightExpr),
+                    BinOpExpression.Operators.Div => new OperatorDiv(leftExpr, rightExpr),
+                    BinOpExpression.Operators.DivFloat => new OperatorDivFloat(leftExpr, rightExpr),
+                    BinOpExpression.Operators.Modulo => new OperatorModulo(leftExpr, rightExpr),
+                    BinOpExpression.Operators.Lt => new OperatorLt(leftExpr, rightExpr),
+                    BinOpExpression.Operators.Gt => new OperatorGt(leftExpr, rightExpr),
+                    BinOpExpression.Operators.Eq => new OperatorEq(leftExpr, rightExpr),
+                    BinOpExpression.Operators.Ne => new OperatorNe(leftExpr, rightExpr),
+                    BinOpExpression.Operators.Ge => new OperatorGte(leftExpr, rightExpr),
+                    BinOpExpression.Operators.Le => new OperatorLte(leftExpr, rightExpr),
+                    _ => null
+                };
+
+                if (condition is null) {
+                    NotificationHelper.Notify($"Unknown operator: {binExpr.Operator}");
+                    return false;
+                }
+
+                return true;
+            }
+            case FieldAccessExpression { Name: var fieldName, ObjectExpression: var objectExpression }: {
+                if (!TryCreate(objectExpression, ctx, out var objExpr)) {
+                    condition = null;
+                    return false;
+                }
+
+                condition = FieldAccessCommands.Create(fieldName, objExpr, ctx);
+                return true;
+            }
         }
 
-        if (expr is { Left: { } left, Right: { } right }) {
-            if (!TryCreate(left, ctx, out var leftExpr)) {
-                condition = null;
-                return false;
-            }
-            if (!TryCreate(right, ctx, out var rightExpr)) {
-                condition = null;
-                return false;
-            }
-
-            condition = expr.Operator switch {
-                "&&" => new OperatorAnd(leftExpr, rightExpr),
-                "||" => new OperatorOr(leftExpr, rightExpr),
-                "&" => new OperatorBitwiseAnd(leftExpr, rightExpr),
-                "|" => new OperatorBitwiseOr(leftExpr, rightExpr),
-                "+" => new OperatorAdd(leftExpr, rightExpr),
-                "-" => new OperatorSub(leftExpr, rightExpr),
-                "*" => new OperatorMul(leftExpr, rightExpr),
-                "/" => new OperatorDiv(leftExpr, rightExpr),
-                "//" => new OperatorDivFloat(leftExpr, rightExpr),
-                "%" => new OperatorModulo(leftExpr, rightExpr),
-                "<" => new OperatorLt(leftExpr, rightExpr),
-                ">" => new OperatorGt(leftExpr, rightExpr),
-                "==" => new OperatorEq(leftExpr, rightExpr),
-                "!=" => new OperatorNe(leftExpr, rightExpr),
-                ">=" => new OperatorGte(leftExpr, rightExpr),
-                "<=" => new OperatorLte(leftExpr, rightExpr),
-                _ => null
-            };
-
-            if (condition is null) {
-                NotificationHelper.Notify($"Unknown operator: {expr.Operator}");
-                return false;
-            }
-
-            return true;
-        }
-        
         NotificationHelper.Notify($"Couldn't parse: {expr}");
         condition = null;
         return false;
+    }
+
+    private sealed class StringInterpolationOperator(List<Condition> args) : Condition {
+        private readonly StringBuilder _stringBuilder = new();
+        
+        public override object Get(Session session, object? userdata) {
+            var builder = _stringBuilder;
+            
+            foreach (var arg in args) {
+                var obj = arg.Get(session, userdata);
+                if (obj is string str)
+                    builder.Append(str);
+                else
+                    builder.Append(CultureInfo.InvariantCulture, $"{obj}");
+            }
+            
+            var ret = builder.ToString();
+            builder.Clear();
+            return ret;
+        }
+
+        protected internal override Type ReturnType => typeof(string);
+
+        protected override IEnumerable<object> GetArgsForDebugPrint() => args;
     }
 
     private sealed class OperatorAnd(Condition a, Condition b) : Condition {
@@ -224,16 +291,40 @@ public static class ConditionHelper {
         protected override object Perform<T>(T a, T b) {
             return a + b;
         }
+
+        protected override object Perform(Vector2 a, float b) {
+            return new Vector2(a.X + b, a.Y + b);
+        }
+
+        protected override object Perform(Vector2 a, Vector2 b) {
+            return a + b;
+        }
     }
     
     private sealed class OperatorSub(Condition a, Condition b) : MathOperator(a, b) {
         protected override object Perform<T>(T a, T b) {
             return a - b;
         }
+        
+        protected override object Perform(Vector2 a, float b) {
+            return new Vector2(a.X - b, a.Y - b);
+        }
+
+        protected override object Perform(Vector2 a, Vector2 b) {
+            return a - b;
+        }
     }
     
     private sealed class OperatorMul(Condition a, Condition b) : MathOperator(a, b) {
         protected override object Perform<T>(T a, T b) {
+            return a * b;
+        }
+        
+        protected override object Perform(Vector2 a, float b) {
+            return a * b;
+        }
+
+        protected override object Perform(Vector2 a, Vector2 b) {
             return a * b;
         }
     }
@@ -243,6 +334,14 @@ public static class ConditionHelper {
             if (T.IsZero(b)) {
                 return T.Zero;
             }
+            return a / b;
+        }
+        
+        protected override object Perform(Vector2 a, float b) {
+            return a / b;
+        }
+
+        protected override object Perform(Vector2 a, Vector2 b) {
             return a / b;
         }
     }
@@ -255,13 +354,34 @@ public static class ConditionHelper {
             
             return float.CreateTruncating(a) / float.CreateTruncating(b);
         }
+        
+        protected override object Perform(Vector2 a, float b) {
+            return a / b;
+        }
 
-        protected internal override Type ReturnType => typeof(float);
+        protected override object Perform(Vector2 a, Vector2 b) {
+            return a / b;
+        }
+
+        protected internal override Type? ReturnType {
+            get {
+                var def = base.ReturnType;
+                return def == typeof(int) ? typeof(float) : def;
+            }
+        }
     }
     
     private sealed class OperatorModulo(Condition a, Condition b) : MathOperator(a, b) {
         protected override object Perform<T>(T a, T b) {
             return a % b;
+        }
+        
+        protected override object Perform(Vector2 a, float b) {
+            return new Vector2(a.X % b, a.Y % b);
+        }
+
+        protected override object Perform(Vector2 a, Vector2 b) {
+            return new Vector2(a.X % b.X, a.Y % b.Y);
         }
     }
     
@@ -308,6 +428,7 @@ public static class ConditionHelper {
             return (a, b) switch {
                 (int ai, int bi) => Compare(ai, bi),
                 (float ai, float bi) => Compare(ai, bi),
+                (string ai, string bi) => ai == bi,
                 _ => LogIncomparableTypes(a, b)
             };
         }
@@ -322,11 +443,20 @@ public static class ConditionHelper {
 
     private abstract class MathOperator(Condition condA, Condition condB) : BinaryOperator(condA, condB) {
         protected abstract object Perform<T>(T a, T b) where T : INumber<T>;
+        
+        protected abstract object Perform(Vector2 a, float b);
+        
+        protected abstract object Perform(Vector2 a, Vector2 b);
 
         protected override object Operate(object a, object b) {
             return (a, b) switch {
                 (int ai, int bi) => Perform(ai, bi),
                 (float ai, float bi) => Perform(ai, bi),
+                (float bi, Vector2 v2) => Perform(v2, bi),
+                (int bi, Vector2 v2) => Perform(v2, bi),
+                (Vector2 v2, int bi) => Perform(v2, bi),
+                (Vector2 v2, float bi) => Perform(v2, bi),
+                (Vector2 v2, Vector2 bi) => Perform(v2, bi),
                 _ => LogIncomparableTypes(a, b)
             };
         }
@@ -348,6 +478,8 @@ public static class ConditionHelper {
                 return typeof(float);
             if (a == typeof(float) && b == typeof(int))
                 return typeof(float);
+            if (a == typeof(Vector2) && (b == typeof(int) || b == typeof(float)))
+                return typeof(Vector2);
             return null;
         }
     }
@@ -402,7 +534,9 @@ public static class ConditionHelper {
     }
     
     private sealed class ConstFloat(float x) : Condition {
-        public override object Get(Session session, object? userdata) => x;
+        private readonly object _boxed = x;
+        
+        public override object Get(Session session, object? userdata) => _boxed;
         
         public override bool OnlyChecksFlags() => true;
         
@@ -410,23 +544,37 @@ public static class ConditionHelper {
 
         protected override IEnumerable<object> GetArgsForDebugPrint() => [x];
     }
+    
+    private sealed class ConstString(string x) : Condition {
+        public string Value => x;
+        
+        public override object Get(Session session, object? userdata) => x;
+        
+        public override bool OnlyChecksFlags() => true;
+        
+        protected internal override Type ReturnType => typeof(string);
 
-    private sealed class FlagAccessor(string name, bool inverted) : Condition, IInvertible {
-        public string Flag => name;
+        protected override IEnumerable<object> GetArgsForDebugPrint() => [x];
+    }
+
+    private sealed class FlagAccessor(Condition nameCond, bool inverted) : Condition, IInvertible {
+        public string? Flag => nameCond is ConstString c ? c.Value : null;
+        
         public bool Inverted => inverted;
         
         public override bool OnlyChecksFlags() => true;
         
         protected internal override Type ReturnType => typeof(int);
 
-        protected override IEnumerable<object> GetArgsForDebugPrint() => [Inverted ? $"!{name}" : name];
+        protected override IEnumerable<object> GetArgsForDebugPrint() => [Inverted ? $"!{Flag ?? nameCond.ToString()}" : Flag ?? nameCond.ToString()];
         
         public Condition CreateInverted() {
-            return new FlagAccessor(Flag, !Inverted);
+            return new FlagAccessor(nameCond, !Inverted);
         }
         
         public override object Get(Session session, object? userdata) {
-            return session.GetFlag(name) != inverted ? 1 : 0;
+            var flag = Flag ?? nameCond.GetString(session, userdata);
+            return session.GetFlag(flag) != inverted ? One : Zero;
         }
     }
 
@@ -437,7 +585,7 @@ public static class ConditionHelper {
         public override object Get(Session session, object? userdata) {
             _invoker ??= prop.GetGetMethod()!.GetFastInvoker();
             
-            return _invoker(target) ?? 0;
+            return _invoker(target) ?? Zero;
         }
 
         public override bool OnlyChecksFlags() => false;
@@ -467,7 +615,17 @@ public static class ConditionHelper {
             return slider.Value;
         }
 
-        public override bool OnlyChecksFlags() => false;
+        protected internal override Type ReturnType => typeof(float);
+    }
+    
+    private sealed class IndirectSliderAccessor(Condition nameCond) : Condition {
+        public override object Get(Session session, object? userdata) {
+            var name = nameCond.GetString(session, userdata);
+            
+            return session.GetSlider(name);
+        }
+        
+        protected internal override Type ReturnType => typeof(float);
     }
     
     private sealed class CounterAccessor(string name) : Condition {
@@ -485,17 +643,27 @@ public static class ConditionHelper {
             
             return _valueCounter.Value;
         }
-        
-        public override bool OnlyChecksFlags() => false;
 
         protected internal override Type ReturnType => typeof(int);
 
         protected override IEnumerable<object> GetArgsForDebugPrint() => [name];
     }
     
+    private sealed class IndirectCounterAccessor(Condition nameCond) : Condition {
+        public override object Get(Session session, object? userdata) {
+            var name = nameCond.GetString(session, userdata);
+            
+            return session.GetCounter(name);
+        }
+
+        protected internal override Type ReturnType => typeof(int);
+
+        protected override IEnumerable<object> GetArgsForDebugPrint() => [nameCond];
+    }
+    
     private sealed class Empty : Condition {
         public override object Get(Session session, object? userdata) {
-            return 1;
+            return One;
         }
 
         public override bool OnlyChecksFlags() => true;
@@ -506,6 +674,9 @@ public static class ConditionHelper {
     }
 
     public abstract class Condition : ISavestatePersisted {
+        internal static readonly object One = 1;
+        internal static readonly object Zero = 0;
+        
         public abstract object Get(Session session, object? userdata);
 
         protected virtual IEnumerable<object> GetArgsForDebugPrint() => [];
@@ -542,6 +713,17 @@ public static class ConditionHelper {
             NotificationHelper.Notify($"Can't convert Session Expression value '{obj}' [{obj?.GetType().Name ?? "null"}] to {typeof(T).Name}.\nReturning 0!");
             return T.Zero;
         }
+
+        internal string GetString(Session session, object? userdata = null) {
+            var obj = Get(session, userdata);
+            if (obj is string str)
+                return str;
+            
+            if (obj is IFormattable f)
+                return f.ToString(null, CultureInfo.InvariantCulture);
+
+            return obj.ToString() ?? "";
+        }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Check(object? userdata = null) => Check(FrostModule.GetCurrentLevel().Session, userdata);
@@ -552,7 +734,7 @@ public static class ConditionHelper {
         public bool Empty => this is Empty;
 
         public bool IsSimpleFlagCheck([NotNullWhen(true)] out string? checkedFlag) {
-            if (this is FlagAccessor { Inverted: false } f) {
+            if (this is FlagAccessor { Inverted: false, Flag: not null } f) {
                 checkedFlag = f.Flag;
                 return true;
             }
@@ -617,7 +799,7 @@ public static class ConditionHelper {
                     break;
                 case string str:
                     if (TryCreate(str, ctx, out condition)) {
-                        dict[name] = condition; // cache the parsed condition
+                       // dict[name] = condition; // cache the parsed condition
                     }
                     break;
             }

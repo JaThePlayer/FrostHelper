@@ -2,6 +2,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using static FrostHelper.Helpers.ConditionHelper;
+using Vector2 = Microsoft.Xna.Framework.Vector2;
 
 namespace FrostHelper.SessionExpressions;
 
@@ -18,6 +19,10 @@ internal static class FunctionCommands {
         ["sin"] = PureMathCondition.TryCreateFloat<SinFunc>,
         ["cos"] = PureMathCondition.TryCreateFloat<CosFunc>,
         ["tan"] = PureMathCondition.TryCreateFloat<TanFunc>,
+        ["dialog"] = DialogCondition.TryCreate,
+        ["truncate"] = PureMathCondition.TryCreateFloat<TruncateFunc>,
+        ["round"] = PureMathCondition.TryCreateFloat<RoundFunc>,
+        ["vec"] = VecCondition.TryCreate,
     };
 
     public static void Register(string modName, string cmdName, Func<Session, object?, IReadOnlyList<object>, object> func) {
@@ -81,6 +86,14 @@ internal static class FunctionCommands {
     
     private struct TanFunc : IPureMathFunc<float> {
         public static object Get(float x) => float.Tan(x);
+    }
+    
+    private struct TruncateFunc : IPureMathFunc<float> {
+        public static object Get(float x) => float.Truncate(x);
+    }
+    
+    private struct RoundFunc : IPureMathFunc<float> {
+        public static object Get(float x) => float.Round(x);
     }
     
     private struct AbsFunc<T> : IPureMathFunc<T> where T : struct, INumber<T> {
@@ -187,6 +200,22 @@ internal static class FunctionCommands {
         }
     }
     
+    private sealed class VecCondition(Condition x, Condition y) : FunctionCondition(x, y) {
+        protected internal override Type ReturnType => typeof(Vector2);
+
+        public override object Get(Session session, object? userdata) {
+            return new Vector2(x.GetFloat(session, userdata), y.GetFloat(session, userdata));
+        }
+        
+        public static bool TryCreate(IReadOnlyList<Condition> args, [NotNullWhen(true)] out Condition? condition, [NotNullWhen(false)] out string? errorMessage) {
+            if (args is not [var x, var y]) {
+                return ArgumentAmtMismatch(args.Count, 2, out condition, out errorMessage);
+            }
+
+            return Ok(new VecCondition(x, y), out condition, out errorMessage);
+        }
+    }
+    
     private sealed class ClampCondition {
         public static bool TryCreate(IReadOnlyList<Condition> args, [NotNullWhen(true)] out Condition? condition, [NotNullWhen(false)] out string? errorMessage) {
             if (args is not [var x, var min, var max]) {
@@ -211,6 +240,24 @@ internal static class FunctionCommands {
                 return T.Clamp(xVal, minVal, maxVal);
             }
         }
+    }
+
+    private sealed class DialogCondition(Condition key) : FunctionCondition(key) {
+        public static bool TryCreate(IReadOnlyList<Condition> args, [NotNullWhen(true)] out Condition? condition, [NotNullWhen(false)] out string? errorMessage) {
+            if (args is not [var x]) {
+                return TooFewArgs(args.Count, 1, out condition, out errorMessage);
+            }
+            
+            return Ok(new DialogCondition(x), out condition, out errorMessage);
+        }
+
+        public override object Get(Session session, object? userdata) {
+            var name = key.GetString(session, userdata);
+
+            return Dialog.Clean(name);
+        }
+
+        protected internal override Type ReturnType => typeof(string);
     }
     
     internal abstract class FunctionCondition : Condition {

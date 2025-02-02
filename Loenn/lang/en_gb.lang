@@ -73,6 +73,8 @@ entities.FrostHelper/CustomFireBarrier.attributes.description.surfaceColor=Hex c
 entities.FrostHelper/CustomFireBarrier.attributes.description.edgeColor=Hex color used for the edges of this barrier.
 entities.FrostHelper/CustomFireBarrier.attributes.description.centerColor=Hex color used for the center of this barrier.
 entities.FrostHelper/CustomFireBarrier.attributes.description.silent=Whether the barrier should never make sound.
+entities.FrostHelper/CustomFireBarrier.attributes.description.canCollide=Whether this entity can be collided with in any way.\nDisable for decorative barriers.
+entities.FrostHelper/CustomFireBarrier.attributes.description.hasSolid=If `Can Collide` is set, determines whether this barrier should act as a solid block,\nallowing non-player entities to interact with it,\nand allowing for walljumping from the barrier.
 
 # Rainbow Fire Barrier
 entities.FrostHelper/RainbowFireBarrier.placements.name.default=Rainbow Fire Barrier
@@ -107,7 +109,8 @@ entities.FrostHelper/IceSpinner.attributes.description.borderColor=Hex color to 
 entities.FrostHelper/IceSpinner.attributes.description.destroyColor=Hex color to use for particles which appear when the spinner is destroyed.
 entities.FrostHelper/IceSpinner.attributes.description.attachToSolid=Whether this spinner should attach to solid entities.
 entities.FrostHelper/IceSpinner.attributes.description.moveWithWind=Whether this spinner should move with wind. Cursed
-entities.FrostHelper/IceSpinner.attributes.description.dashThrough=Whether it's possible to dash through this spinner without dying.
+entities.FrostHelper/IceSpinner.attributes.description.dashThrough=Determines what happens when the player dashes into this spinner.\nKill - Kills the player (default)\nPassThrough - Does not kill the player, allowing the spinner to be dashed through.\nShatter - Shatters this spinner\nShatterGroup - Shatters all spinnners with the same Attach Group.
+entities.FrostHelper/IceSpinner.attributes.description.onHoldable=Determines what happens when a holdable collides with this spinner.\nPassThrough - Nothing (default)\nShatter - Shatters this spinner\nShatterGroup - Shatters all spinners with the same Attach Group.
 entities.FrostHelper/IceSpinner.attributes.description.bloomAlpha=If not zero, determines the alpha value for the bloom point of this spinner
 entities.FrostHelper/IceSpinner.attributes.description.bloomRadius=The radius of the bloom point of this spinner.
 entities.FrostHelper/IceSpinner.attributes.description.spritePathSuffix=The suffix to add to the path of all sprite images.\nIGNORED if 'directory' contains a '>'. Refer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Custom-Spinners
@@ -121,6 +124,31 @@ entities.FrostHelper/IceSpinner.attributes.description.scale=Scale applied to th
 entities.FrostHelper/IceSpinner.attributes.description.imageScale=Scale applied to the images for this spinner, useful for creating bigger spinners with existing, smaller sprites.
 entities.FrostHelper/IceSpinner.attributes.description.hitbox=Controls the hitbox for this entity.\nRefer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Custom-Colliders
 entities.FrostHelper/IceSpinner.attributes.description.depth=Depth at which this spinner gets rendered.\nWarning: Using too many different depths of spinners in the same room can cause performance issues.
+
+entities.FrostHelper/TriggerSpinner.placements.name.default=Trigger Spinner
+entities.FrostHelper/TriggerSpinner.placements.description.default=A Custom Spinner, which acts like a Trigger Spike.
+entities.FrostHelper/TriggerSpinner.attributes.description.directory=Path relative to Atlases/Gameplay to the directory containing the sprites for the spinner when it hasn't been activated yet.\nAnimations are supported with very specific file structure.\nRefer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Custom-Spinners
+entities.FrostHelper/TriggerSpinner.attributes.name.directory=Off Directory
+entities.FrostHelper/TriggerSpinner.attributes.description.onDirectory=Path relative to Atlases/Gameplay to the directory containing the sprites for the spinner after it has been activated.\nAnimations are supported with very specific file structure.\nRefer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Custom-Spinners
+entities.FrostHelper/TriggerSpinner.attributes.description.tint=Hex color to use to tint the sprites.
+entities.FrostHelper/TriggerSpinner.attributes.description.borderColor=Hex color to use to render the borders.
+entities.FrostHelper/TriggerSpinner.attributes.description.destroyColor=Hex color to use for particles which appear when the spinner is destroyed.
+entities.FrostHelper/TriggerSpinner.attributes.description.attachToSolid=Whether this spinner should attach to solid entities.
+entities.FrostHelper/TriggerSpinner.attributes.description.dashThrough=Determines what happens when the player dashes into this spinner when its been activated already.\nKill - Kills the player (default)\nPassThrough - Does not kill the player, allowing the spinner to be dashed through.\nShatter - Shatters this spinner\nShatterGroup - Shatters all spinnners with the same Attach Group.
+entities.FrostHelper/TriggerSpinner.attributes.description.onHoldable=Determines what happens when a holdable collides with this spinner when its been activated already.\nPassThrough - Nothing (default)\nShatter - Shatters this spinner\nShatterGroup - Shatters all spinners with the same Attach Group.
+entities.FrostHelper/TriggerSpinner.attributes.description.bloomAlpha=If not zero, determines the alpha value for the bloom point of this spinner
+entities.FrostHelper/TriggerSpinner.attributes.description.bloomRadius=The radius of the bloom point of this spinner.
+entities.FrostHelper/TriggerSpinner.attributes.description.rainbow=Whether this spinner is rainbow. Supports Maddie's Helping Hand's rainbow spinner controller.
+entities.FrostHelper/TriggerSpinner.attributes.description.collidable=Whether it's possible to collide with this spinner.
+entities.FrostHelper/TriggerSpinner.attributes.description.renderOutline=Whether this spinner should render its outline.
+entities.FrostHelper/TriggerSpinner.attributes.description.attachGroup=The group that this entity is in. All entities with the same attach group will be attached to the same solid.
+entities.FrostHelper/TriggerSpinner.attributes.description.debrisCount=The amount of debris created when this spinner is destroyed\nHigh values can cause huge lag!
+entities.FrostHelper/TriggerSpinner.attributes.description.singleFGImage=Use a single FG image, even if the spinner is partially in a wall. Improves performance, but can cause visual differences.
+entities.FrostHelper/TriggerSpinner.attributes.description.scale=Scale applied to the hitbox, useful for making larger/smaller spinners.\nDoes NOT scale sprites.
+entities.FrostHelper/TriggerSpinner.attributes.description.imageScale=Scale applied to the images for this spinner, useful for creating bigger spinners with existing, smaller sprites.
+entities.FrostHelper/TriggerSpinner.attributes.description.hitbox=Controls the hitbox for this entity.\nRefer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Custom-Colliders
+entities.FrostHelper/TriggerSpinner.attributes.description.depth=Depth at which this spinner gets rendered.\nWarning: Using too many different depths of spinners in the same room can cause performance issues.
+entities.FrostHelper/TriggerSpinner.attributes.description.delay=How long (in seconds) it takes before the spinner becomes collideable after the player touches it.
 
 FrostHelper.paths.customSpinner.danger/crystal>_white=Vanilla White
 FrostHelper.paths.customSpinner.danger/crystal>_red=Vanilla Red
@@ -907,7 +935,8 @@ triggers.FrostHelper/TimerChange.attributes.description.timeChange=The amount of
 triggers.FrostHelper/TimerChange.attributes.description.operation=Determines which operation should be used.\nAdd - increases the timer by Time Change.\nSet - sets the timer to Time Change.
 triggers.FrostHelper/TimerChange.attributes.description.oneUse=Whether the trigger should be one-use.
 
-triggers.FrostHelper/LightningBaseColorTrigger.placements.name.default=Darkness Base Color
+triggers.FrostHelper/LightingBaseColorTrigger.placements.name.default=Darkness Base Color
+triggers.FrostHelper/LightingBaseColorTrigger.attributes.description.color=The new color to use.
 triggers.FrostHelper/LightningBaseColorTrigger.attributes.description.color=The new color to use.
 
 triggers.FrostHelper/StylegroundBlendModeTrigger.placements.name.default=Styleground Blend Mode Change
@@ -952,6 +981,26 @@ triggers.FrostHelper/FlashlightColorTrigger.placements.name.default=Player Flash
 triggers.FrostHelper/FlashlightColorTrigger.attributes.description.color=Hex/XNA color to use for the players's flashlight. "Transparent" means that the flashlight is disabled.
 triggers.FrostHelper/FlashlightColorTrigger.attributes.description.time=How long the color change should last for.
 triggers.FrostHelper/FlashlightColorTrigger.attributes.description.persistent=Whether the color change should persist between deaths.
+
+triggers.FrostHelper/ChangeSpinnersTrigger.placements.name.default=Change Spinners
+triggers.FrostHelper/ChangeSpinnersTrigger.placements.description.default=Edits Frost Helper Spinners in the room, based on a Session Expression filter.\nCan optionally have a node pointing at another Change/Shatter Spinners trigger to create a chain of edits.
+triggers.FrostHelper/ChangeSpinnersTrigger.attributes.description.filter=Session Expression which determines whether a spinner should be changed.\nRan on each spinner every time this trigger gets activated.\nOn top of usual Session Expression commands, these are also available:\n$attachGroup - This spinner's attach group, int.\n$directory - The current directory of this spinner, as provided in a map editor.\n$origDirectory - Same as $directory, but always returns the directory set on the spinner initially, before any Change Spinner triggers.\n$playerDist - Current distance of this spinner from the player, float.\n$playerCollides - Whether the player collides with this spinner (works even if the spinner is uncollideable currently)\n$animFrame - If this spinner is animated, returns the current animation frame as an int.\n\nExample:\n$directory=="danger/triggerSpinner>_off!" && $playerCollides  - can be used to imitate Trigger Spinners.
+triggers.FrostHelper/ChangeSpinnersTrigger.attributes.description.cacheFilter=Same as `Filter`, but runs *once*, on room load.\nOnly spinners which matched this filter on room load will be checked by this trigger,\nwhich can be useful for lag reduction if you plan on activating this trigger each frame.
+triggers.FrostHelper/ChangeSpinnersTrigger.attributes.description.oncePerSpinner=If enabled, this trigger will only change a given spinner once.
+triggers.FrostHelper/ChangeSpinnersTrigger.attributes.description.newDirectory=If not blank, changes the Directory of the spinner to this new one.\nFor animations to work correctly, the original directory should be animated as well.
+triggers.FrostHelper/ChangeSpinnersTrigger.attributes.description.animationBehavior=If `New Directory` is not blank, determines how to affect animated spinners when their directory changes.\nLeaveUnchanged - The animation will continue from the same frame (assuming frame counts are the same between directories).\nReset - The animation will reset, and take into account the `RandomizeStartFrame` option of the new animation's fhAnimation.yaml file.
+triggers.FrostHelper/ChangeSpinnersTrigger.attributes.description.newCollidable=If not `LeaveUnchanged`, makes the spinner collidable or not.
+triggers.FrostHelper/ChangeSpinnersTrigger.attributes.description.newRainbow=If not `LeaveUnchanged`, makes the spinner rainbow or not.
+triggers.FrostHelper/ChangeSpinnersTrigger.attributes.description.newTint=If not blank, changes the spinner's Tint.
+triggers.FrostHelper/ChangeSpinnersTrigger.attributes.description.newBorderColor=If not blank, changes the spinner's Border Color.
+triggers.FrostHelper/ChangeSpinnersTrigger.attributes.description.newDashThrough=If not `LeaveUnchanged`, changes the spinner's Dash Through.
+triggers.FrostHelper/ChangeSpinnersTrigger.attributes.description.newOnHoldable=If not `LeaveUnchanged`, changes the spinner's On Holdable.
+triggers.FrostHelper/ChangeSpinnersTrigger.attributes.description.nextTriggerDelay=If this trigger has a node pointing at another Change Spinners trigger,\nthat trigger will get get activated after this delay,\nand it will attempt to change the spinner that got changed by this trigger.\nFor example, this trigger could start playing an animation,\nthen point to another Change Spinners trigger to make that spinner collideable after a delay,\nimitating Trigger Spikes.
+
+triggers.FrostHelper/ShatterSpinnersTrigger.placements.name.default=Shatter Custom Spinners
+triggers.FrostHelper/ShatterSpinnersTrigger.placements.description.default=Shatters Frost Helper Spinners in the room, based on a Session Expression filter.\nCan optionally be activated by a Change Spinners trigger to create a chain of edits.
+triggers.FrostHelper/ShatterSpinnersTrigger.attributes.description.filter=Session Expression which determines whether a spinner should be shattered.\n\nRan on each spinner every time this trigger gets activated.\nOn top of usual Session Expression commands, these are also available:\n$attachGroup - This spinner's attach group, int.\n$directory - The current directory of this spinner, as provided in a map editor.\n$origDirectory - Same as $directory, but always returns the directory set on the spinner initially, before any Change Spinner triggers.\n$playerDist - Current distance of this spinner from the player, float.\n$playerCollides - Whether the player collides with this spinner (works even if the spinner is uncollideable currently)\n$animFrame - If this spinner is animated, returns the current animation frame as an int.\n\nExample:\n$directory=="danger/triggerSpinner>_off!" && $playerCollides  - can be used to imitate Trigger Spinners.
+triggers.FrostHelper/ShatterSpinnersTrigger.attributes.description.cacheFilter=Same as `Filter`, but runs *once*, on room load.\nOnly spinners which matched this filter on room load will be checked by this trigger,\nwhich can be useful for lag reduction if you plan on activating this trigger each frame.
 
 # effects
 style.effects.FrostHelper/ShaderWrapper.name=Shader Wrapper

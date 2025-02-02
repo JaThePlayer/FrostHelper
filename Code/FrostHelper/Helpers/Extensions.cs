@@ -20,6 +20,28 @@ public static class Extensions {
     public static Color GetColor(this EntityData data, string key, string defHexCode) {
         return ColorHelper.GetColor(data.Attr(key, defHexCode ?? "White"));
     }
+    
+    public static Color? GetColorNullable(this EntityData data, string key, string defHexCode = "") {
+        var str = data.Attr(key, defHexCode ?? "");
+        if (string.IsNullOrWhiteSpace(str))
+            return null;
+        
+        return ColorHelper.GetColor(str);
+    }
+    
+    public static int? GetIntNullable(this EntityData data, string key, int? def = null) {
+        if (data.Values?.TryGetValue(key, out var obj) is not true)
+            return def;
+        
+        if (obj is int num)
+            return num;
+        
+        if (int.TryParse(obj.ToString(), NumberStyles.Integer, CultureInfo.InvariantCulture, out int result))
+            return result;
+        
+        return def;
+    }
+    
     public static Color[] GetColors(this EntityData data, string key, Color[] def) {
         return ColorHelper.GetColors(data.Attr(key, "")) ?? def;
     }

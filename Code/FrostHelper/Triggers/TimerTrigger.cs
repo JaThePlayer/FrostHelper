@@ -192,20 +192,31 @@ internal sealed class CounterDisplayEntity : BaseTimerEntity {
     
     private readonly CounterExpression _counter;
     
-    private float _lastValue = 0;
+    private object _lastValue = 0;
     private string _lastValueStr = "0";
 
     protected override string GetText() {
         if (Scene is Level level) {
-            var value = _counter.GetFloat(level.Session);
-            if (value == _lastValue)
+            var valueObj = _counter.GetObject(level.Session);
+            if (valueObj == _lastValue)
                 return _lastValueStr;
 
-            _lastValue = value;
-            value = float.Round(value, 4);
-            _lastValueStr = float.IsInteger(value) 
-                ? ((int)value).ToString(CultureInfo.InvariantCulture)
-                : value.ToString(CultureInfo.InvariantCulture);
+            _lastValue = valueObj;
+
+            if (valueObj is int i)
+                valueObj = (float)i;
+            
+            if (valueObj is float value)
+            {
+                value = float.Round(value, 4);
+                _lastValueStr = float.IsInteger(value) 
+                    ? ((int)value).ToString(CultureInfo.InvariantCulture)
+                    : value.ToString(CultureInfo.InvariantCulture);
+            } else {
+                _lastValueStr = valueObj.ToString()!;
+            }
+            
+
             return _lastValueStr;
         }
 

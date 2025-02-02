@@ -11,13 +11,11 @@ internal sealed class FlagInvertTrigger : Trigger {
     public override void OnEnter(Player player) {
         base.OnEnter(player);
 
-        if (player.Scene is not Level level)
+        if (Scene is not Level level)
             return;
         
-        var flags = level.Session.Flags;
         var toChange = Flag;
 
-        if (!flags.Add(toChange))
-            flags.Remove(toChange);
+        level.Session.SetFlag(toChange, !level.Session.GetFlag(toChange));
     }
 }

@@ -8,6 +8,7 @@ public class CustomFireBarrier : Entity {
     public bool IgnoreCoreMode;
     
     private readonly bool CanBeCollidable;
+    private readonly bool HasSolid;
 
     internal readonly CustomLavaRect Lava;
     
@@ -16,6 +17,7 @@ public class CustomFireBarrier : Entity {
         float height = data.Height;
         IsIce = data.Bool("isIce", false);
         CanBeCollidable = data.Bool("canCollide", true);
+        HasSolid = data.Bool("hasSolid", true);
         
         Tag = Tags.TransitionUpdate;
         IgnoreCoreMode = data.Bool("ignoreCoreMode", false);
@@ -77,13 +79,12 @@ public class CustomFireBarrier : Entity {
     public void SetCollidable() {
         if (IgnoreCoreMode) {
             Collidable = true;
-            return;
+        } else {
+            if (!IsIce)
+                Collidable = SceneAs<Level>().CoreMode == Session.CoreModes.Hot;
+            else
+                Collidable = SceneAs<Level>().CoreMode == Session.CoreModes.Cold;
         }
-
-        if (!IsIce)
-            Collidable = SceneAs<Level>().CoreMode == Session.CoreModes.Hot;
-        else
-            Collidable = SceneAs<Level>().CoreMode == Session.CoreModes.Cold;
         
         if (solid is { })
             solid.Collidable = Collidable;
@@ -91,7 +92,7 @@ public class CustomFireBarrier : Entity {
 
     public override void Added(Scene scene) {
         base.Added(scene);
-        if (CanBeCollidable)
+        if (CanBeCollidable && HasSolid)
             scene.Add(solid = new Solid(Position + new Vector2(2f, 3f), Width - 4f, Height - 5f, false));
         SetCollidable();
 

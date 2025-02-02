@@ -28,11 +28,37 @@ public static class ControllerHelper<T> where T : Entity {
         }
 
         var newController = factory();
-        newController.Add(new OnAwakeCallbackComponent(static () => _justAddedControllers.Clear()));
+        newController.Add(new OnAwakeCallbackComponent(() => _justAddedControllers.Remove(newController)));
         _justAddedControllers.Add(newController);
         scene.Add(newController);
 
         return newController;
+    }
+
+    internal static T? FindFirst(Scene scene, Func<T, bool> filter) {
+        foreach (T e in scene.Tracker.SafeGetEntities<T>()) {
+            if (filter(e))
+                return e;
+        }
+        foreach (T e in _justAddedControllers) {
+            if (filter(e))
+                return e;
+        }
+
+        return null;
+    }
+    
+    internal static T? FindFirst<TState>(Scene scene, TState state, Func<T, TState, bool> filter) {
+        foreach (T e in scene.Tracker.SafeGetEntities<T>()) {
+            if (filter(e, state))
+                return e;
+        }
+        foreach (T e in _justAddedControllers) {
+            if (filter(e, state))
+                return e;
+        }
+
+        return null;
     }
 }
 

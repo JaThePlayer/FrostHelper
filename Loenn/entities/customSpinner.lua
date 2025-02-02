@@ -7,40 +7,42 @@ local drawableSpriteStruct = require("structs.drawable_sprite")
 
 local fallback = mods.internalModContent .. "/missing_image"
 
-local spinner = {}
+local spinner = {
+    name = "FrostHelper/IceSpinner"
+}
+local triggerSpinner = {
+    name = "FrostHelper/TriggerSpinner"
+}
 
-spinner.name = "FrostHelper/IceSpinner"
+local collisionModes = {
+    "Kill",
+    "PassThrough",
+    "Shatter",
+    "ShatterGroup",
+}
+local collisionModesForHoldables = {
+    -- "Kill", - No way to consistently kill holdables
+    "PassThrough",
+    "Shatter",
+    "ShatterGroup",
+}
+
+local collisionModesForHoldables_Unactivated = {
+    -- "Kill", - No way to consistently kill holdables
+    "PassThrough",
+    "Activate",
+    "Shatter",
+    "ShatterGroup",
+}
+
 
 function spinner.depth(room, entity)
     return entity.depth or -8500
 end
+triggerSpinner.depth = spinner.depth
 
 jautils.createPlacementsPreserveOrder(spinner, "custom_spinner", {
-    { "directory", "danger/crystal>_white", "FrostHelper.texturePath", {
-        baseFolder = "danger",
-        pattern = "^(danger/.*)/fg(.-)%d+$",
-        captureConverter = function(dir, subdir)
-            local animationless = string.match(dir, "(.-)/%d%d$")
-            if animationless then
-                return animationless .. ">" .. subdir .. "!"
-            end
-
-            return dir .. ">" .. subdir
-        end,
-        displayConverter = function(dir, subdir)
-            dir = string.match(dir, "(.-)/%d%d$") or dir
-
-            local humanizedDir = utils.humanizeVariableName(string.match(dir, "^.*/(.*/hot)$") or string.match(dir, "^.*/(.*)$") or dir)
-            if subdir and #subdir > 0 then
-                return humanizedDir .. " (" .. utils.humanizeVariableName(subdir) .. ")"
-            end
-
-            return humanizedDir
-        end,
-        vanillaSprites = { "danger/crystal/fg_white00", "danger/crystal/fg_red00", "danger/crystal/fg_blue00", "danger/crystal/fg_purple00" },
-        langDir = "customSpinner",
-    }},
-    { "spritePathSuffix", "" },
+    { "directory", "danger/crystal>_white", "FrostHelper.texturePath", jautils.spinnerDirectoryFieldData },
     { "tint", "ffffff", "color" },
     { "borderColor", "000000", "color" },
     { "destroyColor", "b0eaff", "color" },
@@ -52,11 +54,35 @@ jautils.createPlacementsPreserveOrder(spinner, "custom_spinner", {
     { "scale", 1 },
     { "imageScale", 1 },
     { "depth", -8500, "depth" },
+    { "onHoldable", "PassThrough", collisionModesForHoldables },
+    { "dashThrough", "Kill", collisionModes }, -- Dash Through needs to be last, because it used to be a bool, and it will break the layout if its not last and uses the old bool value.
     { "attachToSolid", false },
-    { "dashThrough", false },
     { "rainbow", false },
     { "collidable", true },
     { "drawOutline", true },
+    { "singleFGImage", false }
+})
+
+jautils.createPlacementsPreserveOrder(triggerSpinner, "default", {
+    { "directory", "danger/FrostHelper/triggerSpinner>_off!", "FrostHelper.texturePath", jautils.spinnerDirectoryFieldData },
+    { "onDirectory", "danger/FrostHelper/triggerSpinner>_on!", "FrostHelper.texturePath", jautils.spinnerDirectoryFieldData },
+    { "delay", 0.3 },
+    { "hitbox", "C,6,0,0;R,16,4,-8,-3", "FrostHelper.collider"},
+    { "tint", "ffffff", "color" },
+    { "borderColor", "000000", "color" },
+    { "bloomAlpha", 0.0 },
+    { "bloomRadius", 0.0 },
+    { "destroyColor", "b0eaff", "color" },
+    { "debrisCount", 8, "integer" },
+    { "attachGroup", -1, "FrostHelper.attachGroup" },
+    { "scale", 1 },
+    { "imageScale", 1 },
+    { "depth", -8500, "depth" },
+    { "onHoldable", "PassThrough", collisionModesForHoldables },
+    { "unactivatedOnHoldable", "PassThrough", collisionModesForHoldables_Unactivated },
+    { "dashThrough", "Kill", collisionModes }, -- Dash Through needs to be last, because it used to be a bool, and it will break the layout if its not last and uses the old bool value.
+    { "attachToSolid", false },
+    { "rainbow", false },
     { "singleFGImage", false }
 })
 
@@ -159,9 +185,16 @@ function spinner.associatedMods(entity)
         return cache[4]
     end
 
-    cache[4] = { "FrostHelper", unpack(jautils.associatedModsFromSprite(fgSprite)) }
+    local associated = jautils.associatedModsFromSprite(fgSprite)
+    if associated[1] == "FrostHelper" then
+        cache[4] = associated
+        return cache[4]
+    end
+
+    cache[4] = { "FrostHelper", unpack(associated) }
     return cache[4]
 end
+triggerSpinner.associatedMods = spinner.associatedMods
 
 function spinner.sprite(room, entity)
     local color = utils.getColor(entity.tint or "ffffff")
@@ -203,10 +236,15 @@ function spinner.sprite(room, entity)
 
     return sprites
 end
+triggerSpinner.sprite = spinner.sprite
 
 function spinner.selection(room, entity)
     local scale = entity.scale or 1
     return utils.rectangle(entity.x - 8 * scale, entity.y - 8 * scale, 16 * scale, 16 * scale)
 end
+triggerSpinner.selection = spinner.selection
 
-return spinner
+return {
+    spinner,
+    triggerSpinner
+}

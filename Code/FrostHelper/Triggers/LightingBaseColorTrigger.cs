@@ -1,6 +1,6 @@
 ﻿namespace FrostHelper.Triggers;
 
-[CustomEntity("FrostHelper/LightningBaseColorTrigger")]
+[CustomEntity("FrostHelper/LightingBaseColorTrigger", "FrostHelper/LightningBaseColorTrigger")]
 public class LightingBaseColorTrigger : Trigger {
     public readonly Color Color;
     public bool Persistent;

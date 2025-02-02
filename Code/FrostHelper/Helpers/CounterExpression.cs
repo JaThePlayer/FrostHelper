@@ -34,6 +34,10 @@ internal sealed class CounterExpression {
         return (float?)_valueCounter?.Get(session) ?? _valueCondition?.GetFloat(session, userdata) ?? _value;
     }
 
+    public object GetObject(Session session, object? userdata = null) {
+        return (float?)_valueCounter?.Get(session) ?? _valueCondition?.Get(session, userdata) ?? _value;
+    }
+
     public ConditionHelper.Condition ToCondition() {
         if (_valueCondition is { })
             return _valueCondition;

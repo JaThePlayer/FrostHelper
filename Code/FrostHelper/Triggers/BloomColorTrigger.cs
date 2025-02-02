@@ -62,11 +62,20 @@ public class BloomColorPulseTrigger : Trigger {
 
             API.API.SetBloomColor(lerped);
         };
-        tween.OnComplete = (t) => {
-            //API.API.SetBloomColor(To);
-        };
+
         tween.Start();
-        Add(tween);
+        
+        var holder = ControllerHelper<PulseHolder>.AddToSceneIfNeeded(Scene);
+        holder.Add(tween);
+    }
+
+    [Tracked]
+    private sealed class PulseHolder : Entity {
+        public PulseHolder() {
+            Tag = Tags.Global;
+            Active = true;
+            Visible = false;
+        }
     }
 }
 

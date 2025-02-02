@@ -46,7 +46,9 @@ public class Icicle : Entity {
 
     // tbh I have no clue what's going on in here at this point
     private bool MoveVCheck(float amount) {
-        Level level = (Scene as Level)!;
+        if (Scene is not Level level)
+            return false;
+        
         if (!(amount < 0f && Top <= level.Bounds.Top)) {
             if (!(amount > 0f && Bottom >= level.Bounds.Bottom + 32)) {
                 for (int i = 1; i <= 4; i++) {
@@ -60,6 +62,7 @@ public class Icicle : Entity {
                             audio.setVolume(0.25f);
                             level.ParticlesFG.Emit(FinalBoss.P_Burst, 1, Center, Vector2.One * 4f, Color.WhiteSmoke);
                             RemoveSelf();
+                            return false;
                         }
                     }
                 }
