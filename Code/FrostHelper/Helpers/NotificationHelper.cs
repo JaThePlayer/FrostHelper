@@ -98,4 +98,25 @@ internal static class NotificationExt {
         
         return res;
     }
+
+    public static MTexture? GetWithNotif(this Atlas atlas, string key, string fallbackKey) {
+        var res = atlas.GetOrDefault(key, null);
+        if (res is null) {
+            if (key != "") // allow empty strings to use the fallback without a warning
+                NotificationHelper.Notify($"Failed to find texture: {atlas.RelativeDataPath}{key}");
+            res = atlas.GetOrDefault(fallbackKey, null);
+        }
+        
+        return res;
+    }
+    
+    public static MTexture GetWithNotif(this Atlas atlas, string key) {
+        var res = atlas.GetOrDefault(key, null);
+        if (res is null) {
+                NotificationHelper.Notify($"Failed to find texture: {atlas.RelativeDataPath}{key}");
+                res = atlas.GetFallback();
+        }
+        
+        return res;
+    }
 }

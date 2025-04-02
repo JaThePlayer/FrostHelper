@@ -19,7 +19,22 @@ end
 
 jautils.createPlacementsPreserveOrder(controller, "default", {
     { "counter", "", "sessionCounter" },
-    { "flags", "", "list" },
+    { "flags", "", "list", {
+        elementDefault = "",
+        elementOptions = {
+            fieldType = "FrostHelper.complexField",
+                separator = ";",
+                innerFields = {
+                    {
+                        name = "FrostHelper.fields.flagCounterController.flag",
+                    },
+                    {
+                        name = "FrostHelper.fields.flagCounterController.value",
+                        default = 1,
+                    },
+                }
+        },
+    }},
 })
 
 return controller

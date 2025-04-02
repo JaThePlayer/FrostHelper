@@ -1,3 +1,17 @@
+# Fields
+
+FrostHelper.fields.gradient.from=From
+FrostHelper.fields.gradient.from.tooltip=The starting color of this gradient fragment.
+FrostHelper.fields.gradient.to=To
+FrostHelper.fields.gradient.to.tooltip=The ending color of this gradient fragment.
+FrostHelper.fields.gradient.percent=Percent
+FrostHelper.fields.gradient.percent.tooltip=The percent of the screen this gradient fragment takes up.
+
+FrostHelper.fields.flagCounterController.flag=Condition
+FrostHelper.fields.flagCounterController.flag.tooltip=Condition that needs to be met for the Value to be added to the counter.\nSession expressions are supported, refer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Session-Expressions
+FrostHelper.fields.flagCounterController.value=Value
+FrostHelper.fields.flagCounterController.value.tooltip=Value added to the counter if the Condition is met.\nSession expressions are supported, refer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Session-Expressions
+
 # -- Entities --
 # entities.entityName.placements.*
 # entities.entityName.description.*
@@ -75,6 +89,34 @@ entities.FrostHelper/CustomFireBarrier.attributes.description.centerColor=Hex co
 entities.FrostHelper/CustomFireBarrier.attributes.description.silent=Whether the barrier should never make sound.
 entities.FrostHelper/CustomFireBarrier.attributes.description.canCollide=Whether this entity can be collided with in any way.\nDisable for decorative barriers.
 entities.FrostHelper/CustomFireBarrier.attributes.description.hasSolid=If `Can Collide` is set, determines whether this barrier should act as a solid block,\nallowing non-player entities to interact with it,\nand allowing for walljumping from the barrier.
+entities.FrostHelper/CustomFireBarrier.attributes.description.fade=Over how many pixels the barrier's edges should fade to the center color.\nCapped at half of the barrier's width or height, depending on the direction.
+
+entities.FrostHelper/CustomFireBarrier.attributes.description.waves=Configures the waves on the surface of the barrier.
+FrostHelper.fields.customFireBarrier.amplitude=Amplitude
+FrostHelper.fields.customFireBarrier.amplitude.tooltip=The amplitude of this sine wave.\nThe wave follows the formula: `Amplitude * sin(xPos * Length + time * Frequency + Phase)`
+FrostHelper.fields.customFireBarrier.waveNumber=Wave Number
+FrostHelper.fields.customFireBarrier.waveNumber.tooltip=The wave number (2pi/length) of this wave.\nThe wave follows the formula: `Amplitude * sin(xPos * WaveNumber + time * Frequency + Phase)`
+FrostHelper.fields.customFireBarrier.frequency=Frequency
+FrostHelper.fields.customFireBarrier.frequency.tooltip=The angular frequency of this sine wave.\nThe wave follows the formula: `Amplitude * sin(xPos * Length + time * Frequency + Phase)`
+FrostHelper.fields.customFireBarrier.phase=Phase
+FrostHelper.fields.customFireBarrier.phase.tooltip=The starting phase of this sine wave.\nThe wave follows the formula: `Amplitude * sin(xPos * Length + time * Frequency + Phase)`
+
+entities.FrostHelper/CustomFireBarrier.attributes.description.rainbow=Configures which parts of the barrier are rainbow.
+FrostHelper.fields.customFireBarrier.rainbow.surface=Surface
+FrostHelper.fields.customFireBarrier.rainbow.surface.tooltip=Makes the surfaces of the barrier rainbow.
+FrostHelper.fields.customFireBarrier.rainbow.edge=Edge
+FrostHelper.fields.customFireBarrier.rainbow.edge.tooltip=Makes the edges of the barrier rainbow.
+FrostHelper.fields.customFireBarrier.rainbow.bubble=Bubbles
+FrostHelper.fields.customFireBarrier.rainbow.bubble.tooltip=Makes the bubbles of the barrier rainbow.
+
+entities.FrostHelper/CustomFireBarrier.attributes.name.bubbleAmountMultiplier=Bubble Config
+entities.FrostHelper/CustomFireBarrier.attributes.description.bubbleAmountMultiplier=Configures bubbles inside this barrier, including their textures and amount.
+FrostHelper.fields.customFireBarrier.bubble.amountMultiplier=Amount Multiplier
+FrostHelper.fields.customFireBarrier.bubble.amountMultiplier.tooltip=Multiplies the number of bubbles in this barrier. Set to 0 to disable bubbles.
+FrostHelper.fields.customFireBarrier.bubble.path=Texture Paths
+FrostHelper.fields.customFireBarrier.bubble.path.tooltip=List of paths to the textures used for bubbles when they're inside the barrier, separated by ';'
+FrostHelper.fields.customFireBarrier.bubble.surfaceAnimations=Surface Animation Paths
+FrostHelper.fields.customFireBarrier.bubble.surfaceAnimations.tooltip=List of paths with animations to use for bubbles when they pop at the surface of the barrier, separated by ';'
 
 # Rainbow Fire Barrier
 entities.FrostHelper/RainbowFireBarrier.placements.name.default=Rainbow Fire Barrier

@@ -1,16 +1,68 @@
-﻿using System.Runtime.CompilerServices;
+﻿using FrostHelper.Helpers;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace FrostHelper;
 
 internal sealed class CustomLavaRect : Component {
+    internal struct WaveData {
+        private static readonly Dictionary<string, List<WaveData>> _parsedWaveCache = new();
+        
+        public float Amplitude, WaveNumber, Frequency, Phase;
+
+        public WaveData(float amplitude, float waveNumber, float frequency) {
+            Amplitude = amplitude;
+            WaveNumber = waveNumber;
+            Frequency = frequency;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public float Get(float val, float timer) {
+            return Sin(val * WaveNumber + timer * Frequency + Phase) * Amplitude;
+        }
+
+        public static List<WaveData> ParseWaves(string waves) {
+            ref var cachedRef = ref CollectionsMarshal.GetValueRefOrAddDefault(_parsedWaveCache, waves, out _);
+            if (cachedRef is {})
+                return cachedRef;
+
+            var parsed = new List<WaveData>();
+            var parser = new SpanParser(waves);
+            while (parser.SliceUntil(';').TryUnpack(out var waveParser)) {
+                WaveData waveData = default;
+
+                if (waveParser.ReadUntil<float>(',').TryUnpack(out waveData.Amplitude)
+                    && waveParser.ReadUntil<float>(',').TryUnpack(out waveData.WaveNumber)
+                    && waveParser.ReadUntil<float>(',').TryUnpack(out waveData.Frequency)
+                    && waveParser.Read<float>().TryUnpack(out waveData.Phase)) {
+                }
+                
+                parsed.Add(waveData);
+            }
+
+            cachedRef = parsed;
+
+            return parsed;
+        }
+    }
+
+    [Flags]
+    internal enum RainbowModes {
+        None = 0,
+        Surface = 1,
+        Edge = 2,
+        Bubble = 4,
+        
+        All = Surface | Edge | Bubble,
+    }
+
+    internal List<WaveData> Waves;
+    
     public Vector2 Position;
     public float Fade = 16f;
     public float Spikey;
     public OnlyModes OnlyMode;
     
-    public float SmallWaveAmplitude = 1f;
-    public float BigWaveAmplitude = 4f;
     public float CurveAmplitude = 12f;
     public float UpdateMultiplier = 1f;
     
@@ -18,7 +70,7 @@ internal sealed class CustomLavaRect : Component {
     public Color EdgeColor = Color.LightGray;
     public Color CenterColor = Color.DarkGray;
 
-    public bool IsRainbow;
+    internal RainbowModes IsRainbow;
     
     private float _timer = Calc.Random.NextFloat(100f);
     private VertexPositionColor[] _verts;
@@ -29,18 +81,59 @@ internal sealed class CustomLavaRect : Component {
     private int _surfaceBubbleIndex;
     private List<List<MTexture>>? _surfaceBubbleAnimations;
 
-    private readonly float _bubbleAmountMultiplier;
-    private bool HasBubbles => _bubbleAmountMultiplier > 0f;
+    private float _bubbleAmountMultiplier;
+    public bool HasBubbles => _bubbleAmountMultiplier > 0f;
 
     public int SurfaceStep { get; set; }
 
     public float Width { get; set; }
 
     public float Height { get; set; }
+    
+    private List<MTexture> _bubbleTextures { get; set; }
 
-    public CustomLavaRect(float width, float height, int step, float bubbleAmountMultiplier)
+    private void SetSurfaceBubbleAnimations(ReadOnlySpan<char> key) {
+        var parser = new SpanParser(key);
+
+        _surfaceBubbleAnimations = [];
+        while (parser.SliceUntil(';').TryUnpack(out var next)) {
+            _surfaceBubbleAnimations.Add(GFX.Game.GetAtlasSubtexturesWithNotif(next.Remaining.ToString()));
+        }
+    }
+    
+    private void SetBubbleTextures(ReadOnlySpan<char> key) {
+        var parser = new SpanParser(key);
+
+        _bubbleTextures = [];
+        while (parser.SliceUntil(';').TryUnpack(out var next)) {
+            _bubbleTextures.Add(GFX.Game.GetWithNotif(next.Remaining.ToString()));
+        }
+    }
+
+    private void SetupBubbles(string config) {
+        // multiplier|bubbleTexture1;bubbleTexture2...|surfaceBubbles1;surfaceBubbles2...
+        var parser = new SpanParser(config);
+        ReadOnlySpan<char> bubbleTextures = "particles/bubble";
+        ReadOnlySpan<char> surfaceBubbleAnims = "danger/lava/bubble_a";
+
+        parser.ReadUntil<float>('|').TryUnpack(out _bubbleAmountMultiplier);
+        if (!parser.IsEmpty && parser.SliceUntil('|').TryUnpack(out var bubblePath)) {
+            if (!bubblePath.Remaining.IsEmpty) {
+                bubbleTextures = bubblePath.Remaining;
+            }
+        }
+        
+        if (!parser.IsEmpty) {
+            surfaceBubbleAnims = parser.Remaining;
+        }
+
+        SetBubbleTextures(bubbleTextures);
+        SetSurfaceBubbleAnimations(surfaceBubbleAnims);
+    }
+
+    public CustomLavaRect(float width, float height, int step, string bubbleConfig)
         : base(true, true) {
-        _bubbleAmountMultiplier = bubbleAmountMultiplier;
+        SetupBubbles(bubbleConfig);
         Resize(width, height, step);
     }
 
@@ -57,22 +150,40 @@ internal sealed class CustomLavaRect : Component {
             _surfaceBubbles = new SurfaceBubble[(int) Math.Max(4.0, _bubbles.Length * 0.25)];
             
             for (int index = 0; index < _bubbles.Length; ++index) {
-                _bubbles[index].Position =
+                ref var bubble = ref _bubbles[index];
+                bubble.Position =
                     new Vector2(1f + Calc.Random.NextFloat(Width - 2f), Calc.Random.NextFloat(Height));
-                _bubbles[index].Speed = Calc.Random.Range(4, 12);
-                _bubbles[index].Alpha = Calc.Random.Range(0.4f, 0.8f);
+                bubble.Speed = Calc.Random.Range(4, 12);
+                bubble.Alpha = Calc.Random.Range(0.4f, 0.8f);
+                bubble.Type = _bubbleTextures.Count == 1 ? (byte)0 : (byte)Calc.Random.Next(_bubbleTextures.Count);
             }
 
             for (int index = 0; index < _surfaceBubbles.Length; ++index)
                 _surfaceBubbles[index].X = -1f;
-            _surfaceBubbleAnimations = [
-                GFX.Game.GetAtlasSubtextures("danger/lava/bubble_a")
-            ];
         }
+    }
+
+    private Rectangle GetCullRect() {
+        Vector2 basePos = Entity.Position + Position;
+        
+        var rect = new Rectangle((int)basePos.X, (int)basePos.Y, (int)Width, (int)Height);
+        rect.Inflate(16, 16);
+
+        return rect;
+    }
+    
+    private bool IsVisible(out Rectangle cullRect) {
+        Camera camera = (Scene as Level)!.Camera;
+        cullRect = GetCullRect();
+        
+        return CameraCullHelper.IsRectangleVisible(cullRect, lenience: 4f, camera);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     public override void Update() {
+        if (!IsVisible(out _))
+            return;
+        
         _timer += UpdateMultiplier * Engine.DeltaTime;
         if (UpdateMultiplier != 0.0)
             _dirty = true;
@@ -108,15 +219,20 @@ internal sealed class CustomLavaRect : Component {
         base.Update();
     }
 
-    public float Sin(float value) => (float) ((1.0 + Math.Sin(value)) / 2.0);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static float Sin(float value) => (1.0f + float.Sin(value)) / 2.0f;
 
     public float Wave(int step, float length) {
         int val = step * SurfaceStep;
         float num1 = OnlyMode != OnlyModes.All
             ? 1f
             : Calc.ClampedMap(val, 0.0f, length * 0.1f) * Calc.ClampedMap(val, length * 0.9f, length, 1f, 0.0f);
-        float num2 = Sin((float) (val * 0.25 + _timer * 4.0)) * SmallWaveAmplitude +
-                     Sin((float) (val * 0.05000000074505806 + _timer * 0.5)) * BigWaveAmplitude;
+
+        float num2 = 0;
+        foreach (var wave in CollectionsMarshal.AsSpan(Waves)) {
+            num2 += wave.Get(val, _timer);
+        }
+        
         if (step % 2 == 0)
             num2 += Spikey;
         if (OnlyMode != OnlyModes.All)
@@ -160,13 +276,11 @@ internal sealed class CustomLavaRect : Component {
             v->Position = vc;
             v->Color = cc;
             v++;
-
-            v->Position = va;
-            v->Color = ca;
+            
+            *v = v[-3];
             v++;
-
-            v->Position = vc;
-            v->Color = cc;
+            
+            *v = v[-2];
             v++;
 
             v->Position = vd;
@@ -176,13 +290,58 @@ internal sealed class CustomLavaRect : Component {
         vert += 6;
     }
 
-    public void Edge(ref int vert, NumVector2 a, NumVector2 b, float fade, float insetFade) {
+    private interface IWaveProvider {
+        float Wave(CustomLavaRect rect, int step, float length);
+    }
+
+    private struct DefaultWaveProvider : IWaveProvider {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public float Wave(CustomLavaRect rect, int step, float length) {
+            return rect.Wave(step, length);
+        }
+    }
+    
+    private unsafe /*ref*/ struct PrecalculatedWaveProvider(float* waves) : IWaveProvider {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public float Wave(CustomLavaRect rect, int step, float length) {
+            return waves[step];
+        }
+    }
+
+    private void Edge<TWave>(ref int vert, NumVector2 a, NumVector2 b, float fade, float insetFade, 
+                             TWave waveProvider, Rectangle cullRect) 
+    where TWave : struct, IWaveProvider {
+        
         float length = (a - b).Length();
-        float newMin = OnlyMode == OnlyModes.All ? insetFade / length : 0.0f;
         float steps = length / SurfaceStep;
+
+        var aVisible = new NumVector2(
+            float.Clamp(a.X, cullRect.Left, cullRect.Right),
+            float.Clamp(a.Y, cullRect.Top, cullRect.Bottom)
+        );
+        var bVisible = new NumVector2(
+            float.Clamp(b.X, cullRect.Left, cullRect.Right),
+            float.Clamp(b.Y, cullRect.Top, cullRect.Bottom)
+        );
+        var stepsToRenderAnywayDueToFade = float.Max(fade, insetFade) / SurfaceStep / 2;
+        float visibleLength = (aVisible - bVisible).Length();
+        float visibleSteps = visibleLength / SurfaceStep;
+        var startingStep = (int)float.Ceiling(((a - aVisible).Length() / SurfaceStep) - stepsToRenderAnywayDueToFade);
+        startingStep = int.Max(startingStep, 0);
+        visibleSteps += startingStep;
+        visibleSteps = float.Min(steps, visibleSteps + stepsToRenderAnywayDueToFade*2);
+
+        if (startingStep > visibleSteps)
+            return;
+
+        /*
+        Console.WriteLine($"T: {steps}, skipping: {startingStep}, rendering: {visibleSteps}");
+        */
+        
+        float newMin = OnlyMode == OnlyModes.All ? insetFade / length : 0.0f;
         var inset = (b - a).SafeNormalize().Perpendicular();
 
-        float prevWave = Wave(0, length);
+        float prevWave = waveProvider.Wave(this, startingStep, length);
         var va = a - (inset * prevWave);
         var vaColor = GetSurfaceColor(va);
         var vaInsetColor = GetSurfaceColor(va + inset);
@@ -190,13 +349,13 @@ internal sealed class CustomLavaRect : Component {
         var prevOtherPos = NumVector2.Lerp(a, b, newMin);
         var prevOtherPosCenterColor = GetCenterColor(prevOtherPos + inset * (fade - prevWave));
         
-        for (int step = 1; step <= steps; ++step) {
+        for (int step = startingStep + 1; step <= visibleSteps; ++step) {
             var percent = step / steps;
             if (percent > 1f)
                 percent = 1f;
             
             var pos = NumVector2.Lerp(a, b, percent);
-            float wave = Wave(step, length);
+            float wave = waveProvider.Wave(this, step, length);
             var vb = pos - (inset * wave);
             var otherPos = NumVector2.Lerp(a, b, Calc.ClampedMap(percent, 0.0f, 1f, newMin, 1f - newMin));
 
@@ -233,42 +392,70 @@ internal sealed class CustomLavaRect : Component {
         }
     }
 
-    public override void Render() {
+    public override unsafe void Render() {
+        if (!IsVisible(out var rect))
+            return;
+        
         GameplayRenderer.End();
+        
+        Camera camera = (Scene as Level)!.Camera;
+        Vector2 basePos = Entity.Position + Position;
+        var visibleRect = CameraCullHelper.GetVisibleSection(rect, lenience: 4, camera);
+        
         if (_dirty) {
             NumVector2 topLeft = default;
             NumVector2 topRight = new(Width, 0f);
             NumVector2 botLeft = new(0f, Height);
             NumVector2 botRight = new(Width, Height);
-            NumVector2 fadeCenter = new(Math.Min(Fade, Width / 2f), Math.Min(Fade, Height / 2f));
+            NumVector2 fadeByAxis = new(Math.Min(Fade, Width / 2f), Math.Min(Fade, Height / 2f));
+            var visibleRectForEdges = visibleRect.MovedBy(-basePos);
             
             _vertCount = 0;
             if (OnlyMode == OnlyModes.All) {
-                Edge(ref _vertCount, topLeft, topRight, fadeCenter.Y, fadeCenter.X);
-                Edge(ref _vertCount, topRight, botRight, fadeCenter.X, fadeCenter.Y);
-                Edge(ref _vertCount, botRight, botLeft, fadeCenter.Y, fadeCenter.X);
-                Edge(ref _vertCount, botLeft, topLeft, fadeCenter.X, fadeCenter.Y);
+                int steps = (int)float.Ceiling(Width / SurfaceStep) + 1;
+                Span<float> waves = stackalloc float[steps];
+                for (int i = 0; i < steps; i++) {
+                    waves[i] = Wave(i, Width);
+                }
+
+                int steps2 = (int)float.Ceiling(Height / SurfaceStep) + 1;
+                Span<float> waves2 = Width == Height ? waves : stackalloc float[steps2];
+                if (Width != Height) {
+                    for (int i = 0; i < steps2; i++) {
+                        waves2[i] = Wave(i, Height);
+                    }
+                }
+
+                // We can't have : allows ref struct yet, so we need to use pointers... oh no
+                // This is safe because we know the data is stack-allocated, and has no GC-refs, so it will never be moved under us.
+                // (and we need stackalloc to Span<float> instead of float*, because otherwise the ternary for waves2 doesn't work.
+                var precalced = new PrecalculatedWaveProvider((float*)Unsafe.AsPointer(ref waves[0]));
+                var precalced2 = new PrecalculatedWaveProvider((float*)Unsafe.AsPointer(ref waves2[0]));
+                
+                Edge(ref _vertCount, topLeft, topRight, fadeByAxis.Y, fadeByAxis.X, precalced, visibleRectForEdges);
+                Edge(ref _vertCount, topRight, botRight, fadeByAxis.X, fadeByAxis.Y, precalced2, visibleRectForEdges);
+                Edge(ref _vertCount, botRight, botLeft, fadeByAxis.Y, fadeByAxis.X, precalced, visibleRectForEdges);
+                Edge(ref _vertCount, botLeft, topLeft, fadeByAxis.X, fadeByAxis.Y, precalced2, visibleRectForEdges);
                 
                 Quad(ref _vertCount,
-                    topLeft + fadeCenter, GetCenterColor(topLeft + fadeCenter), 
-                    topRight + new NumVector2(-fadeCenter.X, fadeCenter.Y), GetCenterColor(topRight + new NumVector2(-fadeCenter.X, fadeCenter.Y)),
-                    botRight - fadeCenter, GetCenterColor(botRight - fadeCenter), 
-                    botLeft + new NumVector2(fadeCenter.X, -fadeCenter.Y), GetCenterColor(botLeft + new NumVector2(fadeCenter.X, -fadeCenter.Y)));
+                    topLeft + fadeByAxis, GetCenterColor(topLeft + fadeByAxis), 
+                    topRight + new NumVector2(-fadeByAxis.X, fadeByAxis.Y), GetCenterColor(topRight + new NumVector2(-fadeByAxis.X, fadeByAxis.Y)),
+                    botRight - fadeByAxis, GetCenterColor(botRight - fadeByAxis), 
+                    botLeft + new NumVector2(fadeByAxis.X, -fadeByAxis.Y), GetCenterColor(botLeft + new NumVector2(fadeByAxis.X, -fadeByAxis.Y)));
             } else if (OnlyMode == OnlyModes.OnlyTop) {
-                Edge(ref _vertCount, topLeft, topRight, fadeCenter.Y, 0.0f);
-                Quad(ref _vertCount, topLeft + new NumVector2(0.0f, fadeCenter.Y),
-                    topRight + new NumVector2(0.0f, fadeCenter.Y), botRight, botLeft, CenterColor);
+                Edge(ref _vertCount, topLeft, topRight, fadeByAxis.Y, 0.0f, new DefaultWaveProvider(), visibleRectForEdges);
+                Quad(ref _vertCount, topLeft + new NumVector2(0.0f, fadeByAxis.Y),
+                    topRight + new NumVector2(0.0f, fadeByAxis.Y), botRight, botLeft, CenterColor);
             } else if (OnlyMode == OnlyModes.OnlyBottom) {
-                Edge(ref _vertCount, botRight, botLeft, fadeCenter.Y, 0.0f);
-                Quad(ref _vertCount, topLeft, topRight, botRight + new NumVector2(0.0f, -fadeCenter.Y),
-                    botLeft + new NumVector2(0.0f, -fadeCenter.Y), CenterColor);
+                Edge(ref _vertCount, botRight, botLeft, fadeByAxis.Y, 0.0f, new DefaultWaveProvider(), visibleRectForEdges);
+                Quad(ref _vertCount, topLeft, topRight, botRight + new NumVector2(0.0f, -fadeByAxis.Y),
+                    botLeft + new NumVector2(0.0f, -fadeByAxis.Y), CenterColor);
             }
 
             _dirty = false;
         }
 
-        Camera camera = (Scene as Level)!.Camera;
-        Vector2 basePos = Entity.Position + Position;
+
         var buffer = RenderTargetHelper.RentFullScreenBuffer();
         var targets = Draw.SpriteBatch.GraphicsDevice.GetRenderTargets();
         Draw.SpriteBatch.GraphicsDevice.SetRenderTarget(buffer);
@@ -281,38 +468,52 @@ internal sealed class CustomLavaRect : Component {
         Draw.SpriteBatch.Draw(buffer, camera.position, Color.White);
         RenderTargetHelper.ReturnFullScreenBuffer(buffer);
         if (HasBubbles) {
-            MTexture bubbleTexture = GFX.Game["particles/bubble"];
-            for (int index = 0; index < _bubbles!.Length; ++index) {
-                var pos = basePos + _bubbles[index].Position;
-                bubbleTexture.DrawCentered(pos, GetSurfaceColor(pos.ToNumerics()) * _bubbles[index].Alpha);
+            var bubbles = _bubbles;
+            var bubbleTextures = CollectionsMarshal.AsSpan(_bubbleTextures);
+            
+            for (int index = 0; index < bubbles!.Length; ++index) {
+                ref var bubble = ref bubbles[index];
+                var pos = basePos + bubble.Position;
+                if (visibleRect.Contains(pos.ToPoint()))
+                    bubbleTextures[bubble.Type].DrawCentered(pos, GetBubbleColor(pos.ToNumerics()) * bubbles[index].Alpha);
             }
 
-            for (int index = 0; index < _surfaceBubbles!.Length; ++index) {
-                if (_surfaceBubbles[index].X >= 0.0) {
-                    MTexture surfaceTexture = _surfaceBubbleAnimations![_surfaceBubbles[index].Animation][(int) _surfaceBubbles[index].Frame];
-                    int step = (int) (_surfaceBubbles[index].X / SurfaceStep);
+            var surfaceBubbles = _surfaceBubbles;
+            for (int index = 0; index < surfaceBubbles!.Length; ++index) {
+                ref var surfaceBubble = ref surfaceBubbles[index];
+                
+                if (surfaceBubble.X >= 0.0) {
+                    MTexture surfaceTexture = _surfaceBubbleAnimations![surfaceBubble.Animation][(int) surfaceBubble.Frame];
+                    int step = (int) (surfaceBubble.X / SurfaceStep);
                     float y = 1f - Wave(step, Width);
                     var position = basePos + new Vector2(step * SurfaceStep, y);
-                    surfaceTexture.DrawJustified(position, new Vector2(0.5f, 1f), GetSurfaceColor(position.ToNumerics()));
+                    if (visibleRect.Contains(position.ToPoint()))
+                        surfaceTexture.DrawJustified(position, new Vector2(0.5f, 1f), GetBubbleColor(position.ToNumerics()));
                 }
             }
         }
     }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Color GetBubbleColor(NumVector2 pos) {
+        return (IsRainbow & RainbowModes.Bubble) != 0 ? ColorHelper.GetHue(Scene, Entity.Position.Add(pos)) : SurfaceColor;
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Color GetSurfaceColor(NumVector2 pos) {
-        return IsRainbow ? ColorHelper.GetHue(Scene, Entity.Position.Add(pos)) : SurfaceColor;
+        return (IsRainbow & RainbowModes.Surface) != 0 ? ColorHelper.GetHue(Scene, Entity.Position.Add(pos)) : SurfaceColor;
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Color GetEdgeColor(NumVector2 pos) {
-        return IsRainbow ? MultiplyNoAlpha(ColorHelper.GetHue(Scene, Entity.Position.Add(pos)), 0.8f) : EdgeColor;
+        return (IsRainbow & RainbowModes.Edge) != 0 ? MultiplyNoAlpha(ColorHelper.GetHue(Scene, Entity.Position.Add(pos)), 0.8f) : EdgeColor;
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Color GetCenterColor(NumVector2 pos) {
         //return MultiplyNoAlpha(ColorHelper.GetHue(Scene, Entity.Position), 0.6f);
         return CenterColor;
+        //return (IsRainbow & RainbowModes.Edge) != 0 ? MultiplyNoAlpha(ColorHelper.GetHue(Scene, Entity.Position.Add(pos)), 0.6f) : CenterColor;
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -331,6 +532,7 @@ internal sealed class CustomLavaRect : Component {
         public Vector2 Position;
         public float Speed;
         public float Alpha;
+        public byte Type;
     }
 
     public struct SurfaceBubble {

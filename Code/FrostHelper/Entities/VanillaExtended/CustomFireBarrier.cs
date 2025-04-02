@@ -1,6 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-
-namespace FrostHelper;
+﻿namespace FrostHelper;
 
 [CustomEntity("FrostHelper/CustomFireBarrier")]
 public class CustomFireBarrier : Entity {
@@ -31,22 +29,37 @@ public class CustomFireBarrier : Entity {
             Add(new CoreModeListener(OnChangeMode));
         }
 
-        var lava = Lava = new CustomLavaRect(width, height, IsIce ? 2 : 4, data.Float("bubbleAmountMultiplier", 1f));
+        var lava = Lava = new CustomLavaRect(width, height, IsIce ? 2 : 4, data.Attr("bubbleAmountMultiplier", "1"));
         Add(lava);
         lava.SurfaceColor = ColorHelper.GetColor(data.Attr("surfaceColor"));
         lava.EdgeColor = ColorHelper.GetColor(data.Attr("edgeColor"));
         lava.CenterColor = ColorHelper.GetColor(data.Attr("centerColor"));
-        lava.SmallWaveAmplitude = data.Float("smallWaveAmplitude", 2f);
-        lava.BigWaveAmplitude = data.Float("bigWaveAmplitude", 1f);
+        
+        var waves = data.Attr("waves", "default");
+        if (waves == "default") {
+            var smallWaveAmplitude = data.Float("smallWaveAmplitude", 2f);
+            if (IsIce) {
+                smallWaveAmplitude /= 2f;
+            }
+            
+            lava.Waves = [
+                new(smallWaveAmplitude, 0.25f, 4.0f),
+                new(data.Float("bigWaveAmplitude", 1f), 0.05000000074505806f, 0.5f),
+            ];
+        } else {
+            lava.Waves = CustomLavaRect.WaveData.ParseWaves(waves);
+        }
+        
         lava.CurveAmplitude = data.Float("curveAmplitude", 1f);
         lava.OnlyMode = data.Enum("surfaces", CustomLavaRect.OnlyModes.All);
         if (IsIce) {
             lava.UpdateMultiplier = 0f;
             lava.Spikey = 3f;
-            lava.SmallWaveAmplitude /= 2f;
         }
 
-        lavaRect = new Rectangle((int) (data.Position + offset).X, (int) (data.Position + offset).Y, (int) width, (int) height);
+        lava.IsRainbow = (CustomLavaRect.RainbowModes)data.Int("rainbow", 0);
+        lava.Fade = data.Float("fade", 16f);
+
         Depth = -8500;
 
         var silentFlag = data.Attr("silentFlag");
@@ -127,22 +140,13 @@ public class CustomFireBarrier : Entity {
         player.Die((player.Center - Center).SafeNormalize(), false, true);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private bool InView() {
-        return CameraCullHelper.IsRectangleVisible(lavaRect, lenience: 16f);
-    }
-
     public override void Update() {
-        Visible = Collidable && InView();
         if ((Scene as Level)!.Transitioning) {
             idleSfx?.UpdateSfxPosition();
         } else {
-            if (Visible)
-                base.Update();
+            base.Update();
         }
     }
-
-    private Rectangle lavaRect;
 
     private Solid? solid;
 

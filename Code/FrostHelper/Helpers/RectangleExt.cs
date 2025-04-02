@@ -6,6 +6,9 @@ public static class RectangleExt {
     public static Rectangle FromPoints(Vector2 a, Vector2 b)
         => FromTwoPointsCore<Vector2, GetX, GetY>(a, b);
 
+    internal static Rectangle FromPoints(NumVector2 a, NumVector2 b)
+        => FromTwoPointsCore<NumVector2, GetX, GetY>(a, b);
+    
     public static Rectangle FromPoints(Point a, Point b)
         => FromTwoPointsCore<Point, GetX, GetY>(a, b);
 
@@ -121,9 +124,12 @@ public static class RectangleExt {
     public static Rectangle MovedBy(this Rectangle r, int x, int y) => new(r.X + x, r.Y + y, r.Width, r.Height);
     public static Rectangle MovedTo(this Rectangle r, Vector2 pos) => new((int) pos.X, (int) pos.Y, r.Width, r.Height);
     
-    private struct GetX : IStaticFunc<Vector2, int>, IStaticFunc<Vector3, int>, IStaticFunc<Point, int> {
+    private struct GetX : IStaticFunc<Vector2, int>, IStaticFunc<Vector3, int>, IStaticFunc<Point, int>, IStaticFunc<NumVector2, int> {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int Invoke(Vector2 arg) => (int)arg.X;
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int Invoke(NumVector2 arg) => (int)arg.X;
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int Invoke(Vector3 arg) => (int)arg.X;
@@ -132,9 +138,12 @@ public static class RectangleExt {
         public static int Invoke(Point arg) => arg.X;
     }
     
-    private struct GetY : IStaticFunc<Vector2, int>, IStaticFunc<Vector3, int>, IStaticFunc<Point, int> {
+    private struct GetY : IStaticFunc<Vector2, int>, IStaticFunc<Vector3, int>, IStaticFunc<Point, int>, IStaticFunc<NumVector2, int> {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int Invoke(Vector2 arg) => (int)arg.Y;
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int Invoke(NumVector2 arg) => (int)arg.Y;
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int Invoke(Vector3 arg) => (int)arg.Y;

@@ -3,7 +3,6 @@ local utils = require("utils")
 local mods = require("mods")
 local languageRegistry = require("language_registry")
 local jautils = mods.requireFromPlugin("libraries.jautils")
-local filesystem = require("utils.filesystem")
 
 local integerField = {}
 

@@ -150,7 +150,7 @@ local function createConnectorsForSpinner(room, entity, baseBGSprite, cache)
     local s = cache[3]
 
     for _, e2 in ipairs(room.entities) do
-        if e2._id <= id then goto continue end
+        if (e2._id or -1) <= id then goto continue end
 
         if e2._name == name and e2.attachGroup == attachGroup and e2.attachToSolid == attachToSolid then
             local e2x, e2y = e2.x, e2.y

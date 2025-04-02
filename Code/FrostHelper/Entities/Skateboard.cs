@@ -10,7 +10,7 @@ public class Skateboard : JumpThru {
         Old
     }
 
-    Directions dir;
+    private Directions dir;
     bool keepMoving;
     bool hasMoved = false;
     bool interactWithEntities = false;

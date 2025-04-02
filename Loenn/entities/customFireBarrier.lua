@@ -22,12 +22,92 @@ jautils.createPlacementsPreserveOrder(customFireBarrier, "normal", {
     { "surfaceColor", "ff8933", "color" },
     { "edgeColor", "f25e29", "color" },
     { "centerColor", "d01c01", "color" },
-    { "smallWaveAmplitude", 2 },
-    { "bigWaveAmplitude", 1 },
+    { "waves", "2,0.25,4.0;1,0.05000000074505806,0.5", "list", {
+        elementSeparator = ";",
+        elementDefault = "2,0.25,4.0",
+        elementOptions = {
+            fieldType = "FrostHelper.complexField",
+            separator = ",",
+            innerFields = {
+                {
+                    name = "FrostHelper.fields.customFireBarrier.amplitude",
+                    default = 2,
+                    info = {
+                        fieldType = "number",
+                    }
+                },
+                {
+                    name = "FrostHelper.fields.customFireBarrier.waveNumber",
+                    default = 0.25,
+                    info = {
+                        fieldType = "number",
+                    }
+                },
+                {
+                    name = "FrostHelper.fields.customFireBarrier.frequency",
+                    default = 4.0,
+                    info = {
+                        fieldType = "number",
+                    }
+                },
+                {
+                    name = "FrostHelper.fields.customFireBarrier.phase",
+                    default = 0,
+                    info = {
+                        fieldType = "number",
+                    }
+                },
+            }
+        },
+    } },
     { "curveAmplitude", 1 },
-    { "bubbleAmountMultiplier", 1 },
+    { "bubbleAmountMultiplier", "1|particles/bubble|danger/lava/bubble_a", "FrostHelper.complexField", {
+        separator = "|",
+        innerFields = {
+            {
+                name = "FrostHelper.fields.customFireBarrier.bubble.amountMultiplier",
+                default = 1,
+                info = {
+                    fieldType = "number",
+                }
+            },
+            {
+                name = "FrostHelper.fields.customFireBarrier.bubble.path",
+                default = "particles/bubble",
+                info = {
+                    fieldType = "list",
+                    elementSeparator = ";",
+                }
+            },
+            {
+                name = "FrostHelper.fields.customFireBarrier.bubble.surfaceAnimations",
+                default = "danger/lava/bubble_a",
+                info = {
+                    fieldType = "list",
+                    elementSeparator = ";",
+                }
+            },
+        }
+    } },
     { "surfaces", "All", onlyModes },
     { "silentFlag", "" },
+    { "fade", 16 },
+    { "rainbow", 0, "FrostHelper.flagEnum", {
+        innerFields = {
+            {
+                name = "FrostHelper.fields.customFireBarrier.rainbow.surface",
+                value = 1,
+            },
+            {
+                name = "FrostHelper.fields.customFireBarrier.rainbow.edge",
+                value = 2,
+            },
+            {
+                name = "FrostHelper.fields.customFireBarrier.rainbow.bubble",
+                value = 4,
+            },
+        }
+    }},
     { "silent", false },
     { "isIce", false },
     { "ignoreCoreMode", false },
@@ -40,10 +120,32 @@ jautils.addPlacement(customFireBarrier, "ice", {
     { "surfaceColor", "a6fff4" },
     { "edgeColor", "6cd6eb" },
     { "centerColor", "4ca8d6" },
+    { "waves", "1,0.25,4.0;1,0.05,0.5" }
 })
 
 local function selectionFunc(room, entity)
     return utils.rectangle(entity.x, entity.y, entity.width, entity.height)
+end
+
+local defaultBubblePaths = { "particles/bubble" }
+
+local function getBubbleConfig(entity)
+    local str = entity.bubbleAmountMultiplier
+    if not str then
+        return 1, defaultBubblePaths
+    end
+
+    if type(str) == "number" then
+        return str, defaultBubblePaths
+    end
+
+    str = tostring(str)
+    local mult, path = str:match("^([^|]*)|?([^|]*)")
+    if path == "" then
+        path = nil
+    end
+
+    return tonumber(mult) or 1, path and path:split(";")() or defaultBubblePaths
 end
 
 local function spriteFunc(room, entity)
@@ -60,13 +162,16 @@ local function spriteFunc(room, entity)
         y = 0,
     }
 
+    local bubbleMult, bubbleTextures = getBubbleConfig(entity)
+
     utils.setSimpleCoordinateSeed(entity.x, entity.y)
-    local bubbleAmt = entity.width * entity.height * 0.005 * (entity.bubbleAmountMultiplier or 1)
+    local bubbleAmt = entity.width * entity.height * 0.005 * (bubbleMult)
     if bubbleAmt >= 1 then
         for i = 0, bubbleAmt, 1 do
             particleData.x, particleData.y = entity.x + math.random(3, math.max(3,entity.width - 7)), entity.y + math.random(3, math.max(3, entity.height - 7))
-            local particle = drawableSpriteStruct.fromTexture(particlePath, particleData)
-    
+            local texture = bubbleTextures[math.random(0, #bubbleTextures)]
+            local particle = drawableSpriteStruct.fromTexture(texture, particleData)
+
             table.insert(sprites, particle)
         end
     end
@@ -83,6 +188,8 @@ local rainbowFireBarrier = {}
 rainbowFireBarrier.name = "FrostHelper/RainbowFireBarrier"
 rainbowFireBarrier.depth = -8500
 
+--[[
+These are deprecated now
 jautils.createPlacementsPreserveOrder(rainbowFireBarrier, "default", {
     { "width", 16 },
     { "height", 16 },
@@ -98,9 +205,11 @@ jautils.createPlacementsPreserveOrder(rainbowFireBarrier, "default", {
     { "ignoreCoreMode", false },
     { "canCollide", true },
 })
+]]
 
 rainbowFireBarrier.selection = selectionFunc
 rainbowFireBarrier.sprite = spriteFunc
+
 
 return {
     customFireBarrier,

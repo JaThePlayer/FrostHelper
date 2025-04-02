@@ -7,15 +7,15 @@ namespace FrostHelper.Entities;
 internal sealed class FlagCounterController : Entity {
     private readonly struct Entry {
         public readonly ConditionHelper.Condition Condition;
-        public readonly int Value;
+        public readonly ConditionHelper.Condition Value;
 
         public Entry(string from) {
             var sepIndex = from.IndexOf(';');
             if (sepIndex < 0) {
-                Value = 1;
+                Value = ConditionHelper.CreateOrDefault("1", "1");
                 Condition = ConditionHelper.CreateOrDefault(from, "");
             } else {
-                Value = int.Parse(from.AsSpan(sepIndex+1), CultureInfo.InvariantCulture);
+                Value = ConditionHelper.CreateOrDefault(from[(sepIndex+1)..], "1");
                 Condition = ConditionHelper.CreateOrDefault(from[..sepIndex], "");
             }
         }
@@ -33,7 +33,7 @@ internal sealed class FlagCounterController : Entity {
 
         Visible = false;
 
-        if (_conditions.All(c => c.Condition.OnlyChecksFlags())) {
+        if (_conditions.All(c => c.Condition.OnlyChecksFlags() && c.Value.OnlyChecksFlags())) {
             Active = false;
             Add(new FlagListener(flag: null, OnFlagSet, mustChange: true, triggerOnRoomBegin: true));
         } else {
@@ -54,7 +54,7 @@ internal sealed class FlagCounterController : Entity {
     private void UpdateCounter(Session session) {
         var amt = 0;
         foreach (var c in _conditions) {
-            amt += c.Condition.Check(session) ? c.Value : 0;
+            amt += c.Condition.Check(session) ? c.Value.GetInt(session) : 0;
         }
         
         session.SetCounter(CounterName, amt);
