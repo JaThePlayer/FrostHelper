@@ -141,6 +141,8 @@ public class CustomFireBarrier : Entity {
     }
 
     public override void Update() {
+        Visible = Collidable;
+        
         if ((Scene as Level)!.Transitioning) {
             idleSfx?.UpdateSfxPosition();
         } else {
