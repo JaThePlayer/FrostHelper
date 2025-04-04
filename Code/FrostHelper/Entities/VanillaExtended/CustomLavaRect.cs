@@ -185,7 +185,7 @@ internal sealed class CustomLavaRect : Component {
             return;
         
         _timer += UpdateMultiplier * Engine.DeltaTime;
-        if (UpdateMultiplier != 0.0)
+        if (UpdateMultiplier != 0.0 || IsRainbow != RainbowModes.None)
             _dirty = true;
 
         if (HasBubbles) {
@@ -397,12 +397,14 @@ internal sealed class CustomLavaRect : Component {
             return;
         
         GameplayRenderer.End();
-        
-        Camera camera = (Scene as Level)!.Camera;
+
+        var level = (Scene as Level)!;
+        Camera camera = level.Camera;
         Vector2 basePos = Entity.Position + Position;
-        var visibleRect = CameraCullHelper.GetVisibleSection(rect, lenience: 4, camera);
+        var shouldRenderInFull = UpdateMultiplier == 0f || level.Transitioning;
+        var visibleRect = shouldRenderInFull ? rect : CameraCullHelper.GetVisibleSection(rect, lenience: 4, camera);
         
-        if (_dirty) {
+        if (_dirty || (level.Transitioning && IsRainbow != RainbowModes.None)) {
             NumVector2 topLeft = default;
             NumVector2 topRight = new(Width, 0f);
             NumVector2 botLeft = new(0f, Height);
