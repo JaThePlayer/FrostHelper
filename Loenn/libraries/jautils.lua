@@ -18,6 +18,7 @@ local rainbowHelper = mods.requireFromPlugin("libraries.rainbowHelper")
 local compat = mods.requireFromPlugin("libraries.compat")
 local mapScanHelper = mods.requireFromPlugin("libraries.mapScanHelper")
 local easings = mods.requireFromPlugin("libraries.easings")
+local fakeTilesHelper = require("helpers.fake_tiles")
 
 local celesteDepths = --require("consts.object_depths")
 {
@@ -323,6 +324,12 @@ jautils.fieldTypeOverrides = {
             searchable = true,
         }
     end,
+    tiletype = function (data)
+        return {
+            options = fakeTilesHelper.getTilesOptions(data.layer),
+            editable = false
+        }
+    end,
     ["FrostHelper.easing"] = function (data)
         return {
             options = easings,
@@ -400,6 +407,7 @@ local fieldTypesWhichNeedLiveUpdate = {
     typesList = true,
     sessionCounter = true,
     cloudTag = true,
+    tiletype = true,
     ["FrostHelper.stylegroundTag"] = true,
 }
 

@@ -1,7 +1,7 @@
 ﻿namespace FrostHelper;
 
 /// <summary>
-/// A dash block that destoys attached entities when broken.
+/// A dash block that destroys attached entities when broken.
 /// </summary>
 [CustomEntity("FrostHelper/DashBlockDestroyAttached")]
 [Tracked(false)]
@@ -17,12 +17,23 @@ public class DashBlockDestroyAttached : DashBlock {
 
         _hooksLoaded = true;
         On.Celeste.DashBlock.RemoveAndFlagAsGone += DashBlock_RemoveAndFlagAsGone;
+        On.Celeste.DashBlock.Break_Vector2_Vector2_bool_bool += DashBlock_Break;
+    }
+
+    private static void DashBlock_Break(On.Celeste.DashBlock.orig_Break_Vector2_Vector2_bool_bool orig, DashBlock self, Vector2 from, Vector2 direction, bool playSound, bool playDebrisSound) {
+        if (playSound && self is DashBlockDestroyAttached self2 && !string.IsNullOrWhiteSpace(self2._breakSfx)) {
+            Audio.Play(self2._breakSfx, self2.Position);
+            playSound = false;
+        }
+        
+        orig(self, from, direction, playSound, playDebrisSound);
     }
 
     [OnUnload]
     public static void UnloadHooks() {
         _hooksLoaded = false;
         On.Celeste.DashBlock.RemoveAndFlagAsGone -= DashBlock_RemoveAndFlagAsGone;
+        On.Celeste.DashBlock.Break_Vector2_Vector2_bool_bool -= DashBlock_Break;
     }
     
     /// <summary>
@@ -41,8 +52,11 @@ public class DashBlockDestroyAttached : DashBlock {
     }
     #endregion
 
+    private readonly string _breakSfx;
+    
     public DashBlockDestroyAttached(EntityData data, Vector2 offset, EntityID id) : base(data, offset, id) {
         LoadHooksIfNeeded();
+        _breakSfx = data.Attr("breakSfx", "");
     }
 
     public override void Awake(Scene scene) {

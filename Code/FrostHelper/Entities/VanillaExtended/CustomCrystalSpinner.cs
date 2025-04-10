@@ -289,7 +289,7 @@ public class CustomSpinner : Entity {
         
         base.Awake(scene);
 
-        if (GameplayBuffers.Gameplay is { } ? InView() : InView(new(320f, 180f))) {
+        if (InView()) {
             CreateSprites();
         }
     }
@@ -516,14 +516,7 @@ public class CustomSpinner : Entity {
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private bool InView() {
-        var gp = GameplayBuffers.Gameplay;
-        
-        return InView(new(gp.Width, gp.Height));
-    }
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private bool InView(NumVector2 gpBufferSize) {
-        var camera = (Scene as Level)?.Camera!;
+        var camera = (Scene as Level)!.Camera!;
 
         var diff = Unsafe.As<Vector2, NumVector2>(ref Position);
         diff -= Unsafe.As<Vector2, NumVector2>(ref camera.position);
@@ -532,7 +525,7 @@ public class CustomSpinner : Entity {
         diff += cullingDistance;
         if (diff.X <= 0f || diff.Y <= 0f)
             return false;
-        diff -= gpBufferSize;
+        diff -= new NumVector2(int.Max(camera.Viewport.Width, 320), int.Max(camera.Viewport.Height, 180));
         diff -= cullingDistance;
         diff -= cullingDistance;
         
