@@ -676,6 +676,8 @@ public static class ConditionHelper {
     public abstract class Condition : ISavestatePersisted {
         internal static readonly object One = 1;
         internal static readonly object Zero = 0;
+
+        protected object BoolToBoxedInt(bool b) => b ? One : Zero;
         
         public abstract object Get(Session session, object? userdata);
 

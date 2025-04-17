@@ -12,12 +12,10 @@ local fallingBlockIgnoreSolids = {
 jautils.createPlacementsPreserveOrder(fallingBlockIgnoreSolids, "default", {
     { "width", 8 },
     { "height", 8 },
-    { "tiletype", "3" },
+    { "tiletype", "3", "tiletype", { layer = "tilesFg" } },
     { "climbFall", true },
     { "behind", false },
     { "allowStaticMovers", true },
 })
-
-fallingBlockIgnoreSolids.fieldInformation = fakeTilesHelper.getFieldInformation("tiletype")
 
 return fallingBlockIgnoreSolids

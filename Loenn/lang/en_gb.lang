@@ -1070,4 +1070,7 @@ style.effects.FrostHelper/Gradient.description.loopY=Whether the gradient loops 
 ui.fh.attachGroup.tooltip=Assigns this entity a new group that's not yet used in this room
 ui.fh.attachGroup.name=Auto
 
+ui.fh.altTileGrid.edit.name=Edit Tile Layer
+ui.fh.altTileGrid.edit.tooltip=Edit this Alternate Tile Layer.
+
 ui.menubar.fh_showSpinnerConnectors=Show Spinner Connectors [Frost Helper]

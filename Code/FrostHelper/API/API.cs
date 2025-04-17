@@ -169,6 +169,7 @@ public static partial class API {
     public static void UpdateShapeColliderPoint(Collider shapeCollider, int pointIndex, Vector2 point) {
         if (shapeCollider is ShapeHitbox shape) {
             shape.Points[pointIndex] = point;
+            shape.OnChanged();
         } else {
             throw new ArgumentException($"The first argument to {nameof(UpdateShapeColliderPoint)} must be a {nameof(ShapeHitbox)}!");
         }

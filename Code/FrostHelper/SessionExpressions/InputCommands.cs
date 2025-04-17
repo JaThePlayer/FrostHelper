@@ -157,13 +157,13 @@ internal static class InputCommands {
 
     private sealed class OperatorCheckButton(VirtualButton button, OperatorCheckButton.Modes mode) : Condition {
         public override object Get(Session session, object? userdata) {
-            return mode switch {
-                Modes.Check => button.Check ? 1 : 0,
-                Modes.Repeating => button.Repeating ? 1 : 0,
-                Modes.Pressed => button.Pressed ? 1 : 0,
-                Modes.Released => button.Released ? 1 : 0,
-                _ => 0
-            };
+            return BoolToBoxedInt(mode switch {
+                Modes.Check => button.Check,
+                Modes.Repeating => button.Repeating,
+                Modes.Pressed => button.Pressed,
+                Modes.Released => button.Released,
+                _ => false
+            });
         }
 
         public override bool OnlyChecksFlags() => false;
@@ -182,7 +182,7 @@ internal static class InputCommands {
             return mode switch {
                 Modes.X => joystick.Value.X,
                 Modes.Y => joystick.Value.Y,
-                _ => 0
+                _ => Zero
             };
         }
 

@@ -49,7 +49,7 @@ internal static class SimpleCommands {
         public override object Get(Session session, object? userdata) {
             var ret = func(session, userdata);
             if (ret is bool b)
-                return b ? 1 : 0;
+                return BoolToBoxedInt(b);
             return ret;
         }
 
@@ -63,7 +63,7 @@ internal static class SimpleCommands {
     }
 
     private sealed class HasGoldenAccessor : Condition {
-        public override object Get(Session session, object? userdata) => session.GrabbedGolden ? 1 : 0;
+        public override object Get(Session session, object? userdata) => BoolToBoxedInt(session.GrabbedGolden);
 
         protected internal override Type ReturnType => typeof(int);
     }
@@ -87,7 +87,7 @@ internal static class SimpleCommands {
     }
 
     private sealed class RestartedFromGoldenAccessor : Condition {
-        public override object Get(Session session, object? userdata) => session.RestartedFromGolden ? 1 : 0;
+        public override object Get(Session session, object? userdata) => BoolToBoxedInt(session.RestartedFromGolden);
 
         public override bool OnlyChecksFlags() => false;
 
@@ -105,9 +105,8 @@ internal static class SimpleCommands {
     }
 
     private sealed class PhotosensitiveAccessor : Condition {
-        public override object Get(Session session, object? userdata) {
-            return Settings.Instance.DisableFlashes ? 1 : 0;
-        }
+        public override object Get(Session session, object? userdata) =>
+            BoolToBoxedInt(Settings.Instance.DisableFlashes);
 
         public override bool OnlyChecksFlags() => false;
 
@@ -115,9 +114,8 @@ internal static class SimpleCommands {
     }
     
     private sealed class AllowLightningAccessor : Condition {
-        public override object Get(Session session, object? userdata) {
-            return CoreModule.Settings.AllowLightning ? 1 : 0;
-        }
+        public override object Get(Session session, object? userdata)
+            => BoolToBoxedInt(CoreModule.Settings.AllowLightning);
 
         public override bool OnlyChecksFlags() => false;
 
@@ -125,9 +123,8 @@ internal static class SimpleCommands {
     }
     
     private sealed class AllowDistortAccessor : Condition {
-        public override object Get(Session session, object? userdata) {
-            return CoreModule.Settings.AllowDistort ? 1 : 0;
-        }
+        public override object Get(Session session, object? userdata)
+            => BoolToBoxedInt(CoreModule.Settings.AllowDistort);
 
         public override bool OnlyChecksFlags() => false;
 
@@ -135,9 +132,8 @@ internal static class SimpleCommands {
     }
     
     private sealed class AllowGlitchAccessor : Condition {
-        public override object Get(Session session, object? userdata) {
-            return CoreModule.Settings.AllowGlitch ? 1 : 0;
-        }
+        public override object Get(Session session, object? userdata) =>
+            BoolToBoxedInt(CoreModule.Settings.AllowGlitch);
 
         public override bool OnlyChecksFlags() => false;
 
@@ -145,9 +141,8 @@ internal static class SimpleCommands {
     }
     
     private sealed class AllowScreenFlashAccessor : Condition {
-        public override object Get(Session session, object? userdata) {
-            return CoreModule.Settings.AllowScreenFlash ? 1 : 0;
-        }
+        public override object Get(Session session, object? userdata)
+            => BoolToBoxedInt(CoreModule.Settings.AllowScreenFlash);
 
         public override bool OnlyChecksFlags() => false;
 
@@ -155,9 +150,8 @@ internal static class SimpleCommands {
     }
     
     private sealed class AllowTextHighlightAccessor : Condition {
-        public override object Get(Session session, object? userdata) {
-            return CoreModule.Settings.AllowTextHighlight ? 1 : 0;
-        }
+        public override object Get(Session session, object? userdata) =>
+            BoolToBoxedInt(CoreModule.Settings.AllowTextHighlight);
 
         public override bool OnlyChecksFlags() => false;
 
@@ -201,7 +195,7 @@ internal static class SimpleCommands {
             if (Engine.Scene.Tracker.SafeGetEntity<Player>() is { } player)
                 return _lastValue = GetFromPlayer(player);
 
-            return _lastValue ?? 0;
+            return _lastValue ?? Zero;
         }
 
         public override bool OnlyChecksFlags() => false;

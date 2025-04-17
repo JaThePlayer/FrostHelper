@@ -20,7 +20,7 @@ internal abstract class EntityCondition : ConditionHelper.Condition {
         if (userdata is Entity entity) {
             return GetValue(session, entity);
         }
-        return 0;
+        return Zero;
     }
 }
 
@@ -32,6 +32,7 @@ where T : Entity {
         if (userdata is T entity) {
             return GetValue(session, entity);
         }
-        return 0;
+
+        return Zero;
     }
 }

@@ -103,7 +103,6 @@ internal sealed class CustomDustGraphic : DustGraphic {
     // main rendering method
     private static void DustEdges_BeforeRender(On.Celeste.DustEdges.orig_BeforeRender orig, DustEdges self) {
         orig(self);
-
         var edges = self.Scene.Tracker.GetComponents<CustomDustEdge>();
         if (edges.Count == 0)
             return;
@@ -126,8 +125,8 @@ internal sealed class CustomDustGraphic : DustGraphic {
         gd.Textures[1] = self.DustNoiseFrom!.Texture_Safe;
         gd.Textures[2] = self.DustNoiseTo.Texture_Safe;
 
-        gd.SetRenderTarget(GameplayBuffers.ResortDust);
-        gd.Clear(Color.Transparent);
+        //gd.SetRenderTarget(GameplayBuffers.ResortDust);
+        //gd.Clear(Color.Transparent);
 
         var customDustBuffer = RenderTargetHelper<CustomDustBunny>.Get();
 
