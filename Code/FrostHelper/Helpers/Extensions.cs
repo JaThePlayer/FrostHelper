@@ -1,5 +1,6 @@
 ﻿using FrostHelper.Helpers;
 using System.Globalization;
+using System.Runtime.CompilerServices;
 
 namespace FrostHelper;
 
@@ -79,12 +80,22 @@ public static class Extensions {
             return defaultValue;
         }
 
-        int splitIndex = val.IndexOf(',');
+        var parser = new SpanParser(val);
+        if (!parser.ReadUntil<float>(',').TryUnpack(out var x)) {
+            NotificationHelper.Notify($"Failed to parse {val} as a Vector2!");
+            return defaultValue;
+        }
 
-        return splitIndex switch {
-            -1 => treatFloatAsXOnly ? new(val.ToSingle(), defaultValue.Y) : new(val.ToSingle()),
-            _ => new(val.Substring(0, splitIndex).ToSingle(), val.Substring(splitIndex + 1).ToSingle())
-        };
+        if (parser.IsEmpty) {
+            return treatFloatAsXOnly ? new(x, defaultValue.Y) : new(x);
+        }
+        
+        if (!parser.ReadUntil<float>(',').TryUnpack(out var y)) {
+            NotificationHelper.Notify($"Failed to parse {val} as a Vector2!");
+            return defaultValue;
+        }
+
+        return new(x, y);
     }
 
     public static Vector2[] GetNodesWithOffsetWithPositionPrepended(this EntityData data, Vector2 offset) {
@@ -306,7 +317,21 @@ public static class Extensions {
     
     public static Vector2 Add(this Vector2 vector, NumVector2 other) => new(vector.X + other.X, vector.Y + other.Y);
     
-    public static NumVector2 ToNumerics(this Vector2 vector) => new(vector.X, vector.Y);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static NumVector2 ToNumerics(this Vector2 vector)
+#if NET8_0_OR_GREATER
+        => Unsafe.BitCast<Vector2, NumVector2>(vector);
+#else
+        => new(vector.X, vector.Y);
+#endif
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector2 ToXna(this NumVector2 vector)
+    #if NET8_0_OR_GREATER
+        => Unsafe.BitCast<NumVector2, Vector2>(vector);
+    #else
+        => new(vector.X, vector.Y);
+    #endif
 
     public static bool ParsePair(this ReadOnlySpan<char> str, char splitOn, out ReadOnlySpan<char> left,
         out ReadOnlySpan<char> right) {

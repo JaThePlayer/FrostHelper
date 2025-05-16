@@ -130,8 +130,6 @@ public class CustomSpinner : Entity {
     public string directory;
     public string destroyColor;
     public bool isCore;
-    public static ParticleType P_Move => CrystalStaticSpinner.P_Move;
-    public const float ParticleInterval = 0.02f;
 
     // used by maddie's helping hand
     public bool AttachToSolid;
@@ -158,6 +156,8 @@ public class CustomSpinner : Entity {
     internal bool ColliderDisabledExternally = false;
 
     private string hitboxStr;
+
+    private int _lastDepth;
 
     internal void CreateCollider() {
         if (Collider is { })
@@ -238,7 +238,7 @@ public class CustomSpinner : Entity {
             Collidable = false;
             ColliderDisabledExternally = true;
         }
-        Depth = data.Int("depth", -8500);
+        Depth = _lastDepth = data.Int("depth", -8500);
         AttachToSolid = attachToSolid;
         AttachGroup = data.Int("attachGroup", -1);
         if (AttachToSolid) {
@@ -356,8 +356,9 @@ public class CustomSpinner : Entity {
     }
 
     internal void SetDepth(int newDepth) {
-        if (newDepth == Depth)
+        if (newDepth == _lastDepth)
             return;
+        _lastDepth = newDepth;
         
         UnregisterFromRenderers();
         Depth = newDepth;
@@ -466,6 +467,10 @@ public class CustomSpinner : Entity {
                     UpdateHue();
             }
         } else {
+            // Fix Crystalline Helper Depth triggers used on spinners, needed for older maps
+            if (_lastDepth != Depth)
+                SetDepth(Depth);
+            
             // No need to call base.Update, as none of the components need to get updated.
             // We dodge horrible hooks this way (+ enumeration through the component list)
             // base.Update();

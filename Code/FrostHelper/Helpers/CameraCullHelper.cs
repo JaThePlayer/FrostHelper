@@ -1,17 +1,45 @@
-﻿//#define CULL_RECT_RENDER
-
-using FrostHelper.Helpers;
+﻿using FrostHelper.Helpers;
+using System.Runtime.CompilerServices;
+using System.Runtime.Intrinsics;
 
 namespace FrostHelper; 
+
 public static class CameraCullHelper {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsRectangleVisible(float x, float y, float w, float h, float lenience = 4f, Camera? camera = null) {
-        camera ??= (Engine.Scene as Level)?.Camera;
-        return camera is null || (
-            x + w >= camera.Left - lenience 
-         && x <= camera.Right + lenience 
-         && y + h >= camera.Top - lenience 
-         && y <= camera.Bottom + lenience
-        );
+        camera ??= (Engine.Scene as Level)!.Camera!;
+        x -= camera.Left;
+        y -= camera.Top;
+        
+        if (Vector128.IsHardwareAccelerated) {
+            NumVector2 viewportSize = new NumVector2(camera.Viewport.Width, camera.Viewport.Height) * camera.zoom.ToNumerics();
+            return Vector128.LessThanOrEqualAll(
+                Vector128.Create(-w - x, - h - y, x - viewportSize.X, y - viewportSize.Y), 
+                Vector128.Create(lenience));
+        }
+        
+        return x + w >= - lenience
+               && y + h >= - lenience
+               && x <= lenience + camera.Viewport.Width * camera.zoom.X
+               && y <= lenience + camera.Viewport.Height * camera.zoom.Y;
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static bool IsPointVisible(NumVector2 pos, float lenience, Camera camera) {
+        pos -= new NumVector2(camera.Left, camera.Top);
+        
+        if (Vector128.IsHardwareAccelerated) {
+            var viewportSize = new NumVector2(camera.Viewport.Width, camera.Viewport.Height) * camera.zoom.ToNumerics();
+            viewportSize -= pos;
+            return Vector128.GreaterThanAll(
+                Vector128.Create(pos.X, pos.Y, viewportSize.X, viewportSize.Y), 
+                Vector128.Create(-lenience));
+        }
+        
+        return pos.X >= - lenience
+               && pos.Y >= - lenience
+               && pos.X <= lenience + camera.Viewport.Width * camera.zoom.X
+               && pos.Y <= lenience + camera.Viewport.Height * camera.zoom.Y;
     }
 
     public static bool IsRectangleVisible(Rectangle rectangle, float lenience = 4f, Camera? camera = null) {

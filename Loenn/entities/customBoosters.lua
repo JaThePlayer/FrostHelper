@@ -1,5 +1,6 @@
 local jautils = require("mods").requireFromPlugin("libraries.jautils")
 local utils = require("utils")
+local drawableSpriteStruct = require("structs.drawable_sprite")
 
 local fallback = "objects/FrostHelper/dashIncrementBooster/booster00"
 
@@ -40,6 +41,31 @@ local function createCustomBoosterHandler(name, mainPlacement, secondPlacement)
     return handler
 end
 
+local vanillaBoosterDirectories = {
+    "objects/booster/booster00",
+    "objects/FrostHelper/dashIncrementBooster/booster00",
+    "objects/FrostHelper/grayBooster/booster00",
+    "objects/FrostHelper/blueBooster/booster00",
+    "objects/FrostHelper/yellowBooster/booster00",
+}
+
+local function getDirectoryFieldInfo(vanillaSprites) return {
+    baseFolder = "objects",
+    pattern = "^(objects/.*/)booster00$",
+    filter = function(dir) return
+            (not not drawableSpriteStruct.fromTexture(dir .. "booster00", {}))
+        and (not not drawableSpriteStruct.fromTexture(dir .. "outline", {}))
+    end,
+    captureConverter = function(dir)
+        return dir
+    end,
+    displayConverter = function(dir)
+        return utils.humanizeVariableName(string.match(dir, "^.*/(.*)/$") or dir)
+    end,
+    vanillaSprites = vanillaSprites or {},
+    langDir = "customBooster",
+} end
+
 local dashIncrementBooster = createCustomBoosterHandler("FrostHelper/IncrementBooster",
 {
     { "respawnTime", 1.0 },
@@ -48,7 +74,7 @@ local dashIncrementBooster = createCustomBoosterHandler("FrostHelper/IncrementBo
     { "dashes", 1 },
     { "particleColor", "93bd40", "color" },
     { "outlineColor", "000000", "color" },
-    { "directory", "objects/FrostHelper/dashIncrementBooster/" },
+    { "directory", "objects/FrostHelper/dashIncrementBooster/", "FrostHelper.texturePath", getDirectoryFieldInfo(vanillaBoosterDirectories) },
     { "reappearSfx", "event:/game/04_cliffside/greenbooster_reappear" },
     { "enterSfx", "event:/game/04_cliffside/greenbooster_enter" },
     { "boostSfx", "event:/game/04_cliffside/greenbooster_dash" },
@@ -76,7 +102,7 @@ local grayBooster = createCustomBoosterHandler("FrostHelper/GrayBooster", {
     { "boostTime", 0.0 },
     { "particleColor", "Gray", "color" },
     { "outlineColor", "000000", "color" },
-    { "directory", "objects/FrostHelper/grayBooster/" },
+    { "directory", "objects/FrostHelper/grayBooster/", "FrostHelper.texturePath", getDirectoryFieldInfo(vanillaBoosterDirectories) },
     { "reappearSfx", "event:/game/04_cliffside/greenbooster_reappear" },
     { "enterSfx", "event:/game/04_cliffside/greenbooster_enter" },
     { "boostSfx", "event:/game/04_cliffside/greenbooster_dash" },
@@ -102,7 +128,7 @@ local blueBooster = createCustomBoosterHandler("FrostHelper/BlueBooster", {
     { "boostTime", 0.25 },
     { "particleColor", "87cefa", "color" },
     { "outlineColor", "000000", "color" },
-    { "directory", "objects/FrostHelper/blueBooster/" },
+    { "directory", "objects/FrostHelper/blueBooster/", "FrostHelper.texturePath", getDirectoryFieldInfo(vanillaBoosterDirectories) },
     { "reappearSfx", "event:/game/04_cliffside/greenbooster_reappear" },
     { "enterSfx", "event:/game/04_cliffside/greenbooster_enter" },
     { "boostSfx", "event:/game/04_cliffside/greenbooster_dash" },
@@ -120,7 +146,7 @@ local yellowBooster = createCustomBoosterHandler("FrostHelper/YellowBooster", {
     { "particleColor", "Yellow", "color" },
     { "outlineColor", "000000", "color" },
     { "flashTint", "Red", "color" },
-    { "directory", "objects/FrostHelper/yellowBooster/" },
+    { "directory", "objects/FrostHelper/yellowBooster/", "FrostHelper.texturePath", getDirectoryFieldInfo(vanillaBoosterDirectories) },
     { "reappearSfx", "event:/game/04_cliffside/greenbooster_reappear" },
     { "enterSfx", "event:/game/04_cliffside/greenbooster_enter" },
     { "boostSfx", "event:/game/04_cliffside/greenbooster_dash" },

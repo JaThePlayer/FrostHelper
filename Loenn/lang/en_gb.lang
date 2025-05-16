@@ -12,6 +12,11 @@ FrostHelper.fields.flagCounterController.flag.tooltip=Condition that needs to be
 FrostHelper.fields.flagCounterController.value=Value
 FrostHelper.fields.flagCounterController.value.tooltip=Value added to the counter if the Condition is met.\nSession expressions are supported, refer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Session-Expressions
 
+FrostHelper.fields.range.from=Min
+FrostHelper.fields.range.from.tooltip=The minimum value of this range.
+FrostHelper.fields.range.to=Max
+FrostHelper.fields.range.to.tooltip=The maximum value of this range.
+
 # -- Entities --
 # entities.entityName.placements.*
 # entities.entityName.description.*
@@ -635,6 +640,22 @@ entities.FrostHelper/RainbowSwitchGate.placements.name.default=Rainbow Switch Ga
 entities.FrostHelper/RainbowSwitchGate.attributes.description.persistent=Will stay open once activated, even if the player dies.
 entities.FrostHelper/RainbowSwitchGate.attributes.description.sprite=Changes the visual appearance of the switch gate.
 
+
+entities.FrostHelper/DynamicRainGenerator.placements.name.default=Dynamic Rain Generator
+entities.FrostHelper/DynamicRainGenerator.placements.description.default=Generates Dynamic Rain, which can collide with solids and be at any angle.
+entities.FrostHelper/DynamicRainGenerator.attributes.description.colors=List of colors used for the rain. A random color from this list will be chosen for each rain droplet.
+entities.FrostHelper/DynamicRainGenerator.attributes.description.density=Determines how many rain droplets there will be.
+entities.FrostHelper/DynamicRainGenerator.attributes.description.speedRange=A range of speed values for rain droplets, from the lowest to the highest.
+entities.FrostHelper/DynamicRainGenerator.attributes.description.rotationRange=A range of rotation values for rain droplets (in degrees), from the lowest to the highest.
+entities.FrostHelper/DynamicRainGenerator.attributes.description.depth=The depth at which rain and its particles will be rendered.
+entities.FrostHelper/DynamicRainGenerator.attributes.description.enableFlag=Flag which needs to be set to enable this generator to create new rain particles. Existing particles will continue existing until they collide. Session Expressions are supported.
+entities.FrostHelper/DynamicRainGenerator.attributes.description.collideWith=List of entity SIDs or C# type names that rain droplets will collide with. They need to be Tracked.
+entities.FrostHelper/DynamicRainGenerator.attributes.description.rainbow=Whether rain droplets should use rainbow colors instead. Their color is chosen at creation time, then stays the same for their lifespan.
+entities.FrostHelper/DynamicRainGenerator.attributes.description.attachToSolid=Whether the generator should attach to solids.\nExisting droplets will stay in place, while new ones will be generated at the new location.
+entities.FrostHelper/DynamicRainGenerator.attributes.description.generatorLength=Generators with high Width or Height get automatically split into smaller ones, for performance reasons.\nThis setting determines the length of the smaller generators.\nFor generators with high rotation values, this setting might visibly impact where rain droplets get created at,\nwhich might matter if the generator is on-screen.\nToo small or too large values might degrade performance,\nthough the value that's best for performance depends on the exact layout of the room and is hard to measure.\nLeave at -1 to let Frost Helper automatically pick a value.
+entities.FrostHelper/DynamicRainGenerator.attributes.description.editorPreviewLength=Changes the length of the in-editor preview lines showing the angle rangle of the rain droplets.\nHas no in-game effect.
+entities.FrostHelper/DynamicRainGenerator.attributes.description.presimulationTime=How long (in seconds) the rain should be pre-simulated before the first render frame.\nHelps avoid issues with rain not existing on room load / transition.
+
 # -- Mod Names --
 # mods.modName.*
 mods.FrostHelper.name=Frost Helper
@@ -1074,3 +1095,6 @@ ui.fh.altTileGrid.edit.name=Edit Tile Layer
 ui.fh.altTileGrid.edit.tooltip=Edit this Alternate Tile Layer.
 
 ui.menubar.fh_showSpinnerConnectors=Show Spinner Connectors [Frost Helper]
+
+ui.fh.fields.scan=Scan
+ui.fh.fields.scan.tooltip=Scan all mods to fill the below dropdown with sprites, might take a while a finish.

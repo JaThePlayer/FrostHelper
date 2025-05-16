@@ -4,11 +4,6 @@ local utils = require("utils")
 
 local dustEdgeColor = {1.0, 0.0, 0.0}
 
-local builtinDirectories = {
-    "danger/dustcreature",
-    "frostHelper/whiteDust",
-}
-
 local dust = {
     name = "FrostHelper/DustSprite",
     depth = -50,
@@ -16,7 +11,24 @@ local dust = {
 
 jautils.createPlacementsPreserveOrder(dust, "default", {
     { "edgeColors", "f25a10,ff0000,f21067", "colorList" },
-    { "directory", "danger/dustcreature", "editableDropdown", builtinDirectories },
+    { "directory", "danger/FrostHelper/whiteDust", "FrostHelper.texturePath", {
+        baseFolder = "danger",
+        pattern = "^(danger/.*)/base00$",
+        filter = function(dir) return
+                (not not drawableSpriteStruct.fromTexture(dir .. "/base00", {}))
+            and (not not drawableSpriteStruct.fromTexture(dir .. "/center00", {}))
+            and (not not drawableSpriteStruct.fromTexture(dir .. "/eyes00", {}))
+            and (not not drawableSpriteStruct.fromTexture(dir .. "/overlay00", {}))
+        end,
+        captureConverter = function(dir)
+            return dir
+        end,
+        displayConverter = function(dir)
+            return utils.humanizeVariableName(string.match(dir, "^.*/(.*)$") or dir)
+        end,
+        vanillaSprites = { "danger/dustcreature/base00", "danger/FrostHelper/whiteDust/base00"  },
+        langDir = "customDust",
+    } },
     { "tint", "ffffff", "color" },
     { "eyeColor", "ff0000", "color" },
     { "attachGroup", -1, "FrostHelper.attachGroup" },

@@ -24,7 +24,7 @@ public class ArbitraryShapeFireBarrier : Entity {
         for (int i = 0; i < indices.Length; i++) {
             Vertices[i] = new Vector3(verts[indices[i]], 0f);
         }
-        LavaShape Lava = new LavaShape(input, Vertices, IsIce ? 2 : 4);
+        LavaShape Lava = new LavaShape(input.ToArray(), Vertices, IsIce ? 2 : 4);
         Lava.SurfaceColor = ColorHelper.GetColor(data.Attr("surfaceColor", "ff8933"));
         Lava.EdgeColor = ColorHelper.GetColor(data.Attr("edgeColor", "f25e29"));
         Lava.CenterColor = ColorHelper.GetColor(data.Attr("centerColor", "d01c01"));

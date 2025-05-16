@@ -7,8 +7,6 @@ plusOneRefill.name = "FrostHelper/PlusOneRefill"
 plusOneRefill.depth = -100
 
 jautils.createPlacementsPreserveOrder(plusOneRefill, "normal", {
-    { "directory", "objects/FrostHelper/plusOneRefill"},
-   --[[   
     { "directory", "objects/FrostHelper/plusOneRefill", "FrostHelper.texturePath", {
         baseFolder = "objects",
         pattern = "^(objects/.*)/outline$",
@@ -17,16 +15,14 @@ jautils.createPlacementsPreserveOrder(plusOneRefill, "normal", {
             and (not not drawableSpriteStruct.fromTexture(dir .. "/flash00", {}))
         end,
         captureConverter = function(dir)
-            print(dir)
             return dir
         end,
         displayConverter = function(dir)
             return utils.humanizeVariableName(string.match(dir, "^.*/(.*)$") or dir)
         end,
-        vanillaSprites = { "objects/spring/white" },
-        langDir = "customSpring",
+        vanillaSprites = { "objects/FrostHelper/plusOneRefill/outline" },
+        langDir = "plusOneRefill",
     }},
-    ]]
     { "particleColor", "ffffff", "color" },
     { "dashCount", 1, "integer" },
     { "respawnTime", 2.5 },

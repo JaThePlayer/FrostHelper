@@ -39,7 +39,7 @@ jautils.createPlacementsPreserveOrder(switchGate, "default", {
         displayConverter = function(dir)
             return utils.humanizeVariableName(string.match(dir, "^.*/(.*)/$") or dir)
         end,
-        vanillaSprites = { "objects/switchgate/icon00" },
+        vanillaSprites = { "objects/switchgate/block" },
         langDir = "rainbowSwitchGate",
     }},
     { "persistent", false }

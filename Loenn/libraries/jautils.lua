@@ -367,9 +367,7 @@ jautils.fieldTypeOverrides = {
         }
     end,
     ["FrostHelper.texturePath"] = function (data)
-        if not compat.inSnowberry
-           -- Way too laggy for now
-           and not (compat.inLonn and (data.baseFolder == "objects" or data.baseFolder == "objects/switchgate")) then
+        if not compat.inSnowberry then
             data.fieldType = "FrostHelper.texturePath"
             return data
         end
@@ -399,6 +397,22 @@ jautils.fieldTypeOverrides = {
                 "FullRandom",
                 "Custom",
             },
+        }
+    end,
+    ["range"] = function (data)
+        return {
+            fieldType = "FrostHelper.complexField",
+            separator = ",",
+            innerFields = {
+                {
+                    name = "FrostHelper.fields.range.from",
+                    default = data.from or 0
+                },
+                {
+                    name = "FrostHelper.fields.range.to",
+                    default = data.to or 0
+                },
+            }
         }
     end,
 }
@@ -822,6 +836,11 @@ end
 
 function jautils.getLineSprite(x1, y1, x2, y2, color, thickness)
     return drawableLineStruct.fromPoints({x1, y1, x2, y2}, color or jautils.colorWhite, thickness or 1)
+end
+
+function jautils.getLineSpriteFloored(x1, y1, x2, y2, color, thickness)
+    local floor = math.floor
+    return drawableLineStruct.fromPoints({floor(x1), floor(y1), floor(x2), floor(y2)}, color or jautils.colorWhite, thickness or 1)
 end
 
 ---Returns a sprite that renders a hollow ellipse

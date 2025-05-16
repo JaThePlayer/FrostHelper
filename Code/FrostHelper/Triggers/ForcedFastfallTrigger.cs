@@ -1,4 +1,4 @@
-﻿using Celeste.Mod.Entities;
+﻿using Celeste.Mod.Helpers;
 
 namespace FrostHelper;
 
@@ -42,36 +42,23 @@ public class ForcedFastfallTrigger : Trigger {
     private static void Player_NormalUpdate(ILContext il) {
         var cursor = new ILCursor(il);
 
-        while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdcR4(Player.MaxFall))) {
-            cursor.Emit(OpCodes.Pop);
-            cursor.Emit(OpCodes.Ldarg_0); // this
-            cursor.EmitDelegate(GetMaxFallSpeed);
-            break;
+        if (!cursor.TryGotoNextBestFit(MoveType.After,
+                instr => instr.MatchStfld<Player>(nameof(Player.maxFall)),
+                instr => instr.MatchLdsfld("Celeste.Input", nameof(Input.MoveY)),
+                instr => instr.MatchCall<VirtualIntegerAxis>("op_Implicit"))) {
+            Logger.Log(LogLevel.Error, "FrostHelper", "Failed to apply Player_NormalUpdate() IL hook for ForcedFastfallTrigger!");
+            return;
         }
-
-        while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchStloc(9))) {
-            cursor.Emit(OpCodes.Ldarg_0); // this
-            cursor.EmitDelegate(GetCurrentFallSpeed);
-            cursor.Emit(OpCodes.Stloc_S, (byte) 9);
-            break;
-        }
-    }
-
-    private static float GetCurrentFallSpeed(Player player) {
-        if (IsForcedFastfall(player.Scene))
-            return Player.MaxFall + (Player.FastMaxFall - Player.MaxFall) * 0.5f; //200f;
         
-        float maxFall = Player.MaxFall;
-        float fastMaxFall = Player.FastMaxFall;
-        if (player.SceneAs<Level>().InSpace) {
-            maxFall *= 0.6f;
-            fastMaxFall *= 0.6f;
-        }
-
-        return maxFall + (fastMaxFall - maxFall) * 0.5f;
+        // - if (Input.MoveY == 1f && this.Speed.Y >= num3)
+        // + if (FakeMoveY(Input.MoveY, this) == 1f && this.Speed.Y >= num3)
+        cursor.Emit(OpCodes.Ldarg_0);
+        cursor.EmitDelegate(FakeMoveY);
     }
 
-    private static float GetMaxFallSpeed(Player player) {
-        return !IsForcedFastfall(player.Scene) ? Player.MaxFall : Player.FastMaxFall;
+    private static float FakeMoveY(float orig, Player player) {
+        if (IsForcedFastfall(player.Scene))
+            return 1f;
+        return orig;
     }
 }

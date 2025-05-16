@@ -67,12 +67,6 @@ local function createSpringHandler(name, spriteRotation, speedAsVector)
 
     jautils.createPlacementsPreserveOrder(handler, "normal", {
         { "color", "ffffff", "color" },
-        --[[
-        { "directory", "objects/spring/", "editableDropdown", {
-            "objects/spring/",
-            "objects/FrostHelper/whiteSpring/"
-        }},
-        ]]
         { "directory", "objects/spring/", "FrostHelper.texturePath", {
             baseFolder = "objects",
             pattern = "^(objects/.*/)00$",
@@ -83,7 +77,7 @@ local function createSpringHandler(name, spriteRotation, speedAsVector)
             displayConverter = function(dir)
                 return utils.humanizeVariableName(string.match(dir, "^.*/(.*)/$") or dir)
             end,
-            vanillaSprites = { "objects/spring/white" },
+            vanillaSprites = { "objects/spring/00", "objects/FrostHelper/whiteSpring/00" },
             langDir = "customSpring",
             fallback = {
                 "objects/spring/",

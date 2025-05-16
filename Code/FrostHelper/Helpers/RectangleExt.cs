@@ -1,4 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
+using System.Runtime.Intrinsics;
 
 namespace FrostHelper.Helpers;
 
@@ -123,6 +124,17 @@ public static class RectangleExt {
     public static Rectangle MovedBy(this Rectangle r, Vector2 offset) => new(r.X + (int) offset.X, r.Y + (int) offset.Y, r.Width, r.Height);
     public static Rectangle MovedBy(this Rectangle r, int x, int y) => new(r.X + x, r.Y + y, r.Width, r.Height);
     public static Rectangle MovedTo(this Rectangle r, Vector2 pos) => new((int) pos.X, (int) pos.Y, r.Width, r.Height);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool Contains(this Rectangle r, NumVector2 value) {
+        if (Vector128.IsHardwareAccelerated) {
+            return Vector128.LessThanOrEqualAll(
+                Vector128.Create(r.X - value.X, r.Y - value.Y, value.X - r.X - r.Width, value.Y - r.Y - r.Height), 
+                Vector128.Create(0, 0, -1, -1f));
+        }
+        
+        return r.Y <= value.Y && value.Y < r.Y + r.Height && r.X <= value.X && value.X < r.X + r.Width;
+    }
     
     private struct GetX : IStaticFunc<Vector2, int>, IStaticFunc<Vector3, int>, IStaticFunc<Point, int>, IStaticFunc<NumVector2, int> {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

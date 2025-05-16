@@ -11,7 +11,7 @@ using Vector2 = Microsoft.Xna.Framework.Vector2;
 namespace FrostHelper.Helpers;
 
 public static class ConditionHelper {
-    private static readonly Condition EmptyCondition = new Empty();
+    internal static readonly Condition EmptyCondition = new Empty();
 
     internal static Condition CreateOrDefault(string txt, string defaultValue, ExpressionContext? ctx = null) {
         ctx ??= ExpressionContext.Default;
