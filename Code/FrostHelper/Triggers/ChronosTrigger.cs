@@ -1,96 +1,107 @@
-﻿// This is a legacy class used for 1 (one) map, I don't really care about how horrible it is rn
-#pragma warning disable CL0004
-
-namespace FrostHelper;
+﻿namespace FrostHelper;
 
 [CustomEntity("FrostHelper/ChronosTrigger")]
-public class ChronosTrigger : Trigger {
-    public float StartTime;
+[Tracked]
+internal sealed class ChronosTrigger : Trigger {
+    public readonly float StartTime;
     public float CurrentTime;
+    private bool _triggered = false;
+    private bool _died;
+    Player _player;
 
-    public new bool Triggered = false;
 
-    Player player;
-
-    public ChronosTrigger(EntityData data, Vector2 offset) : base(data, offset) {
-        StartTime = CurrentTime = data.Float("time", 2f);
+    private static bool _hooksLoaded;
+    private static void LoadHooksIfNeeded() {
+        if (_hooksLoaded)
+            return;
+        _hooksLoaded = true;
+        
+        On.Celeste.Player.UseRefill += Player_UseRefill;
+        On.Celeste.HeartGem.Collect += HeartGem_Collect;
     }
 
-    public override void Removed(Scene scene) {
-        base.Removed(scene);
+    [OnUnload]
+    internal static void UnloadHooks() {
+        if (!_hooksLoaded)
+            return;
+        _hooksLoaded = false;
+        
         On.Celeste.Player.UseRefill -= Player_UseRefill;
         On.Celeste.HeartGem.Collect -= HeartGem_Collect;
+    }
+    
+    public ChronosTrigger(EntityData data, Vector2 offset) : base(data, offset) {
+        LoadHooksIfNeeded();
+        StartTime = CurrentTime = data.Float("time", 2f);
     }
 
     public override void OnEnter(Player player) {
         base.OnEnter(player);
-        if (!Triggered) {
-            ChronosDisplay? display;
-            if ((display = player.Scene.Tracker.SafeGetEntity<ChronosDisplay>()) != null) {
-                display.TrackedTrigger = this;
-            } else {
-                Scene.Add(new ChronosDisplay(this));
-            }
-            Triggered = true;
-            this.player = player;
-            On.Celeste.Player.UseRefill += Player_UseRefill;
-            On.Celeste.HeartGem.Collect += HeartGem_Collect;
+        
+        if (_triggered)
+            return;
+        
+        if (player.Scene.Tracker.SafeGetEntity<ChronosDisplay>() is {} display) {
+            display.TrackedTrigger = this;
+        } else {
+            Scene.Add(new ChronosDisplay(this));
         }
+        
+        _triggered = true;
+        _player = player;
     }
 
-    private void HeartGem_Collect(On.Celeste.HeartGem.orig_Collect orig, HeartGem self, Player player) {
-        if (Scene == null) {
-            On.Celeste.Player.UseRefill -= Player_UseRefill;
-            On.Celeste.HeartGem.Collect -= HeartGem_Collect;
-            orig(self, player);
-            return;
+    private static bool Player_UseRefill(On.Celeste.Player.orig_UseRefill orig, Player self, bool twoDashes) {
+        if (self.Scene?.Tracker.SafeGetEntity<ChronosTrigger>() is not {} chronosTrigger) {
+            return orig(self, twoDashes);
         }
+
+        _ = orig(self, twoDashes);
+        if (chronosTrigger.CurrentTime < 0) {
+            Distort.Anxiety = 0f;
+            Engine.TimeRate = 1f;
+        }
+        
+        chronosTrigger.CurrentTime = chronosTrigger.StartTime;
+        return true; // we'll always use the refill.
+    }
+
+    private static void HeartGem_Collect(On.Celeste.HeartGem.orig_Collect orig, HeartGem self, Player player) {
         orig(self, player);
-        RemoveSelf();
+        if (self.Scene?.Tracker.SafeGetEntity<ChronosTrigger>() is not {} chronosTrigger)
+            return;
+        
+        chronosTrigger.RemoveSelf();
         ChronosDisplay? display;
         if ((display = player.Scene.Tracker.SafeGetEntity<ChronosDisplay>()) != null)
             display.RemoveSelf();
     }
-    
-    private bool Player_UseRefill(On.Celeste.Player.orig_UseRefill orig, Player self, bool twoDashes) {
-        if (Scene == null) {
-            On.Celeste.Player.UseRefill -= Player_UseRefill;
-            On.Celeste.HeartGem.Collect -= HeartGem_Collect;
-            return orig(self, twoDashes);
-        }
 
-        bool ret = orig(self, twoDashes);
-        if (CurrentTime < 0) {
-            Distort.Anxiety = 0f;
-            Engine.TimeRate = 1f;
-        }
-        CurrentTime = StartTime;
-        return true;
-    }
-
-    bool died;
     public override void Update() {
         base.Update();
-        if (player != null && !player.Dead && Triggered && !player.CollideCheck<PlaybackBillboard>()) {
-            if (CurrentTime <= 0 && !died) {
+        if (_player is not { Dead: false })
+            return;
+        
+        if (_triggered && !_player.CollideCheck<PlaybackBillboard>()) {
+            if (CurrentTime <= 0 && !_died) {
                 // time ran out
                 Engine.TimeRate -= Engine.DeltaTime * 3f;
                 Distort.Anxiety += Engine.DeltaTime * 1.1f;
                 if (Engine.TimeRate < 0.1f) {
                     Engine.TimeRate = 0f;
-                    player.StateMachine.State = Player.StDummy;
-                    player.StateMachine.Locked = true;
+                    _player.StateMachine.State = Player.StDummy;
+                    _player.StateMachine.Locked = true;
 
                     if (Input.Talk.Pressed || Input.MenuConfirm.Pressed || Input.Dash.Pressed || Input.Jump.Pressed) {
-                        player.Die(Vector2.Zero, true);
+                        _player.Die(Vector2.Zero, true);
                         Engine.TimeRate = 1f;
-                        died = true;
+                        _died = true;
                     }
                 }
             } else {
                 CurrentTime -= Engine.DeltaTime;
             }
-        } else if (CurrentTime < 0 && player != null && !player.Dead && player.CollideCheck<PlaybackBillboard>()) {
+        } else if (CurrentTime < 0 && _player.CollideCheck<PlaybackBillboard>()) {
             Distort.Anxiety = 0f;
             Engine.TimeRate = 1f;
         }
@@ -98,7 +109,7 @@ public class ChronosTrigger : Trigger {
 }
 
 [Tracked]
-public class ChronosDisplay : Entity {
+internal sealed class ChronosDisplay : Entity {
     float fadeTime;
     bool fading;
     public ChronosTrigger TrackedTrigger;
