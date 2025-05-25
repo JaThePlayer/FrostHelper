@@ -1,5 +1,6 @@
 ﻿using FrostHelper.Helpers;
 using FrostHelper.ModIntegration;
+using System.Diagnostics.CodeAnalysis;
 
 namespace FrostHelper;
 
@@ -34,22 +35,63 @@ public class CustomLightningRenderer : Entity {
     public bool UpdateSeeds;
     public bool DrawEdges;
 
-    private static CustomLightningRenderer? justAddedRenderer = null;
+    internal bool AffectedByLightningBoxes => Cfg.AffectedByBreakerBoxes;
+    internal Color FillColor => Cfg.FillColor;
+    
+    internal Config Cfg;
 
-    public CustomLightningRenderer() {
-        edges = new();
-        Bolts = new();
-        fills = new();
-        arbitraryFills = new();
-        ElectricityColors = new[]
-        {
-                Calc.HexToColor("fcf579"),
-                Calc.HexToColor("8cf7e2")
-        };
+    internal record struct Config(bool AffectedByBreakerBoxes, EquatableArray<Config.BoltConfig> Bolts, int Depth, Color FillColor) {
+        public static Config Default => new(false, DefaultBolts, -1000100, ColorHelper.GetColor("18110919"));
+
+        public record struct BoltConfig(Color Color, float Thickness) : ISpanParsable<BoltConfig> {
+            public static BoltConfig Parse(string s, IFormatProvider? provider) {
+                return Parse(s.AsSpan(), provider);
+            }
+
+            public static bool TryParse([NotNullWhen(true)] string? s, IFormatProvider? provider, out BoltConfig result) {
+                return TryParse(s.AsSpan(), provider, out result);
+            }
+
+            public static BoltConfig Parse(ReadOnlySpan<char> s, IFormatProvider? provider) {
+                return TryParse(s, provider, out var config) ? config : default;
+            }
+
+            public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, out BoltConfig result) {
+                result = default;
+                
+                var parser = new SpanParser(s);
+                if (!parser.ReadUntil<RGBAOrXnaColor>(',').TryUnpack(out var color))
+                    return false;
+                float thickness = 1f;
+                if (!parser.IsEmpty && !parser.Read<float>().TryUnpack(out thickness))
+                    return false;
+
+                result = new BoltConfig(color.Color, thickness);
+                return true;
+            }
+        }
+    }
+    
+    internal static readonly EquatableArray<Config.BoltConfig> DefaultBolts = new([
+        new(Calc.HexToColor("fcf579"), 1f),
+        new(Calc.HexToColor("8cf7e2"), 1f)
+    ]);
+
+    public CustomLightningRenderer() : this(Config.Default) {
+        
+    }
+    
+    internal CustomLightningRenderer(Config cfg) {
+        edges = [];
+        Bolts = [];
+        fills = [];
+        arbitraryFills = [];
+        Cfg = cfg;
         UpdateSeeds = true;
         DrawEdges = true;
         Tag = (Tags.Global | Tags.TransitionUpdate);
-        Depth = -1000100;
+        Depth = cfg.Depth;
+        ElectricityColors = cfg.Bolts.Backing.Select(x => x.Color).ToArray();
         electricityColorsLerped = new Color[ElectricityColors.Length];
         Add(new CustomBloom(OnRenderBloom));
         //base.Add(this.AmbientSfx = new SoundSource());
@@ -58,44 +100,30 @@ public class CustomLightningRenderer : Entity {
         BloomVerts = new VertexPositionColor[1024];
     }
 
-    /// <summary>
-    /// To be called in entity.Added(Scene scene)
-    /// </summary>
-    public static CustomLightningRenderer AddToSceneIfNeeded(Scene scene) {
-        var tracked = scene.Tracker.SafeGetEntity<CustomLightningRenderer>();
-        if (tracked is null && justAddedRenderer is null) {
-            scene.Add(justAddedRenderer = new CustomLightningRenderer());
-            return justAddedRenderer;
-        }
-
-        return tracked ?? justAddedRenderer!;
-    }
-
-    public static CustomLightningRenderer Get(Scene scene) {
-        return scene.Tracker.SafeGetEntity<CustomLightningRenderer>() ?? justAddedRenderer!;
-    }
-
     public void SetColors(Color[] colors) {
-        ElectricityColors = colors;
+        var span = ElectricityColors;
+        var upper = int.Min(span.Length, colors.Length);
+        for (int i = 0; i < upper; i++)
+            span[i] = colors[i];
+        
         var bolts = Bolts;
-        for (int i = 0; i < bolts.Count; i++) {
-            bolts[i].Color = colors[i % 2];
-        }
+        for (int i = 0; i < bolts.Count; i++)
+            bolts[i].Color = colors[i % colors.Length];
     }
 
     public override void Awake(Scene scene) {
         base.Awake(scene);
-        // no longer needed
-        justAddedRenderer = null;
 
-        API.API.GetLightningColors(out var a, out var b, out var _, out float _);
-        SetColors(new[] { a, b });
+        if (FrostModule.Session.LightningColorA != null) {
+            API.API.GetLightningColors(out var a, out var b, out var _, out float _);
+            SetColors([a, b]);
+        }
     }
 
     public override void SceneEnd(Scene scene) {
         base.SceneEnd(scene);
-        edges = new();
-        Bolts = new();
+        edges = [];
+        Bolts = [];
     }
 
     public void MarkDirty() {
@@ -175,13 +203,18 @@ public class CustomLightningRenderer : Entity {
             Array.Resize(ref verts, nVertices);
         }
     }
+    
+    internal void Reset()
+    {
+        UpdateSeeds = true;
+        Fade = 0.0f;
+    }
 
     private void OnRenderBloom() {
         Camera camera = (Scene as Level)!.Camera;
         Color color = Color.White * (0.25f + Fade * 0.75f);
         float scale = HDlesteCompat.Scale;
 
-        // todo: maybe move this into BloomVerts and cache it as well?
         foreach (Edge edge in edges) {
             if (edge.Visible) {
                 Draw.Line((edge.Parent.Position + edge.A), (edge.Parent.Position + edge.B), color, 4f * scale);
@@ -196,13 +229,14 @@ public class CustomLightningRenderer : Entity {
 
         if (CachedBloomVertsCount.Value > 0) {
             GameplayRenderer.End();
-            GFX.DrawVertices(camera.Matrix * Matrix.CreateScale(scale), BloomVerts, CachedBloomVertsCount.Value, null, null);
+            GFX.DrawVertices(camera.Matrix, BloomVerts, CachedBloomVertsCount.Value);
             GameplayRenderer.Begin();
 
-            // disable caching for now, the performance tradeoff between culling and caching needs to be investigated
-            CachedBloomVertsCount = null;
         }
+        // disable caching for now, the performance tradeoff between culling and caching needs to be investigated
+        CachedBloomVertsCount = null;
 
+        // TODO: deduplicate among many renderers, including vanilla one.
         if (Fade > 0f) {
             var level = (Scene as Level)!;
             Draw.Rect(level.Camera.X, level.Camera.Y, 320f * scale, 180f * scale, Color.White * Fade);
@@ -233,15 +267,16 @@ public class CustomLightningRenderer : Entity {
             index++;
         }
 
+        var camera = FrostModule.GetCurrentLevel().Camera;
         for (int i = 0; i < arbitraryFills.Count; i++) {
             var fill = arbitraryFills[i];
-            
-            if (CameraCullHelper.IsRectangleVisible(fill.Bounds)) {
+
+            if (CameraCullHelper.IsRectangleVisible(fill.RenderBounds, 4f, camera)) {
                 var fillVerts = fill.Verts;
                 EnsureCapacity(ref verts, index + fillVerts.Length);
                 for (int j = 0; j < fillVerts.Length; j++) {
                     verts[index].Color = color;
-                    verts[index].Position = fillVerts[j];
+                    verts[index].Position = fillVerts[j].AddXY(fill.Parent.Position);
                     index++;
                 }
             }
@@ -252,20 +287,25 @@ public class CustomLightningRenderer : Entity {
         base.Render();
         Camera camera = (Scene as Level)!.Camera;
         int num = 0;
-        API.API.GetLightningFillColor(out Color fillColor, out float fillColorMultiplier);
+        var fillColor = LightningColorTrigger.GetFillColor(FillColor);
+        var fillColorMultiplier = LightningColorTrigger.GetLightningFillColorMultiplier(1f);
         RenderFills(ref num, ref edgeVerts, fillColor * fillColorMultiplier);
 
-        if (edges.Count > 0) {
+        if (edges.Count > 0 && electricityColorsLerped.Length > 0) {
             for (int i = 0; i < electricityColorsLerped.Length; i++) {
                 electricityColorsLerped[i] = Color.Lerp(ElectricityColors[i], Color.White, Fade);
             }
             uint num2 = leapSeed;
             foreach (Edge edge in edges) {
                 if (edge.Visible) {
-                    DrawSimpleLightning(ref num, ref edgeVerts, edgeSeed, edge.Parent.Position, edge.A, edge.B, electricityColorsLerped[0], 1f + Fade * 3f);
-                    DrawSimpleLightning(ref num, ref edgeVerts, edgeSeed + 1u, edge.Parent.Position, edge.A, edge.B, electricityColorsLerped[1], 1f + Fade * 3f);
+                    var i = 0;
+                    foreach (ref var bolt in Cfg.Bolts.AsSpan()) {
+                        DrawSimpleLightning(ref num, ref edgeVerts, edgeSeed + (uint)i, edge.Parent.Position, edge.A, edge.B, electricityColorsLerped[i], bolt.Thickness + Fade * 3f);
+                        i++;
+                    }
+                    
                     if (PseudoRand(ref num2) % 30u == 0u) {
-                        DrawBezierLightning(ref num, ref edgeVerts, edgeSeed, edge.Parent.Position, edge.A, edge.B, 24f, 10, electricityColorsLerped[1]);
+                        DrawBezierLightning(ref num, ref edgeVerts, edgeSeed, edge.Parent.Position, edge.A, edge.B, 24f, 10, electricityColorsLerped[^1]);
                     }
                 }
             }
@@ -343,35 +383,22 @@ public class CustomLightningRenderer : Entity {
                 vector3 += new Vector2(PseudoRandRange(ref seed, -2f, 2f), LightningRenderer.PseudoRandRange(ref seed, -2f, 2f));
             }
             verts[index].Position = new Vector3(vector2 - vector, 0f);
-            VertexPositionColor[] array = verts;
-            int num = index;
-            index = num + 1;
-            array[num].Color = color;
+            verts[index++].Color = color;
+            
             verts[index].Position = new Vector3(vector3 - vector, 0f);
-            VertexPositionColor[] array2 = verts;
-            num = index;
-            index = num + 1;
-            array2[num].Color = color;
+            verts[index++].Color = color;
+            
             verts[index].Position = new Vector3(vector3, 0f);
-            VertexPositionColor[] array3 = verts;
-            num = index;
-            index = num + 1;
-            array3[num].Color = color;
+            verts[index++].Color = color;
+            
             verts[index].Position = new Vector3(vector2 - vector, 0f);
-            VertexPositionColor[] array4 = verts;
-            num = index;
-            index = num + 1;
-            array4[num].Color = color;
+            verts[index++].Color = color;
+            
             verts[index].Position = new Vector3(vector3, 0f);
-            VertexPositionColor[] array5 = verts;
-            num = index;
-            index = num + 1;
-            array5[num].Color = color;
+            verts[index++].Color = color;
+            
             verts[index].Position = new Vector3(vector2, 0f);
-            VertexPositionColor[] array6 = verts;
-            num = index;
-            index = num + 1;
-            array6[num].Color = color;
+            verts[index++].Color = color;
             vector2 = vector3;
         }
     }
@@ -553,13 +580,11 @@ public class CustomLightningRenderer : Entity {
         }
     }
 
-    public class ArbitraryFill {
-        public readonly Vector3[] Verts;
-        public readonly Rectangle Bounds;
+    public sealed class ArbitraryFill(Entity parent, Vector3[] verts) {
+        public readonly Vector3[] Verts = verts;
+        public readonly Rectangle Bounds = RectangleExt.FromPointsFromXY(verts);
+        public Entity Parent = parent;
 
-        public ArbitraryFill(Vector3[] verts) {
-            Verts = verts;
-            Bounds = RectangleExt.FromPointsFromXY(verts);
-        }
+        public Rectangle RenderBounds => Bounds.MovedBy(Parent.Position);
     }
 }

@@ -17,7 +17,7 @@ public static class ArbitraryShapeEntityHelper {
 
     public static Vector3[] GetFillFromNodes(EntityData data, Vector2 offset, string cacheKey = "__cachedFillV3") {
         if (data.Values.TryGetValue(cacheKey, out var cached)) {
-            return (Vector3[]) cached;
+        //    return (Vector3[]) cached;
         }
 
         var nodes = data.NodesOffset(offset);

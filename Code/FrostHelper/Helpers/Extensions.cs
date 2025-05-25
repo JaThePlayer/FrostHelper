@@ -47,6 +47,14 @@ public static class Extensions {
         return ColorHelper.GetColors(data.Attr(key, "")) ?? def;
     }
 
+    internal static T[] ParseArray<T>(this EntityData data, string key, char separator, T[] def) where T : ISpanParsable<T> {
+        if (data.String(key) is not { } str)
+            return def;
+
+        var parser = new SpanParser(str);
+        return parser.ParseList<T>(separator).ToArray();
+    }
+
     /// <summary>
     /// Gets a hashset out of a comma-seperated list of elements. Each element in the hashset is trimmed
     /// </summary>

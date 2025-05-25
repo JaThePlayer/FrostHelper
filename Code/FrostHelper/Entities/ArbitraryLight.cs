@@ -146,10 +146,11 @@ internal sealed class ArbitraryLight : VertexLight {
     }
 
     private static bool IsVisibleArbitraryLight(VertexLight light) {
-        if (light is not ArbitraryLight arbitraryLight)
+        if (light is not ArbitraryLight arbitraryLight || Engine.Scene is not Level level)
             return false;
 
-        return CameraCullHelper.IsRectangleVisible(arbitraryLight.Bounds.MovedBy(light.Position + light.Entity.Position)) && arbitraryLight.Condition.Check();
+        return CameraCullHelper.IsRectangleVisible(arbitraryLight.Bounds.MovedBy(light.Position + light.Entity.Position), 4f, level.Camera)
+               && arbitraryLight.Condition.Check();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

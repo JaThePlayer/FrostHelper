@@ -3,9 +3,9 @@
 namespace FrostHelper;
 
 public class FrostHelperSession : EverestModuleSession {
-    public string LightningColorA { get; set; } = null!;
-    public string LightningColorB { get; set; } = null!;
-    public string LightningFillColor { get; set; } = "ffffff";
+    public string? LightningColorA { get; set; }
+    public string? LightningColorB { get; set; }
+    public string? LightningFillColor { get; set; }
     public float? LightningFillColorMultiplier { get; set; } = null;//0.1f;
 
     public Color BloomColor { get; set; } = Color.White;

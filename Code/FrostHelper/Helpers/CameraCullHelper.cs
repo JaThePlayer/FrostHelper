@@ -7,7 +7,7 @@ namespace FrostHelper;
 public static class CameraCullHelper {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsRectangleVisible(float x, float y, float w, float h, float lenience = 4f, Camera? camera = null) {
-        camera ??= (Engine.Scene as Level)!.Camera!;
+        camera ??= FrostModule.GetCurrentLevel().Camera;
         x -= camera.Left;
         y -= camera.Top;
         

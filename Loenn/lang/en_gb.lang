@@ -217,6 +217,7 @@ entities.FrostHelper/SpringLeft.attributes.description.oneUse=Whether the spring
 entities.FrostHelper/SpringLeft.attributes.description.renderOutline=Whether this spring should render its outline
 entities.FrostHelper/SpringLeft.attributes.description.dashRecovery=Sets the player's dash count to this value upon use.\nNegative values are supported, and will take away dashes, preventing the player from using the spring if they don't have enough.\nA value of 10000 (default) makes it refill dashes to the current dash limit instead.\nA value of 10001 makes it leave dash count unchanged instead.
 entities.FrostHelper/SpringLeft.attributes.description.staminaRecovery=Sets the player's stamina to this value upon use.\nNegative values are supported, and will take away stamina, preventing the player from using the spring if they don't have enough.\nA value of 10000 (default) makes it refill stamina to the current stamina limit instead.\nA value of 10001 makes it leave stamina unchanged instead.
+entities.FrostHelper/SpringLeft.attributes.description.jumpRecovery=Sets the player's jumps (Extended Variants) to this value upon use.\nNegative values are supported, and will take away jumps, preventing the player from using the spring if they don't have enough.\nA value of 10000 (default) makes it refill jumps to the current jump limit instead.\nA value of 10001 makes it leave jumps unchanged instead (default).\nValues other than 10001 require Extended Variants Mode to be installed.
 entities.FrostHelper/SpringLeft.attributes.description.sfx=Sound effect to play on interaction.
 
 entities.FrostHelper/SpringRight.attributes.description.playerCanUse=Whether the player can use this spring
@@ -226,6 +227,7 @@ entities.FrostHelper/SpringRight.attributes.description.oneUse=Whether the sprin
 entities.FrostHelper/SpringRight.attributes.description.renderOutline=Whether this spring should render its outline
 entities.FrostHelper/SpringRight.attributes.description.dashRecovery=Sets the player's dash count to this value upon use.\nNegative values are supported, and will take away dashes, preventing the player from using the spring if they don't have enough.\nA value of 10000 (default) makes it refill dashes to the current dash limit instead.\nA value of 10001 makes it leave dash count unchanged instead.
 entities.FrostHelper/SpringRight.attributes.description.staminaRecovery=Sets the player's stamina to this value upon use.\nNegative values are supported, and will take away stamina, preventing the player from using the spring if they don't have enough.\nA value of 10000 (default) makes it refill stamina to the current stamina limit instead.\nA value of 10001 makes it leave stamina unchanged instead.
+entities.FrostHelper/SpringRight.attributes.description.jumpRecovery=Sets the player's jumps (Extended Variants) to this value upon use.\nNegative values are supported, and will take away jumps, preventing the player from using the spring if they don't have enough.\nA value of 10000 (default) makes it refill jumps to the current jump limit instead.\nA value of 10001 makes it leave jumps unchanged instead (default).\nValues other than 10001 require Extended Variants Mode to be installed.
 entities.FrostHelper/SpringRight.attributes.description.sfx=Sound effect to play on interaction.
 
 entities.FrostHelper/SpringFloor.attributes.description.playerCanUse=Whether the player can use this spring
@@ -235,6 +237,7 @@ entities.FrostHelper/SpringFloor.attributes.description.oneUse=Whether the sprin
 entities.FrostHelper/SpringFloor.attributes.description.renderOutline=Whether this spring should render its outline
 entities.FrostHelper/SpringFloor.attributes.description.dashRecovery=Sets the player's dash count to this value upon use.\nNegative values are supported, and will take away dashes, preventing the player from using the spring if they don't have enough.\nA value of 10000 (default) makes it refill dashes to the current dash limit instead.\nA value of 10001 makes it leave dash count unchanged instead.
 entities.FrostHelper/SpringFloor.attributes.description.staminaRecovery=Sets the player's stamina to this value upon use.\nNegative values are supported, and will take away stamina, preventing the player from using the spring if they don't have enough.\nA value of 10000 (default) makes it refill stamina to the current stamina limit instead.\nA value of 10001 makes it leave stamina unchanged instead.
+entities.FrostHelper/SpringFloor.attributes.description.jumpRecovery=Sets the player's jumps (Extended Variants) to this value upon use.\nNegative values are supported, and will take away jumps, preventing the player from using the spring if they don't have enough.\nA value of 10000 (default) makes it refill jumps to the current jump limit instead.\nA value of 10001 makes it leave jumps unchanged instead (default).\nValues other than 10001 require Extended Variants Mode to be installed.
 entities.FrostHelper/SpringFloor.attributes.description.sfx=Sound effect to play on interaction.
 
 entities.FrostHelper/SpringCeiling.attributes.description.playerCanUse=Whether the player can use this spring
@@ -244,6 +247,7 @@ entities.FrostHelper/SpringCeiling.attributes.description.oneUse=Whether the spr
 entities.FrostHelper/SpringCeiling.attributes.description.renderOutline=Whether this spring should render its outline
 entities.FrostHelper/SpringCeiling.attributes.description.dashRecovery=Sets the player's dash count to this value upon use.\nNegative values are supported, and will take away dashes, preventing the player from using the spring if they don't have enough.\nA value of 10000 (default) makes it refill dashes to the current dash limit instead.\nA value of 10001 makes it leave dash count unchanged instead.
 entities.FrostHelper/SpringCeiling.attributes.description.staminaRecovery=Sets the player's stamina to this value upon use.\nNegative values are supported, and will take away stamina, preventing the player from using the spring if they don't have enough.\nA value of 10000 (default) makes it refill stamina to the current stamina limit instead.\nA value of 10001 makes it leave stamina unchanged instead.
+entities.FrostHelper/SpringCeiling.attributes.description.jumpRecovery=Sets the player's jumps (Extended Variants) to this value upon use.\nNegative values are supported, and will take away jumps, preventing the player from using the spring if they don't have enough.\nA value of 10000 (default) makes it refill jumps to the current jump limit instead.\nA value of 10001 makes it leave jumps unchanged instead (default).\nValues other than 10001 require Extended Variants Mode to be installed.
 entities.FrostHelper/SpringCeiling.attributes.description.sfx=Sound effect to play on interaction.
 
 # Custom Flutterbird
@@ -541,6 +545,16 @@ entities.FrostHelper/StaticDoor.attributes.description.hitbox=Controls the hitbo
 
 entities.FrostHelper/ArbitraryShapeLightning.placements.name.default=Arbitrary Shape Lightning
 entities.FrostHelper/ArbitraryShapeLightning.attributes.description.windingOrder=The winding order of the polygon.\nIf your shape looks broken in-game, try changing this property until it looks correctly.
+entities.FrostHelper/ArbitraryShapeLightning.attributes.description.fill=Whether the last node should be connected to the entity's position, and whether the inside of the shape should be drawn filled in.
+entities.FrostHelper/ArbitraryShapeLightning.attributes.description.fillColor=The color used to fill in the lightning.
+entities.FrostHelper/ArbitraryShapeLightning.attributes.description.depth=The depth this lightning is rendered at.
+entities.FrostHelper/ArbitraryShapeLightning.attributes.description.edgeBolts=A list of bolts which will be rendered at the edges of this lightning.\nThe color of the last bolt in this list will be used for additional bolts inside of the lightning.\nEach entry is separated by ';',\nand each entry is of the format 'color,thickness'.
+entities.FrostHelper/ArbitraryShapeLightning.attributes.description.affectedByLightningBoxes=Whether Lightning Breaker Boxes should destroy this lightning.
+FrostHelper.fields.lightning.boltColor=Color
+FrostHelper.fields.lightning.boltColor.tooltip=The color of this bolt.
+FrostHelper.fields.lightning.boltThickness=Thickness
+FrostHelper.fields.lightning.boltThickness.tooltip=The thickness (in pixels) of this bolt.
+
 
 entities.FrostHelper/ArbitraryBloom.placements.name.default=Arbitrary Bloom
 entities.FrostHelper/ArbitraryBloom.attributes.description.windingOrder=The winding order of the polygon.\nIf your shape looks broken in-game, try changing this property until it looks correctly.

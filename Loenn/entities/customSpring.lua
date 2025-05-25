@@ -88,6 +88,7 @@ local function createSpringHandler(name, spriteRotation, speedAsVector)
         { "attachGroup", -1, "FrostHelper.attachGroup" },
         { "dashRecovery", 10000, dashAndStaminaRecoveryOptions },
         { "staminaRecovery", 10000, dashAndStaminaRecoveryOptions },
+        { "jumpRecovery", 10001, dashAndStaminaRecoveryOptions },
         { "sfx", "event:/game/general/spring" },
         { "version", 2, "integer" },
         { "oneUse", false },

@@ -55,6 +55,15 @@ public class LightningColorTrigger : Trigger {
         return trigger?.FillColor ?? OrDefault(FrostModule.Session?.LightningFillColor, prev);
     }
 
+    internal static Color GetFillColor(Color prev) {
+        if (GetFirstEnteredTrigger() is { } trigger)
+            return ColorHelper.GetColor(trigger.FillColor);
+        if (FrostModule.Session?.LightningFillColor is { } col)
+            return ColorHelper.GetColor(col);
+
+        return prev;
+    }
+    
     internal static float GetLightningFillColorMultiplier(float prev = 0.1f) {
         return GetFirstEnteredTrigger()?.FillColorMultiplier ?? FrostModule.Session?.LightningFillColorMultiplier ?? prev;
     }
@@ -109,7 +118,7 @@ public class LightningColorTrigger : Trigger {
         Color c2 = ColorHelper.GetColor(data.Attr("color2", "8cf7e2"));
         FillColor = ColorHelper.ColorToHex(ColorHelper.GetColor(data.Attr("fillColor", "ffffff")));
         FillColorMultiplier = data.Float("fillColorMultiplier", 0.1f);
-        electricityColors = new Color[] { c1, c2 };
+        electricityColors = [c1, c2];
 
         if (!string.IsNullOrWhiteSpace(data.Attr("depth")))
             NewDepth = data.Int("depth");
@@ -130,11 +139,11 @@ public class LightningColorTrigger : Trigger {
         if (renderer is null)
             return;
 
-        ChangeLightningColor(renderer, new[] { colorA, colorB }, newDepth);
+        ChangeLightningColor(renderer, [colorA, colorB], newDepth);
     }
 
     public static void ChangeLightningColor(Color colorA, Color colorB, int? newDepth = null) {
-        ChangeLightningColor(new[] { colorA, colorB }, newDepth);
+        ChangeLightningColor([colorA, colorB], newDepth);
     }
 
     public static void ChangeLightningColor(Color[] colors, int? newDepth = null) {
@@ -143,11 +152,7 @@ public class LightningColorTrigger : Trigger {
         if (Engine.Scene.Tracker.SafeGetEntity<CustomLightningRenderer>() is { } customRenderer) {
             if (newDepth is { } depth)
                 customRenderer.Depth = depth;
-            customRenderer.ElectricityColors = colors;
-            var bolts = customRenderer.Bolts;
-            for (int i = 0; i < bolts.Count; i++) {
-                bolts[i].Color = colors[i % 2];
-            }
+            customRenderer.SetColors(colors);
         }
     }
 

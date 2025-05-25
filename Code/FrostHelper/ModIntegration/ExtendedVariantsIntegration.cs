@@ -20,7 +20,7 @@ public static class ExtVariantsAPI
 
         Loaded = true;
 
-        return true;
+        return GetCurrentVariantValue is {};
     }
 
     private static bool Loaded { get; set; }
@@ -39,6 +39,9 @@ public static class ExtVariantsAPI
     //void CapJumpCount(int jumpCount)
     public static Action<int>? CapJumpCount;
     
+    //int GetJumpCount()
+    public static Func<int>? GetJumpCount;
+    
     public static object? GetVariantValue(Variant variant)
     {
         LoadIfNeeded();
@@ -55,6 +58,12 @@ public static class ExtVariantsAPI
     public static int? GetVariantInt(Variant variant) => GetVariantValue(variant) switch
     {
         null => null,
+        var obj => Convert.ToInt32(obj),
+    };
+    
+    public static int GetVariantInt(Variant variant, int def) => GetVariantValue(variant) switch
+    {
+        null => def,
         var obj => Convert.ToInt32(obj),
     };
 

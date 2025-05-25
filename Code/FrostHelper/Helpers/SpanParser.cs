@@ -224,6 +224,14 @@ internal ref struct SpanParser(ReadOnlySpan<char> input)
     public void SkipEnd(int chars) {
         _remaining = _remaining[..^chars];
     }
+
+    public List<T> ParseList<T>(char separator) where T : ISpanParsable<T> {
+        List<T> arr = [];
+        while (!IsEmpty && ReadUntil<T>(separator).TryUnpack(out T t)) {
+            arr.Add(t);
+        }
+        return arr;
+    }
 }
 
 internal readonly struct Res<T>(T val, bool success)
