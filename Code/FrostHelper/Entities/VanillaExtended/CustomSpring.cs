@@ -289,7 +289,7 @@ public class CustomSpring : Spring {
 
         var prevDashes = player.Dashes;
         var prevStamina = player.Stamina;
-        var prevJumps = ExtVariantsAPI.GetJumpCount!();
+        var prevJumps = ExtVariantsAPI.LoadIfNeeded() ? ExtVariantsAPI.GetJumpCount?.Invoke() ?? 1 : 1;
         
         if (DashRecovery < 0 && prevDashes < -DashRecovery)
             return;
