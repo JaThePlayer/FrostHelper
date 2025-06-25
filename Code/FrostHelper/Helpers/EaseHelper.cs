@@ -6,10 +6,10 @@ namespace FrostHelper;
 
 public static class EaseHelper {
     private static void PrintStack(KeraLua.Lua state) {
-        Console.WriteLine("Stack:");
-        for (int i = 1; i <= state.GetTop(); i++) {
-            Console.WriteLine($"[{i}]: {state.ToString(i)}");
-        }
+        //Console.WriteLine("Stack:");
+        //for (int i = 1; i <= state.GetTop(); i++) {
+        //    Console.WriteLine($"[{i}]: {state.ToString(i)}");
+        //}
     }
 
     /// <returns>An easer of the name specified by <paramref name="name"/>, defaulting to <paramref name="defaultValue"/> or <see cref="Ease.Linear"/> if <paramref name="defaultValue"/> is null </returns>

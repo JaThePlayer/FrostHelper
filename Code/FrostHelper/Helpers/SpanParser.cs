@@ -232,6 +232,23 @@ internal ref struct SpanParser(ReadOnlySpan<char> input)
         }
         return arr;
     }
+    
+    public bool TryParseList<T>(char separator, out List<T> res) where T : ISpanParsable<T> {
+        res = [];
+        
+        while (!IsEmpty) {
+            if (ReadUntil<T>(separator).TryUnpack(out T t)) 
+            {
+                res.Add(t);
+            }
+            else 
+            {
+                return false;
+            }
+        }
+        
+        return true;
+    }
 }
 
 internal readonly struct Res<T>(T val, bool success)

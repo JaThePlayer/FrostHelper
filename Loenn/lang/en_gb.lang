@@ -670,6 +670,10 @@ entities.FrostHelper/DynamicRainGenerator.attributes.description.generatorLength
 entities.FrostHelper/DynamicRainGenerator.attributes.description.editorPreviewLength=Changes the length of the in-editor preview lines showing the angle rangle of the rain droplets.\nHas no in-game effect.
 entities.FrostHelper/DynamicRainGenerator.attributes.description.presimulationTime=How long (in seconds) the rain should be pre-simulated before the first render frame.\nHelps avoid issues with rain not existing on room load / transition.
 
+entities.FrostHelper/RainCollider.placements.name.default=Dynamic Rain Collider
+entities.FrostHelper/RainCollider.placements.description.default=Invisible collider that blocks Dynamic Rain.
+entities.FrostHelper/RainCollider.attributes.description.makeSplashes=Whether rain droplets hitting this collider should create splash particles.
+
 # -- Mod Names --
 # mods.modName.*
 mods.FrostHelper.name=Frost Helper
@@ -1078,6 +1082,40 @@ triggers.FrostHelper/ShatterSpinnersTrigger.placements.name.default=Shatter Cust
 triggers.FrostHelper/ShatterSpinnersTrigger.placements.description.default=Shatters Frost Helper Spinners in the room, based on a Session Expression filter.\nCan optionally be activated by a Change Spinners trigger to create a chain of edits.
 triggers.FrostHelper/ShatterSpinnersTrigger.attributes.description.filter=Session Expression which determines whether a spinner should be shattered.\n\nRan on each spinner every time this trigger gets activated.\nOn top of usual Session Expression commands, these are also available:\n$attachGroup - This spinner's attach group, int.\n$directory - The current directory of this spinner, as provided in a map editor.\n$origDirectory - Same as $directory, but always returns the directory set on the spinner initially, before any Change Spinner triggers.\n$playerDist - Current distance of this spinner from the player, float.\n$playerCollides - Whether the player collides with this spinner (works even if the spinner is uncollideable currently)\n$animFrame - If this spinner is animated, returns the current animation frame as an int.\n\nExample:\n$directory=="danger/triggerSpinner>_off!" && $playerCollides  - can be used to imitate Trigger Spinners.
 triggers.FrostHelper/ShatterSpinnersTrigger.attributes.description.cacheFilter=Same as `Filter`, but runs *once*, on room load.\nOnly spinners which matched this filter on room load will be checked by this trigger,\nwhich can be useful for lag reduction if you plan on activating this trigger each frame.
+
+triggers.FrostHelper/SequencerTrigger.placements.name.default=Sequencer
+triggers.FrostHelper/SequencerTrigger.placements.description.default=When entered, starts a programmable sequence of timed commands,\nlike setting flags, counters, sliders, or activating other triggers.
+triggers.FrostHelper/SequencerTrigger.attributes.description.sequence=The sequence to execute, consisting of a list of commands executed in order from top to bottom.\nUse Delay commands to insert a delay between commands.
+triggers.FrostHelper/SequencerTrigger.attributes.description.loop=Whether the sequence should loop itself infinitely once the last command is executed.
+triggers.FrostHelper/SequencerTrigger.attributes.description.oneUse=Whether the sequence can only be activated once.\nEspecially useful when 'loop' is enabled.
+triggers.FrostHelper/SequencerTrigger.attributes.description.terminationCondition=Session Expression condition which, when met, terminates the sequence prematurely, even if its a looping sequence.\nChecked right before executing any command.\nRefer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Session-Expressions for more info.
+
+FrostHelper.fields.sequence.delay.dropdown=Delay
+FrostHelper.fields.sequence.delay=Delay
+FrostHelper.fields.sequence.delay.tooltip=Delays the sequence by the given amount of time (in seconds).\nSession expressions are supported, refer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Session-Expressions
+
+FrostHelper.fields.sequence.flag.dropdown=Set Flag
+FrostHelper.fields.sequence.flag.name=Name
+FrostHelper.fields.sequence.flag.name.tooltip=The name of the flag to set.
+FrostHelper.fields.sequence.flag.value=Value
+FrostHelper.fields.sequence.flag.value.tooltip=The Session Expression value to set the flag to.\nUse 1 to enable, and 0 to disable the flag.\nRefer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Session-Expressions for more info.
+
+FrostHelper.fields.sequence.counter.dropdown=Set Counter
+FrostHelper.fields.sequence.counter.name=Name
+FrostHelper.fields.sequence.counter.name.tooltip=The name of the Counter to set.
+FrostHelper.fields.sequence.counter.value=Value
+FrostHelper.fields.sequence.counter.value.tooltip=The Session Expression value to set the counter to.\nRefer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Session-Expressions for more info.
+
+FrostHelper.fields.sequence.slider.dropdown=Set Slider
+FrostHelper.fields.sequence.slider.name=Name
+FrostHelper.fields.sequence.slider.name.tooltip=The name of the Slider to set.
+FrostHelper.fields.sequence.slider.value=Value
+FrostHelper.fields.sequence.slider.value.tooltip=The Session Expression value to set the slider to, can be a floating-point value.\nRefer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Session-Expressions for more info.
+
+FrostHelper.fields.sequence.activateAt.dropdown=Activate Trigger At Node
+FrostHelper.fields.sequence.activateAt=Node Index
+FrostHelper.fields.sequence.activateAt.tooltip=The 0-based index of the node to activate trigger below, like an Activator.\nSo, to activate the trigger at the first node, use '0', second - '1', and so on.\nSession expressions are supported, refer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Session-Expressions
+
 
 # effects
 style.effects.FrostHelper/ShaderWrapper.name=Shader Wrapper

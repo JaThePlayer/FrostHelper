@@ -2,17 +2,18 @@
 using FrostHelper.Helpers;
 using FrostHelper.ModIntegration;
 using System.Diagnostics;
+using System.Threading;
 
 namespace FrostHelper.Entities;
 
 [CustomEntity("FrostHelper/ArbitraryShapeCloud")]
 [Tracked]
 internal sealed class ArbitraryShapeCloud : Entity {
-    private static volatile int _Debug_RenderTargetCount = 0;
+    private static volatile int _debugRenderTargetCount;
 
     [Conditional("DEBUG")]
     private static void PrintRenderTargetCount() {
-        Console.WriteLine($"ArbitraryShapeCloud_RenderTargets: {_Debug_RenderTargetCount}");
+        Logger.Log(LogLevel.Debug, "FrostHelper.ArbitraryShapeCloudDebug", $"RenderTargets: {_debugRenderTargetCount}");
     }
 
     public readonly VertexPositionColor[] Fill;
@@ -80,7 +81,7 @@ internal sealed class ArbitraryShapeCloud : Entity {
             RenderTarget.Dispose();
             RenderTarget = null;
 
-            _Debug_RenderTargetCount--;
+            Interlocked.Increment(ref _debugRenderTargetCount);
             PrintRenderTargetCount();
         }
     }
@@ -125,7 +126,7 @@ internal sealed class ArbitraryShapeCloud : Entity {
         }
 
         RenderTarget = new(gd, w, h, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
-        _Debug_RenderTargetCount++;
+        _debugRenderTargetCount++;
         PrintRenderTargetCount();
 
         gd.SetRenderTarget(RenderTarget);

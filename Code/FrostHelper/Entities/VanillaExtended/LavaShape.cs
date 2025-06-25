@@ -101,6 +101,7 @@ public class LavaShape : Component {
             //bubbles[i].MinY = GetBottomY(new Vector2(bubbles[i].Position.X, bubbles[i].MaxY + 1f));
             bubbles[i].MinY = GetSurfaceY(new Vector2(bubbles[i].Position.X, MaxY - MinY + 4f));
             bubbles[i].MaxY = GetSurfaceY(new Vector2(bubbles[i].Position.X, bubbles[i].MinY - 4f));
+            bubbles[i].Position.Y = float.Clamp(bubbles[i].Position.Y, bubbles[i].MaxY, bubbles[i].MinY);
             bubbles[i].Speed = Calc.Random.Range(4, 12);
             bubbles[i].Alpha = Calc.Random.Range(0.4f, 0.8f);
         }
@@ -120,7 +121,7 @@ public class LavaShape : Component {
         for (int i = 0; i < bubbles.Length; i++) {
             Bubble[] array = bubbles;
             int num = i;
-            array[num].Position.Y = array[num].Position.Y - UpdateMultiplier * bubbles[i].Speed * Engine.DeltaTime;
+            array[num].Position.Y -= UpdateMultiplier * bubbles[i].Speed * Engine.DeltaTime;
 
             //if (bubbles[i].Position.Y < 2f - Wave((int)(bubbles[i].Position.X / (float)SurfaceStep), Width))
             if (bubbles[i].Position.Y < bubbles[i].MaxY) {
@@ -285,38 +286,13 @@ public class LavaShape : Component {
         GameplayRenderer.End();
         if (dirty) {
             vertCount = 0;
-            /*
-				Vector2 zero = Vector2.Zero;
-				Vector2 vector = zero;
-				Vector2 vector2 = new Vector2(zero.X + Width, zero.Y);
-				Vector2 vector3 = new Vector2(zero.X, zero.Y + Height);
-				Vector2 vector4 = zero + new Vector2(Width, Height);
-				Vector2 vector5 = new Vector2(Math.Min(Fade, Width / 2f), Math.Min(Fade, Height / 2f));
-				vertCount = 0;
-				if (OnlyMode == OnlyModes.None)
-				{
-					Edge(ref vertCount, vector, vector2, vector5.Y, vector5.X);
-					Edge(ref vertCount, vector2, vector4, vector5.X, vector5.Y);
-					Edge(ref vertCount, vector4, vector3, vector5.Y, vector5.X);
-					Edge(ref vertCount, vector3, vector, vector5.X, vector5.Y);
-					Quad(ref vertCount, vector + vector5, vector2 + new Vector2(-vector5.X, vector5.Y), vector4 - vector5, vector3 + new Vector2(vector5.X, -vector5.Y), CenterColor);
-				}
-				else if (OnlyMode == OnlyModes.OnlyTop)
-				{
-					Edge(ref vertCount, vector, vector2, vector5.Y, 0f);
-					Quad(ref vertCount, vector + new Vector2(0f, vector5.Y), vector2 + new Vector2(0f, vector5.Y), vector4, vector3, CenterColor);
-				}
-				else if (OnlyMode == OnlyModes.OnlyBottom)
-				{
-					Edge(ref vertCount, vector4, vector3, vector5.Y, 0f);
-					Quad(ref vertCount, vector, vector2, vector4 + new Vector2(0f, -vector5.Y), vector3 + new Vector2(0f, -vector5.Y), CenterColor);
-				}*/
             for (int i = 0; i < Fill.Length; i++) {
-                verts[vertCount] = new VertexPositionColor(Fill[i], CenterColor);
+                verts[vertCount] = new VertexPositionColor(Fill[i], CenterColor); 
                 vertCount++;
             }
 
             Vector2 vector5 = new Vector2(Math.Min(Fade, Width / 2f), Math.Min(Fade, Height / 2f));
+            
             for (int i = 0; i < EdgeVertices.Length - 1; i++) {
                 Edge(ref vertCount, EdgeVertices[i], EdgeVertices[i + 1], vector5.X, vector5.Y, i > 0, true);
             }

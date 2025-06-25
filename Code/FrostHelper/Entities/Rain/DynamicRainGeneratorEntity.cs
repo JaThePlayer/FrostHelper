@@ -33,7 +33,7 @@ internal sealed class DynamicRainGeneratorEntity : Entity
 
         var group = new DynamicRainGroup() {
             FlagIfPlayerInside = flagIfPlayerInside,
-            EntityFilter = FrostModule.GetTypes(data.Attr("collideWith", "Celeste.Player,Celeste.Solid,Celeste.Water")),
+            EntityFilter = [ typeof(Player), typeof(Solid) ], // FrostModule.GetTypes(data.Attr("collideWith", "Celeste.Player,Celeste.Solid")),
         };
         Add(group);
         

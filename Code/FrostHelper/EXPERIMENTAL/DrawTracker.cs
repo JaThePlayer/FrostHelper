@@ -4,6 +4,7 @@
 #pragma warning disable CL0001 // dont pass lambdas to EmitDelegate
 
 using System.Diagnostics;
+using System.Text;
 
 namespace FrostHelper.EXPERIMENTAL;
 
@@ -48,15 +49,19 @@ public static class DrawTracker {
             foreach (var item in Hooks) {
                 item.Dispose();
             }
-            Hooks = new();
+            Hooks = [];
 
             var longestType = DrawAmts.Max(t => t.Key.Length);
+            
+            StringBuilder res = new();
+            res.AppendLine("draw_track results:");
             DrawAmts
              .OrderBy(p => p.Value) // while OrderByDescending might make more sense, this ordering makes it easier to read in the console
              .Select(p => $"{p.Key}{new string(' ', longestType - p.Key.Length)} {p.Value} - {p.Value * 6} verts")
-             .Foreach(Console.WriteLine);
+             .Foreach(s => res.AppendLine(s));
 
-            Console.WriteLine(DrawAmts.Sum(p => p.Value * 6));
+            res.AppendLine($"Total found verts: {DrawAmts.Sum(p => p.Value * 6)}");
+            Logger.Log(LogLevel.Info, "FrostHelper.DrawTracker", res.ToString());
         };
     }
 

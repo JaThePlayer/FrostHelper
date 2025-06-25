@@ -77,10 +77,7 @@ public class LayerTracker : Entity {
 
     public void OnTransitionEnd() {
         foreach (var item in Layers) {
-            //Console.WriteLine();
-            //Console.WriteLine(item.Value.Count);
             item.Value.RemoveAll(e => e.Scene is null);
-            //Console.WriteLine(item.Value.Count);
         }
     }
 

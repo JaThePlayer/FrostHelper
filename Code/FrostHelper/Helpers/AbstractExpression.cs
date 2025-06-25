@@ -73,6 +73,7 @@ internal partial class AbstractExpression {
     public string TypeName => GetType().Name;
     
     // ':' is not banned due to some vanilla flags using it - ternary operations will need something else
+    // ';' is banned and used as a list separator in places accepting expressions, do not unban.
     [GeneratedRegex(@"[\~\^\[\]\{\};\?]", RegexOptions.CultureInvariant | RegexOptions.IgnoreCase | RegexOptions.Singleline)]
     private static partial Regex ReservedCharsRegex();
     

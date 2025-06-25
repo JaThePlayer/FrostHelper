@@ -10,7 +10,7 @@ local iconUtils = require("ui.utils.icons")
 
 local complexField = {}
 
-complexField.fieldType = "FrostHelper.complexField"
+complexField.fieldType = "FrostHelper.polymorphicComplexField"
 
 complexField._MT = {}
 complexField._MT.__index = {}
@@ -56,10 +56,8 @@ function complexField._MT.__index:setValue(value, dontUpdateFields)
     if not dontUpdateFields then
         for index, value in ipairs(self.uiForms) do
             local text = values[index] or ""
-            --print(index, text, value.field)
             if value.field then
                 value.field:setText(text)
-               -- value.field.index = 0-- #value.field:getText()
             else
                 value:setValue(text)
             end
@@ -75,33 +73,11 @@ function complexField._MT.__index:getValue()
 end
 
 function complexField._MT.__index:fieldValid()
-    for _, value in ipairs(self.uiForms) do
-        if not value:fieldValid() then
-            return false
-        end
+    if not self._validate then
+        return true
     end
 
-    return true
-end
-
-function complexField._MT.__index:validateIdx(v)
-    --return type(v) == "number" and v >= self.minValue and v <= self.maxValue
-    return true
-end
-
-function complexField._MT.__index:fieldsValid()
-    local t = {}
-    local values = self:splitValue(self.currentValue)
-
-    for i = 1, #self.innerFields, 1 do
-        table.insert(t, self:validateIdx(values[i]))
-    end
-
-    return t
-end
-
-function complexField._MT.__index:getGrid()
-    return grid.getGrid(self.gridContents, 2)
+    return self._validate()
 end
 
 local function shouldShowMenu(element, x, y, button)
@@ -113,24 +89,6 @@ local function shouldShowMenu(element, x, y, button)
     end
 
     return false
-end
-
-
-local function fieldChanged(formField, col)
-    return function(element, new, old)
-        new = string.gsub(new or "", formField.separator, "") or ""
-
-        local values = formField:splitValue(formField.currentValue)
-
-        values[col] = new
-
-        local newValue = formField:valuesToString(values)
-        if newValue ~= formField.currentValue then
-            formField:setValue(newValue, true)
-
-            formField:notifyFieldChanged()
-        end
-    end
 end
 
 local function overUpdateFieldStyle(formField, valid)
@@ -180,6 +138,141 @@ local fieldTypeToStringToValue = {
     end,
 }
 
+local fieldDropdown = require("ui.widgets.field_dropdown")
+local dropdowns = require("ui.widgets.dropdown")
+
+local function createGrid(formField)
+    local language = languageRegistry.getLanguage()
+
+    local valueSplit = formField:splitValue(formField.currentValue)
+    local curValue = valueSplit[2] or ""
+
+    for i, fieldData in ipairs(formField.types) do
+        if valueSplit[1] == fieldData.name then
+            local fieldType = fieldData.info.fieldType or "string"
+
+            if fieldData.info and fieldTypeToStringToValue[fieldType] then
+                curValue = fieldTypeToStringToValue[fieldType](curValue, fieldData.default)
+            end
+
+            local el = forms.getFieldElement(getLangKey(language, formField.langPrefix .. "." .. fieldData.name, fieldData.name), curValue, fieldData.info or {})
+            local tooltipText = getLangKey(language, formField.langPrefix .. "." .. fieldData.name .. ".tooltip", nil)
+
+            local origNotify = el.notifyFieldChanged
+            el.notifyFieldChanged = function(...)
+                local new = el.field and el.field:getText() or el:getValue()
+                new = string.gsub(new or "", formField.separator, "") or ""
+
+                local newValue = fieldData.name .. formField.separator .. new
+                if newValue ~= formField.currentValue then
+                    formField:setValue(newValue, true)
+
+                    formField:notifyFieldChanged()
+                end
+
+                if origNotify then
+                    origNotify(...)
+                end
+            end
+
+            formField._validate = function()
+                return el:fieldValid()
+            end
+
+            if fieldType == "FrostHelper.complexField" then
+                return el:getGrid()
+            end
+
+            local gridContents = {}
+            for _, elElement in ipairs(el.elements) do
+                if tooltipText then
+                    elElement.tooltipText = tooltipText
+                    elElement.interactive = 1
+                end
+
+                table.insert(gridContents, elElement)
+            end
+
+            return grid.getGrid(gridContents, 2)
+        end
+    end
+
+    return grid.getGrid({}, 2)
+end
+
+local function dropdownChanged(formField)
+    return function(element, newText)
+        if not formField._ignoredFirstChange then
+            formField._ignoredFirstChange = true
+            return
+        end
+
+        local foundOption = false
+
+        local editable = formField.editable
+        local searchable = formField.searchable
+        local currentType = formField:splitValue(formField.currentValue)[1]
+
+        for _, option in ipairs(formField.types) do
+            if option.name == newText or option.displayName == newText then
+                foundOption = option
+            end
+        end
+
+        if foundOption and foundOption.name ~= currentType then
+            --formField.currentValue = foundOption.defaultValue --value
+
+            --local valid = formField:fieldValid()
+            --local warningValid = formField:fieldWarning()
+            --updateFieldStyle(formField, valid, warningValid)
+
+            formField:setValue(foundOption.defaultValue, true)
+            formField:notifyFieldChanged()
+
+            formField.gridGroup.children = { createGrid(formField) }
+            formField.gridGroup:reflow()
+        end
+    end
+end
+
+local function generateTypeDropdown(formField, options)
+    local minWidth = options.minWidth or options.width or 160
+    local maxWidth = options.maxWidth or options.width or 160
+    local language = languageRegistry.getLanguage()
+
+    local optionStrings = {}
+
+    local selectedIndex = -1
+
+    local currentType = formField:splitValue(formField.currentValue)[1]
+
+    local types = formField.types
+
+    for i, value in ipairs(types) do
+        value.displayName = getLangKey(language, formField.langPrefix .. "." .. value.name .. ".dropdown", value.name)
+
+        table.insert(optionStrings, value.displayName)
+
+        if value.name == currentType then
+            selectedIndex = i
+        end
+    end
+
+    local listOptions = {
+        initialItem = selectedIndex,
+    }
+
+    local dropdown = dropdowns.fromList(dropdownChanged(formField), optionStrings, listOptions):with({
+        minWidth = minWidth,
+        maxWidth = maxWidth
+    })
+
+    listOptions.parentProxy = dropdown
+    listOptions.spawnParent = dropdown
+
+    return dropdown
+end
+
 function complexField.getElement(name, value, options)
     value = tostring(value)
 
@@ -188,8 +281,9 @@ function complexField.getElement(name, value, options)
     local formField = {}
     formField = setmetatable(formField, complexField._MT)
     formField.separator = options.separator or ","
-    formField.innerFields = options.innerFields or {}
+    formField.types = options.types or {}
     formField.uiForms = {}
+    formField.langPrefix = options.langPrefix or ""
 
     local valueSplit = formField:splitValue(value)
 
@@ -208,39 +302,6 @@ function complexField.getElement(name, value, options)
         maxWidth = maxWidth
     })
 
-    local gridContents = {}
-    formField.gridContents = gridContents
-
-    for i, fieldData in ipairs(formField.innerFields) do
-        local curValue = valueSplit[i]
-        if not curValue or curValue == "" then
-            curValue = fieldData.default or ""
-        end
-
-        if fieldData.info and fieldTypeToStringToValue[fieldData.info.fieldType or "string"] then
-            curValue = fieldTypeToStringToValue[fieldData.info.fieldType or "string"](curValue, fieldData.default)
-        end
-
-        local el = forms.getFieldElement(getLangKey(language, fieldData.name, fieldData.name), curValue, fieldData.info or {})
-        local tooltipText = getLangKey(language, fieldData.name .. ".tooltip", nil)
-        local onChanged = fieldChanged(formField, i)
-
-        el.notifyFieldChanged = function()
-            onChanged(el, el.field and el.field:getText() or el:getValue())
-        end
-
-        for _, elElement in ipairs(el.elements) do
-            if tooltipText then
-                elElement.tooltipText = tooltipText
-                elElement.interactive = 1
-            end
-
-
-            table.insert(gridContents, elElement)
-        end
-
-        table.insert(formField.uiForms, el)
-    end
 
     if field.height == -1 then
         field:layout()
@@ -259,8 +320,11 @@ function complexField.getElement(name, value, options)
             onClick = function(orig, self)
                 orig(self)
 
+                local typeDropdown = generateTypeDropdown(formField, options)
+                formField.gridGroup = uiElements.group({ createGrid(formField) })
+
                 contextMenu.showContextMenu(function()
-                    return formField:getGrid()
+                    return grid.getGrid({ typeDropdown, formField.gridGroup }, 1)
                 end, {
                     shouldShowMenu = shouldShowMenu,
                     mode = "focused"
@@ -290,6 +354,7 @@ function complexField.getElement(name, value, options)
         label, field
     }
 
+    createGrid(formField)
     local valid = formField:fieldValid()
     overUpdateFieldStyle(formField, valid)
 

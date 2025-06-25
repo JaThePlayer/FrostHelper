@@ -27,6 +27,7 @@ internal sealed class FlagCounterController : Entity {
     public FlagCounterController(EntityData data, Vector2 offset) : base(data.Position + offset) {
         CounterName = data.Attr("counter");
         _conditions = data.Attr("flags")
+            // todo: ',' used here as separator in place accepting expressions, needed for backwards compat but this is bad!
             .Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
             .Select(s => new Entry(s))
             .ToArray();

@@ -22,7 +22,7 @@ jautils.createPlacementsPreserveOrder(rain, "default", {
     { "depth", 2000, "depth" },
     { "enableFlag", "", "FrostHelper.condition" },
    -- { "flagIfPlayerInside", "" }, -- undecided if I like the current impl
-    { "collideWith", "Celeste.Player,Celeste.Solid,Celeste.Water", "typesList" },
+   -- { "collideWith", "Celeste.Player,Celeste.Solid", "typesList" },
     { "presimulationTime", 1 },
     { "editorPreviewLength", 32 },
     { "rainbow", false },
@@ -80,7 +80,7 @@ end
 function rain.sprite(room, entity)
     local rectangle = rain.selection(room, entity)
 
-    local sprites = jautils.getBorderedRectangleSprites(rectangle, fillColor, entity.activeLineColor or borderColor)
+    local sprites = jautils.getBorderedRectangleSprites(rectangle, fillColor, borderColor)
 
     local minRot, maxRot = getMinMaxRotation(entity)
     local x, y, w, h = entity.x, entity.y, entity.width, entity.height

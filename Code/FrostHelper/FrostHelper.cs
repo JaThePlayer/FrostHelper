@@ -5,7 +5,9 @@ using FrostHelper.EXPERIMENTAL;
 using FrostHelper.Helpers;
 using FrostHelper.ModIntegration;
 using MonoMod.ModInterop;
+using System.Text;
 using YamlDotNet.Serialization;
+using Commands = Monocle.Commands;
 
 namespace FrostHelper;
 
@@ -489,7 +491,7 @@ public class FrostModule : EverestModule {
         };
     }
 
-    [Command("gc", "[Frost Helper] Forces an aggresive GC run")]
+    [Command("gc", "[Frost Helper] Forces an aggressive GC run")]
     public static void CmdGC() {
         for (int i = 0; i < 5; i++) {
             GC.Collect(3);
@@ -498,14 +500,23 @@ public class FrostModule : EverestModule {
 
     [Command("flags", "[Frost Helper] Lists all flags")]
     public static void CmdFlags() {
-        GetCurrentLevel().Session.Flags.Foreach(Console.WriteLine);
+        StringBuilder res = new();
+        res.AppendLine("Active flags:");
+        
+        GetCurrentLevel().Session.Flags.Foreach(s => res.AppendLine(s));
+        
+        var msg = res.ToString();
+        Logger.Log(LogLevel.Info, "FrostHelper.Flags", msg);
+        Engine.Commands.Log(msg);
     }
 
     [Command("detailed_count", "[Frost Helper] Lists all entities by type")]
     public static void CmdDetailedCount() {
-        Console.WriteLine("Components:");
+        StringBuilder res = new();
+        res.AppendLine("detailed_count results:");
+        res.AppendLine("Components:");
         Print(Engine.Scene.Entities.SelectMany(s => s));
-        Console.WriteLine("Entities:");
+        res.AppendLine("Entities:");
         Print(Engine.Scene.Entities);
 
         void Print(IEnumerable<object> obj) {
@@ -516,23 +527,33 @@ public class FrostModule : EverestModule {
                  .ToDictionary(t => t.FullName ?? t.Name, t => types.Count(t2 => t2 == t))
                  .OrderBy(p => p.Value) // while OrderByDescending might make more sense, this ordering makes it easier to read in the console
                  .Select(p => $"{p.Key}{new string(' ', longestType - p.Key.Length)} {p.Value}")
-                 .Foreach(Console.WriteLine);
+                 .Foreach(s => res.AppendLine(s));
         }
+        
+        var msg = res.ToString();
+        Logger.Log(LogLevel.Info, "FrostHelper.DetailedCount", msg);
+        Engine.Commands.Log(msg);
     }
 
     [Command("shader_info", "[Frost Helper] Prints out information about a shader")]
     public static void CmdShaderInfo(string shaderName) {
         var shader = ShaderHelperIntegration.GetEffect(shaderName);
 
-        Console.WriteLine($"{shaderName}:\n{shader.Parameters.Aggregate("Parameters:", (string p1, EffectParameter p2) => $"{p1}\n{p2.Name}: {p2.ParameterType}")}");
+        Logger.Log(LogLevel.Info, "FrostHelper.ShaderInfo", $"{shaderName}:\n{shader.Parameters.Aggregate("Parameters:", (string p1, EffectParameter p2) => $"{p1}\n{p2.Name}: {p2.ParameterType}")}");
     }
 
     [Command("fh_attached", "[Frost Helper] Prints out information about all data attached to entities by Frost Helper")]
     public static void CmdListAttached() {
-        Console.WriteLine("Attached Data:");
+        StringBuilder res = new();
+        
+        res.AppendLine("fh_attached results:");
         foreach (var item in Engine.Scene.Entities.entities.Cast<object>().Concat(GetCurrentLevel().Foreground.Backdrops).Concat(GetCurrentLevel().Background.Backdrops)) {
             if (AttachedDataHelper.GetAllData(item) is { } data)
-                Console.WriteLine($"{item} -> {string.Join(",", data)}");
+                res.AppendLine($"{item} -> {string.Join(",", data)}");
         }
+        
+        var msg = res.ToString();
+        Logger.Log(LogLevel.Info, "FrostHelper.ListAttached", msg);
+        Engine.Commands.Log(msg);
     }
 }

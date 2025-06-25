@@ -38,12 +38,6 @@ public class GroupedMoverAttacher : Entity {
     }
 
     public static void PreAwake(List<Entity> toAwake, EntityList entitiyList) {
-#if DebugLog
-        Console.WriteLine("Pre Awake");
-        Console.WriteLine();
-        Console.WriteLine();
-#endif
-
         foreach (GroupedMoverAttacher item in entitiyList.Scene.Tracker.SafeGetEntities<GroupedMoverAttacher>()) {
             item.Check(toAwake);
         }
@@ -73,15 +67,9 @@ public class GroupedMoverAttacher : Entity {
 
     public void Check(List<Entity> entities) {
         foreach (Entity entity in entities) {
-#if DebugLog
-            Console.WriteLine("Checking... " + entity.GetType());
-#endif
             if ((entity.Collider is not null ? CollideCheck(entity) : Collider.Collide(entity.Position))
                 && (Types.Contains(entity.GetType()) != IsBlacklist)
                 && (entity.Get<GroupedStaticMover>() is null)) {
-#if DebugLog
-                Console.WriteLine("Adding!!!!");
-#endif
 
                 switch (entity) {
                     case Solid solid:

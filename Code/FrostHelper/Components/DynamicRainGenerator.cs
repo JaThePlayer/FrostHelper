@@ -3,6 +3,26 @@ using System.Runtime.InteropServices;
 
 namespace FrostHelper.Components;
 
+/*
+ * IDEAS:
+ * - RainRegion Entity - optimisation
+ *   * Mapper-defined regions for rain to be in
+ *   * Rain generators placed within a region will use that region
+ *   * Rain generators treat these regions as their bounding box for broad-phase entity checks
+ *   * Each region has a name, placing multiple regions with the same name combines their region, creating an arbitrary sized region.
+ *     * ALT: Arbitrary Shape Region, but it'd need a FILLED polygon collider + perf issues?
+ * - StationaryTypes(List<Type>) - optimisation
+ *   * Mapper-defined list of types of entities that the mapper declares will NOT move, ever.
+ *   * All stationary entities get combined into a Grid<1x1 pixels>, and collision is only checked against the grid + non-stationary entities.
+ * - RainCollider Component - feature. Make water use it instead of hardcoding.
+ *   * AttachToSolid(bool) 
+ *   * CollideChance(float): impl - Dict<Generator, bool[]/BitArray collidedIds>, array idx set to false by generator when a rain droplet regenerates
+ *   * bool OnRainHit(Vector2 pos) - returns: whether the collision actually occured. Can be set via API.
+ *   * Stationary(bool)
+ *     * if (!AttachToSolid && && CollideChance >= 1f && OnRainHit is null && Stationary),
+ *     * this collider is treated as stationary and can be merged into the stationary Grid.  
+ */
+
 internal sealed class DynamicRainGroup() : Component(true, false) {
     public float PlayerInsideTimer;
 
@@ -34,6 +54,45 @@ internal sealed class DynamicRainGroup() : Component(true, false) {
 }
 
 internal sealed class DynamicRainGenerator : Component {
+    #region Hooks
+    private static bool _hooksLoaded;
+    
+    [HookPreload]
+    internal static void LoadHooksIfNeeded() {
+        if (_hooksLoaded)
+            return;
+        _hooksLoaded = true;
+        
+        On.Celeste.Water.ctor_Vector2_bool_bool_float_float += WaterCtor;
+    }
+
+    private static void WaterCtor(On.Celeste.Water.orig_ctor_Vector2_bool_bool_float_float orig, Water self, Vector2 position, bool topsurface, bool bottomsurface, float width, float height) {
+        orig(self, position, topsurface, bottomsurface, width, height);
+
+        float rippleTimerStart = 0f;
+        self.Add(new RainCollider(self.Collider, false) {
+            OnMakeSplashes = (ParticleSystem system, ref Rain rain) => {
+                if ((self.Scene.TimeActive - rippleTimerStart) > 0f) {
+                    Vector2 p = new(rain.Position.X, self.Y);
+                    self.TopSurface?.DoRipple(p, 0.21f);
+                    rippleTimerStart = self.Scene.TimeActive;
+                }
+
+                return false;
+            }
+        });
+    }
+
+    [OnUnload]
+    internal static void UnloadHooks() {
+        if (!_hooksLoaded)
+            return;
+        _hooksLoaded = false;
+        
+        On.Celeste.Water.ctor_Vector2_bool_bool_float_float -= WaterCtor;
+    }
+    #endregion
+    
     public Vector2 Offset;
 
     internal static readonly Color[] DefaultColors = [Calc.HexToColor("161933")];
@@ -58,13 +117,18 @@ internal sealed class DynamicRainGenerator : Component {
     private readonly Random _random;
     private readonly int _length;
     private Rectangle _levelBounds;
-    private readonly List<Entity> _potentialCollisionTargets = new();
+    
+    private readonly List<Entity> _potentialCollisionTargets = [];
+    private readonly List<RainCollider> _potentialRainColliders = [];
+    
     private readonly Rain[] _rains;
+    private readonly HashSet<RainCollider>?[] _collidersWithin;
 
     public DynamicRainGenerator(int length, float density) : base(true, true) {
         _random = new Random(Calc.Random.Next());
         _length = length;
         _rains = new Rain[(int)(length * density)];
+        _collidersWithin = new HashSet<RainCollider>[_rains.Length];
     }
 
     private Vector2 RenderPos => Offset + Entity.Position;
@@ -149,12 +213,12 @@ internal sealed class DynamicRainGenerator : Component {
         return RenderPos.ToNumerics();
     }
 
-    
+    /*
     public override void DebugRender(Camera camera) {
         base.DebugRender(camera);
         Draw.Rect(GetBounds(), Color.Red * 0.16f);
     }
-    
+    */
 
     public override void Render() {
         Rectangle bounds = GetBounds();
@@ -205,11 +269,19 @@ internal sealed class DynamicRainGenerator : Component {
         foreach (var type in Group.EntityFilter) {
             CollideInto(level, selfBounds, _potentialCollisionTargets, type, ref colliderBounds);
         }
+        // Same for rain colliders
+        // ReSharper disable once PossibleInvalidCastExceptionInForeachLoop
+        foreach (RainCollider rainCollider in level.Tracker.SafeGetComponents<RainCollider>()) {
+            if (FastBroadCollision(ref selfBounds, rainCollider.Collider, ref colliderBounds)) {
+                _potentialRainColliders.Add(rainCollider);
+            }
+        }
 
         var playerInside = false;
         
         var rains = _rains;
-        var targets = CollectionsMarshal.AsSpan(_potentialCollisionTargets);
+        var targetEntities = CollectionsMarshal.AsSpan(_potentialCollisionTargets);
+        var targetRainColliders = CollectionsMarshal.AsSpan(_potentialRainColliders);
         var madeRipple = false; // multiple ripples don't really work well, AND cause lag.
 
         for (var i = 0; i < rains.Length; i++) {
@@ -221,26 +293,34 @@ internal sealed class DynamicRainGenerator : Component {
             var shouldInit = false;
             if (rain.Position.Y > bottom) {
                 shouldInit = true;
-            } else if (colliderBounds.Contains(rain.Position) && CheckCollision(rain.Position, targets) is {} collidedEntity) {
-                playerInside |= collidedEntity.GetType() == typeof(Player);
+            } else if (colliderBounds.Contains(rain.Position)) {
+                if (CheckCollision(rain.Position, targetEntities) is { } collidedEntity) {
+                    playerInside |= collidedEntity.GetType() == typeof(Player);
 
-                if (CameraCullHelper.IsPointVisible(rain.Position, 8f, cam)) {
-                    if (!madeRipple && collidedEntity is Water water) {
-                        Vector2 p = new(rain.Position.X, water.Y);
-                        water.TopSurface?.DoRipple(p, 0.21f);
-                        madeRipple = true;
-                        //Particles.Emit(Water.P_Splash, 1, p, new Vector2(8f, 2f), Color, new Vector2(0.0f, -1f).Angle());
+                    if (CameraCullHelper.IsPointVisible(rain.Position, 8f, cam)) {
+                        /*
+                        if (!madeRipple && collidedEntity is Water water) {
+                            Vector2 p = new(rain.Position.X, water.Y);
+                            water.TopSurface?.DoRipple(p, 0.21f);
+                            madeRipple = true;
+                            //Particles.Emit(Water.P_Splash, 1, p, new Vector2(8f, 2f), Color, new Vector2(0.0f, -1f).Angle());
+                        }*/
+                        Group.Particles.Emit(
+                            Water.P_Splash, 
+                            // WaterInteraction.P_Drip,
+                            rain.Position.ToXna(), rain.Color, float.Pi + rain.Rotation);
                     }
-                    Group.Particles.Emit(
-                        Water.P_Splash, 
-                        // WaterInteraction.P_Drip,
-                        rain.Position.ToXna(), rain.Color, float.Pi + rain.Rotation);
+                    shouldInit = true;
+                } else if (CheckCollision(i, rain.Position, targetRainColliders) is { } rainCollider) {
+                    shouldInit = true;
+                    if (rainCollider.MakeSplashes && CameraCullHelper.IsPointVisible(rain.Position, 8f, cam)) {
+                        rainCollider.MakeSplashesImpl(Group.Particles, ref rain);
+                    }
                 }
-                
-                shouldInit = true;
             }
 
             if (shouldInit) {
+                _collidersWithin[i]?.Clear();
                 if (enabled)
                     rain.Init(GetNewRainPos(), this);
                 else
@@ -249,6 +329,7 @@ internal sealed class DynamicRainGenerator : Component {
         }
 
         _potentialCollisionTargets.Clear();
+        _potentialRainColliders.Clear();
         _wasEnabled = enabled;
         
         if (playerInside)
@@ -256,29 +337,27 @@ internal sealed class DynamicRainGenerator : Component {
     }
 
     private Entity? CheckCollision(NumVector2 point, Span<Entity> collidedEntities) {
-        foreach (Entity e in collidedEntities) {
-            var collider = e.Collider;
-            
-            // Fast path, because Hitbox collisions are stupidly slow (TODO: Everest PR)
-            if (collider.GetType() == typeof(Hitbox)) {
-                var hitbox = (Hitbox) collider;
-                var pos = hitbox.Position + e.Position;
-                var bounds = new Rectangle((int)pos.X, (int)pos.Y, (int)hitbox.width, (int)hitbox.height);
-                if (bounds.Contains(point)) {
+        foreach (Entity e in collidedEntities)
+            if (FastPointCollision(point, e.Collider))
+                return e;
+
+        return null;
+    }
+    
+    private RainCollider? CheckCollision(int rainIdx, NumVector2 point, Span<RainCollider> collidedEntities) {
+        foreach (RainCollider e in collidedEntities)
+            if (FastPointCollision(point, e.Collider)) {
+                if (e.PassThroughChance > 0f) {
+                    var store = _collidersWithin[rainIdx] ??= [];
+                    if (!store.Add(e) || _random.NextFloat(1f) < e.PassThroughChance) {
+                        continue;
+                    }
+                }
+
+                if (e.TryHit(point)) {
                     return e;
                 }
             }
-            // Fast path, because Grid collisions are stupidly slow (TODO: Everest PR)
-            else if (collider.GetType() == typeof(Grid))
-            {
-                var grid = (Grid) collider;
-                var p = point - grid.Position.ToNumerics() - e.Position.ToNumerics();
-                if (grid.Data[(int) (p.X / grid.CellWidth), (int) (p.Y / grid.CellHeight)])
-                    return e;
-            }
-            else if (collider.Collide(point.ToXna()))
-                return e;
-        }
 
         return null;
     }
@@ -291,26 +370,60 @@ internal sealed class DynamicRainGenerator : Component {
             if (!e.Collidable || e.Collider is not {} collider)
                 continue;
 
-            if (collider.GetType() == typeof(Hitbox)) {
-                // Fast path, because Hitbox collisions are stupidly slow
-                var hitbox = (Hitbox) collider;
-                var pos = hitbox.Position + e.Position;
-                var bounds = new Rectangle((int)pos.X, (int)pos.Y, (int)hitbox.width, (int)hitbox.height);
-                if (bounds.Intersects(rect)) {
-                    colliderBounds = colliderBounds.Width == 0 ? bounds : RectangleExt.Merge(colliderBounds, bounds);
-                    hits.Add(e);
-                }
-            }
-            // Grid collisions become really expensive with large rectangles, it's better to just accept them here and do point collision checks against them later.
-            else if (collider.GetType() == typeof(Grid) || e.CollideRect(rect)) {
-                var bounds = collider.Bounds;
-                colliderBounds = colliderBounds.Width == 0 ? bounds : RectangleExt.Merge(colliderBounds, bounds);
+            if (FastBroadCollision(ref rect, collider, ref colliderBounds)) {
                 hits.Add(e);
             }
         }
     }
 
-    private struct Rain {
+    #region FastCollisions
+    private static bool FastPointCollision(NumVector2 point, Collider collider) {
+        // Fast path, because Hitbox collisions are stupidly slow (TODO: Everest PR)
+        if (collider.GetType() == typeof(Hitbox)) {
+            var hitbox = (Hitbox) collider;
+            var pos = hitbox.Position + hitbox.Entity.Position;
+            var bounds = new Rectangle((int)pos.X, (int)pos.Y, (int)hitbox.width, (int)hitbox.height);
+            return bounds.Contains(point);
+        }
+        
+        // Fast path, because Grid collisions are stupidly slow (TODO: Everest PR)
+        if (collider.GetType() == typeof(Grid))
+        {
+            var grid = (Grid) collider;
+            var p = point - grid.Position.ToNumerics() - grid.Entity.Position.ToNumerics();
+            return grid.Data[(int) (p.X / grid.CellWidth), (int) (p.Y / grid.CellHeight)];
+        }
+        
+        return collider.Collide(point.ToXna());
+    }
+
+    /// <summary>
+    /// Performs a fast collision against this collider for broad-phase checking, expanding <see cref="colliderBounds"/> as needed.
+    /// Might not do a full collision check if its deemed worth it for perf, for example grids always return true.
+    /// </summary>
+    private static bool FastBroadCollision(ref Rectangle rect, Collider collider, ref Rectangle colliderBounds) {
+        if (collider.GetType() == typeof(Hitbox)) {
+            // Fast path, because Hitbox collisions are stupidly slow
+            var hitbox = (Hitbox) collider;
+            var pos = hitbox.Position + hitbox.Entity.Position;
+            var bounds = new Rectangle((int)pos.X, (int)pos.Y, (int)hitbox.width, (int)hitbox.height);
+            if (bounds.Intersects(rect)) {
+                colliderBounds = colliderBounds.Width == 0 ? bounds : RectangleExt.Merge(colliderBounds, bounds);
+                return true;
+            }
+        }
+        // Grid collisions become really expensive with large rectangles, it's better to just accept them here and do point collision checks against them later.
+        else if (collider.GetType() == typeof(Grid) || collider.Collide(rect)) {
+            var bounds = collider.Bounds;
+            colliderBounds = colliderBounds.Width == 0 ? bounds : RectangleExt.Merge(colliderBounds, bounds);
+            return true;
+        }
+
+        return false;
+    }
+    #endregion
+
+    internal struct Rain {
         public NumVector2 Position;
         public NumVector2 Speed;
         public Vector2 Scale;
