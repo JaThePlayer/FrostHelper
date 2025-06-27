@@ -17,6 +17,7 @@ internal sealed class DynamicRainGeneratorEntity : Entity
         }
         
         var colors = data.GetColors("colors", DynamicRainGenerator.DefaultColors);
+        var opacity = data.Float("opacity", 1f);
 
         var speedRange = data.GetVec2("speedRange", new(200f, 600f));
         var scaleRange = data.GetVec2("scaleRange", new(4f, 16f));
@@ -33,7 +34,7 @@ internal sealed class DynamicRainGeneratorEntity : Entity
 
         var group = new DynamicRainGroup() {
             FlagIfPlayerInside = flagIfPlayerInside,
-            EntityFilter = [ typeof(Player), typeof(Solid) ], // FrostModule.GetTypes(data.Attr("collideWith", "Celeste.Player,Celeste.Solid")),
+            EntityFilter = FrostModule.GetTypes(data.Attr("collideWith", "Celeste.Player,Celeste.Solid")),
         };
         Add(group);
         
@@ -48,6 +49,7 @@ internal sealed class DynamicRainGeneratorEntity : Entity
             Group = group,
             Offset = offset,
             PreSimulationTime = preSimulationTime,
+            Alpha = opacity,
         };
         
         Rectangle collisionBox = new((int)Position.X, (int)Position.Y, 8, 8);

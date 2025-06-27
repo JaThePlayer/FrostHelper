@@ -98,6 +98,8 @@ internal sealed class DynamicRainGenerator : Component {
     internal static readonly Color[] DefaultColors = [Calc.HexToColor("161933")];
     internal Color[] Colors { get; set; } = DefaultColors;
     
+    internal float Alpha { get; set; } = 1f;
+    
     internal Vector2 SpeedRange { get; set; } = new(200f, 600f);
 
     internal Vector2 RotationRange { get; set; } = new(-0.05f, 0.05f);
@@ -294,29 +296,22 @@ internal sealed class DynamicRainGenerator : Component {
             if (rain.Position.Y > bottom) {
                 shouldInit = true;
             } else if (colliderBounds.Contains(rain.Position)) {
-                if (CheckCollision(rain.Position, targetEntities) is { } collidedEntity) {
+                if (CheckCollision(i, rain.Position, targetRainColliders) is { } rainCollider) {
+                    shouldInit = true;
+                    if (rainCollider.MakeSplashes && CameraCullHelper.IsPointVisible(rain.Position, 8f, cam)) {
+                        rainCollider.MakeSplashesImpl(Group.Particles, ref rain);
+                    }
+                } else if (CheckCollision(rain.Position, targetEntities) is { } collidedEntity) {
                     playerInside |= collidedEntity.GetType() == typeof(Player);
 
                     if (CameraCullHelper.IsPointVisible(rain.Position, 8f, cam)) {
-                        /*
-                        if (!madeRipple && collidedEntity is Water water) {
-                            Vector2 p = new(rain.Position.X, water.Y);
-                            water.TopSurface?.DoRipple(p, 0.21f);
-                            madeRipple = true;
-                            //Particles.Emit(Water.P_Splash, 1, p, new Vector2(8f, 2f), Color, new Vector2(0.0f, -1f).Angle());
-                        }*/
                         Group.Particles.Emit(
                             Water.P_Splash, 
                             // WaterInteraction.P_Drip,
                             rain.Position.ToXna(), rain.Color, float.Pi + rain.Rotation);
                     }
                     shouldInit = true;
-                } else if (CheckCollision(i, rain.Position, targetRainColliders) is { } rainCollider) {
-                    shouldInit = true;
-                    if (rainCollider.MakeSplashes && CameraCullHelper.IsPointVisible(rain.Position, 8f, cam)) {
-                        rainCollider.MakeSplashesImpl(Group.Particles, ref rain);
-                    }
-                }
+                } 
             }
 
             if (shouldInit) {
@@ -443,7 +438,7 @@ internal sealed class DynamicRainGenerator : Component {
             Position += angle.Perpendicular() * (random.Range(-halfWidth, halfWidth));
             Speed = angle * speedLen;
             Scale = new Vector2(generator.ScaleRange.X + (speedLen - speedRange.X) / (speedRange.Y - speedRange.X) * (generator.ScaleRange.Y - generator.ScaleRange.X), 1f);
-            Color = generator.IsRainbow ? ColorHelper.GetHue(generator.Scene, position.ToXna()) : random.Choose(generator.Colors);
+            Color = (generator.IsRainbow ? ColorHelper.GetHue(generator.Scene, position.ToXna()) : random.Choose(generator.Colors)) * generator.Alpha;
         }
     }
 }

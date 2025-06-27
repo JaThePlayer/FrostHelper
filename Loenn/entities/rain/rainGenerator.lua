@@ -14,6 +14,7 @@ local borderColor = jautils.getColor("0000ff")
 jautils.createPlacementsPreserveOrder(rain, "default", {
     { "width", 16 },
     { "colors", "161933", "colorList" },
+    { "opacity", 1 },
     { "density", 0.75 },
     { "speedRange", "200,600", "range", {from=200, to=600} },
     { "scaleRange", "4,16", "range", {from=4, to=16} },
@@ -22,7 +23,7 @@ jautils.createPlacementsPreserveOrder(rain, "default", {
     { "depth", 2000, "depth" },
     { "enableFlag", "", "FrostHelper.condition" },
    -- { "flagIfPlayerInside", "" }, -- undecided if I like the current impl
-   -- { "collideWith", "Celeste.Player,Celeste.Solid", "typesList" },
+    { "collideWith", "Celeste.Player,Celeste.Solid", "typesList" },
     { "presimulationTime", 1 },
     { "editorPreviewLength", 32 },
     { "rainbow", false },

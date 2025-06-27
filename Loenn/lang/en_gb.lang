@@ -669,6 +669,7 @@ entities.FrostHelper/DynamicRainGenerator.attributes.description.attachToSolid=W
 entities.FrostHelper/DynamicRainGenerator.attributes.description.generatorLength=Generators with high Width or Height get automatically split into smaller ones, for performance reasons.\nThis setting determines the length of the smaller generators.\nFor generators with high rotation values, this setting might visibly impact where rain droplets get created at,\nwhich might matter if the generator is on-screen.\nToo small or too large values might degrade performance,\nthough the value that's best for performance depends on the exact layout of the room and is hard to measure.\nLeave at -1 to let Frost Helper automatically pick a value.
 entities.FrostHelper/DynamicRainGenerator.attributes.description.editorPreviewLength=Changes the length of the in-editor preview lines showing the angle rangle of the rain droplets.\nHas no in-game effect.
 entities.FrostHelper/DynamicRainGenerator.attributes.description.presimulationTime=How long (in seconds) the rain should be pre-simulated before the first render frame.\nHelps avoid issues with rain not existing on room load / transition.
+entities.FrostHelper/DynamicRainGenerator.attributes.description.opacity=The opacity of the rain colors, between 0 and 1.
 
 entities.FrostHelper/RainCollider.placements.name.default=Dynamic Rain Collider
 entities.FrostHelper/RainCollider.placements.description.default=Invisible collider that blocks Dynamic Rain.
