@@ -473,14 +473,7 @@ public class FrostModule : EverestModule {
         return ret;
     }
 
-    public static Level GetCurrentLevel() {
-        return Engine.Scene switch {
-            Level level => level,
-            LevelLoader loader => loader.Level,
-            AssetReloadHelper => (Level) AssetReloadHelper.ReturnToScene,
-            _ => throw new Exception("GetCurrentLevel called outside of a level... how did you manage that?")
-        };
-    }
+    public static Level GetCurrentLevel() => Engine.Scene.ToLevel();
 
     public static Level? TryGetCurrentLevel() {
         return Engine.Scene switch {

@@ -1,15 +1,21 @@
+---@module "jautils"
 local jautils = require("mods").requireFromPlugin("libraries.jautils", "FrostHelper")
 local utils = require("utils")
 local drawing = require("utils.drawing")
 local drawableRectangle = require("structs.drawable_rectangle")
 
+---@class DynamicRainGenerator : Entity
+---@field depth? integer
+---@field editorPreviewLength? integer
+
+---@type EntityHandler<DynamicRainGenerator>
 local rain = {
     name = "FrostHelper/DynamicRainGenerator",
 }
 
-local indicatorColor = jautils.getColor("0000aaaa")
-local fillColor = jautils.getColor("0000aaaa")
-local borderColor = jautils.getColor("0000ff")
+local indicatorColor = jautils.getConstColor("0000aaaa")
+local fillColor = jautils.getConstColor("0000aaaa")
+local borderColor = jautils.getConstColor("0000ff")
 
 jautils.createPlacementsPreserveOrder(rain, "default", {
     { "width", 16 },

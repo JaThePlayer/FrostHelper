@@ -4,20 +4,20 @@ namespace FrostHelper.Triggers.Activator;
 
 [CustomEntity("FrostHelper/OnEntityEnterActivator")]
 internal sealed class OnEntityEnterActivator : BaseActivator {
-    private bool CacheEntities;
-    private Type[] AllowedTypes;
-    private List<Entity>? CachedEntities;
+    private readonly bool _cacheEntities;
+    private readonly EntityFilter _filter;
+    private List<Entity>? _cachedEntities;
 
     // see comment in Update
     //private Entity? lastCollidedEntity;
 
-    private HashSet<Entity> lastCollided = new();
+    private readonly HashSet<Entity> _lastCollided = [];
 
     public OnEntityEnterActivator(EntityData data, Vector2 offset) : base(data, offset) {
-        CacheEntities = data.Bool("cache", true);
-        AllowedTypes = API.API.GetTypes(data.Attr("types", ""));
+        _cacheEntities = data.Bool("cache", true);
+        _filter = EntityFilter.CreateFrom(data); //API.API.GetTypes(data.Attr("types", ""));
 
-        if (AllowedTypes.Length == 0) {
+        if (_filter.Empty) {
             NotificationHelper.Notify("An On Entity Enter Activator with an empty 'types' list will DO NOTHING!");
         }
     }
@@ -25,8 +25,8 @@ internal sealed class OnEntityEnterActivator : BaseActivator {
     public override void Awake(Scene scene) {
         base.Awake(scene);
 
-        if (CacheEntities)
-            CachedEntities = scene.Entities.Where(IsValid).ToList();
+        if (_cacheEntities)
+            _cachedEntities = scene.Entities.Where(IsValid).ToList();
     }
 
     public override void Update() {
@@ -55,7 +55,7 @@ internal sealed class OnEntityEnterActivator : BaseActivator {
             CallOnLeave(player);
         }*/
 
-        if (CachedEntities is { } cache) {
+        if (_cachedEntities is { } cache) {
             foreach (var entity in cache) {
                 if (HandleEntity(hitbox, entity, player))
                     break;
@@ -68,7 +68,7 @@ internal sealed class OnEntityEnterActivator : BaseActivator {
         }
     }
 
-    private bool IsValid(Entity e) => AllowedTypes.ContainsReference(e.GetType());
+    private bool IsValid(Entity e) => _filter.Matches(e);
 
     private bool HandleEntity(Hitbox hitbox, Entity entity, Player? player) {
         var ret = false;
@@ -76,10 +76,10 @@ internal sealed class OnEntityEnterActivator : BaseActivator {
         if (entity is { Collidable: true, Collider: { } c }) {
             var collided = hitbox.Collide(c);
             if (collided) {
-                if (lastCollided.Add(entity))
+                if (_lastCollided.Add(entity))
                     ActivateAll(player!);
             } else {
-                if (lastCollided.Remove(entity)) {
+                if (_lastCollided.Remove(entity)) {
 
                 }
             }

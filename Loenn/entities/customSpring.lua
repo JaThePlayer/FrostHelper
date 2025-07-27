@@ -1,9 +1,14 @@
 local drawableSpriteStruct = require("structs.drawable_sprite")
+---@module "jautils"
 local jautils = require("mods").requireFromPlugin("libraries.jautils")
 local utils = require("utils")
 
 local springDepth = -8501
 local springTexture = "objects/spring/00"
+
+---@class CustomSpring : Entity
+---@field outlineColor string?
+---@field renderOutline boolean
 
 local rotations = {
     [0] = "FrostHelper/SpringFloor",
@@ -32,6 +37,7 @@ local dashAndStaminaRecoveryOptions = {
 }
 
 local function createSpringHandler(name, spriteRotation, speedAsVector)
+    ---@type EntityHandler<CustomSpring>
     local handler = {
         name = name,
 
@@ -39,20 +45,16 @@ local function createSpringHandler(name, spriteRotation, speedAsVector)
         sprite = function (room, entity)
             local sprite = getSprite(entity)
 
-            if sprite then
-                sprite:setJustification(0.5, 1.0)
-                sprite.rotation = spriteRotation
-                local renderOutline = entity.renderOutline == nil and true or entity.renderOutline
-                if renderOutline then
-                    local sprites = jautils.getBorder(sprite, entity.outlineColor)
-                    table.insert(sprites, sprite)
-                    return sprites
-                end
-
-                return sprite
+            sprite:setJustification(0.5, 1.0)
+            sprite.rotation = spriteRotation
+            local renderOutline = entity.renderOutline == nil and true or entity.renderOutline
+            if renderOutline then
+                local sprites = jautils.getBorder(sprite, entity.outlineColor)
+                table.insert(sprites, sprite)
+                return sprites
             end
 
-            return nil
+            return sprite
         end,
         selection = function(room, entity)
             local sprite = drawableSpriteStruct.fromTexture("objects/spring/00", entity)
@@ -62,7 +64,7 @@ local function createSpringHandler(name, spriteRotation, speedAsVector)
         end,
         rotate = jautils.getNameRotationHandler(rotations),
         flip = jautils.getNameFlipHandler(rotations),
-        ignoredFields = { "_name", "_id", "version" }
+        --ignoredFields = { "_name", "_id", "version" },
     }
 
     jautils.createPlacementsPreserveOrder(handler, "normal", {
@@ -86,11 +88,22 @@ local function createSpringHandler(name, spriteRotation, speedAsVector)
         }},
         { "speedMult", speedAsVector and "1.0" or 1.0 },
         { "attachGroup", -1, "FrostHelper.attachGroup" },
-        { "dashRecovery", 10000, dashAndStaminaRecoveryOptions },
-        { "staminaRecovery", 10000, dashAndStaminaRecoveryOptions },
-        { "jumpRecovery", 10001, dashAndStaminaRecoveryOptions },
+        -- legacy options, replaced with 'recovery'
+        { "dashRecovery", 10000, dashAndStaminaRecoveryOptions, nil, {
+            hideIf = function (entity) return entity.recovery ~= nil end },
+            doNotAddToPlacement = true,
+        },
+        { "staminaRecovery", 10000, dashAndStaminaRecoveryOptions, nil, {
+            hideIf = function (entity) return entity.recovery ~= nil end },
+            doNotAddToPlacement = true,
+        },
+        { "jumpRecovery", 10001, dashAndStaminaRecoveryOptions, nil, {
+            hideIf = function (entity) return entity.recovery ~= nil end },
+            doNotAddToPlacement = true,
+        },
+        { "recovery", "10000;10000;10001", "statRecovery", nil, { hideIfMissing = true } },
         { "sfx", "event:/game/general/spring" },
-        { "version", 2, "integer" },
+        { "version", 2, "integer", nil, { hidden = true } },
         { "oneUse", false },
         { "playerCanUse", true },
         { "renderOutline", true },

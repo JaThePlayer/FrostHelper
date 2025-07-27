@@ -54,6 +54,17 @@ public static class Extensions {
         var parser = new SpanParser(str);
         return parser.ParseList<T>(separator).ToArray();
     }
+    
+    internal static T Parse<T>(this EntityData data, string key, T def) where T : ISpanParsable<T> {
+        if (data.String(key) is not { } str)
+            return def;
+
+        if (T.TryParse(str, null, out var result))
+            return result;
+
+        NotificationHelper.Notify($"Failed to parse {str} as a {typeof(T)}!");
+        return def;
+    }
 
     /// <summary>
     /// Gets a hashset out of a comma-seperated list of elements. Each element in the hashset is trimmed
@@ -148,7 +159,7 @@ public static class Extensions {
         };
 
         // xna sanity checks
-        // todo: remove once Core is stable
+        /*
         if ((state.AlphaBlendFunction is BlendFunction.Min or BlendFunction.Max) && (state.AlphaSourceBlend is not Blend.One || state.AlphaDestinationBlend is not Blend.One)) {
             NotificationHelper.Notify($"AlphaSourceBlend and AlphaDestinationBlend MUST be One when using AlphaBlendFunction Min or Max,\nor XNA will crash!");
         }
@@ -156,7 +167,7 @@ public static class Extensions {
         if ((state.ColorBlendFunction is BlendFunction.Min or BlendFunction.Max) && (state.ColorSourceBlend is not Blend.One || state.ColorDestinationBlend is not Blend.One)) {
             NotificationHelper.Notify($"ColorSourceBlend and ColorDestinationBlend MUST be One when using ColorBlendFunction Min or Max,\nor XNA will crash!");
         }
-
+        */
 
         data.Values[cacheKey] = state;
         return state;
@@ -354,4 +365,11 @@ public static class Extensions {
         right = str[(idx + 1)..];
         return true;
     }
+
+    public static Level ToLevel(this Scene scene) => scene switch {
+        Level l => l,
+        LevelLoader loader => loader.Level,
+        AssetReloadHelper => (Level) AssetReloadHelper.ReturnToScene,
+        _ => throw new Exception("ToLevel called outside of a level... how did you manage that?")
+    };
 }

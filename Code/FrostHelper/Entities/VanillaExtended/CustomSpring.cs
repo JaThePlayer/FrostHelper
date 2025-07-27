@@ -33,7 +33,7 @@ public class CustomSpring : Spring {
     }
 
     private static bool Puffer_HitSpring(On.Celeste.Puffer.orig_HitSpring orig, Puffer self, Spring spring) {
-        if (spring is CustomSpring customSpring && customSpring.Orientation == CustomOrientations.Ceiling) {
+        if (spring is CustomSpring { Orientation: CustomOrientations.Ceiling }) {
             if (self.hitSpeed.Y <= 0f) {
                 self.GotoHitSpeed(224f * Vector2.UnitY);
                 self.MoveTowardsX(spring.CenterX, 4f, null);
@@ -48,7 +48,7 @@ public class CustomSpring : Spring {
     }
 
     private static bool Glider_HitSpring(On.Celeste.Glider.orig_HitSpring orig, Glider self, Spring spring) {
-        if (spring is CustomSpring customSpring && customSpring.Orientation == CustomOrientations.Ceiling) {
+        if (spring is CustomSpring { Orientation: CustomOrientations.Ceiling }) {
             if (!self.Hold.IsHeld && self.Speed.Y <= 0f) {
                 self.Speed.X *= 0.5f;
                 self.Speed.Y = -160f;
@@ -63,7 +63,7 @@ public class CustomSpring : Spring {
     }
 
     private static bool TheoCrystal_HitSpring(On.Celeste.TheoCrystal.orig_HitSpring orig, TheoCrystal self, Spring spring) {
-        if (spring is CustomSpring customSpring && customSpring.Orientation == CustomOrientations.Ceiling) {
+        if (spring is CustomSpring { Orientation: CustomOrientations.Ceiling }) {
             if (!self.Hold.IsHeld && self.Speed.Y <= 0f) {
                 self.Speed.X *= 0.5f;
                 self.Speed.Y = -160f;
@@ -124,15 +124,7 @@ public class CustomSpring : Spring {
     /// </summary>
     public bool AlwaysActivate;
 
-    /// <summary>
-    /// Sentinel value for <see cref="DashRecovery"/> and <see cref="StaminaRecovery"/>,
-    /// which makes them refill your dashes/stamina instead of adding/removing from it.
-    /// </summary>
-    internal const int RecoveryIsARefill = 10000;
-    internal const int RecoveryIsIgnored = 10001;
-    internal readonly int DashRecovery;
-    internal readonly int StaminaRecovery;
-    internal readonly int JumpRecovery;
+    private readonly Recovery _recovery;
 
     private static readonly Dictionary<string, CustomOrientations> EntityDataNameToOrientation = new() {
         ["FrostHelper/SpringLeft"] = CustomOrientations.WallLeft,
@@ -160,15 +152,18 @@ public class CustomSpring : Spring {
         dir = data.Attr("directory", "objects/spring/");
         RenderOutline = data.Bool("renderOutline", true);
 
-        
-        DashRecovery = data.Int("dashRecovery", RecoveryIsARefill);
-        StaminaRecovery = data.Int("staminaRecovery", RecoveryIsARefill);
-        JumpRecovery = data.Int("jumpRecovery", RecoveryIsIgnored);
-
-        if (JumpRecovery != RecoveryIsIgnored && (!ExtVariantsAPI.LoadIfNeeded() || ExtVariantsAPI.GetCurrentVariantValue is null)) {
-            PostcardHelper.Start("Custom Spring with custom Jump Recovery is used, but Extended Variants is not loaded! Report this to the mapmaker.");
-            return;
+        if (data.Has("recovery")) {
+            _recovery = data.Parse("recovery", Recovery.DefaultRefill);
+        } else {
+            _recovery = new Recovery(
+                data.Int("dashRecovery", Recovery.RecoveryIsARefill),
+                data.Int("staminaRecovery", Recovery.RecoveryIsARefill),
+                data.Int("jumpRecovery", Recovery.RecoveryIsIgnored)
+            );
         }
+
+        if (_recovery.ShowPostcardIfNeeded("Custom Spring"))
+            return;
         
         //speedMult = FrostModule.StringToVec2(data.Attr("speedMult", "1"));
         // LEGACY BEHAVIOUR TIME!
@@ -287,18 +282,12 @@ public class CustomSpring : Spring {
         if (player.StateMachine.State == Player.StDreamDash || !playerCanUse)
             return;
 
-        var prevDashes = player.Dashes;
-        var prevStamina = player.Stamina;
-        var prevJumps = ExtVariantsAPI.LoadIfNeeded() ? ExtVariantsAPI.GetJumpCount?.Invoke() ?? 1 : 1;
-        
-        if (DashRecovery < 0 && prevDashes < -DashRecovery)
-            return;
-        if (StaminaRecovery < 0 && prevStamina < -StaminaRecovery)
-            return;
-        if (JumpRecovery < 0 && prevJumps < -JumpRecovery)
+        var prev = _recovery.SavePlayerData(player);
+
+        if (!_recovery.CanUse(prev))
             return;
 
-        if (Version == 0 && NewOnCollide_Version0(player, prevJumps)) {
+        if (Version == 0 && NewOnCollide_Version0(player, prev)) {
             return;
         }
 
@@ -329,7 +318,7 @@ public class CustomSpring : Spring {
 
                 player.varJumpSpeed = player.Speed.Y;
 
-                OnSuccessfulPlayerHit(player, prevDashes, prevStamina, prevJumps);
+                OnSuccessfulPlayerHit(player, prev);
 
                 if (playerInverted && Orientation == CustomOrientations.Floor || Orientation == CustomOrientations.Ceiling) {
                     TimeBasedClimbBlocker.NoClimbTimer = 4f / 60f;
@@ -349,7 +338,7 @@ public class CustomSpring : Spring {
                     player.Speed *= speedMult;
                     if (MultiplyPlayerY)
                         player.varJumpSpeed = player.Speed.Y;
-                    OnSuccessfulPlayerHit(player, prevDashes, prevStamina, prevJumps);
+                    OnSuccessfulPlayerHit(player, prev);
                 }
                 break;
             case CustomOrientations.WallRight:
@@ -363,7 +352,7 @@ public class CustomSpring : Spring {
                         player.varJumpSpeed = player.Speed.Y;
                     BounceAnimate();
 
-                    OnSuccessfulPlayerHit(player, prevDashes, prevStamina, prevJumps);
+                    OnSuccessfulPlayerHit(player, prev);
                 }
                 break;
             default:
@@ -374,10 +363,7 @@ public class CustomSpring : Spring {
     /// <summary>
     /// Old version of the NewOnCollide method before PR4. This has broken upside-down spring behaviour - it launches the player way too high.
     /// </summary>
-    private bool NewOnCollide_Version0(Player player, int prevJumps) {
-        var prevDashes = player.Dashes;
-        var prevStamina = player.Stamina;
-        
+    private bool NewOnCollide_Version0(Player player, Recovery.SavedPlayerData prev) {
         switch (Orientation) {
             case CustomOrientations.Floor:
                 if (AlwaysActivate || GravityHelperIntegration.InvertIfPlayerInverted(player.Speed.Y) >= 0f) {
@@ -385,7 +371,7 @@ public class CustomSpring : Spring {
                     GravityHelperIntegration.SuperBounce(player, Top);
                     player.Speed.Y *= speedMult.Y;
 
-                    OnSuccessfulPlayerHit(player, prevDashes, prevStamina, prevJumps);
+                    OnSuccessfulPlayerHit(player, prev);
                 }
                 return true;
             case CustomOrientations.Ceiling:
@@ -405,7 +391,7 @@ public class CustomSpring : Spring {
                     }
 
                     player.varJumpSpeed = player.Speed.Y;
-                    OnSuccessfulPlayerHit(player, prevDashes, prevStamina, prevJumps);
+                    OnSuccessfulPlayerHit(player, prev);
 
                     TimeBasedClimbBlocker.NoClimbTimer = 4f / 60f;
                     inactiveTimer = 6f * Engine.DeltaTime;
@@ -421,59 +407,9 @@ public class CustomSpring : Spring {
         }
     }
 
-    private void OnSuccessfulPlayerHit(Player player, int prevDashes, float prevStamina, int prevJumps) {
+    private void OnSuccessfulPlayerHit(Player player, Recovery.SavedPlayerData prev) {
         OnSuccessfulHit();
-
-        switch (DashRecovery) {
-            case RecoveryIsARefill:
-                break;
-            case RecoveryIsIgnored:
-                player.Dashes = prevDashes;
-                break;
-            case > RecoveryIsIgnored:
-                NotificationHelper.Notify($"DashRecovery value of {DashRecovery} is invalid and reserved for future use.\nPlease use a different value!");
-                break;
-            case < 0:
-                player.Dashes = prevDashes + DashRecovery;
-                break;
-            default:
-                player.Dashes = DashRecovery;
-                break;
-        }
-        
-        switch (StaminaRecovery) {
-            case RecoveryIsARefill:
-                break;
-            case RecoveryIsIgnored:
-                player.Stamina = prevStamina;
-                break;
-            case > RecoveryIsIgnored:
-                NotificationHelper.Notify($"StaminaRecovery value of {StaminaRecovery} is invalid and reserved for future use.\nPlease use a different value!");
-                break;
-            case < 0:
-                player.Stamina = prevStamina + StaminaRecovery;
-                break;
-            default:
-                player.Stamina = StaminaRecovery;
-                break;
-        }
-
-        switch (JumpRecovery) {
-            case RecoveryIsARefill:
-                ExtVariantsAPI.SetJumpCount!(int.Max(ExtVariantsAPI.GetVariantInt(ExtVariantsAPI.Variant.JumpCount, 1) - 1, prevJumps));
-                break;
-            case RecoveryIsIgnored:
-                break;
-            case > RecoveryIsIgnored:
-                NotificationHelper.Notify($"JumpRecovery value of {JumpRecovery} is invalid and reserved for future use.\nPlease use a different value!");
-                break;
-            case < 0:
-                ExtVariantsAPI.SetJumpCount!(prevJumps + JumpRecovery);
-                break;
-            default:
-                ExtVariantsAPI.SetJumpCount!(JumpRecovery);
-                break;
-        }
+        _recovery.Recover(player, prev);
     }
 
     public IEnumerator BreakRoutine() {

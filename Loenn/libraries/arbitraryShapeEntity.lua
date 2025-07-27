@@ -1,3 +1,4 @@
+---@module "jautils"
 local jautils = require("mods").requireFromPlugin("libraries.jautils", "FrostHelper")
 local drawableLineStruct = require("structs.drawable_line")
 local drawableFunction = require("structs.drawable_function")
@@ -58,9 +59,14 @@ function helper.createPolygonSprite(points, fillColor)
     return sprite
 end
 
+---@param nodeColor AnyColor
+---@param lineColor AnyColor
+---@param fillColor AnyColor
+---@param mainNodeColor? AnyColor
+---@return fun(room: Room, entity: UnknownEntity): Drawable[]
 function helper.getSpriteFunc(nodeColor, lineColor, fillColor, mainNodeColor)
-    nodeColor = jautils.getColor(nodeColor or "ffffff")
-    lineColor = jautils.getColor(lineColor or "fcf579")
+    nodeColor = jautils.getColor(nodeColor or "ffffff") or jautils.colorWhite
+    lineColor = jautils.getColor(lineColor or "fcf579") or jautils.colorWhite
 
     mainNodeColor = mainNodeColor or nodeColor
 
@@ -97,6 +103,10 @@ end
 -- make sure nodes aren't drawn because it looks stupid
 function helper.nodeSprite() end
 
+---@param room Room
+---@param entity Entity
+---@return Rectangle
+---@return Rectangle[]
 function helper.selection(room, entity)
     local main = utils.rectangle(entity.x - 2, entity.y - 2, 4, 4)
 

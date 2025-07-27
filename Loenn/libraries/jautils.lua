@@ -49,9 +49,6 @@ local celesteDepths = --require("consts.object_depths")
     ["Formation Sequences (-2000000)"] = -2000000,
 }
 
----@alias color string | table<integer, number>
----@alias sprite table
-
 local jautils = {}
 
 jautils.windingOrders = {
@@ -104,13 +101,15 @@ end
 
 ---Returns a table which contains all of the elements of all passed tables.
 ---Argument tables that have a _type field will be added to the returned table directly instead of being looped over
----@param ... table
----@return table
+---@generic T
+---@param ... T|T[]
+---@return T[]
 function jautils.union(...)
     local union = {}
 
     for _, value in ipairs({...}) do
         if not value then
+---@diagnostic disable-next-line: undefined-field
         elseif value._type then -- specific to lonn
             table.insert(union, value)
         else
@@ -121,6 +120,12 @@ function jautils.union(...)
     return union
 end
 
+---Adds all values from 'toAddTable' into 'addTo', returning the same 'addTo' instance.
+---@generic T
+---@param addTo T[]
+---@param toAddTable T[]
+---@param insertLoc number?
+---@return T[]
 function jautils.addAll(addTo, toAddTable, insertLoc)
     if insertLoc then
         for _, value in ipairs(toAddTable) do
@@ -140,6 +145,8 @@ end
     PLACEMENTS
 ]]
 
+---Returns all known entity SIDs.
+---@return string[]
 local getAllSids = function ()
     return {}
 end
@@ -415,6 +422,50 @@ jautils.fieldTypeOverrides = {
             }
         }
     end,
+    ["statRecovery"] = function (data)
+        return {
+            fieldType = "FrostHelper.complexField",
+            separator = ";",
+            innerFields = {
+                {
+                    name = "FrostHelper.fields.statRecovery.dashes",
+                    default = 10000,
+                    info = {
+                        fieldType = "integer",
+                        options = {
+                            ["10000 (Refill)"] = 10000,
+                            ["10001 (No Change)"] = 10001,
+                        },
+                        maximumValue = 10001,
+                    }
+                },
+                {
+                    name = "FrostHelper.fields.statRecovery.stamina",
+                    default = 10000,
+                    info = {
+                        fieldType = "integer",
+                        options = {
+                            ["10000 (Refill)"] = 10000,
+                            ["10001 (No Change)"] = 10001,
+                        },
+                        maximumValue = 10001,
+                    }
+                },
+                {
+                    name = "FrostHelper.fields.statRecovery.jumps",
+                    default = 10000,
+                    info = {
+                        fieldType = "integer",
+                        options = {
+                            ["10000 (Refill)"] = 10000,
+                            ["10001 (No Change)"] = 10001,
+                        },
+                        maximumValue = 10001,
+                    }
+                }
+            }
+        }
+    end
 }
 
 local fieldTypesWhichNeedLiveUpdate = {
@@ -428,7 +479,7 @@ local fieldTypesWhichNeedLiveUpdate = {
 local function createFieldInfoFromJaUtilsPlacement(placementData)
     local fieldInformation = {}
     for _,v in ipairs(placementData) do
-        local fieldName, defaultValue, fieldType, fieldData = v[1], v[2], v[3], v[4]
+        local fieldName, defaultValue, fieldType, fieldData, config = v[1], v[2], v[3], v[4], v[5] or {}
         if fieldType then
             local override = jautils.fieldTypeOverrides[fieldType]
             if override then
@@ -471,6 +522,25 @@ local function createFieldInfoFromJaUtilsPlacement(placementData)
     return fieldInformation
 end
 
+---@class placementEntryConfig<T> : {
+---hideIf?: (fun(entity: T):boolean),
+---}
+---@field doNotAddToPlacement boolean|nil If true, this field will not be added to the placement, meaning newly placed entities will not have this field.
+---@field hidden boolean|nil If true, the field will not show up in the entity edit window.
+---@field hideIf nil Callback to determine whether this field should show up in the entity edit window.
+---@field hideIfMissing boolean|nil If true, the field will not show up in the entity edit window if the field is not present on the entity. 
+
+---@alias fieldName string
+---@alias fieldDefaultValue MapSaveable
+---@alias fieldType string|table|nil
+---@alias fieldData any|nil
+
+---Creates placements for this entity handler, as well as ignoredFields, fieldOrder and fieldInformation
+---@generic T
+---@param handler EntityHandler<T>
+---@param placementName string
+---@param placementData { [1]: fieldName, [2]: fieldDefaultValue, [3]: fieldType, [4]: fieldData, [5]: placementEntryConfig<T>|nil }[]
+---@param appendSize boolean|nil
 function jautils.createPlacementsPreserveOrder(handler, placementName, placementData, appendSize)
     handler.placements = {{
         name = placementName,
@@ -485,11 +555,18 @@ function jautils.createPlacementsPreserveOrder(handler, placementName, placement
         table.insert(placementData, 1, { "width", 16 })
     end
 
+    -- ignoredFields(entity):table
+    local hiddenIfFields = {}
+    local hiddenFields = nil
+
     for _,v in ipairs(placementData) do
-        local fieldName, defaultValue, fieldType, fieldData = v[1], v[2], v[3], v[4]
+        local fieldName, defaultValue, fieldType, fieldData, config = v[1], v[2], v[3], v[4], v[5] or {}
 
         table.insert(fieldOrder, fieldName)
-        handler.placements[1].data[fieldName] = defaultValue
+
+        if not config.doNotAddToPlacement then
+            handler.placements[1].data[fieldName] = defaultValue
+        end
 
         if fieldType then
             hasAnyFieldInformation = true
@@ -497,6 +574,43 @@ function jautils.createPlacementsPreserveOrder(handler, placementName, placement
                 needsLiveFieldInfoUpdate = true
             end
         end
+
+        if config then
+            if config.hideIfMissing then
+                table.insert(hiddenIfFields, {
+                    name = fieldName,
+                    cb = function (entity)
+                        return entity[fieldName] == nil
+                    end
+                })
+            end
+            if config.hideIf then
+                table.insert(hiddenIfFields, {
+                    name = fieldName,
+                    cb = config.hideIf
+                })
+            end
+            if config.hidden then
+                hiddenFields = hiddenFields or { "_name", "_id" }
+                table.insert(hiddenFields, fieldName)
+            end
+        end
+    end
+
+    if #hiddenIfFields > 0 then
+        handler.ignoredFields = function (entity)
+            local hidden = hiddenFields and utils.deepcopy(hiddenFields) or { "_name", "_id" }
+
+            for _, value in ipairs(hiddenIfFields) do
+                if value.cb(entity) then
+                    table.insert(hidden, value.name)
+                end
+            end
+
+            return hidden
+        end
+    else
+        handler.ignoredFields = hiddenFields
     end
 
     if needsLiveFieldInfoUpdate then
@@ -510,6 +624,11 @@ function jautils.createPlacementsPreserveOrder(handler, placementName, placement
     handler.fieldOrder = fieldOrder
 end
 
+---Adds a new placement to the given entity handler created by 'createPlacementsPreserveOrder'
+---@generic T
+---@param handler EntityHandler<T>
+---@param placementName string
+---@param ... { [1]: string, [2]: MapSaveable }[]
 function jautils.addPlacement(handler, placementName, ...)
     local newPlacement = {
         name = placementName,
@@ -530,6 +649,14 @@ function jautils.addPlacement(handler, placementName, ...)
 end
 
 local emptyTable = { }
+
+---Returns all mods associated with the texture used by the sprite at the given path
+---@param path string
+---@return string[]
+function jautils.associatedModsFromSprite(path)
+    return emptyTable
+end
+
 if atlases and mods.getModMetadataFromPath and mods.getModNamesFromMetadata then
     local associatedModsFromSpriteCache = {}
     function jautils.associatedModsFromSprite(path)
@@ -542,14 +669,14 @@ if atlases and mods.getModMetadataFromPath and mods.getModNamesFromMetadata then
         if cached then
             return cached
         end
-    
+
         local sprite = gp[path]
         if (not sprite) or sprite.internalFile then
             associatedModsFromSpriteCache[path] = emptyTable
             return emptyTable
         end
-    
-    
+
+
         local filename = sprite.filename
         local modMetadata = mods.getModMetadataFromPath(filename)
         if not modMetadata then
@@ -558,14 +685,10 @@ if atlases and mods.getModMetadataFromPath and mods.getModNamesFromMetadata then
         end
 
         local names = mods.getModNamesFromMetadata(modMetadata)
-    
+
         associatedModsFromSpriteCache[path] = names
-    
+
         return names
-    end
-else
-    function jautils.associatedModsFromSprite(path)
-        return emptyTable
     end
 end
 
@@ -579,6 +702,13 @@ jautils.colorWhite = utils.getColor("ffffff")
 jautils.colorBlack = {0, 0, 0, 1}
 jautils.radian = math.pi / 180
 
+---Returns outline sprites for a sprite at the given path
+---@param data DrawableSprite.FromTextureData
+---@param spritePath string
+---@param color AnyColor
+---@param outlineColor? AnyColor
+---@param scaleX? number
+---@return DrawableSprite[]
 function jautils.getOutlinedSpriteFromPath(data, spritePath, color, outlineColor, scaleX)
     local sprite = drawableSpriteStruct.fromTexture(spritePath, data)
     sprite:setColor(color or jautils.colorWhite)
@@ -591,6 +721,10 @@ function jautils.getOutlinedSpriteFromPath(data, spritePath, color, outlineColor
     return sprites
 end
 
+---Gets border sprites for the given sprite.
+---@param sprite DrawableSprite
+---@param color AnyColor
+---@return DrawableSprite[]
 function jautils.getBorder(sprite, color)
     color = color and utils.getColor(color) or {0, 0, 0, 1}
 
@@ -612,6 +746,10 @@ function jautils.getBorder(sprite, color)
     }
 end
 
+---Gets border sprites for all of the given sprites, returning a table with the borders and original sprites.
+---@param sprites DrawableSprite[]
+---@param color AnyColor
+---@return DrawableSprite[]
 function jautils.getBordersForAll(sprites, color)
     if color == "00000000" then
         return sprites
@@ -628,6 +766,12 @@ function jautils.getBordersForAll(sprites, color)
     return jautils.addAll(newSprites, sprites)
 end
 
+---Creates a copy of the provided texture at a new location.
+---@param baseTexture DrawableSprite
+---@param x number
+---@param y number
+---@param relative boolean?
+---@return DrawableSprite
 function jautils.copyTexture(baseTexture, x, y, relative)
     local texture = drawableSpriteStruct.fromMeta(baseTexture.meta, baseTexture)
     texture.x = relative and baseTexture.x + x or x
@@ -638,6 +782,12 @@ end
 
 local spritePathCache = {}
 
+---Gets the path for a custom sprite, or the fallback path if the custom sprite does not exist.
+---@param entity DrawableSprite.FromTextureData
+---@param customPath string
+---@param fallback string
+---@return string path The found path.
+---@return DrawableSprite? sprite A drawable sprite created using 'entity'.
 function jautils.getSpritePathOrFallback(entity, customPath, fallback)
     local sprite = nil
 
@@ -668,6 +818,13 @@ function jautils.getSpritePathOrFallback(entity, customPath, fallback)
     return fallback, drawableSpriteStruct.fromTexture(fallback, entity)
 end
 
+---Gets the path for a custom sprite at entity[spritePropertyName] .. spritePostfix, or the fallback path if the custom sprite does not exist.
+---@param entity DrawableSprite.FromTextureData
+---@param spritePropertyName string
+---@param spritePostfix string
+---@param fallback string
+---@return string path The found path.
+---@return DrawableSprite? sprite A drawable sprite created using 'entity'.
 function jautils.getCustomSpritePath(entity, spritePropertyName, spritePostfix, fallback)
     local sprite = nil
 
@@ -681,8 +838,13 @@ function jautils.getCustomSpritePath(entity, spritePropertyName, spritePostfix, 
     return fallback, drawableSpriteStruct.fromTexture(fallback, entity)
 end
 
+---@type string[][]
 local getAtlasSubtexturesCache = {}
 
+---Works like Celeste's getAtlasSubtextures.
+---@param path string
+---@param fallback string
+---@return string[]
 function jautils.getAtlasSubtextures(path, fallback)
     if getAtlasSubtexturesCache[path] then
         return getAtlasSubtexturesCache[path]
@@ -722,7 +884,7 @@ end
 ---@param spritePropertyName string
 ---@param spritePostfix string
 ---@param fallback string
----@param spriteTintPropertyName string
+---@param spriteTintPropertyName string?
 ---@return sprite?
 function jautils.getCustomSprite(entity, spritePropertyName, spritePostfix, fallback, spriteTintPropertyName)
     local spritePath, sprite = jautils.getCustomSpritePath(entity, spritePropertyName, spritePostfix, fallback)
@@ -808,36 +970,56 @@ end
 ---Returns a 1x1 drawableSprite located at x,y
 ---@param x number
 ---@param y number
----@param color color
----@return sprite sprite
+---@param color AnyColor
+---@return DrawableSprite sprite
 function jautils.getPixelSprite(x, y, color)
+---@diagnostic disable-next-line: return-type-mismatch -- we know this will never be nil.
     return drawableSpriteStruct.fromInternalTexture(drawableRectangleStruct.tintingPixelTexture, { x = x, y = y, jx = 0, jy = 0, color = color or jautils.colorWhite })
 end
 
 ---Returns a sprite for a rectangle, optionally tinted with fillColor
----@param rectangle table
----@param fillColor color
----@return sprite sprites
+---@param rectangle Rectangle
+---@param fillColor AnyColor
+---@return DrawableSprite sprites
 function jautils.getFilledRectangleSprite(rectangle, fillColor)
     return drawableRectangleStruct.fromRectangle("fill", rectangle.x, rectangle.y, rectangle.width, rectangle.height, fillColor or jautils.colorWhite):getDrawableSprite()
 end
 
 ---Returns 4 sprites for a hollow rectangle, optionally tinted with fillColor
----@param rectangle table
----@param fillColor color
----@return sprite[] sprites
+---@param rectangle Rectangle
+---@param fillColor AnyColor
+---@return DrawableSprite[] sprites
 function jautils.getHollowRectangleSprites(rectangle, fillColor)
     return drawableRectangleStruct.fromRectangle("line", rectangle.x, rectangle.y, rectangle.width, rectangle.height, fillColor or jautils.colorWhite):getDrawableSprite()
 end
 
+---Returns sprites for a bordered rectangle, optionally tinted with fillColor
+---@param rectangle Rectangle
+---@param fillColor AnyColor
+---@param lineColor AnyColor
+---@return DrawableSprite[] sprites
 function jautils.getBorderedRectangleSprites(rectangle, fillColor, lineColor)
     return drawableRectangleStruct.fromRectangle("bordered", rectangle.x, rectangle.y, rectangle.width, rectangle.height, fillColor or jautils.colorWhite, lineColor or jautils.colorWhite):getDrawableSprite()
 end
 
+---@param x1 number
+---@param y1 number
+---@param x2 number
+---@param y2 number
+---@param color AnyColor?
+---@param thickness number?
+---@return DrawableLine
 function jautils.getLineSprite(x1, y1, x2, y2, color, thickness)
     return drawableLineStruct.fromPoints({x1, y1, x2, y2}, color or jautils.colorWhite, thickness or 1)
 end
 
+---@param x1 number
+---@param y1 number
+---@param x2 number
+---@param y2 number
+---@param color AnyColor?
+---@param thickness number?
+---@return DrawableLine
 function jautils.getLineSpriteFloored(x1, y1, x2, y2, color, thickness)
     local floor = math.floor
     return drawableLineStruct.fromPoints({floor(x1), floor(y1), floor(x2), floor(y2)}, color or jautils.colorWhite, thickness or 1)
@@ -848,8 +1030,8 @@ end
 ---@param y number
 ---@param rx number
 ---@param ry number
----@param color color|nil
----@return sprite
+---@param color AnyColor
+---@return DrawableLine
 function jautils.getEllipseSprite(x, y, rx, ry, color)
     local segments = 24
     local slice = math.pi * 2 / segments
@@ -867,8 +1049,8 @@ end
 ---@param x number
 ---@param y number
 ---@param r number
----@param color color|nil
----@return sprite
+---@param color AnyColor
+---@return DrawableLine
 function jautils.getCircleSprite(x, y, r, color)
     return jautils.getEllipseSprite(x, y, r, r, color)
 end
@@ -890,16 +1072,31 @@ end
     MATH
 ]]
 
--- checks if two vectors are equal
+---Checks if two vectors are equal
+---@param ax number
+---@param ay number
+---@param bx number
+---@param by number
 function jautils.equalVec(ax, ay, bx, by)
     return ax == bx and ay == by
 end
 
+---Returns the length of the given vector.
+---@param x number
+---@param y number
+---@return number
 function jautils.lengthVec(x, y)
     return math.sqrt(x * x + y * y);
 end
 
--- reimplementation of Calc.Approach(Vector2, Vector2, float)
+--- reimplementation of Calc.Approach(Vector2, Vector2, float)
+---@param fromX number
+---@param fromY number
+---@param targetX number
+---@param targetY number
+---@param maxMove number
+---@return number x
+---@return number y
 function jautils.approachVec(fromX, fromY, targetX, targetY, maxMove)
     if (maxMove == 0 or (fromX == targetX and fromY == targetY)) then
         return fromX, fromY
@@ -915,7 +1112,11 @@ function jautils.approachVec(fromX, fromY, targetX, targetY, maxMove)
     return fromX + (angleX * maxMove), fromY + (angleY * maxMove)
 end
 
--- reimplementation of Calc.Approach(float, float, float)
+---Reimplementation of Calc.Approach(float, float, float)
+---@param from number
+---@param to number
+---@param maxMove number
+---@return number
 function jautils.approach(from, to, maxMove)
     if from <= to then
         return math.min(from + maxMove, to)
@@ -924,6 +1125,12 @@ function jautils.approach(from, to, maxMove)
     return math.max(from - maxMove, to)
 end
 
+---@param val number
+---@param min number
+---@param max number
+---@param newMin number
+---@param newMax number
+---@return number
 function jautils.map(val, min, max, newMin, newMax)
     return (val - min) / (max - min) * (newMax - newMin) + newMin
 end
@@ -944,41 +1151,78 @@ function jautils.sign(num)
     return num > 0 and 1 or -1
 end
 
+---Normalizes the given vector.
+---@param x number
+---@param y number
+---@return number
+---@return number
 function jautils.normalize(x,y)
     local magnitude = math.sqrt(x*x + y*y)
 
     return x / magnitude, y / magnitude
 end
 
+---@param vector TableVector2
+---@return TableVector2
 function jautils.perpendicularVector(vector)
     return { -vector[2], vector[1] }
 end
 
+---@param x number
+---@param y number
+---@return number
+---@return number
 function jautils.perpendicular(x, y)
     return -y, x
 end
 
+---@param num number
+---@return number
 function jautils.square(num)
     return num * num
 end
 
+---@param x1 number
+---@param y1 number
+---@param x2 number
+---@param y2 number
+---@return number
 function jautils.distanceSquared(x1, y1, x2, y2)
     local diffX, diffY = x2 - x1, y2 - y1
     return diffX * diffX + diffY * diffY
 end
 
+---@param x1 number
+---@param y1 number
+---@param x2 number
+---@param y2 number
+---@return number
 function jautils.distance(x1, y1, x2, y2)
     return math.sqrt(jautils.distanceSquared(x1, y1, x2, y2))
 end
 
+---@param x1 number
+---@param y1 number
+---@param x2 number
+---@param y2 number
+---@return number
+---@return number
 function jautils.midpoint(x1, y1, x2, y2)
     return (x1 + x2) / 2, (y1 + y2) / 2
 end
 
+---Converts degrees to radians
+---@param degree number
+---@return number
 function jautils.degreeToRadians(degree)
     return degree * jautils.radian
 end
 
+---Creates an angle vector with the given length.
+---@param angleRadians number The angle, in radians, of the created vector.
+---@param length number Length of the created vector.
+---@return number x
+---@return number y
 function jautils.angleToVector(angleRadians, length)
 	return math.cos(angleRadians) * length, math.sin(angleRadians) * length
 end
@@ -990,6 +1234,15 @@ function jautils.drawArrow(x1, y1, x2, y2, len, angle)
 	love.graphics.line(x2, y2, x2 + len * math.cos(a - angle), y2 + len * math.sin(a - angle))
 end
 
+---@param x1 number
+---@param y1 number
+---@param x2 number
+---@param y2 number
+---@param len number
+---@param angle number
+---@param thickness number
+---@param color AnyColor
+---@return DrawableLine[]
 function jautils.getArrowSprites(x1, y1, x2, y2, len, angle, thickness, color)
     color = color or jautils.colorWhite
     local a = math.atan2(y1 - y2, x1 - x2)
@@ -1004,17 +1257,32 @@ end
 --[[
     COLORS
 ]]
+
+---Applies a rainbow color to all given sprites
+---@param room Room
+---@param sprites DrawableSprite[]
 function jautils.rainbowifyAll(room, sprites)
     for _,sprite in ipairs(sprites) do
         sprite:setColor(jautils.getRainbowHue(room, sprite.x, sprite.y))
     end
 end
 
+---Gets the rainbow hue at the given location in the room.
+---@param room Room
+---@param x number
+---@param y number
+---@return NormalizedColorTable
 function jautils.getRainbowHue(room, x, y)
     return rainbowHelper.getRainbowHue(room, x, y)
 end
 
---TODO: pretty sure lonn supports rgba at this point, making this useless
+---TODO: pretty sure lonn supports rgba at this point, making this useless
+---@param color string
+---@return boolean success
+---@return number
+---@return number
+---@return number
+---@return number
 function jautils.parseHexColor(color)
     if #color == 6 then
         local success, r, g, b = utils.parseHexColor(color)
@@ -1030,10 +1298,12 @@ function jautils.parseHexColor(color)
         end
     end
 
-    return false, 0, 0, 0
+    return false, 0, 0, 0, 0
 end
 
---TODO: pretty sure lonn supports rgba at this point, making this useless
+---TODO: pretty sure lonn supports rgba at this point, making this useless
+---@param color AnyColor
+---@return NormalizedColorTable|false
 function jautils.getColor(color)
     local colorType = type(color)
 
@@ -1055,12 +1325,28 @@ function jautils.getColor(color)
     elseif colorType == "table" and (#color == 3 or #color == 4) then
         return color
     end
+
+    return false
 end
 
+---TODO: pretty sure lonn supports rgba at this point, making this useless
+---Same as jautils.getColor, but assumes the input is a valid constant, for nicer typing.
+---@param color AnyColor
+---@return NormalizedColorTable
+function jautils.getConstColor(color)
+    return jautils.getColor(color) or error("Constant color was invalid, this is a Frost Helper bug!")
+end
+
+---Multiplies the given color by alpha. Returns false if the color is invalid.
+---@param color AnyColor
+---@param alpha number
+---@return NormalizedColorTable|false
 function jautils.multColor(color, alpha)
     local c = jautils.getColor(color)
+    if not c then
+        return c
+    end
 
-    --return {c[1] * alpha, c[2] * alpha, c[3] * alpha, (c[4] or 1) * alpha }
     return {c[1], c[2], c[3], (c[4] or 1) * alpha }
 end
 
@@ -1099,9 +1385,10 @@ end
 local triggers = require("triggers")
 
 ---Adds extended text support for the given trigger. Returns the handler itself
----@param triggerHandler table
----@param getter function<table>
----@return table triggerHandler
+---@generic T
+---@param triggerHandler TriggerHandler<T>
+---@param getter fun(trigger: T): string
+---@return TriggerHandler<T> triggerHandler
 function jautils.addExtendedText(triggerHandler, getter)
     if not getter then return triggerHandler end
 
@@ -1121,6 +1408,11 @@ end
     Rotations
 ]]
 
+---@generic TVal
+---@generic TKey
+---@param keyvaluetable { [TKey]: TVal }
+---@param toFind TVal
+---@return TKey?
 local function indexof(keyvaluetable, toFind)
     for key, val in pairs(keyvaluetable) do
         if val == toFind then
@@ -1130,8 +1422,8 @@ local function indexof(keyvaluetable, toFind)
 end
 
 ---Returns a handler function to implement entity.rotate(room, entity, direction), where the entity's _name field will get changed according to the rotations table
----@param rotations table { [0] = "upName", [1] = "rightName", [2] = "downName", [3] = "leftName" }
----@return function
+---@param rotations { [0]: string, [1]: string, [2]: string, [3]: string } { [0] = "upName", [1] = "rightName", [2] = "downName", [3] = "leftName" }
+---@return fun(room: Room, entity: Entity, direction: number): boolean
 function jautils.getNameRotationHandler(rotations)
     return function (room, entity, direction)
         local startIndex = indexof(rotations, entity._name)
@@ -1145,8 +1437,8 @@ function jautils.getNameRotationHandler(rotations)
 end
 
 ---Returns a handler function to implement entity.flip(room, entity, horizontal, vertical), where the entity's _name field will get changed according to the rotations table
----@param rotations table { [0] = "upName", [1] = "rightName", [2] = "downName", [3] = "leftName" }
----@return function
+---@param rotations { [0]: string, [1]: string, [2]: string, [3]: string } { [0] = "upName", [1] = "rightName", [2] = "downName", [3] = "leftName" }
+---@return fun(room: Room, entity: Entity, horizontal: boolean, vertical: boolean): boolean
 function jautils.getNameFlipHandler(rotations)
     return function (room, entity, horizontal, vertical)
         local startIndex = indexof(rotations, entity._name)
@@ -1169,9 +1461,9 @@ end
 
 ---Creates a legacy handler from the given handler. Legacy handlers have a different SID and no placements.
 ---This lets mappers still edit existing legacy entities, but not place new ones (without copy-pasting)
----@param handler table
+---@param handler EntityHandler|TriggerHandler
 ---@param legacySid string
----@return table
+---@return EntityHandler|TriggerHandler
 function jautils.createLegacyHandler(handler, legacySid)
     local legacy = utils.deepcopy(handler)
     legacy.placements = nil

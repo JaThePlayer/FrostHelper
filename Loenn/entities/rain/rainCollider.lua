@@ -1,13 +1,17 @@
+---@module 'jautils'
 local jautils = require("mods").requireFromPlugin("libraries.jautils", "FrostHelper")
 local utils = require("utils")
 
+---@class RainCollider : Entity
+
+---@type EntityHandler<RainCollider>
 local rainCollider = {
     name = "FrostHelper/RainCollider",
 }
 
-local indicatorColor = jautils.getColor("0000aaaa")
-local fillColor = jautils.getColor("0000aaaa")
-local borderColor = jautils.getColor("74C5C5")
+local indicatorColor = jautils.getConstColor("0000aaaa")
+local fillColor = jautils.getConstColor("0000aaaa")
+local borderColor = jautils.getConstColor("74C5C5")
 
 jautils.createPlacementsPreserveOrder(rainCollider, "default", {
     { "width", 8 },

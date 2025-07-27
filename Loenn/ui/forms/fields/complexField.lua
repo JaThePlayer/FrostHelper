@@ -226,7 +226,7 @@ function complexField.getElement(name, value, options)
         local onChanged = fieldChanged(formField, i)
 
         el.notifyFieldChanged = function()
-            onChanged(el, el.field and el.field:getText() or el:getValue())
+            onChanged(el, --[[el.field and el.field:getText() or]] el:getValue())
         end
 
         for _, elElement in ipairs(el.elements) do

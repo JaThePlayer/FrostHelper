@@ -1,14 +1,28 @@
+---@module 'jautils'
 local jautils = require("mods").requireFromPlugin("libraries.jautils")
 
 local fallbackSprite = "objects/FrostHelper/skateboard"
 
-local skateboard = {}
+---@class Skateboard : Entity
+---@field direction "Left"|"Right"?
+
+---@type EntityHandler
+local skateboard = {
+    name = "FrostHelper/Skateboard",
+    nodeVisibility = "selected",
+    fieldInformation = {
+        x = {
+            options = {
+                yo = 4,
+                x = 2,
+            }
+        }
+    }
+}
 
 local directionsEnum = {
     "Left", "Right"
 }
-
-skateboard.name = "FrostHelper/Skateboard"
 
 jautils.createPlacementsPreserveOrder(skateboard, "normal", {
     { "direction", "Right", directionsEnum },

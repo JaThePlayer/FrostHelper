@@ -1,4 +1,6 @@
-﻿namespace FrostHelper;
+﻿using FrostHelper.Helpers;
+
+namespace FrostHelper;
 
 [CustomEntity("FrostHelper/EntityRainbowifyController")]
 [Tracked]
@@ -16,7 +18,7 @@ public class EntityRainbowifyController : Entity {
 
         levelRenderManipulator = AllowColorChange((object self) => {
             var controller = (self as Level)!.Tracker?.SafeGetEntity<EntityRainbowifyController>();
-            return controller != null && controller.all;
+            return controller != null && controller._all;
         }, (object self) => {
             return Vector2.Zero;
         });
@@ -57,47 +59,47 @@ public class EntityRainbowifyController : Entity {
     }
     #endregion
 
-    private bool all;
+    private readonly bool _all;
 
-    private Type[] Types;
+    private readonly EntityFilter? _filter;
 
-    private List<Backdrop> affectedBackdrops;
+    private List<Backdrop>? _affectedBackdrops;
 
     public EntityRainbowifyController(EntityData data, Vector2 offset) : base(data.Position + offset) {
         LoadIfNeeded();
 
         string types = data.Attr("types");
         if (types == "all") {
-            all = true;
+            _all = true;
         } else {
-            Types = FrostModule.GetTypes(types);
+            _filter = EntityFilter.CreateFrom(types, isBlacklist: false);
         }
 
     }
 
     public override void Awake(Scene scene) {
         base.Awake(scene);
-        if (Types is null)
+        if (_filter is null)
             return;
 
         foreach (var entity in scene.Entities) {
-            if (Types.Contains(entity.GetType()))
+            if (_filter.Matches(entity))
                 entity.Add(new Rainbowifier());
         }
 
-        affectedBackdrops = new List<Backdrop>();
+        _affectedBackdrops = new List<Backdrop>();
         foreach (var backdrop in (scene as Level)!.Background.Backdrops) {
-            if (Types.Contains(backdrop.GetType()))
-                affectedBackdrops.Add(backdrop);
+            if (_filter.Matches(backdrop))
+                _affectedBackdrops.Add(backdrop);
         }
     }
 
     public override void Render() {
         base.Render();
-        if (affectedBackdrops is null)
+        if (_affectedBackdrops is null)
             return;
 
-        foreach (var backdrop in affectedBackdrops) {
+        foreach (var backdrop in _affectedBackdrops) {
             backdrop.Color = ColorHelper.GetHue(Scene, backdrop.Position);
         }
     }

@@ -1,12 +1,16 @@
+---@module "jautils"
 local jautils = require("mods").requireFromPlugin("libraries.jautils")
+---@module "arbitraryShapeEntity"
 local arbitraryShapeEntity = require("mods").requireFromPlugin("libraries.arbitraryShapeEntity")
 
+---@type EntityHandler<Entity>
 local arbitraryBloom = {
     name = "FrostHelper/ArbitraryBloom",
     nodeLimits = { 2, 999 },
     depth = -math.huge + 6
 }
 
+---@type EntityHandler<Entity>
 local arbitraryBloomBlocker = {
     name = "FrostHelper/BloomBlocker",
     nodeLimits = { 2, 999 },

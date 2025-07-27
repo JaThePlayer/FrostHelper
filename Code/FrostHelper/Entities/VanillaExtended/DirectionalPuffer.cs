@@ -1,9 +1,11 @@
-﻿namespace FrostHelper;
+﻿using FrostHelper.Helpers;
+
+namespace FrostHelper;
 
 [CustomEntity("CCH/DirectionalPuffer",
               "CCH/PinkPuffer",
               "FrostHelper/DirectionalPuffer")]
-public class DirectionalPuffer : Puffer {
+internal sealed class DirectionalPuffer : Puffer {
     private static bool _hooksLoaded;
 
     [HookPreload]
@@ -22,6 +24,7 @@ public class DirectionalPuffer : Puffer {
         IL.Celeste.Puffer.ctor_Vector2_bool += IL_Puffer_Constructor;
     }
 
+    [OnUnload]
     public static void Unload() {
         if (!_hooksLoaded)
             return;
@@ -44,15 +47,15 @@ public class DirectionalPuffer : Puffer {
         None,
     }
 
-    public ExplodeDirection Direction;
-    public bool Static;
-    public int DashRecovery;
-    public new float RespawnTime;
-    public bool NoRespawn;
-    public bool KillOnJump;
-    public bool KillOnLaunch;
-    public Color EyeColor;
-    public Color ExplosionRangeIndicatorColor;
+    private readonly ExplodeDirection _direction;
+    private readonly bool _static;
+    private readonly Recovery _recovery;
+    private readonly float _respawnTime;
+    private readonly bool _noRespawn;
+    private readonly bool _killOnJump;
+    private readonly bool _killOnLaunch;
+    private readonly Color _eyeColor;
+    private readonly Color _explosionRangeIndicatorColor;
 
     public DirectionalPuffer(EntityData data, Vector2 offset) : base(data, offset) {
         LoadIfNeeded();
@@ -65,40 +68,40 @@ public class DirectionalPuffer : Puffer {
         sprite.Play("idle", false, false);
         sprite.SetColor(data.GetColor("color", "ffffff"));
 
-        DashRecovery = data.Name == "CCH/PinkPuffer" ? 2 : data.Int("dashRecovery", 1);
+        // Backwards compat
+        if (!data.Has("recovery")) {
+            var dashRecovery = data.Name == "CCH/PinkPuffer" ? 2 : data.Int("dashRecovery", 1);
+            if (dashRecovery <= 1) {
+                dashRecovery = Recovery.RecoveryIsARefill;
+            }
+            _recovery = new Recovery(dashRecovery, Recovery.RecoveryIsARefill, Recovery.RecoveryIsIgnored);
+        } else {
+            _recovery = data.Parse("recovery", Recovery.DefaultRefill);
+        }
 
-        Direction = data.Enum("explodeDirection", ExplodeDirection.Both);
+        if (_recovery.ShowPostcardIfNeeded("Directional Puffer"))
+            return;
 
-        Static = data.Bool("static", false);
-        NoRespawn = data.Bool("noRespawn", false);
-        RespawnTime = data.Float("respawnTime", 2.5f);
-        KillOnJump = data.Bool("killOnJump", false);
-        KillOnLaunch = data.Bool("killOnLaunch", false);
-        EyeColor = data.GetColor("eyeColor", "000000");
-        ExplosionRangeIndicatorColor = data.GetColor("explosionRangeIndicatorColor", "ffffff");
+        _direction = data.Enum("explodeDirection", ExplodeDirection.Both);
+
+        _static = data.Bool("static", false);
+        _noRespawn = data.Bool("noRespawn", false);
+        _respawnTime = data.Float("respawnTime", 2.5f);
+        _killOnJump = data.Bool("killOnJump", false);
+        _killOnLaunch = data.Bool("killOnLaunch", false);
+        _eyeColor = data.GetColor("eyeColor", "000000");
+        _explosionRangeIndicatorColor = data.GetColor("explosionRangeIndicatorColor", "ffffff");
 
 
         MakeStaticIfNeeded();
     }
 
-    public static bool IsRightPuffer(Puffer p) {
-        if (p is DirectionalPuffer puffer) {
-            return puffer.Direction == ExplodeDirection.Right;
-        }
-
-        return false;
-    }
-
-    public static bool IsLeftPuffer(Puffer p) {
-        if (p is DirectionalPuffer puffer) {
-            return puffer.Direction == ExplodeDirection.Left;
-        }
-
-        return false;
-    }
-
-    public bool DirectionCheck(Player player) {
-        return Direction switch {
+    private bool DirectionCheck(Player player) {
+        _beforeExplodePlayerStats = _recovery.SavePlayerData(player);
+        if (!_recovery.CanUse(_beforeExplodePlayerStats))
+            return true;
+        
+        return _direction switch {
             ExplodeDirection.Left => player.Position.X > Position.X,
             ExplodeDirection.Right => player.Position.X < Position.X,
             ExplodeDirection.Both => false,
@@ -107,9 +110,9 @@ public class DirectionalPuffer : Puffer {
         };
     }
 
-    private static int getRenderStartIndex(int orig, Puffer puffer) {
+    private static int GetRenderStartIndex(int orig, Puffer puffer) {
         if (puffer is DirectionalPuffer dirPuff) {
-            return dirPuff.Direction switch {
+            return dirPuff._direction switch {
                 ExplodeDirection.Left => 14,
                 ExplodeDirection.Right => orig,
                 ExplodeDirection.Both => orig,
@@ -121,9 +124,9 @@ public class DirectionalPuffer : Puffer {
         }
     }
 
-    private static int getRenderEndIndex(int orig, Puffer puffer) {
+    private static int GetRenderEndIndex(int orig, Puffer puffer) {
         if (puffer is DirectionalPuffer dirPuff) {
-            return dirPuff.Direction switch {
+            return dirPuff._direction switch {
                 ExplodeDirection.Left => orig,
                 ExplodeDirection.Right => 14,
                 ExplodeDirection.Both => orig,
@@ -135,14 +138,14 @@ public class DirectionalPuffer : Puffer {
         }
     }
 
-    private static void setRespawnTime(Puffer puffer) {
+    private static void SetRespawnTime(Puffer puffer) {
         if (puffer is DirectionalPuffer dirPuff) {
-            puffer.goneTimer = dirPuff.RespawnTime;
+            puffer.goneTimer = dirPuff._respawnTime;
         }
     }
 
-    private static void removeSelfIfNoRespawn(Puffer puffer) {
-        if (puffer is DirectionalPuffer { NoRespawn: true }) {
+    private static void RemoveSelfIfNoRespawn(Puffer puffer) {
+        if (puffer is DirectionalPuffer { _noRespawn: true }) {
             puffer.RemoveSelf();
         }
     }
@@ -152,17 +155,17 @@ public class DirectionalPuffer : Puffer {
         ILCursor cursor = new(il);
 
         cursor.Emit(OpCodes.Ldarg_0);
-        cursor.EmitCall(removeSelfIfNoRespawn);
+        cursor.EmitCall(RemoveSelfIfNoRespawn);
 
 
         while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchStfld<Puffer>("goneTimer"))) {
             cursor.Emit(OpCodes.Ldarg_0);
-            cursor.EmitCall(setRespawnTime);
+            cursor.EmitCall(SetRespawnTime);
         }
     }
 
     /// <summary>Make sure that you can't get boosted in the opposite direction by moving into the puffer</summary>
-    internal static void IL_OnPlayer(ILContext il) {
+    private static void IL_OnPlayer(ILContext il) {
         ILCursor cursor = new(il);
 
         // find the branch that skips over Puffer.Explode
@@ -206,8 +209,8 @@ public class DirectionalPuffer : Puffer {
         return (p is DirectionalPuffer dirPuff) && dirPuff.DirectionCheck(player);
     }
 
-    internal static bool HandleCustomBounceEvents(Player player, Puffer self) {
-        if (self is DirectionalPuffer { KillOnJump: true } && !player.Dead) {
+    private static bool HandleCustomBounceEvents(Player player, Puffer self) {
+        if (self is DirectionalPuffer { _killOnJump: true } && !player.Dead) {
             player.Die(-Vector2.UnitY);
             self.inflateWiggler.Start();
             self.bounceWiggler.Start();
@@ -221,20 +224,20 @@ public class DirectionalPuffer : Puffer {
     /// - Only render part of the puffer's explosion radius indicator
     /// - Implement the eye color property
     /// </summary>
-    internal static void IL_Render(ILContext il) {
+    private static void IL_Render(ILContext il) {
         ILCursor cursor = new(il);
 
         // change min i
         while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdcI4(0) &&
                                                            instr.Next.MatchStloc(6))) {
             cursor.Emit(OpCodes.Ldarg_0); // this
-            cursor.EmitDelegate(getRenderStartIndex);
+            cursor.EmitDelegate(GetRenderStartIndex);
         }
 
         // change max i
         while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdcI4(28))) {
             cursor.Emit(OpCodes.Ldarg_0); // this
-            cursor.EmitDelegate(getRenderEndIndex);
+            cursor.EmitDelegate(GetRenderEndIndex);
         }
 
         cursor.Index = 0;
@@ -252,17 +255,18 @@ public class DirectionalPuffer : Puffer {
         }
     }
 
-    public static Color GetEyeColor(Color prev, Puffer self) {
-        return self is DirectionalPuffer dirPuf ? dirPuf.EyeColor : prev;
+    private static Color GetEyeColor(Color prev, Puffer self) {
+        return self is DirectionalPuffer dirPuf ? dirPuf._eyeColor : prev;
     }
 
-    public static Color GetExplosionRangeIndicatorColor(Color prev, Puffer self) {
-        return self is DirectionalPuffer dirPuf ? dirPuf.ExplosionRangeIndicatorColor : prev;
+    private static Color GetExplosionRangeIndicatorColor(Color prev, Puffer self) {
+        return self is DirectionalPuffer dirPuf ? dirPuf._explosionRangeIndicatorColor : prev;
     }
 
-    internal static void Puffer_Explode(ILContext il) {
+    private static void Puffer_Explode(ILContext il) {
         ILCursor cursor = new(il);
-        while (cursor.SeekVirtFunctionCall(typeof(Player), "ExplodeLaunch")) {
+        
+        if (cursor.SeekVirtFunctionCall(typeof(Player), "ExplodeLaunch")) {
             cursor.Index++; // skipping over the Pop opcode
 
             cursor.Emit(OpCodes.Ldarg_0); // this
@@ -272,7 +276,7 @@ public class DirectionalPuffer : Puffer {
     }
 
     /// <summary>Make the directional puffer not explode or become alerted if the player is behind the directional puffer</summary>
-    internal static bool ApplyDirectionalCheck(On.Celeste.Puffer.orig_ProximityExplodeCheck orig, Puffer self) {
+    private static bool ApplyDirectionalCheck(On.Celeste.Puffer.orig_ProximityExplodeCheck orig, Puffer self) {
         if (self is DirectionalPuffer dirPuffer) {
             Player player = self.Scene.Tracker.GetNearestEntity<Player>(self.Position);
 
@@ -283,20 +287,19 @@ public class DirectionalPuffer : Puffer {
         return orig(self);
     }
 
+    private Recovery.SavedPlayerData _beforeExplodePlayerStats;
+    
     private static void HandleCustomExplodeEvents(Puffer puffer, Player player) {
         if (puffer is not DirectionalPuffer dirPuffer) 
             return;
 
-        if (dirPuffer.KillOnLaunch && !player.Dead) {
+        if (dirPuffer._killOnLaunch && !player.Dead) {
             player.Die(Calc.AngleToVector(Calc.Angle(dirPuffer.Position, player.Position), 1f));
             return;
         }
 
-        if (dirPuffer.DashRecovery > 1) {
-            player.Dashes = dirPuffer.DashRecovery;
-        }
+        dirPuffer._recovery.Recover(player, dirPuffer._beforeExplodePlayerStats);
     }
-
 
     // based on Maddie's Helping Hand's Static Puffers
     #region StaticPuffer
@@ -311,14 +314,14 @@ public class DirectionalPuffer : Puffer {
     }
 
     public static void ResetSineIfStatic(SineWave idleSine) {
-        if (idleSine.Entity is DirectionalPuffer { Static: true }) {
+        if (idleSine.Entity is DirectionalPuffer { _static: true }) {
             // unrandomize the initial pufferfish position.
             idleSine.Reset();
         }
     }
 
-    public void MakeStaticIfNeeded() {
-        if (!Static) {
+    private void MakeStaticIfNeeded() {
+        if (!_static) {
             return;
         }
 

@@ -1,18 +1,19 @@
 ﻿//#define DebugLog
 
+using FrostHelper.Helpers;
+
 namespace FrostHelper;
 
 [CustomEntity("FrostHelper/GroupedMoverAttacher")]
 [Tracked]
-public class GroupedMoverAttacher : Entity {
+internal sealed class GroupedMoverAttacher : Entity {
     public static readonly Type[] DefaultBlacklist = new[] {
         typeof(GroupedMoverAttacher),
     };
 
     public readonly int AttachGroup;
     public readonly Rectangle Rect;
-    public readonly bool IsBlacklist;
-    public readonly Type[] Types;
+    private readonly EntityFilter _filter;
     public readonly bool SpecialHandling;
     public readonly bool CanBeLeader;
 
@@ -51,8 +52,8 @@ public class GroupedMoverAttacher : Entity {
 
     public GroupedMoverAttacher(EntityData data, Vector2 offset) : base(data.Position + offset) {
         AttachGroup = data.Int("attachGroup", 0);
-        IsBlacklist = data.Bool("isBlacklist", false);
-        Types = FrostModule.GetTypes(data.Attr("types", ""));
+        
+        _filter = EntityFilter.CreateFrom(data, "types", "isBlacklist", DefaultBlacklist);
         SpecialHandling = data.Bool("specialHandling", false);
         CanBeLeader = data.Bool("canBeLeader", true);
 
@@ -68,7 +69,7 @@ public class GroupedMoverAttacher : Entity {
     public void Check(List<Entity> entities) {
         foreach (Entity entity in entities) {
             if ((entity.Collider is not null ? CollideCheck(entity) : Collider.Collide(entity.Position))
-                && (Types.Contains(entity.GetType()) != IsBlacklist)
+                && _filter.Matches(entity)
                 && (entity.Get<GroupedStaticMover>() is null)) {
 
                 switch (entity) {

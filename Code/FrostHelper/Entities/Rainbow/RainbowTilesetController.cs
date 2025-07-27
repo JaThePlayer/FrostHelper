@@ -14,6 +14,29 @@ public class RainbowTilesetController : Entity {
         _loadedHooks = true;
 
         IL.Monocle.TileGrid.RenderAt += TileGrid_RenderAt;
+        On.Celeste.Debris.Init_Vector2_char_bool += DebrisOnInit_Vector2_char_bool;
+    }
+    
+    [OnUnload]
+    public static void Unload() {
+        if (!_loadedHooks)
+            return;
+        _loadedHooks = false;
+
+        IL.Monocle.TileGrid.RenderAt -= TileGrid_RenderAt;
+        On.Celeste.Debris.Init_Vector2_char_bool -= DebrisOnInit_Vector2_char_bool;
+    }
+
+    private static Debris DebrisOnInit_Vector2_char_bool(On.Celeste.Debris.orig_Init_Vector2_char_bool orig, Debris self, Vector2 pos, char tileset, bool playsound) {
+        var d = orig(self, pos, tileset, playsound);
+        var c = GetController();
+        if (c is { }) {
+            if (c._allDebris || c._debris.Contains(tileset)) {
+                d.Add(new Rainbowifier());
+            }
+        }
+        
+        return d;
     }
 
     private static byte GetFirstLocalId(ILCursor cursor, string typeName) {
@@ -29,7 +52,7 @@ public class RainbowTilesetController : Entity {
         VariableDefinition controllerId = new VariableDefinition(il.Import(typeof(RainbowTilesetController)));
         il.Body.Variables.Add(controllerId);
 
-        cursor.EmitCall(getController);
+        cursor.EmitCall(GetController);
         cursor.Emit(OpCodes.Stloc, controllerId);
 
         if (cursor.TryGotoNext(MoveType.After, instr => instr.MatchCallvirt<SpriteBatch>("Draw"))) {
@@ -38,16 +61,16 @@ public class RainbowTilesetController : Entity {
             cursor.Emit(OpCodes.Ldloc_S, mTextureId); // mTexture
             cursor.Emit(OpCodes.Ldarg_0); // this
             cursor.Emit(OpCodes.Ldloc, controllerId);
-            cursor.EmitCall(getColor);
+            cursor.EmitCall(GetColor);
         }
     }
 
-    private static RainbowTilesetController? getController() {
+    private static RainbowTilesetController? GetController() {
         return Engine.Scene.Tracker.SafeGetEntity<RainbowTilesetController>();
     }
 
-    private static Color getColor(Color col, Vector2 position, MTexture texture, TileGrid self, RainbowTilesetController? controller) {
-        if (controller is { } && ContainsTexture(CollectionsMarshal.AsSpan(controller.TilesetTextures), texture.Parent)) {
+    private static Color GetColor(Color col, Vector2 position, MTexture texture, TileGrid self, RainbowTilesetController? controller) {
+        if (controller is { } && ContainsTexture(CollectionsMarshal.AsSpan(controller._tilesetTextures), texture.Parent)) {
             return ColorHelper.GetHue(Engine.Scene, position) * self.Alpha;
         }
 
@@ -65,51 +88,51 @@ public class RainbowTilesetController : Entity {
         }
         return false;
     }
-
-    [OnUnload]
-    public static void Unload() {
-        if (!_loadedHooks)
-            return;
-        _loadedHooks = false;
-
-        IL.Monocle.TileGrid.RenderAt -= TileGrid_RenderAt;
-    }
     #endregion
 
     // Nullable because missing textures can result in nulls here
-    private List<MTexture?> TilesetTextures;
-    private bool BG;
+    private List<MTexture?> _tilesetTextures;
+    private HashSet<char> _debris;
+    private bool _allDebris;
 
     internal RainbowTilesetController(params List<MTexture?> textures) {
         LoadHooksIfNeeded();
         
-        TilesetTextures = textures;
-        BG = false;
+        _tilesetTextures = textures;
+        _debris = [];
+        _allDebris = false;
     }
 
     public RainbowTilesetController(EntityData data, Vector2 offset) : base(data.Position + offset) {
         LoadHooksIfNeeded();
 
-        BG = data.Bool("bg", false);
+        bool bg = data.Bool("bg", false);
         var all = data.Attr("tilesets") == "*";
-        var autotiler = BG ? GFX.BGAutotiler : GFX.FGAutotiler;
+        var autotiler = bg ? GFX.BGAutotiler : GFX.FGAutotiler;
+        var includeDebris = data.Bool("includeDebris", false);
         Tag = Tags.Persistent;
 
+        _allDebris = all && includeDebris;
+        
         if (!all) {
             var tilesetIDs = FrostModule.GetCharArrayFromCommaSeparatedList(data.Attr("tilesets"));
+            
+            _debris = includeDebris ? new HashSet<char>(tilesetIDs) : [];
 
-            TilesetTextures = new(tilesetIDs.Length);
-            for (int i = 0; i < TilesetTextures.Capacity; i++) {
-                TilesetTextures.Add(autotiler.GenerateMap(new VirtualMap<char>(new char[,] { { tilesetIDs[i] } }), true).TileGrid.Tiles[0, 0].Parent);
+            _tilesetTextures = new(tilesetIDs.Length);
+            for (int i = 0; i < _tilesetTextures.Capacity; i++) {
+                _tilesetTextures.Add(autotiler.GenerateMap(new VirtualMap<char>(new[,] { { tilesetIDs[i] } }), true).TileGrid.Tiles[0, 0].Parent);
             }
         } else {
             var autotilerLookupKeys = autotiler.lookup;
-            TilesetTextures = new(autotilerLookupKeys.Count);
+            _tilesetTextures = new(autotilerLookupKeys.Count);
             var enumerator = autotilerLookupKeys.GetEnumerator();
-            for (int i = 0; i < TilesetTextures.Capacity; i++) {
+            for (int i = 0; i < _tilesetTextures.Capacity; i++) {
                 enumerator.MoveNext();
-                TilesetTextures.Add(autotiler.GenerateMap(new VirtualMap<char>(new[,] { { enumerator.Current.Key } }), true).TileGrid.Tiles[0, 0].Parent);
+                _tilesetTextures.Add(autotiler.GenerateMap(new VirtualMap<char>(new[,] { { enumerator.Current.Key } }), true).TileGrid.Tiles[0, 0].Parent);
             }
+
+            _debris = [];
         }
     }
 
@@ -119,7 +142,9 @@ public class RainbowTilesetController : Entity {
         if (controllers.Count > 1) {
             var first = controllers.First(c => c.Scene == scene) as RainbowTilesetController;
             if (first != this) {
-                first!.TilesetTextures = first.TilesetTextures.Union(TilesetTextures).ToList();
+                first!._tilesetTextures = first._tilesetTextures.Union(_tilesetTextures).ToList();
+                first._debris.UnionWith(_debris);
+                first._allDebris |= _allDebris;
                 RemoveSelf();
             }
         }
@@ -128,16 +153,16 @@ public class RainbowTilesetController : Entity {
     internal static void RainbowifyTexture(Scene scene, MTexture texture) {
         // Check if its already rainbowified
         if (ControllerHelper<RainbowTilesetController>.FindFirst(scene,
-                c => ContainsTexture(CollectionsMarshal.AsSpan(c.TilesetTextures), texture)) is { }) {
+                c => ContainsTexture(CollectionsMarshal.AsSpan(c._tilesetTextures), texture)) is { }) {
             return;
         }
         
         var c = ControllerHelper<RainbowTilesetController>.AddToSceneIfNeeded(scene,
-            (c) => true,
+            c => true,
             () => new RainbowTilesetController(texture));
 
-        if (!ContainsTexture(CollectionsMarshal.AsSpan(c.TilesetTextures), texture)) {
-            c.TilesetTextures.Add(texture);
+        if (!ContainsTexture(CollectionsMarshal.AsSpan(c._tilesetTextures), texture)) {
+            c._tilesetTextures.Add(texture);
         }
     }
 }

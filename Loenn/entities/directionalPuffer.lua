@@ -1,5 +1,9 @@
 local utils = require("utils")
+---@module "jautils"
 local jautils = require("mods").requireFromPlugin("libraries.jautils")
+
+---@class Entity
+---@field recovery string?
 
 local explodeIndicatorStartAngle, explodeIndicatorEndAngle = -jautils.degreeToRadians(6), jautils.degreeToRadians(186)
 
@@ -7,11 +11,19 @@ local explodeDirectionsEnum = {
     "Left", "Right", "Both", "None"
 }
 
+---@class DirectionalPuffer : Entity
+---@field explodeDirection? string
+---@field directory? string
+---@field color? string
+---@field right? boolean
+---@field explosionRangeIndicatorColor? string
+
 local builtinSprites = {
     "objects/puffer/",
     "objects/FrostHelper/spikyPuffer/"
 }
 
+---@type EntityHandler<DirectionalPuffer>
 local directionalPuffer = {
     name = "FrostHelper/DirectionalPuffer",
     depth = 0,
@@ -23,7 +35,12 @@ jautils.createPlacementsPreserveOrder(directionalPuffer, "none", {
     { "color", "ffffff", "color" },
     { "eyeColor", "000000", "color" },
     { "explosionRangeIndicatorColor", "ffffff", "color" },
-    { "dashRecovery", 1, "integer" },
+    -- Legacy option, replaced with 'recovery'
+    { "dashRecovery", 1, "integer", nil, {
+        hideIf = function (entity) return entity.recovery ~= nil end },
+        doNotAddToPlacement = true,
+    },
+    { "recovery", "10000;10000;10001", "statRecovery", nil, { hideIfMissing = true } },
     { "respawnTime", 2.5 },
     { "static", false },
     { "right", false },
