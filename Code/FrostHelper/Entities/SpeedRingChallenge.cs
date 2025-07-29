@@ -19,8 +19,11 @@ public class SpeedRingChallenge : Entity {
     bool spawnBerry;
     public Color RingColor;
     readonly List<MTexture> ArrowTextures;
+    private PlayerPlayback? playback;
 
     public long TimeSpent => Finished ? FinalTimeSpent : Scene == null ? 0 : SceneAs<Level>().Session.Time - StartChapterTimer;
+
+    
 
     public SpeedRingChallenge(EntityData data, Vector2 offset, EntityID id) : base(data.Position + offset) {
         ID = id;
@@ -31,10 +34,24 @@ public class SpeedRingChallenge : Entity {
         height = data.Height;
         spawnBerry = data.Bool("spawnBerry", true);
         ArrowTextures = GFX.Game.GetAtlasSubtextures("util/dasharrow/dasharrow");
+        string playbackName = data.Attr("playbackName");
+        if (!string.IsNullOrWhiteSpace(playbackName)) {
+            var playbackData = PlaybackData.Tutorials[playbackName];
+            playback = new PlayerPlayback(Position, PlayerSpriteMode.Playback, playbackData);
+            playback.startDelay = 0f;
+            playback.Active = false;
+            playback.Visible = false;
+        }
 
         Depth = Depths.Top;
     }
 
+    public override void Added(Scene scene) {
+        base.Added(scene);
+        if (playback is not null) {
+            scene.Add(playback);
+        };
+    }
     public override void Awake(Scene scene) {
         base.Awake(scene);
 
@@ -71,6 +88,8 @@ public class SpeedRingChallenge : Entity {
                 StartChapterTimer = SceneAs<Level>().Session.Time;
                 Scene.Add(timer = new SpeedRingTimerDisplay(this));
                 started = true;
+                //This is where the playback should start
+                StartPlayback();
                 initialRespawn = SceneAs<Level>().Session.RespawnPoint.GetValueOrDefault();
                 disabledChallenges = Scene.Tracker.SafeGetEntities<SpeedRingChallenge>().Cast<SpeedRingChallenge>().ToList();
                 disabledChallenges.Remove(this);
@@ -93,6 +112,7 @@ public class SpeedRingChallenge : Entity {
                     FinalTimeSpent = TimeSpent;
                     Finished = true;
                     Visible = false;
+                    //This is where the playback should stop
 
                     FrostModule.SaveData.SetChallengeTime(SceneAs<Level>().Session.Area.SID, ChallengeNameID, FinalTimeSpent);
 
@@ -122,6 +142,11 @@ public class SpeedRingChallenge : Entity {
         }
     }
 
+    private void StartPlayback() {
+        if (playback is null) return;
+        playback.Active = true;
+        playback.Restart();
+    }
 
     public override void Render() {
         base.Render();
