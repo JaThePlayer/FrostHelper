@@ -1,4 +1,6 @@
-﻿namespace FrostHelper;
+﻿using FrostHelper.Helpers;
+
+namespace FrostHelper;
 
 [CustomEntity("FrostHelper/SpeedRingChallenge")]
 [Tracked]
@@ -36,11 +38,14 @@ public class SpeedRingChallenge : Entity {
         ArrowTextures = GFX.Game.GetAtlasSubtextures("util/dasharrow/dasharrow");
         string playbackName = data.Attr("playbackName");
         if (!string.IsNullOrWhiteSpace(playbackName)) {
-            var playbackData = PlaybackData.Tutorials[playbackName];
+            if (!PlaybackData.Tutorials.TryGetValue(playbackName, out var playbackData))
+                throw new InvalidOperationException($"Could not find playback data for {playbackName}");
             playback = new PlayerPlayback(Position, PlayerSpriteMode.Playback, playbackData);
             playback.startDelay = 0f;
             playback.Active = false;
             playback.Visible = false;
+            
+            
         }
 
         Depth = Depths.Top;
