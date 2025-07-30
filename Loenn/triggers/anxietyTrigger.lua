@@ -1,3 +1,6 @@
+---@class AnxietyTrigger : Trigger
+
+---@type TriggerHandler<AnxietyTrigger>
 local anxietyTrigger = {}
 anxietyTrigger.name = "FrostHelper/AnxietyTrigger"
 anxietyTrigger.category = "visual"

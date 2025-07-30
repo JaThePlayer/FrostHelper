@@ -1,7 +1,7 @@
 {
     "Lua.workspace.library": [
         "${3rd}/love2d/library",
-        "E:/luaRepos/lonnTypeAnnotations/library"
+        "${addons}/LoennAnnotations/library"
     ],
     "Lua.workspace.checkThirdParty": true,
     "Lua.runtime.version": "LuaJIT",

@@ -6,6 +6,7 @@ local controller = controllerEntity.createHandler("FrostHelper/RainbowTilesetCon
     data = {
         tilesets = "3",
         bg = false,
+        includeDebris = true,
     },
 }, false, "editor/FrostHelper/RainbowTilesetController")
 

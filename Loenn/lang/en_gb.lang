@@ -861,6 +861,7 @@ triggers.FrostHelper/OnSpawnActivator.placements.description.default=When you lo
 triggers.FrostHelper/OnSpawnActivator.attributes.description.once=Whether this trigger should only activate once, and then get deleted.
 triggers.FrostHelper/OnSpawnActivator.attributes.description.delay=How long to wait (in seconds) before actually activating the triggers.
 triggers.FrostHelper/OnSpawnActivator.attributes.description.activationMode=How the activation should work:\nAll: All triggers get activated at once, in node order.\nCycle: When this trigger activates for the n-th time, the n-th trigger will be chosen.\nRandom: A random (seeded) trigger will be chosen.
+triggers.FrostHelper/OnSpawnActivator.attributes.description.activateOnTransition=Whether the activator should trigger when transitioning into this room.
 
 # FrostHelper/OnDeathActivator
 triggers.FrostHelper/OnDeathActivator.placements.name.default=Activator (On Death)

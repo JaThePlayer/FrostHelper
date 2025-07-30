@@ -7,13 +7,18 @@ namespace FrostHelper.Triggers.Activator;
 /// </summary>
 [CustomEntity("FrostHelper/OnSpawnActivator")]
 internal sealed class OnSpawnActivator : BaseActivator {
+    private readonly bool _activateOnTransition;
+    
     public OnSpawnActivator(EntityData data, Vector2 offset) : base(data, offset) {
         Collidable = false;
         Add(new PostAwakeHook(Activate));
+        _activateOnTransition = data.Bool("activateOnTransition", true);
     }
 
     private void Activate() {
-        ActivateAll(Scene.Tracker.GetEntity<Player>());
+        if (_activateOnTransition || Scene.ToLevel().LastIntroType != Player.IntroTypes.Transition) {
+            ActivateAll(Scene.Tracker.GetEntity<Player>());
+        }
         RemoveSelf();
     }
 }

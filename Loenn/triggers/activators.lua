@@ -95,6 +95,7 @@ return {
         { "hasToBeInside", false },
     }),
     makeActivator("FrostHelper/OnSpawnActivator", {
+        { "activateOnTransition", true }
     }),
     makeActivator("FrostHelper/OnFlagActivator", {
         { "flag", "" },
