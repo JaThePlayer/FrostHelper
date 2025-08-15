@@ -15,7 +15,6 @@ public class RainbowTilesetController : Entity {
 
         IL.Monocle.TileGrid.RenderAt += TileGrid_RenderAt;
         On.Celeste.Debris.Init_Vector2_char_bool += DebrisOnInit_Vector2_char_bool;
-        On.Celeste.Debris.Update += DebrisOnUpdate;
     }
 
     [OnUnload]
@@ -26,23 +25,6 @@ public class RainbowTilesetController : Entity {
 
         IL.Monocle.TileGrid.RenderAt -= TileGrid_RenderAt;
         On.Celeste.Debris.Init_Vector2_char_bool -= DebrisOnInit_Vector2_char_bool;
-        On.Celeste.Debris.Update -= DebrisOnUpdate;
-    }
-
-    private sealed class RainbowDebrisMarker(RainbowDebrisMarker.Mode mode) : Component(false, false) {
-        public enum Mode {
-            LerpedToGray,
-            NotLerped,
-        }
-    }
-    
-    private static void DebrisOnUpdate(On.Celeste.Debris.orig_Update orig, Debris self) {
-        orig(self);
-        if (self.Get<RainbowDebrisMarker>() is {})
-            self.image.Color =
-                // Todo: if needed, impl Mode.LerpedToGray here, as this is vanilla behavior:
-                //Color.Lerp(ColorHelper.GetHue(self.Scene, self.image.RenderPosition), Color.Gray, self.fadeLerp) * self.alpha;
-                ColorHelper.GetHue(self.Scene, self.image.RenderPosition) * self.alpha;
     }
 
     private static Debris DebrisOnInit_Vector2_char_bool(On.Celeste.Debris.orig_Init_Vector2_char_bool orig, Debris self, Vector2 pos, char tileset, bool playsound) {
@@ -50,7 +32,13 @@ public class RainbowTilesetController : Entity {
         var c = GetController();
         if (c is { }) {
             if (c._allDebris || c._debris.Contains(tileset)) {
-                d.Add(new RainbowDebrisMarker(RainbowDebrisMarker.Mode.NotLerped));
+                d.PostUpdate += static (entity) => {
+                    var debris = (Debris)entity;
+                    debris.image.Color =
+                        // Todo: if needed, impl Mode.LerpedToGray here, as this is vanilla behavior:
+                        //Color.Lerp(ColorHelper.GetHue(self.Scene, self.image.RenderPosition), Color.Gray, self.fadeLerp) * self.alpha;
+                        ColorHelper.GetHue(debris.Scene, debris.image.RenderPosition) * debris.alpha;
+                };
             }
         }
         

@@ -1027,7 +1027,7 @@ triggers.FrostHelper/CounterDisplay.attributes.description.visibleFlag=The flag 
 triggers.FrostHelper/TimerChange.placements.name.default=Timer Change
 triggers.FrostHelper/TimerChange.placements.description.default=Changes how much time is left on a timer started by the Timer trigger.
 triggers.FrostHelper/TimerChange.attributes.description.timerId=The Timer ID of the timer that should be changed by this trigger.
-triggers.FrostHelper/TimerChange.attributes.description.timeChange=The amount of time (in seconds) to add/set.
+triggers.FrostHelper/TimerChange.attributes.description.timeChange=The amount of time (in seconds) to add/set.\nSession expressions are supported, refer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Session-Expressions
 triggers.FrostHelper/TimerChange.attributes.description.operation=Determines which operation should be used.\nAdd - increases the timer by Time Change.\nSet - sets the timer to Time Change.
 triggers.FrostHelper/TimerChange.attributes.description.oneUse=Whether the trigger should be one-use.
 

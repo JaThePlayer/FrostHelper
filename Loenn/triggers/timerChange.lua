@@ -11,7 +11,7 @@ local operations = {
 
 jautils.createPlacementsPreserveOrder(timerChange, "default", {
     { "timerId", "" },
-    { "timeChange", 0 },
+    { "timeChange", "0", "FrostHelper.condition" },
     { "operation", "Add", operations },
     { "oneUse", true }
 })

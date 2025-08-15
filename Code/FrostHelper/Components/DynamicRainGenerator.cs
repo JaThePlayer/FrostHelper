@@ -57,7 +57,7 @@ internal sealed class DynamicRainGenerator : Component {
     #region Hooks
     private static bool _hooksLoaded;
     
-    [HookPreload]
+    [OnLoad]
     internal static void LoadHooksIfNeeded() {
         if (_hooksLoaded)
             return;
@@ -71,6 +71,7 @@ internal sealed class DynamicRainGenerator : Component {
 
         float rippleTimerStart = 0f;
         self.Add(new RainCollider(self.Collider, false) {
+            MakeSplashes = true,
             OnMakeSplashes = (ParticleSystem system, ref Rain rain) => {
                 if ((self.Scene.TimeActive - rippleTimerStart) > 0f) {
                     Vector2 p = new(rain.Position.X, self.Y);
@@ -185,9 +186,12 @@ internal sealed class DynamicRainGenerator : Component {
         for (int index = 0; index < _rains.Length; ++index)
             _rains[index].Init(GetNewRainPos(), this);
 
-        for (float f = 0; f < PreSimulationTime; f += Engine.DeltaTime) {
+        // Update at a fixed 60 fps instead of Engine.DeltaTime, as certain entities (like Teleport Doors)
+        // might set Engine.TimeRate to 0 on room load, causing a permanent loop.
+        // Since none of this is visible, there is no point in simulating precision differences from TimeRate changes anyway -
+        // - this only needs to be a rough estimate.
+        for (float f = 0; f < PreSimulationTime; f += 1f / 60f)
             UpdateSimulation();
-        }
     }
 
     public override void Update() {

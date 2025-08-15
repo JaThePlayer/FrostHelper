@@ -1,6 +1,7 @@
 ﻿namespace FrostHelper;
 
-public class CustomSnowball : Entity {
+[Tracked]
+internal sealed class CustomSnowball : Entity {
     public float Speed;
     public float ResetTime;
     public bool DrawOutline;
@@ -17,7 +18,7 @@ public class CustomSnowball : Entity {
         appearDirection = dir;
 
         Speed = speed;
-        if (dir == AppearDirection.Left || dir == AppearDirection.Top)
+        if (dir is AppearDirection.Left or AppearDirection.Top)
             Speed = -speed;
 
         ResetTime = resetTime;

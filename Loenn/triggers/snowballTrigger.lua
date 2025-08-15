@@ -18,6 +18,7 @@ jautils.createPlacementsPreserveOrder(snowballTrigger, "normal", {
     { "offset", 0.0 },
     { "drawOutline", true },
     { "replaceExisting", true },
+    { "once", true },
 }, true)
 
 return snowballTrigger

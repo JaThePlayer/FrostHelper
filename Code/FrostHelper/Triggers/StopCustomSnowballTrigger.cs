@@ -1,14 +1,20 @@
 ﻿namespace FrostHelper;
 
 [CustomEntity("FrostHelper/StopCustomSnowballTrigger")]
-public class StopCustomSnowballTrigger : Trigger {
-    public StopCustomSnowballTrigger(EntityData data, Vector2 offset) : base(data, offset) {
-    }
-
+internal sealed class StopCustomSnowballTrigger(EntityData data, Vector2 offset) : Trigger(data, offset) {
+    private readonly bool _once = data.Bool("once");
+    
     public override void OnEnter(Player player) {
         base.OnEnter(player);
-        foreach (CustomSnowball snowball in Scene.Entities.FindAll<CustomSnowball>()) {
+
+        var any = false;
+        foreach (CustomSnowball snowball in Scene.Tracker.SafeGetEntities<CustomSnowball>()) {
             snowball.StartLeaving();
+            any = true;
+        }
+
+        if (any && _once) {
+            RemoveSelf();
         }
     }
 }
