@@ -14,8 +14,8 @@ public sealed class CustomRisingLava : Entity {
             return;
         _hooksLoaded = !_hooksLoaded;
 
-        _onStay = EasierILHook.CreatePrefixHook(typeof(LavaBlockerTrigger), nameof(LavaBlockerTrigger.OnStay), OnLavaBlockerTriggerStay, capturedArgsCount: 1);
-        _onLeave = EasierILHook.CreatePrefixHook(typeof(LavaBlockerTrigger), nameof(LavaBlockerTrigger.OnLeave), OnLavaBlockerTriggerLeave, capturedArgsCount: 1);
+        _onStay = EasierILHook.CreatePrefixHook(typeof(LavaBlockerTrigger), nameof(LavaBlockerTrigger.OnStay), OnLavaBlockerTriggerStay);
+        _onLeave = EasierILHook.CreatePrefixHook(typeof(LavaBlockerTrigger), nameof(LavaBlockerTrigger.OnLeave), OnLavaBlockerTriggerLeave);
     }
 
     private static void OnLavaBlockerTriggerStay(LavaBlockerTrigger self) {

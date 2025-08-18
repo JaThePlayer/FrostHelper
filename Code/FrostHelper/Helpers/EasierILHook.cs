@@ -135,7 +135,7 @@ public static class EasierILHook {
     public static void EmitCall<T>(this ILCursor p, string methodName) 
         => p.Emit(OpCodes.Call, typeof(T).GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance) ?? throw new MissingMethodException(typeof(T).Name, methodName));
 
-    public static void EmitCall<T>(this ILCursor p, T action) where T : Delegate {
+    public static void EmitCall(this ILCursor p, Delegate action) {
         p.Emit(OpCodes.Call, action.Method);
     }
 
@@ -198,7 +198,14 @@ public static class EasierILHook {
     /// <summary>
     /// Appends a call to <paramref name="toCall"/> to the beginning of the given function.
     /// </summary>
-    public static ILHook CreatePrefixHook<T>(Type type, string methodName, T toCall, int capturedArgsCount = 0) where T : Delegate {
+    public static ILHook CreatePrefixHook(Type type, string methodName, Delegate toCall) {
+        var fullName = toCall.GetType().FullName ?? "null";
+        if (!fullName.StartsWith("System.Action", StringComparison.Ordinal)) {
+            throw new Exception($"Prefix is not a System.Action, but instead '{fullName}'");
+        }
+        
+        var capturedArgsCount = toCall.GetType().GetGenericArguments().Length;
+        
         var hook = new ILHook(
             type.GetMethod(methodName, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static)!,
             ctx => {
@@ -207,6 +214,65 @@ public static class EasierILHook {
                 for (int i = 0; i < capturedArgsCount; i++) {
                     cursor.Emit(OpCodes.Ldarg, i);
                 }
+                cursor.EmitCall(toCall);
+            });
+
+        return hook;
+    }
+
+    internal static void EmitLoadConst(ILCursor cursor, object obj) {
+        switch (obj) {
+            case byte s:
+                cursor.Emit(OpCodes.Ldc_I4_S, s);
+                break;
+            case short s:
+                cursor.Emit(OpCodes.Ldc_I4, s);
+                break;
+            case int i:
+                cursor.Emit(OpCodes.Ldc_I4, i);
+                break;
+            case float f:
+                cursor.Emit(OpCodes.Ldc_R4, f);
+                break;
+            case double d:
+                cursor.Emit(OpCodes.Ldc_R8, d);
+                break;
+            case string s:
+                cursor.Emit(OpCodes.Ldstr, s);
+                break;
+            default:
+                if (obj.GetType().IsEnum) {
+                    cursor.Emit(OpCodes.Ldc_I4, (int)obj);
+                    break;
+                }
+                
+                cursor.EmitReference(obj);
+                break;
+        }
+    }
+    
+    public static ILHook CreatePrefixHook(Type type, string methodName, Delegate toCall, params object[] args) {
+        var fullName = toCall.GetType().FullName ?? "null";
+        if (!fullName.StartsWith("System.Action", StringComparison.Ordinal)) {
+            throw new Exception($"Prefix is not a System.Action, but instead '{fullName}'");
+        }
+        
+        var capturedArgsCount = toCall.GetType().GetGenericArguments().Length - args.Length;
+        
+        var hook = new ILHook(
+            type.GetMethod(methodName, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static)!,
+            ctx => {
+                var cursor = new ILCursor(ctx);
+
+                // first, capture args from the method:
+                for (int i = 0; i < capturedArgsCount; i++) {
+                    cursor.Emit(OpCodes.Ldarg, i);
+                }
+                // then, load up const args:
+                foreach (var arg in args) {
+                    EmitLoadConst(cursor, arg);
+                }
+                
                 cursor.EmitCall(toCall);
             });
 

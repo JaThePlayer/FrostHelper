@@ -372,4 +372,46 @@ public static class Extensions {
         AssetReloadHelper => (Level) AssetReloadHelper.ReturnToScene,
         _ => throw new Exception("ToLevel called outside of a level... how did you manage that?")
     };
+
+    internal static TEnum FlagEnumFromMultipleBools<TEnum>(this EntityData data, params Span<(TEnum Value, string FieldName)> fields) where TEnum : struct, Enum {
+        ulong ret = default;
+        foreach (var (value, fieldName) in fields) {
+            if (data.Bool(fieldName))
+                ret |= value.ToInt64();
+        }
+        
+        Unsafe.SkipInit(out TEnum result);
+        Type underlyingType = typeof(TEnum).GetEnumUnderlyingType();
+
+        if (underlyingType == typeof(sbyte)) Unsafe.As<TEnum, sbyte>(ref result) = (sbyte)ret;
+        if (underlyingType == typeof(byte)) Unsafe.As<TEnum, byte>(ref result) = (byte)ret;
+        if (underlyingType == typeof(short)) Unsafe.As<TEnum, short>(ref result) = (short)ret;
+        if (underlyingType == typeof(ushort)) Unsafe.As<TEnum, ushort>(ref result) = (ushort)ret;
+        if (underlyingType == typeof(int)) Unsafe.As<TEnum, int>(ref result) = (int)ret;
+        if (underlyingType == typeof(uint)) Unsafe.As<TEnum, uint>(ref result) = (uint)ret;
+        if (underlyingType == typeof(long)) Unsafe.As<TEnum, long>(ref result) = (long)ret;
+        if (underlyingType == typeof(ulong)) Unsafe.As<TEnum, ulong>(ref result) = (ulong)ret;
+
+        Console.WriteLine((ret, result.ToString()));
+        return result;
+    }
+
+    internal static ulong ToInt64<TEnum>(this TEnum value) where TEnum : struct, Enum {
+        Type underlyingType = typeof(TEnum).GetEnumUnderlyingType();
+        if (underlyingType == typeof(sbyte)) return (ulong)Unsafe.BitCast<TEnum, sbyte>(value);
+        if (underlyingType == typeof(byte)) return (ulong)Unsafe.BitCast<TEnum, byte>(value);
+        if (underlyingType == typeof(short)) return (ulong)Unsafe.BitCast<TEnum, short>(value);
+        if (underlyingType == typeof(ushort)) return (ulong)Unsafe.BitCast<TEnum, ushort>(value);
+        if (underlyingType == typeof(int)) return (ulong)Unsafe.BitCast<TEnum, int>(value);
+        if (underlyingType == typeof(uint)) return (ulong)Unsafe.BitCast<TEnum, uint>(value);
+        if (underlyingType == typeof(long)) return (ulong)Unsafe.BitCast<TEnum, long>(value);
+        if (underlyingType == typeof(ulong)) return (ulong)Unsafe.BitCast<TEnum, ulong>(value);
+
+        ThrowCannotConvertToInt64Exception(value);
+        return 0;
+    }
+
+    private static void ThrowCannotConvertToInt64Exception<TEnum>(TEnum value) where TEnum : struct, Enum {
+        throw new InvalidOperationException($"Cannot convert {value} [{typeof(TEnum)}] to Int64");
+    }
 }

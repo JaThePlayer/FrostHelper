@@ -103,7 +103,7 @@ local function createSpringHandler(name, spriteRotation, speedAsVector)
         },
         { "recovery", "10000;10000;10001", "statRecovery", nil, { hideIfMissing = true } },
         { "sfx", "event:/game/general/spring" },
-        { "version", 2, "integer", nil, { hidden = true } },
+        { "version", 3, "integer", nil, { hidden = true } },
         { "oneUse", false },
         { "playerCanUse", true },
         { "renderOutline", true },

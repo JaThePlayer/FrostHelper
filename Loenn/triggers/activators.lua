@@ -201,4 +201,13 @@ return {
     {
     }),
     elytraWingActivator,
+    makeActivator("FrostHelper/OnJumpActivator",
+    {
+        { "normalJump", true },
+        { "climbJump", true },
+        { "superJump", true },
+        { "hiccupJump", true },
+        { "wallJump", true },
+        { "superWallJump", true },
+    }),
 }

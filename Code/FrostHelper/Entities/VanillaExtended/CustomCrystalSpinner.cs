@@ -20,7 +20,7 @@ public class CustomSpinner : Entity {
             return;
         _hooksLoaded = true;
 
-        FrostModule.RegisterILHook(EasierILHook.CreatePrefixHook(typeof(CrystalShatterTrigger), nameof(CrystalShatterTrigger.OnEnter), OnCrystalShatterTriggerEnter, capturedArgsCount: 1));
+        FrostModule.RegisterILHook(EasierILHook.CreatePrefixHook(typeof(CrystalShatterTrigger), nameof(CrystalShatterTrigger.OnEnter), OnCrystalShatterTriggerEnter));
         On.Celeste.Player.SummitLaunchUpdate += Player_SummitLaunchUpdate;
     }
 

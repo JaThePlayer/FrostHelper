@@ -122,6 +122,8 @@ public sealed class CustomZipMover : Solid {
     private SpriteSource? ColdSource { get; }
 
     private SpriteSource CurrentSource { get; set; }
+
+    private readonly string _sfxPath;
     
     private void OnChangeMode(Session.CoreModes coreMode) {
         iceModeNext = coreMode == Session.CoreModes.Cold;
@@ -239,6 +241,7 @@ public sealed class CustomZipMover : Solid {
         SurfaceSoundIndex = 7;
         sfx.Position = new Vector2(Width, Height) / 2f;
         Add(sfx);
+        _sfxPath = data.Attr("sfx", "event:/game/01_forsaken_city/zip_mover");
 
         //percentage = data.Float("percentage", 100f);
         if (data.Has("percentage")) {
@@ -447,7 +450,7 @@ public sealed class CustomZipMover : Solid {
         Vector2 start = Position;
         while (true) {
             if (CanActivate.Check() && HasPlayerRider()) {
-                sfx.Play("event:/game/01_forsaken_city/zip_mover", null, 0f);
+                sfx.Play(_sfxPath, null, 0f);
                 Input.Rumble(RumbleStrength.Medium, RumbleLength.Short);
                 StartShaking(0.1f);
                 yield return 0.1f;

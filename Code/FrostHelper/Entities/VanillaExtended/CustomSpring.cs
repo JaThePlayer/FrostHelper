@@ -103,26 +103,28 @@ public class CustomSpring : Spring {
         Ceiling
     }
 
-    private float inactiveTimer;
+    private float _inactiveTimer;
 
     public new CustomOrientations Orientation;
-    public bool RenderOutline;
-    public Sprite Sprite => sprite;
 
-    string dir;
+    private readonly bool _renderOutline;
+    private Sprite Sprite => sprite;
 
-    internal Vector2 speedMult;
-    private int Version;
-
-    public bool MultiplyPlayerY;
+    internal readonly Vector2 SpeedMult;
     
-    public bool OneUse;
+    // 0, 1 - original
+    // 2 - new gravity helper physics
+    // 3 - communal helper dream tunnel support.
+    private readonly int _version;
 
+    private readonly bool _multiplyPlayerY;
+
+    private readonly bool _oneUse;
 
     /// <summary>
     /// Whether the spring should always activate, regardless of the player's/holdable/fish speed.
     /// </summary>
-    public bool AlwaysActivate;
+    private readonly bool _alwaysActivate;
 
     private readonly Recovery _recovery;
 
@@ -144,13 +146,13 @@ public class CustomSpring : Spring {
 
     public CustomSpring(EntityData data, Vector2 offset, CustomOrientations orientation) : base(data.Position + offset, CustomToRegularOrientation[orientation], data.Bool("playerCanUse", true)) {
         LoadIfNeeded();
-        Version = data.Int("version", 0);
+        _version = data.Int("version", 0);
         // this class also has lazy hooks, and we don't want a lag spike when first hitting a spring
         TimeBasedClimbBlocker.LoadIfNeeded();
 
         playerCanUse = data.Bool("playerCanUse", true);
-        dir = data.Attr("directory", "objects/spring/");
-        RenderOutline = data.Bool("renderOutline", true);
+        var dir = data.Attr("directory", "objects/spring/");
+        _renderOutline = data.Bool("renderOutline", true);
 
         if (data.Has("recovery")) {
             _recovery = data.Parse("recovery", Recovery.DefaultRefill);
@@ -175,8 +177,8 @@ public class CustomSpring : Spring {
             CustomOrientations.WallLeft or CustomOrientations.WallRight => data.GetVec2("speedMult", Vector2.One, true),
             _ => new(data.Float("speedMult", 1f)), // other orientations only care about the Y component anyway
         };*/
-        speedMult = data.GetVec2("speedMult", Vector2.One);
-        MultiplyPlayerY = orientation switch {
+        SpeedMult = data.GetVec2("speedMult", Vector2.One);
+        _multiplyPlayerY = orientation switch {
             CustomOrientations.WallLeft or CustomOrientations.WallRight => data.Attr("speedMult").Contains(','),
             _ => true,
         };
@@ -254,26 +256,26 @@ public class CustomSpring : Spring {
         Add(mover);
         staticMover = mover;
 
-        OneUse = data.Bool("oneUse");
-        if (OneUse) {
+        _oneUse = data.Bool("oneUse");
+        if (_oneUse) {
             Add(new Coroutine(OneUseParticleRoutine()));
         }
 
-        AlwaysActivate = data.Bool("alwaysActivate", false);
+        _alwaysActivate = data.Bool("alwaysActivate", false);
         BounceSfx = data.Attr("sfx", "event:/game/general/spring");
     }
 
     public override void Update() {
         base.Update();
 
-        inactiveTimer -= Engine.DeltaTime;
+        _inactiveTimer -= Engine.DeltaTime;
     }
 
     public override void Render() {
         if (!CameraCullHelper.IsVisible(sprite))
             return;
 
-        if (Collidable && RenderOutline)
+        if (Collidable && _renderOutline)
             sprite.DrawOutlineFast(Color.Black);
         sprite.Render();
     }
@@ -282,12 +284,19 @@ public class CustomSpring : Spring {
         if (player.StateMachine.State == Player.StDreamDash || !playerCanUse)
             return;
 
+        // Handle dream tunnel state same as dream dash and prevent collision.
+        if (_version >= 3 && CommunalHelperIntegration.LoadIfNeeded() &&
+            CommunalHelperIntegration.GetDreamTunnelDashState?.Invoke() is { } dreamTunnelState
+            && player.StateMachine.State == dreamTunnelState) {
+            return;
+        }
+
         var prev = _recovery.SavePlayerData(player);
 
         if (!_recovery.CanUse(prev))
             return;
 
-        if (Version == 0 && NewOnCollide_Version0(player, prev)) {
+        if (_version == 0 && NewOnCollide_Version0(player, prev)) {
             return;
         }
 
@@ -296,8 +305,8 @@ public class CustomSpring : Spring {
             case CustomOrientations.Ceiling:
                 // weird check here to fix buffered spring cancels
                 var realY = GravityHelperIntegration.InvertIfPlayerInverted(player.Speed.Y);
-                if (!AlwaysActivate && (Orientation == CustomOrientations.Floor && realY < 0 ||
-                    Orientation == CustomOrientations.Ceiling && (realY > 0 || realY == 0 && inactiveTimer > 0))) {
+                if (!_alwaysActivate && (Orientation == CustomOrientations.Floor && realY < 0 ||
+                    Orientation == CustomOrientations.Ceiling && (realY > 0 || realY == 0 && _inactiveTimer > 0))) {
                     return;
                 }
 
@@ -307,13 +316,13 @@ public class CustomSpring : Spring {
 
                 if (playerInverted && Orientation == CustomOrientations.Floor) {
                     GravityHelperIntegration.InvertedSuperBounce(player, Top);
-                    player.Speed.Y *= speedMult.Y;
+                    player.Speed.Y *= SpeedMult.Y;
                 } else if (!playerInverted && Orientation == CustomOrientations.Ceiling) {
                     player.SuperBounce(Bottom + player.Height);
-                    player.Speed.Y *= -speedMult.Y;
+                    player.Speed.Y *= -SpeedMult.Y;
                 } else {
                     player.SuperBounce(Orientation == CustomOrientations.Floor ? Top : Bottom);
-                    player.Speed.Y *= speedMult.Y;
+                    player.Speed.Y *= SpeedMult.Y;
                 }
 
                 player.varJumpSpeed = player.Speed.Y;
@@ -322,7 +331,7 @@ public class CustomSpring : Spring {
 
                 if (playerInverted && Orientation == CustomOrientations.Floor || Orientation == CustomOrientations.Ceiling) {
                     TimeBasedClimbBlocker.NoClimbTimer = 4f / 60f;
-                    inactiveTimer = 6f * Engine.DeltaTime;
+                    _inactiveTimer = 6f * Engine.DeltaTime;
                 }
 
                 break;
@@ -330,25 +339,25 @@ public class CustomSpring : Spring {
                 // If AlwaysActivate is enabled, we'll set the player's speed to the target direction,
                 // to make the early return in player.SideBounce never activate.
                 // Alternatively, player.SideBounce could be hooked to do this, but that's more work and overhead :p
-                if (AlwaysActivate)
+                if (_alwaysActivate)
                     player.Speed.X = 1;
                 
                 if (player.SideBounce(1, Right, CenterY)) {
                     BounceAnimate();
-                    player.Speed *= speedMult;
-                    if (MultiplyPlayerY)
+                    player.Speed *= SpeedMult;
+                    if (_multiplyPlayerY)
                         player.varJumpSpeed = player.Speed.Y;
                     OnSuccessfulPlayerHit(player, prev);
                 }
                 break;
             case CustomOrientations.WallRight:
                 // read comment in case WallLeft
-                if (AlwaysActivate)
+                if (_alwaysActivate)
                     player.Speed.X = -1;
                 
                 if (player.SideBounce(-1, Left, CenterY)) {
-                    player.Speed *= speedMult;
-                    if (MultiplyPlayerY)
+                    player.Speed *= SpeedMult;
+                    if (_multiplyPlayerY)
                         player.varJumpSpeed = player.Speed.Y;
                     BounceAnimate();
 
@@ -366,35 +375,35 @@ public class CustomSpring : Spring {
     private bool NewOnCollide_Version0(Player player, Recovery.SavedPlayerData prev) {
         switch (Orientation) {
             case CustomOrientations.Floor:
-                if (AlwaysActivate || GravityHelperIntegration.InvertIfPlayerInverted(player.Speed.Y) >= 0f) {
+                if (_alwaysActivate || GravityHelperIntegration.InvertIfPlayerInverted(player.Speed.Y) >= 0f) {
                     BounceAnimate();
                     GravityHelperIntegration.SuperBounce(player, Top);
-                    player.Speed.Y *= speedMult.Y;
+                    player.Speed.Y *= SpeedMult.Y;
 
                     OnSuccessfulPlayerHit(player, prev);
                 }
                 return true;
             case CustomOrientations.Ceiling:
                 // weird check here to fix buffered spring cancels
-                if (AlwaysActivate || (
+                if (_alwaysActivate || (
                         GravityHelperIntegration.InvertIfPlayerInverted(player.Speed.Y) < 0f
-                        || (player.Speed.Y == 0f && inactiveTimer <= 0f)
+                        || (player.Speed.Y == 0f && _inactiveTimer <= 0f)
                 )) {
                     BounceAnimate();
 
                     if (GravityHelperIntegration.IsPlayerInverted?.Invoke() ?? false) {
                         player.SuperBounce(Bottom + player.Height);
-                        player.Speed.Y *= speedMult.Y;
+                        player.Speed.Y *= SpeedMult.Y;
                     } else {
                         player.SuperBounce(Bottom + player.Height);
-                        player.Speed.Y *= -speedMult.Y;
+                        player.Speed.Y *= -SpeedMult.Y;
                     }
 
                     player.varJumpSpeed = player.Speed.Y;
                     OnSuccessfulPlayerHit(player, prev);
 
                     TimeBasedClimbBlocker.NoClimbTimer = 4f / 60f;
-                    inactiveTimer = 6f * Engine.DeltaTime;
+                    _inactiveTimer = 6f * Engine.DeltaTime;
                 }
                 return true;
         }
@@ -402,7 +411,7 @@ public class CustomSpring : Spring {
     }
 
     private void OnSuccessfulHit() {
-        if (OneUse) {
+        if (_oneUse) {
             Add(new Coroutine(BreakRoutine()));
         }
     }
@@ -442,7 +451,7 @@ public class CustomSpring : Spring {
             // Apply speed multiplier
             if (h is { SpeedGetter: { }, SpeedSetter: { } }) {
                 // Old implementation didn't work with custom holdables
-                if (Version < 2 && h.Entity is not Glider and not TheoCrystal) {
+                if (_version < 2 && h.Entity is not Glider and not TheoCrystal) {
                     return;
                 }
                 
@@ -450,13 +459,13 @@ public class CustomSpring : Spring {
                 switch (Orientation)
                 {
                     case CustomOrientations.Floor:
-                        speed.Y *= speedMult.Y;
+                        speed.Y *= SpeedMult.Y;
                         break;
                     case CustomOrientations.Ceiling:
-                        speed.Y *= -speedMult.Y;
+                        speed.Y *= -SpeedMult.Y;
                         break;
                     default:
-                        speed *= speedMult;
+                        speed *= SpeedMult;
                         break;
                 }
                 h.SetSpeed(speed);
@@ -466,7 +475,7 @@ public class CustomSpring : Spring {
 
     private void NewOnPuffer(Puffer p) {
         if (p.HitSpring(this)) {
-            p.hitSpeed *= speedMult;
+            p.hitSpeed *= SpeedMult;
             BounceAnimate();
             OnSuccessfulHit();
         }

@@ -228,7 +228,7 @@ public static partial class API {
     /// Gets the speed multiplier for a given spring. For vanilla springs, this will return <see cref="Vector2.One"/>
     /// </summary>
     public static Vector2 GetSpringSpeedMultiplier(Spring spring) => spring switch {
-        CustomSpring spr => spr.speedMult,
+        CustomSpring spr => spr.SpeedMult,
         _ => Vector2.One
     };
 

@@ -1,15 +1,24 @@
-﻿namespace FrostHelper;
+﻿using FrostHelper.Helpers;
+
+namespace FrostHelper;
 
 [Tracked]
 [CustomEntity("FrostHelper/NoMovementTrigger")]
-public class NoMovementTrigger : Trigger {
+internal sealed class NoMovementTrigger : Trigger {
+    private readonly ConditionHelper.Condition _condition;
+    private readonly bool _mustBeInside;
+    
     public NoMovementTrigger(EntityData data, Vector2 offset) : base(data, offset) {
         LoadIfNeeded();
+
+        _mustBeInside = data.Bool("mustBeInside", true);
+        _condition = data.GetCondition("flag");
     }
 
     public static bool IsMovementDisabled(Scene scene) {
-        foreach (Trigger item in scene.Tracker.SafeGetEntities<NoMovementTrigger>()) {
-            if (item.Triggered) {
+        foreach (NoMovementTrigger item in scene.Tracker.SafeGetEntities<NoMovementTrigger>()) {
+            if ((!item._mustBeInside || item.Triggered) 
+                && (item._condition.Empty || item._condition.Check(scene.ToLevel().Session))) {
                 return true;
             }
         }

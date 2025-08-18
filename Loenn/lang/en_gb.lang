@@ -961,6 +961,20 @@ triggers.FrostHelper/OnElytraRingActivator.attributes.description.once=Whether t
 triggers.FrostHelper/OnElytraRingActivator.attributes.description.delay=How long to wait (in seconds) before actually activating the triggers.
 triggers.FrostHelper/OnElytraRingActivator.attributes.description.activationMode=How the activation should work:\nAll: All triggers get activated at once, in node order.\nCycle: When this trigger activates for the n-th time, the n-th trigger will be chosen.\nRandom: A random (seeded) trigger will be chosen.
 
+# On Jump
+triggers.FrostHelper/OnJumpActivator.placements.name.default=Activator (On Jump)
+triggers.FrostHelper/OnJumpActivator.placements.description.default=Activates triggers which intersect with the nodes of this trigger when the player jumps.
+triggers.FrostHelper/OnJumpActivator.attributes.description.once=Whether this trigger should only activate once, and then get deleted.
+triggers.FrostHelper/OnJumpActivator.attributes.description.delay=How long to wait (in seconds) before actually activating the triggers.
+triggers.FrostHelper/OnJumpActivator.attributes.description.activationMode=How the activation should work:\nAll: All triggers get activated at once, in node order.\nCycle: When this trigger activates for the n-th time, the n-th trigger will be chosen.\nRandom: A random (seeded) trigger will be chosen.
+triggers.FrostHelper/OnJumpActivator.attributes.description.normalJump=Whether to activate for normal jumps.
+triggers.FrostHelper/OnJumpActivator.attributes.description.climbJump=Whether to activate for climb jumps.
+triggers.FrostHelper/OnJumpActivator.attributes.description.superJump=Whether to activate for Super/Hyperdashes.\n(Anything using Player.SuperJump).
+triggers.FrostHelper/OnJumpActivator.attributes.description.hiccupJump=Whether to activate for hiccup jumps.
+triggers.FrostHelper/OnJumpActivator.attributes.description.wallJump=Whether to activate for wall jumps.
+triggers.FrostHelper/OnJumpActivator.attributes.name.superWallJump=Wallbounce
+triggers.FrostHelper/OnJumpActivator.attributes.description.superWallJump=Whether to activate for wallbounces.\n(Anything using Player.SuperWallJump).
+
 # Session Counter Trigger
 triggers.FrostHelper/SessionCounterTrigger.placements.name.default=Session Counter
 triggers.FrostHelper/SessionCounterTrigger.placements.description.default=Changes the value of a Session Counter, which is a 32-bit integer saved to session.
@@ -989,6 +1003,8 @@ triggers.FrostHelper/RandomizeSessionCounterTrigger.attributes.description.seed=
 # FrostHelper/NoMovementTrigger
 triggers.FrostHelper/NoMovementTrigger.placements.name.default=No Movement
 triggers.FrostHelper/NoMovementTrigger.placements.description.default=Disables walking.
+triggers.FrostHelper/NoMovementTrigger.attributes.description.mustBeInside=Whether the player needs to be inside the trigger for it to block movement.
+triggers.FrostHelper/NoMovementTrigger.attributes.description.flag=Flag which needs to be set in order for this trigger to block movement.\nSession Expressions are supported.
 
 triggers.FrostHelper/Timer.placements.name.default=Timer
 triggers.FrostHelper/Timer.placements.description.default=Creates a visible timer, which sets a flag once it expires.

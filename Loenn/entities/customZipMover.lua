@@ -22,6 +22,7 @@ jautils.createPlacementsPreserveOrder(zipper, "custom_zip_mover", {
     { "tint", "ffffff", "color" },
     { "directory", "objects/zipmover" },
     { "canActivateFlag", "", "FrostHelper.condition" },
+    { "sfx", "event:/game/01_forsaken_city/zip_mover" },
     { "speedMultiplier", 1.0 },
     { "coldSpeedMultiplier", 1 / 4 },
     { "bloomAlpha", 1.0 },
