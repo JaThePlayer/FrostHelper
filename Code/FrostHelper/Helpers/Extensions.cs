@@ -392,7 +392,6 @@ public static class Extensions {
         if (underlyingType == typeof(long)) Unsafe.As<TEnum, long>(ref result) = (long)ret;
         if (underlyingType == typeof(ulong)) Unsafe.As<TEnum, ulong>(ref result) = (ulong)ret;
 
-        Console.WriteLine((ret, result.ToString()));
         return result;
     }
 
