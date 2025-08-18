@@ -792,9 +792,9 @@ public static class ConditionHelper {
     public static Condition GetCondition(this BinaryPacker.Element data, ExpressionContext ctx, string name, string def = "")
         => GetConditionCore(data.Attributes, ctx, name, def);
 
-    private static Condition GetConditionCore(Dictionary<string, object> dict, ExpressionContext ctx, string name, string def = "") {
+    private static Condition GetConditionCore(Dictionary<string, object>? dict, ExpressionContext ctx, string name, string def = "") {
         Condition? condition = null;
-        if (dict.TryGetValue(name, out var cond)) {
+        if (dict?.TryGetValue(name, out var cond) ?? false) {
             switch (cond) {
                 case Condition fullCondition:
                     condition = fullCondition;

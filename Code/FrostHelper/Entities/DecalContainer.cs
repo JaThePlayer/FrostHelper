@@ -1,7 +1,11 @@
 ﻿//#define DEBUG_DISPLAY
 #define NEW_IMPL
 
+using FrostHelper.DecalRegistry;
+using FrostHelper.Helpers;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using System.Runtime.Intrinsics;
 
 namespace FrostHelper;
 
@@ -50,7 +54,9 @@ public class DecalContainerMaker : Trigger {
         int newContainers = 0;
         DecalContainer? lastContainer = null;
         foreach (var ent in entities) {
-            if (ent is not Decal item || item.Get<MirrorSurface>() is { }) // todo: get rid of this special case maybe maybe
+            if (ent is not Decal item 
+                || DecalContainerIgnoreDecalRegistryHandler.AllIgnored.Contains(item.Name) 
+                || item.Get<MirrorSurface>() is { }) // todo: get rid of this special case maybe maybe
                 continue;
 
             var r = renderers[item.Depth];
@@ -193,7 +199,7 @@ internal static class DecalContainerHelpers {
 
     internal static void SetScene(Decal item, Scene scene) {
         item.Scene = scene;
-        foreach (var c in item)
+        foreach (var c in item.Components.components)
             c.Entity = item;
     }
 }
@@ -317,14 +323,14 @@ public class DecalContainer {
         }
 
         if (level.Paused) {
-            foreach (var d in Decals) {
+            foreach (var d in CollectionsMarshal.AsSpan(Decals)) {
                 var item = d.decal;
                 if (item.Visible && DecalContainerHelpers.IsInside(cam, d)) {
                     item.Render();
                 }
             }
         } else {
-            foreach (var d in Decals) {
+            foreach (var d in CollectionsMarshal.AsSpan(Decals)) {
                 var item = d.decal;
                 if (item.Visible && DecalContainerHelpers.IsInside(cam, d)) {
                     if (item.Active)
