@@ -55,6 +55,7 @@ public class SpeedRingChallenge : Entity {
 
             if (playbackStartTrim < playback.TrimEnd && playbackStartTrim > 0) {
                 playback.TrimStart = playbackStartTrim;
+                playback.Restart();
             }
             playback.startDelay = 0f;
             playback.Active = false;

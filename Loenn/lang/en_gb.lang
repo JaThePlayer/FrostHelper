@@ -464,6 +464,7 @@ entities.FrostHelper/SpeedRingChallenge.attributes.description.name=The name of 
 entities.FrostHelper/SpeedRingChallenge.attributes.description.playbackName=Insert the name of a playback file to create a ghost playback that races the player.
 entities.FrostHelper/SpeedRingChallenge.attributes.description.playbackOffsetX=Moves the starting point of the playback racer
 entities.FrostHelper/SpeedRingChallenge.attributes.description.playbackOffsetY=Moves the starting point of the playback racer
+entities.FrostHelper/SpeedRingChallenge.attributes.description.playbackStartTrim=Sets how far into the playback it starts. May require changing the offset. 
 entities.FrostHelper/SpeedRingChallenge.attributes.description.playbackEndTrim=Sets how long the playback will play for. Does nothing if set to 0.
 
 entities.FrostHelper/RainbowTilesetController.placements.name.normal=Rainbow Tileset Controller
