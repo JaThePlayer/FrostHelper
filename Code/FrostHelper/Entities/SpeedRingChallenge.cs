@@ -21,6 +21,7 @@ public class SpeedRingChallenge : Entity {
     bool spawnBerry;
     public Color RingColor;
     readonly List<MTexture> ArrowTextures;
+    
     private PlayerPlayback? playback;
     private Vector2 playbackOffset;
 
@@ -37,12 +38,24 @@ public class SpeedRingChallenge : Entity {
         height = data.Height;
         spawnBerry = data.Bool("spawnBerry", true);
         ArrowTextures = GFX.Game.GetAtlasSubtextures("util/dasharrow/dasharrow");
+        //Playback creation begins
         string playbackName = data.Attr("playbackName");
         if (!string.IsNullOrWhiteSpace(playbackName)) {
             if (!PlaybackData.Tutorials.TryGetValue(playbackName, out var playbackData))
                 throw new InvalidOperationException($"Could not find playback data for {playbackName}");
+            //Positioning the playback if desired
             playbackOffset = new Vector2(data.Float("playbackOffsetX", 0f), data.Float("playbackOffsetY", 0f));
             playback = new PlayerPlayback(Position + playbackOffset, PlayerSpriteMode.Playback, playbackData);
+            //Trimming the playback if desired
+            float playbackStartTrim = data.Float("playbackStartTrim");
+            float playbackEndTrim = data.Float("playbackEndTrim");
+            if (playbackEndTrim < playback.TrimEnd && playbackStartTrim < playbackEndTrim && playbackEndTrim > 0) {
+                playback.TrimEnd = playbackEndTrim;
+            }
+
+            if (playbackStartTrim < playback.TrimEnd && playbackStartTrim > 0) {
+                playback.TrimStart = playbackStartTrim;
+            }
             playback.startDelay = 0f;
             playback.Active = false;
             playback.Visible = false;
