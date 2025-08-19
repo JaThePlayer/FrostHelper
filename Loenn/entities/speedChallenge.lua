@@ -4,7 +4,7 @@ local jautils = require("mods").requireFromPlugin("libraries.jautils")
 local speedRingChallenge = {}
 speedRingChallenge.name = "FrostHelper/SpeedRingChallenge"
 speedRingChallenge.nodeLineRenderType = "line"
-speedRingChallenge.fieldOrder = {"x", "y", "width", "height", "timeLimit", "name", "playbackName"}
+speedRingChallenge.fieldOrder = {"x", "y", "width", "height", "timeLimit", "name", "playbackName", "playbackOffsetX", "playbackOffsetY"}
 speedRingChallenge.placements =
 {
     name = "normal",
@@ -14,6 +14,8 @@ speedRingChallenge.placements =
         timeLimit = 1.0,
         name = "fh_test",
         playbackName = "",
+        playbackOffsetX = 0.0,
+        playbackOffsetY = 0.0,
     }
 }
 

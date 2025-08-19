@@ -22,6 +22,7 @@ public class SpeedRingChallenge : Entity {
     public Color RingColor;
     readonly List<MTexture> ArrowTextures;
     private PlayerPlayback? playback;
+    private Vector2 playbackOffset;
 
     public long TimeSpent => Finished ? FinalTimeSpent : Scene == null ? 0 : SceneAs<Level>().Session.Time - StartChapterTimer;
 
@@ -40,7 +41,8 @@ public class SpeedRingChallenge : Entity {
         if (!string.IsNullOrWhiteSpace(playbackName)) {
             if (!PlaybackData.Tutorials.TryGetValue(playbackName, out var playbackData))
                 throw new InvalidOperationException($"Could not find playback data for {playbackName}");
-            playback = new PlayerPlayback(Position, PlayerSpriteMode.Playback, playbackData);
+            playbackOffset = new Vector2(data.Float("playbackOffsetX", 0f), data.Float("playbackOffsetY", 0f));
+            playback = new PlayerPlayback(Position + playbackOffset, PlayerSpriteMode.Playback, playbackData);
             playback.startDelay = 0f;
             playback.Active = false;
             playback.Visible = false;
