@@ -87,6 +87,7 @@ public class SpeedRingChallenge : Entity {
 
     public override void Update() {
         base.Update();
+        StopPlaybackIfAboutToLoop();
         Active = Visible = !Finished;
         if (!Finished && CollideCheck<Player>()) {
             if (!started) {
@@ -152,7 +153,6 @@ public class SpeedRingChallenge : Entity {
         playback.Active = true;
         playback.Restart();
     }
-
     private void StopPlayback() {
         if (playback is null) return;
         if (playback.Visible)
@@ -160,6 +160,11 @@ public class SpeedRingChallenge : Entity {
         playback.Active = playback.Visible = false;
     }
 
+    private void StopPlaybackIfAboutToLoop() {
+        if (playback is null || !playback.Active || playback.Visible) return;
+        StopPlayback();
+    } 
+    
     public override void Render() {
         base.Render();
         if (!(Scene as Level)!.Paused) {
