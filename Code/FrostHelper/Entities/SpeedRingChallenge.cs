@@ -117,7 +117,7 @@ public class SpeedRingChallenge : Entity {
                     FinalTimeSpent = TimeSpent;
                     Finished = true;
                     Visible = false;
-                    //This is where the playback should stop
+                    StopPlayback();
 
                     FrostModule.SaveData.SetChallengeTime(SceneAs<Level>().Session.Area.SID, ChallengeNameID, FinalTimeSpent);
 
@@ -151,6 +151,13 @@ public class SpeedRingChallenge : Entity {
         if (playback is null) return;
         playback.Active = true;
         playback.Restart();
+    }
+
+    private void StopPlayback() {
+        if (playback is null) return;
+        if (playback.Visible)
+            Audio.Play("event:/new_content/char/tutorial_ghost/disappear", playback.Position);
+        playback.Active = playback.Visible = false;
     }
 
     public override void Render() {
