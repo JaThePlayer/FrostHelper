@@ -1,4 +1,6 @@
-﻿namespace FrostHelper;
+﻿using FrostHelper.Helpers;
+
+namespace FrostHelper;
 
 [CustomEntity("FrostHelper/SpeedRingChallenge")]
 [Tracked]
@@ -19,8 +21,13 @@ public class SpeedRingChallenge : Entity {
     bool spawnBerry;
     public Color RingColor;
     readonly List<MTexture> ArrowTextures;
+    
+    private PlayerPlayback? playback;
+    private Vector2 playbackOffset;
 
     public long TimeSpent => Finished ? FinalTimeSpent : Scene == null ? 0 : SceneAs<Level>().Session.Time - StartChapterTimer;
+
+    
 
     public SpeedRingChallenge(EntityData data, Vector2 offset, EntityID id) : base(data.Position + offset) {
         ID = id;
@@ -31,10 +38,41 @@ public class SpeedRingChallenge : Entity {
         height = data.Height;
         spawnBerry = data.Bool("spawnBerry", true);
         ArrowTextures = GFX.Game.GetAtlasSubtextures("util/dasharrow/dasharrow");
+        //Playback creation begins
+        string playbackName = data.Attr("playbackName");
+        if (!string.IsNullOrWhiteSpace(playbackName)) {
+            if (!PlaybackData.Tutorials.TryGetValue(playbackName, out var playbackData))
+                throw new InvalidOperationException($"Could not find playback data for {playbackName}");
+            //Positioning the playback if desired
+            playbackOffset = new Vector2(data.Float("playbackOffsetX", 0f), data.Float("playbackOffsetY", 0f));
+            playback = new PlayerPlayback(Position + playbackOffset, PlayerSpriteMode.Playback, playbackData);
+            //Trimming the playback if desired
+            float playbackStartTrim = data.Float("playbackStartTrim");
+            float playbackEndTrim = data.Float("playbackEndTrim");
+            if (playbackEndTrim < playback.TrimEnd && playbackStartTrim < playbackEndTrim && playbackEndTrim > 0) {
+                playback.TrimEnd = playbackEndTrim;
+            }
+
+            if (playbackStartTrim < playback.TrimEnd && playbackStartTrim > 0) {
+                playback.TrimStart = playbackStartTrim;
+                playback.Restart();
+            }
+            playback.startDelay = 0f;
+            playback.Active = false;
+            playback.Visible = false;
+            
+            
+        }
 
         Depth = Depths.Top;
     }
 
+    public override void Added(Scene scene) {
+        base.Added(scene);
+        if (playback is not null) {
+            scene.Add(playback);
+        };
+    }
     public override void Awake(Scene scene) {
         base.Awake(scene);
 
@@ -65,12 +103,15 @@ public class SpeedRingChallenge : Entity {
 
     public override void Update() {
         base.Update();
+        StopPlaybackIfAboutToLoop();
         Active = Visible = !Finished;
         if (!Finished && CollideCheck<Player>()) {
             if (!started) {
                 StartChapterTimer = SceneAs<Level>().Session.Time;
                 Scene.Add(timer = new SpeedRingTimerDisplay(this));
                 started = true;
+                //This is where the playback should start
+                StartPlayback();
                 initialRespawn = SceneAs<Level>().Session.RespawnPoint.GetValueOrDefault();
                 disabledChallenges = Scene.Tracker.SafeGetEntities<SpeedRingChallenge>().Cast<SpeedRingChallenge>().ToList();
                 disabledChallenges.Remove(this);
@@ -93,6 +134,7 @@ public class SpeedRingChallenge : Entity {
                     FinalTimeSpent = TimeSpent;
                     Finished = true;
                     Visible = false;
+                    StopPlayback();
 
                     FrostModule.SaveData.SetChallengeTime(SceneAs<Level>().Session.Area.SID, ChallengeNameID, FinalTimeSpent);
 
@@ -122,7 +164,23 @@ public class SpeedRingChallenge : Entity {
         }
     }
 
+    private void StartPlayback() {
+        if (playback is null) return;
+        playback.Active = true;
+        playback.Restart();
+    }
+    private void StopPlayback() {
+        if (playback is null) return;
+        if (playback.Visible)
+            Audio.Play("event:/new_content/char/tutorial_ghost/disappear", playback.Position);
+        playback.Active = playback.Visible = false;
+    }
 
+    private void StopPlaybackIfAboutToLoop() {
+        if (playback is null || !playback.Active || playback.Visible) return;
+        StopPlayback();
+    } 
+    
     public override void Render() {
         base.Render();
         if (!(Scene as Level)!.Paused) {
