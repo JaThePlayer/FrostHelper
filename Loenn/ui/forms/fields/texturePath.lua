@@ -105,15 +105,18 @@ local function findSprites(options, scan)
     end
 
     if scan then
-        local dir = "Graphics/Atlases/Gameplay/" .. baseFolder
-        local filenames = allSpritesByBaseDir[dir] or findModFiletype(dir, "png")
+        local atlas = (options.atlas or "Graphics/Atlases/Gameplay/")
+        local targetExt = (options.extension or "png")
+        local dir = atlas .. baseFolder
+        local filenames = allSpritesByBaseDir[dir] or findModFiletype(dir, targetExt)
         allSpritesByBaseDir[dir] = filenames
 
         for i, name in ipairs(filenames) do
             local idx = name:find("/")
             local nameNoExt, ext = utils.splitExtension(name:sub(idx + 1))
-            if ext == "png" then
-                local entry = createEntry(options, language, displayNameLangDir, string.sub(nameNoExt, #"Graphics/Atlases/Gameplay/" + 1), added, pattern, captureConverter, displayConverter, baseFolder)
+            print(i, name, idx, nameNoExt, ext)
+            if ext == targetExt then
+                local entry = createEntry(options, language, displayNameLangDir, string.sub(nameNoExt, #atlas + 1), added, pattern, captureConverter, displayConverter, baseFolder)
                 if entry then
                     table.insert(res, entry)
                 end

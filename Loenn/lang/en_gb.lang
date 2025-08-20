@@ -466,6 +466,9 @@ entities.FrostHelper/SpeedRingChallenge.attributes.description.playbackOffsetX=M
 entities.FrostHelper/SpeedRingChallenge.attributes.description.playbackOffsetY=Moves the starting point of the playback racer
 entities.FrostHelper/SpeedRingChallenge.attributes.description.playbackStartTrim=Sets how far into the playback it starts. May require changing the offset. 
 entities.FrostHelper/SpeedRingChallenge.attributes.description.playbackEndTrim=Sets how long the playback will play for. Does nothing if set to 0.
+entities.FrostHelper/SpeedRingChallenge.attributes.description.spawnBerry=Whether the final node of the challenge should instead specify the location of a berry that should be awarded to the player after winning the challenge.
+entities.FrostHelper/SpeedRingChallenge.attributes.description.flagOnWin=Flag to set when the player wins the challenge.
+entities.FrostHelper/SpeedRingChallenge.attributes.description.recordPlayback=ONLY ENABLE WHEN MAPPING\nAutomatically records a playback when attempting the challenge,\nand saves it to the path provided by 'Playback Name' upon winning.
 
 entities.FrostHelper/RainbowTilesetController.placements.name.normal=Rainbow Tileset Controller
 entities.FrostHelper/RainbowTilesetController.attributes.description.bg=Whether this controller should affect BG tiles instead of FG tiles

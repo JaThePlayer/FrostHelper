@@ -465,6 +465,41 @@ jautils.fieldTypeOverrides = {
                 }
             }
         }
+    end,
+    ["playback"] = function (data)
+        local fallback = {
+            "combo",
+            "superwalljump",
+            "too_close",
+            "too_far",
+            "wavedash",
+            "wavedashppt"
+        }
+
+        if not compat.inSnowberry then
+            return {
+                fieldType = "FrostHelper.texturePath",
+                atlas = "Tutorials",
+                extension = "bin",
+                baseFolder = "",
+                pattern = "/(.*)",
+                filter = function(dir) return true end,
+                captureConverter = function(dir)
+                    return dir
+                end,
+                displayConverter = function(dir)
+                    return utils.humanizeVariableName(string.match(dir, "^.*/(.*)/$") or dir)
+                end,
+                vanillaSprites = fallback,
+                langDir = "",
+                fallback = fallback
+            }
+        end
+
+        return {
+            options = fallback,
+            editable = true,
+        }
     end
 }
 

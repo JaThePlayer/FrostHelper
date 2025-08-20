@@ -26,7 +26,7 @@ public static class NotificationHelper {
 
 
     public class NotificationController : Entity {
-        public static List<Notification> Notifications = new();
+        public List<Notification> Notifications = new();
         
         public void Push(Notification notification) {
             notification.Time = DateTime.Now;

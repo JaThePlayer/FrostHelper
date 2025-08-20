@@ -1,25 +1,23 @@
 local utils = require("utils")
+---@module "jautils"
 local jautils = require("mods").requireFromPlugin("libraries.jautils")
 
 local speedRingChallenge = {}
 speedRingChallenge.name = "FrostHelper/SpeedRingChallenge"
 speedRingChallenge.nodeLineRenderType = "line"
-speedRingChallenge.fieldOrder = {"x", "y", "width", "height", "timeLimit", "name", "playbackName", "playbackOffsetX", "playbackOffsetY", "playbackStartTrim", "playbackEndTrim"}
-speedRingChallenge.placements =
-{
-    name = "normal",
-    data = {
-        width = 16,
-        height = 16,
-        timeLimit = 1.0,
-        name = "fh_test",
-        playbackName = "",
-        playbackOffsetX = 0.0,
-        playbackOffsetY = 0.0,
-        playbackStartTrim = 0.0,
-        playbackEndTrim = 0.0,
-    }
-}
+
+jautils.createPlacementsPreserveOrder(speedRingChallenge, "normal", {
+    { "timeLimit", 1 },
+    { "name", "fh_test" },
+    { "flagOnWin", "" },
+    { "playbackName", "", "playback" },
+    { "playbackOffsetX", 0.0 },
+    { "playbackOffsetY", 0.0 },
+    { "playbackStartTrim", 0.0 },
+    { "playbackEndTrim", 0.0 },
+    { "recordPlayback", false },
+    { "spawnBerry", true },
+}, true)
 
 local ellipseColor = { 1, 1, 1, 1 }
 
