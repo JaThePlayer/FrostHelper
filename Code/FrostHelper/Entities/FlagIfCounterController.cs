@@ -16,6 +16,8 @@ internal sealed class FlagIfCounterController : Entity {
             data.Attr("counter"),
             data.Attr("target"),
             data.Enum("operation", SessionCounterComparer.CounterOperation.Equal));
+
+        Tag |= Tags.PauseUpdate;
     }
 
     public override void Update() {

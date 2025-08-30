@@ -19,7 +19,9 @@ internal static class BackdropHelper {
     }
     #endregion
 
-    internal sealed class OrigPositionData {
+    internal sealed class OrigPositionData : IAttachable {
+        public static string DynamicDataName => "fh.OrigPositionData";
+        
         public Vector2? Pos;
     }
 
@@ -30,7 +32,7 @@ internal static class BackdropHelper {
 
         static void ResetPos(BackdropRenderer renderer) {
             foreach (var item in renderer.Backdrops) {
-                if (item.GetOrCreateAttached<OrigPositionData>().Pos is { } origPos) {
+                if (item.GetOrCreateDynamicDataAttached<OrigPositionData>().Pos is { } origPos) {
                     item.Position = origPos;
                 }
             }

@@ -39,7 +39,7 @@ internal static class CustomBackdropBlendModeHelper {
     }
 
     private static BlendState ChangeBlendState(Backdrop backdrop, BlendState prevBlend) {
-        if (backdrop.TryGetAttached<BlendModeAttachedData>() is { } data && data.State != prevBlend) {
+        if (backdrop.GetDynamicDataAttached<BlendModeAttachedData>() is { } data && data.State != prevBlend) {
             var renderer = backdrop.Renderer;
 
             renderer.EndSpritebatch();
@@ -62,7 +62,9 @@ internal static class CustomBackdropBlendModeHelper {
     }
     #endregion
 
-    internal class BlendModeAttachedData {
+    internal class BlendModeAttachedData : IAttachable {
+        public static string DynamicDataName => "fh.blendMode";
+        
         public BlendState State;
 
         public BlendModeAttachedData(BlendState state) {
@@ -76,14 +78,14 @@ internal static class CustomBackdropBlendModeHelper {
         if (backdrop is Parallax parallax) {
             parallax.BlendState = state;
         } else {
-            backdrop.SetAttached(new BlendModeAttachedData(state));
+            backdrop.SetDynamicDataAttached(new BlendModeAttachedData(state));
         }
     }
 
     public static BlendState? GetBlendMode(Backdrop backdrop) {
         if (backdrop is Parallax parallax) {
             return parallax.BlendState;
-        } else if (backdrop.TryGetAttached<BlendModeAttachedData>() is { State: var state }) {
+        } else if (backdrop.GetDynamicDataAttached<BlendModeAttachedData>() is { State: var state }) {
             return state;
         }
 

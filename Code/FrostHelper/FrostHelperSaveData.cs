@@ -6,31 +6,32 @@ public class FrostHelperSaveData : EverestModuleSaveData {
     /// </summary>
     public Dictionary<string, long> ChallengeTimes = new Dictionary<string, long>();
 
-    public long GetChallengeTime(string challengeNameWithSID) {
-        if (ChallengeTimes.ContainsKey(challengeNameWithSID)) {
-            return ChallengeTimes[challengeNameWithSID];
-        } else {
-            return -1;
-        }
+    private static string GetChallengeId(string sid, string name) => sid + '>' + name;
+    
+    public long GetChallengeTime(string challengeNameWithSid) {
+        return ChallengeTimes.GetValueOrDefault(challengeNameWithSid, -1);
+    }
+    
+    public long GetChallengeTime(string sid, string challengeName) {
+        return ChallengeTimes.GetValueOrDefault(GetChallengeId(sid, challengeName), -1);
     }
 
-    public void SetChallengeTime(string SID, string challengeName, long ticks) {
-        if (ChallengeTimes == null)
-            ChallengeTimes = new Dictionary<string, long>();
-        string name = SID + '>' + challengeName;
-        if (ChallengeTimes.ContainsKey(name)) {
+    public void SetChallengeTime(string sid, string challengeName, long ticks) {
+        ChallengeTimes ??= new();
+        
+        string name = GetChallengeId(sid, challengeName);
+        if (!ChallengeTimes.TryAdd(name, ticks)) {
             if (ticks < ChallengeTimes[name]) {
                 ChallengeTimes[name] = ticks;
                 FrostModule.Instance.WriteSaveData(Index, FrostModule.Instance.SerializeSaveData(Index));
             }
         } else {
-            ChallengeTimes.Add(name, ticks);
             FrostModule.Instance.WriteSaveData(Index, FrostModule.Instance.SerializeSaveData(Index));
         }
     }
 
-    public bool IsChallengeBeaten(string SID, string challengeName, long timeLimit) {
-        string name = SID + '>' + challengeName;
+    public bool IsChallengeBeaten(string sid, string challengeName, long timeLimit) {
+        string name = GetChallengeId(sid, challengeName);
         if (ChallengeTimes == null) {
             ChallengeTimes = new Dictionary<string, long>();
             return false;

@@ -15,6 +15,8 @@ public class FrostHelperSession : EverestModuleSession {
     
     public float? NextDashSpeed { get; set; }
     public float? NextSuperJumpSpeed { get; set; }
+    
+    public float NoClimbTimer { get; set; }
 
     /// <summary>
     /// Used by some Frost Helper entities to make an entity remove itself immediately, but while allowing it to do other stuff

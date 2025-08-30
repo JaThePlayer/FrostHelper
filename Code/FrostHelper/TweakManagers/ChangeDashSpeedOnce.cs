@@ -1,4 +1,4 @@
-﻿namespace FrostHelper;
+﻿namespace FrostHelper.TweakManagers;
 
 internal static class ChangeDashSpeedOnce {
     public static float? NextDashSpeed {

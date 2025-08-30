@@ -469,6 +469,26 @@ entities.FrostHelper/SpeedRingChallenge.attributes.description.playbackEndTrim=S
 entities.FrostHelper/SpeedRingChallenge.attributes.description.spawnBerry=Whether the final node of the challenge should instead specify the location of a berry that should be awarded to the player after winning the challenge.
 entities.FrostHelper/SpeedRingChallenge.attributes.description.flagOnWin=Flag to set when the player wins the challenge.
 entities.FrostHelper/SpeedRingChallenge.attributes.description.recordPlayback=ONLY ENABLE WHEN MAPPING\nAutomatically records a playback when attempting the challenge,\nand saves it to the path provided by 'Playback Name' upon winning.
+entities.FrostHelper/SpeedRingChallenge.attributes.description.colorUnbeaten=Color to use if the challenge hasn't been beaten on this savefile yet.
+entities.FrostHelper/SpeedRingChallenge.attributes.description.colorBeaten=Color to use if the challenge has been beaten already on this savefile.
+entities.FrostHelper/SpeedRingChallenge.attributes.description.progressCounter=Session Counter that gets updated according to the player's progress in this challenge.\n-1 means the challenge hasn't started.\n0 means the challenge has started,\nthen the counter gets incremented by 1 each time the player touches a ring.
+
+entities.FrostHelper/SpeedRingChallenge3d.placements.name.normal=Speed Ring Challenge (3D Rendering)
+entities.FrostHelper/SpeedRingChallenge3d.placements.description.normal=Uses Communal Helper to render 3d rings.\nEach ring is made up of 2 consecutive nodes.\nFinal node is used to search for a berry to spawn in as a reward.
+entities.FrostHelper/SpeedRingChallenge3d.attributes.description.timeLimit=How much time (in seconds) the player has to complete the challenge
+entities.FrostHelper/SpeedRingChallenge3d.attributes.description.name=The name of this challenge. Used for saving times
+entities.FrostHelper/SpeedRingChallenge3d.attributes.description.playbackName=Insert the name of a playback file to create a ghost playback that races the player.
+entities.FrostHelper/SpeedRingChallenge3d.attributes.description.playbackOffsetX=Moves the starting point of the playback racer
+entities.FrostHelper/SpeedRingChallenge3d.attributes.description.playbackOffsetY=Moves the starting point of the playback racer
+entities.FrostHelper/SpeedRingChallenge3d.attributes.description.playbackStartTrim=Sets how far into the playback it starts. May require changing the offset. 
+entities.FrostHelper/SpeedRingChallenge3d.attributes.description.playbackEndTrim=Sets how long the playback will play for. Does nothing if set to 0.
+entities.FrostHelper/SpeedRingChallenge3d.attributes.description.spawnBerry=Whether the final node of the challenge should instead specify the location of a berry that should be awarded to the player after winning the challenge.
+entities.FrostHelper/SpeedRingChallenge3d.attributes.description.flagOnWin=Flag to set when the player wins the challenge.
+entities.FrostHelper/SpeedRingChallenge3d.attributes.description.recordPlayback=ONLY ENABLE WHEN MAPPING\nAutomatically records a playback when attempting the challenge,\nand saves it to the path provided by 'Playback Name' upon winning.
+entities.FrostHelper/SpeedRingChallenge3d.attributes.description.colorUnbeaten=Color to use if the challenge hasn't been beaten on this savefile yet.
+entities.FrostHelper/SpeedRingChallenge3d.attributes.description.colorBeaten=Color to use if the challenge has been beaten already on this savefile.
+entities.FrostHelper/SpeedRingChallenge3d.attributes.description.progressCounter=Session Counter that gets updated according to the player's progress in this challenge.\n-1 means the challenge hasn't started.\n0 means the challenge has started,\nthen the counter gets incremented by 1 each time the player touches a ring.
+
 
 entities.FrostHelper/RainbowTilesetController.placements.name.normal=Rainbow Tileset Controller
 entities.FrostHelper/RainbowTilesetController.attributes.description.bg=Whether this controller should affect BG tiles instead of FG tiles
@@ -1054,6 +1074,11 @@ triggers.FrostHelper/TimerChange.attributes.description.timerId=The Timer ID of 
 triggers.FrostHelper/TimerChange.attributes.description.timeChange=The amount of time (in seconds) to add/set.\nSession expressions are supported, refer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Session-Expressions
 triggers.FrostHelper/TimerChange.attributes.description.operation=Determines which operation should be used.\nAdd - increases the timer by Time Change.\nSet - sets the timer to Time Change.
 triggers.FrostHelper/TimerChange.attributes.description.oneUse=Whether the trigger should be one-use.
+
+triggers.FrostHelper/TimerReset.placements.name.default=Timer Reset
+triggers.FrostHelper/TimerReset.placements.description.default=Resets a timer started by the Timer trigger, allowing it to be started again.
+triggers.FrostHelper/TimerReset.attributes.description.timerId=The Timer ID of the timer that should be changed by this trigger.
+triggers.FrostHelper/TimerReset.attributes.description.oneUse=Whether the trigger should be one-use.
 
 triggers.FrostHelper/LightingBaseColorTrigger.placements.name.default=Darkness Base Color
 triggers.FrostHelper/LightingBaseColorTrigger.attributes.description.color=The new color to use.

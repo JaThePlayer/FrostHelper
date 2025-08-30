@@ -1,4 +1,6 @@
-﻿namespace FrostHelper.Entities;
+﻿using FrostHelper.Helpers;
+
+namespace FrostHelper.Entities;
 
 public class LavaShape : Component {
     public int SurfaceStep { get; private set; }
@@ -212,25 +214,31 @@ public class LavaShape : Component {
     private void Edge(ref int vert, Vector2 a, Vector2 b, float fade, float insetFade, bool continueFromPrevious, bool createAfter) {
         float length = (a - b).Length();
         float num2 = (OnlyMode == OnlyModes.None) ? (insetFade / length) : 0f;
-        float num3 = length / SurfaceStep;
+        float maxSteps = length / SurfaceStep;
+        var dir = (b - a).SafeNormalize();
         Vector2 perpendicular = (b - a).SafeNormalize().Perpendicular();
         int i = 1;
-        while (i <= num3) {
-            Vector2 value = Vector2.Lerp(a, b, (i - 1) / num3);
-            float num5 = Wave(i - 1, length);
-            Vector2 outer = value - perpendicular * num5;
-            Vector2 value2 = Vector2.Lerp(a, b, i / num3);
-            float num6 = Wave(i, length);
-            Vector2 inner = value2 - perpendicular * num6;
-            Vector2 value3 = Vector2.Lerp(a, b, Calc.ClampedMap((i - 1) / num3, 0f, 1f, num2, 1f - num2));
-            Vector2 value4 = Vector2.Lerp(a, b, Calc.ClampedMap(i / num3, 0f, 1f, num2, 1f - num2));
+        while (i <= maxSteps) {
+            Vector2 prevPos = Vector2.Lerp(a, b, (i - 1) / maxSteps);
+            Vector2 pos = Vector2.Lerp(a, b, i / maxSteps);
+            
+            float wave = Wave(i, length);
+            float prevWave = Wave(i - 1, length);
+            
+            Vector2 inner = pos - perpendicular * wave;
+            Vector2 outer = prevPos - perpendicular * prevWave;
+            
+            Vector2 value3 = Vector2.Lerp(a, b, Calc.ClampedMap((i - 1) / maxSteps, 0f, 1f, num2, 1f - num2));
+            Vector2 value4 = Vector2.Lerp(a, b, Calc.ClampedMap(i / maxSteps, 0f, 1f, num2, 1f - num2));
+            
             if (continueFromPrevious && i == 1) {
                 // finish the first tri
-                Vector2 loc = value3 + perpendicular * (fade - num5);
+                Vector2 loc = value3 + perpendicular * (fade - prevWave);
                 verts[vert].Position.X = loc.X;
                 verts[vert].Position.Y = loc.Y;
                 verts[vert].Color = CenterColor;
                 vert++;
+                
                 // make the 2nd one
                 verts[vert].Position.X = outer.X + perpendicular.X;
                 verts[vert].Position.Y = outer.Y + perpendicular.Y;
@@ -250,13 +258,13 @@ public class LavaShape : Component {
             // gradient
             Quad(ref vert, outer + perpendicular, EdgeColor,
                            inner + perpendicular, EdgeColor,
-                           value4 + perpendicular * (fade - num6), CenterColor,
-                           value3 + perpendicular * (fade - num5), CenterColor);
+                           value4 + perpendicular * (fade - wave), CenterColor,
+                           value3 + perpendicular * (fade - prevWave), CenterColor);
 
             // background
 
-            Quad(ref vert, value3 + perpendicular * (fade - num5),
-                           value4 + perpendicular * (fade - num6),
+            Quad(ref vert, value3 + perpendicular * (fade - prevWave),
+                           value4 + perpendicular * (fade - wave),
                            value4 + perpendicular * fade,
                            value3 + perpendicular * fade, CenterColor);
 
@@ -267,13 +275,13 @@ public class LavaShape : Component {
                            outer + perpendicular * 1f, SurfaceColor);
 
             i++;
-            if (i > num3 && createAfter) {
+            if (i > maxSteps && createAfter) {
                 verts[vert].Position.X = inner.X + perpendicular.X;
                 verts[vert].Position.Y = inner.Y + perpendicular.Y;
                 verts[vert].Color = EdgeColor;
                 vert++;
 
-                Vector2 loc = value4 + perpendicular * (fade - num6);
+                Vector2 loc = value4 + perpendicular * (fade - wave);
                 verts[vert].Position.X = loc.X;
                 verts[vert].Position.Y = loc.Y;
                 verts[vert].Color = CenterColor;
@@ -302,12 +310,13 @@ public class LavaShape : Component {
         Camera camera = (Scene as Level)!.Camera;
         
         var buffer = RenderTargetHelper.RentFullScreenBuffer();
-        var targets = Draw.SpriteBatch.GraphicsDevice.GetRenderTargets();
-        Draw.SpriteBatch.GraphicsDevice.SetRenderTarget(buffer);
-        Draw.SpriteBatch.GraphicsDevice.Clear(Color.Transparent);
+        var gd = Draw.SpriteBatch.GraphicsDevice;
+        var targets = gd.StoreRenderTargets();
+        gd.SetRenderTarget(buffer);
+        gd.Clear(Color.Transparent);
         
         GFX.DrawVertices(Matrix.CreateTranslation(new Vector3(Position, 0f)) * camera.Matrix, verts, vertCount, null, BlendState.Opaque);
-        Draw.SpriteBatch.GraphicsDevice.SetRenderTargets(targets);
+        targets.Restore();
         GameplayRenderer.Begin();
         Draw.SpriteBatch.Draw(buffer, camera.position, Color.White);
         RenderTargetHelper.ReturnFullScreenBuffer(buffer);

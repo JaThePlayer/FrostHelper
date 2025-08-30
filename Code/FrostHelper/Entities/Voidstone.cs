@@ -5,7 +5,7 @@ namespace FrostHelper;
 [CustomEntity("FrostHelper/Voidstone")]
 [Tracked]
 public class Voidstone : Solid {
-    public static ParticleType BoostParticle => _boostParticle is null ? (_boostParticle = new ParticleType() {
+    public static ParticleType BoostParticle => _boostParticle ??= new ParticleType {
         Source = GFX.Game["particles/shard"],
         Color = FillColor,
         Color2 = FillColor * 0.7f,
@@ -20,8 +20,8 @@ public class Voidstone : Solid {
         LifeMin = 0.4f,
         LifeMax = 0.6f,
         DirectionRange = 6.28318548f
-    }) : _boostParticle;
-    private static ParticleType _boostParticle;
+    };
+    private static ParticleType? _boostParticle;
 
     private static bool _loadedHooks;
 

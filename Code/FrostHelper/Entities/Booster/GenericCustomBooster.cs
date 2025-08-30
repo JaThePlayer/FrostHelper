@@ -1,11 +1,14 @@
 ﻿using Celeste.Mod.Meta;
 using FrostHelper.Helpers;
 using FrostHelper.ModIntegration;
+using FrostHelper.TweakManagers;
 using System.Diagnostics;
 
 namespace FrostHelper.Entities.Boosters {
     [Tracked(true)]
-    public class GenericCustomBooster : Entity {
+    public class GenericCustomBooster : Entity, IAttachable {
+        public static string DynamicDataName => "fh.booster";
+        
         #region Hooks
         private static bool _hooksLoaded;
 
@@ -68,9 +71,8 @@ namespace FrostHelper.Entities.Boosters {
 
         private static bool ShouldCallDashEvents(Player self) {
             if (GetBoosterThatIsBoostingPlayer(self) is { BoostingPlayer: true }) {
-                FrostModule.player_calledDashEvents.SetValue(self, false);
-
-                self.SetAttached<GenericCustomBooster>(null!);
+                self.calledDashEvents = false;
+                self.SetDynamicDataAttached<GenericCustomBooster>(null);
                 return false;
             }
 
@@ -487,21 +489,20 @@ namespace FrostHelper.Entities.Boosters {
         public static int CustomRedBoostState = int.MaxValue;
         public static void RedDashBegin(Entity e) {
             Player player = (e as Player)!;
-            DynData<Player> data = new DynData<Player>(player);
-            data["calledDashEvents"] = false;
-            data["dashStartedOnGround"] = false;
+            player.calledDashEvents = false;
+            player.dashStartedOnGround = false;
             Celeste.Celeste.Freeze(0.05f);
             Dust.Burst(player.Position, (-player.DashDir).Angle(), 8, null);
-            data["dashCooldownTimer"] = 0.2f;
-            data["dashRefillCooldownTimer"] = 0.1f;
-            data["StartedDashing"] = true;
+            player.dashCooldownTimer = 0.2f;
+            player.dashRefillCooldownTimer = 0.1f;
+            player.StartedDashing = true;
             (player.Scene as Level)!.Displacement.AddBurst(player.Center, 0.5f, 0f, 80f, 0.666f, Ease.QuadOut, Ease.QuadOut);
             Input.Rumble(RumbleStrength.Strong, RumbleLength.Medium);
-            data["dashAttackTimer"] = 0.3f;
-            data["gliderBoostTimer"] = 0.55f;
+            player.dashAttackTimer = 0.3f;
+            player.gliderBoostTimer = 0.55f;
             player.DashDir = Vector2.Zero;
             player.Speed = Vector2.Zero;
-            if (!data.Get<bool>("onGround") && player.Ducking && player.CanUnDuck) {
+            if (player is { onGround: false, Ducking: true, CanUnDuck: true }) {
                 player.Ducking = false;
             }
 
@@ -680,7 +681,7 @@ namespace FrostHelper.Entities.Boosters {
         }
 
         public static GenericCustomBooster? GetBoosterThatIsBoostingPlayer(Player e) {
-            return e.TryGetAttached<GenericCustomBooster>();
+            return e.GetDynamicDataAttached<GenericCustomBooster>();
         }
 
         #endregion

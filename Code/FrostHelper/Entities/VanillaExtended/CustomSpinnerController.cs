@@ -34,13 +34,12 @@ public class CustomSpinnerController : Entity {
     /// <summary>
     /// Level name this controller comes from, used to avoid using the controller in new rooms on room transition.
     /// </summary>
-    internal readonly string? Level;
+    internal readonly string? Level = FrostModule.TryGetCurrentLevel()?.Session.Level;
 
     public CustomSpinnerController() {
-        Level = FrostModule.TryGetCurrentLevel()?.Session.Level;
     }
 
-    public CustomSpinnerController(EntityData data, Vector2 offset) : base() {
+    public CustomSpinnerController(EntityData data, Vector2 offset) {
         NoCycles = !data.Bool("cycles", true);
 
         OutlineShader = ShaderHelperIntegration.TryGetEffect(data.Attr("outlineShader", ""));

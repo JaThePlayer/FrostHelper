@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using FrostHelper.ModIntegration;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace FrostHelper.Helpers;
@@ -6,7 +7,7 @@ namespace FrostHelper.Helpers;
 /// <summary>
 /// Helper class which allows for checking entity types against a mapper-defined list of entity types
 /// </summary>
-internal class EntityFilter(HashSet<Type> types, bool isBlacklist, HashSet<int> ids) {
+internal class EntityFilter(HashSet<Type> types, bool isBlacklist, HashSet<int> ids) : ISavestatePersisted {
     private static readonly Type[] DefaultBlacklistTypes = [
         typeof(Player),
         typeof(SolidTiles),

@@ -1,11 +1,12 @@
+---@module "jautils"
+local jautils = require("mods").requireFromPlugin("libraries.jautils")
+
 local journalTrigger = {}
 journalTrigger.name = "FrostHelper/SpeedChallengeJournal"
-journalTrigger.placements = {
-    name = "normal",
-    data = {
-        challengeNames = "sc2020_beg_rainbowBerryRush",
-        autoAddSid = true,
-    }
-}
+
+jautils.createPlacementsPreserveOrder(journalTrigger, "normal", {
+    { "challengeNames", "fh_test", "list" },
+    { "autoAddSid",  true },
+})
 
 return journalTrigger

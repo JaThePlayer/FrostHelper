@@ -564,7 +564,7 @@ public sealed class CustomZipMover : Solid {
             var cam = FrostModule.GetCurrentLevel().Camera.Position;
             
             GameplayRenderer.End();
-            var prevTargets = gd.GetRenderTargets();
+            var prevTargets = gd.StoreRenderTargets();
             gd.SetRenderTarget(target);
             gd.Clear(Color.Transparent);
             GameplayRenderer.Begin();
@@ -595,7 +595,7 @@ public sealed class CustomZipMover : Solid {
             Draw.Pixel = oldPixel;
             
             GameplayRenderer.End();
-            gd.SetRenderTargets(prevTargets);
+            prevTargets.Restore();
             
             GameplayRenderer.Begin();
             // create a shadow. This works because its hardcoded to use Color.Black

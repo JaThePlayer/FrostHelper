@@ -63,7 +63,7 @@ public class CustomSpinner : Entity {
     }
     #endregion
 
-    internal sealed class SpinnerFills {
+    internal sealed class SpinnerFills : ISavestatePersisted {
         public List<Fill> Fills { get; } = [];
 
         public record struct Fill(MTexture Texture, float AnimOffset, Color Color, Vector2 Position, float Rotation) {
@@ -89,7 +89,16 @@ public class CustomSpinner : Entity {
         public Span<Fill> FillsSpan => CollectionsMarshal.AsSpan(Fills);
     }
 
-    internal CustomSpinnerSpriteSource SpriteSource;
+    private CustomSpinnerSpriteSource _spriteSource;
+    private NumVector2 _scaledCullingDist;
+    
+    internal CustomSpinnerSpriteSource SpriteSource {
+        get => _spriteSource;
+        set {
+            _spriteSource = value;
+            _scaledCullingDist = value.CullingDistance * ImageScale;
+        }
+    }
     
     // accessed by TAS-Helper via reflection
     internal CustomSpinnerController controller;
@@ -526,15 +535,15 @@ public class CustomSpinner : Entity {
         var diff = Unsafe.As<Vector2, NumVector2>(ref Position);
         diff -= Unsafe.As<Vector2, NumVector2>(ref camera.position);
         
-        var cullingDistance = SpriteSource.CullingDistance * ImageScale;
+        var cullingDistance = _scaledCullingDist;
         diff += cullingDistance;
-        if (diff.X <= 0f || diff.Y <= 0f)
+        if (diff.X <= 0f | diff.Y <= 0f)
             return false;
-        diff -= new NumVector2(int.Max(camera.Viewport.Width, 320), int.Max(camera.Viewport.Height, 180));
+        diff -= new NumVector2(camera.Viewport.Width, camera.Viewport.Height);
         diff -= cullingDistance;
         diff -= cullingDistance;
         
-        return diff.X < 0f && diff.Y < 0f;
+        return diff.X < 0f & diff.Y < 0f;
     }
 
     internal static T? GetRendererFromTracker<T>(Scene scene, int depth) where T : Entity, ISpinnerRenderer<T> {

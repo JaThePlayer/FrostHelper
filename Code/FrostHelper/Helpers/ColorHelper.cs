@@ -92,12 +92,12 @@ public static class ColorHelper {
     // Based on Communal Helper:
 
     // Used to maintain compatibility with Maddie's Helping Hand RainbowSpinnerColorController
-    private static CrystalStaticSpinner? crystalSpinner;
+    private static CrystalStaticSpinner? _crystalSpinner;
 
     public static void SetGetHueScene(Scene scene) {
-        crystalSpinner ??= new CrystalStaticSpinner(Vector2.Zero, false, CrystalColor.Rainbow);
+        _crystalSpinner ??= new CrystalStaticSpinner(Vector2.Zero, false, CrystalColor.Rainbow);
 
-        crystalSpinner.Scene = scene;
+        _crystalSpinner.Scene = scene;
     }
 
     /// <summary>
@@ -106,14 +106,14 @@ public static class ColorHelper {
     /// <param name="position"></param>
     /// <returns></returns>
     public static Color GetHue(Vector2 position) {
-        return crystalSpinner!.GetHue(position);
+        return _crystalSpinner!.GetHue(position);
     }
 
     public static Color GetHue(Scene scene, Vector2 position) {
-        crystalSpinner ??= new CrystalStaticSpinner(Vector2.Zero, false, CrystalColor.Rainbow);
-        crystalSpinner.Scene = scene;
+        _crystalSpinner ??= new CrystalStaticSpinner(Vector2.Zero, false, CrystalColor.Rainbow);
+        _crystalSpinner.Scene = scene;
 
-        return crystalSpinner.GetHue(position);
+        return _crystalSpinner.GetHue(position);
     }
 }
 

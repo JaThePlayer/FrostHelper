@@ -3,25 +3,20 @@ using System.IO;
 
 namespace FrostHelper;
 
-[CustomEntity("FrostHelper/SpeedRingChallenge")]
-[Tracked]
-internal sealed class SpeedRingChallenge : Entity {
+[Tracked(Inherited = true)]
+internal abstract class SpeedRingChallenge : Entity {
     private SpeedRingTimerDisplay _timer;
     private readonly EntityID _id;
     public readonly string ChallengeNameId;
-    private readonly Vector2[] _nodes;
-    private int _currentNodeId = -1;
+
+    protected int CurrentNodeId = -1;
     public readonly long TimeLimit;
     private long _startChapterTimer = 0;
     private long _finalTimeSpent = -1;
     private bool _started;
     private bool _finished;
-    private Strawberry? _berryToSpawn;
-    private float _lerp;
-    private readonly float _width;
-    private readonly float _height;
-    private readonly bool _spawnBerry;
-    private Color _ringColor;
+    private Entity? _berryToSpawn;
+    protected readonly bool SpawnBerry;
     private readonly List<MTexture> _arrowTextures;
     private readonly PlayerPlayback? _playback;
     private Vector2 _initialRespawn;
@@ -33,23 +28,27 @@ internal sealed class SpeedRingChallenge : Entity {
 
     private readonly string _flagOnWin;
 
+    private readonly Color _colorNotYetBeaten, _colorBeatenBefore;
+
+    private readonly CounterAccessor _progressCounter;
+
     public long TimeSpent => _finished ? _finalTimeSpent : Scene == null ? 0 : SceneAs<Level>().Session.Time - _startChapterTimer;
 
     public SpeedRingChallenge(EntityData data, Vector2 offset, EntityID id) : base(data.Position + offset) {
         _id = id;
-        _nodes = data.NodesOffset(offset);
+
         TimeLimit = TimeSpan.FromSeconds(data.Float("timeLimit", 1f)).Ticks;
         ChallengeNameId = data.Attr("name", "fh_test");
-        _width = data.Width;
-        _height = data.Height;
-        _spawnBerry = data.Bool("spawnBerry", true);
+        SpawnBerry = data.Bool("spawnBerry", true);
         _arrowTextures = GFX.Game.GetAtlasSubtextures("util/dasharrow/dasharrow");
         _playbackPath = data.Attr("playbackName");
         _playback = CreatePlayback(data);
         _recordPlayback = data.Bool("recordPlayback");
         _flagOnWin = data.Attr("flagOnWin");
 
-        Depth = Depths.Top;
+        _colorNotYetBeaten = data.GetColor("colorUnbeaten", "ffd700");
+        _colorBeatenBefore = data.GetColor("colorBeaten", "0000ff");
+        _progressCounter = new CounterAccessor(data.Attr("progressCounter"));
     }
 
     private PlayerPlayback? CreatePlayback(EntityData data)
@@ -83,46 +82,78 @@ internal sealed class SpeedRingChallenge : Entity {
         return playback;
     }
 
+    private void SetProgressCounter(Scene scene, int value) {
+        if (!string.IsNullOrWhiteSpace(_progressCounter.CounterName)) {
+            _progressCounter.Set(scene.ToLevel().Session, value);
+        }
+    }
+    
+    private void IncrementProgressCounter(Scene scene) {
+        if (!string.IsNullOrWhiteSpace(_progressCounter.CounterName)) {
+            var session = scene.ToLevel().Session;
+            _progressCounter.Set(session, _progressCounter.Get(session) + 1);
+        }
+    }
+
     public override void Added(Scene scene) {
         base.Added(scene);
+
+        SetProgressCounter(scene, -1);
         
         if (_playback is not null) {
             scene.Add(_playback);
         }
+
+        scene.Add(new ArrowDisplay(this));
     }
+
+    protected bool IsChallengeBeaten(Scene scene) =>
+        FrostModule.SaveData.IsChallengeBeaten(scene.ToLevel().Session.Area.SID, ChallengeNameId, TimeLimit);
+    
+    protected Color GetRingColor(Scene scene)
+        => IsChallengeBeaten(scene) ? _colorBeatenBefore : _colorNotYetBeaten;
+
+    private Entity? FindStrawberry() {
+        Strawberry? berryToSpawn = null;
+        var rect = GetStrawberrySearchHitbox();
+        foreach (var berry in Scene.Entities.OfType<Strawberry>()) {
+            if (rect.Contains(new Point((int) berry.Position.X, (int) berry.Position.Y))) {
+                berryToSpawn = berry;
+                break;
+            }
+        }
+        if (berryToSpawn == null) {
+            NotificationHelper.Notify($"Didn't find a berry inside of the final node of the Speed Ring: {ChallengeNameId}, but there's {Scene.Entities.OfType<Strawberry>().Count()} berries");
+        } else {
+            berryToSpawn.Active = berryToSpawn.Visible = berryToSpawn.Collidable = false;
+        }
+
+        return berryToSpawn;
+    }
+
+    protected abstract Rectangle GetStrawberrySearchHitbox();
+
+    protected abstract void MoveToNextNode();
 
     public override void Awake(Scene scene) {
         base.Awake(scene);
-
-        var level = scene.ToLevel();
         
-        _ringColor = FrostModule.SaveData.IsChallengeBeaten(level.Session.Area.SID, ChallengeNameId, TimeLimit) ? Color.Blue : Color.Gold;
-
-        var last = _nodes.Last();
-        Collider = new Hitbox(_width, _height, last.X - Position.X, last.Y - Position.Y);
-        if (_spawnBerry) {
-            _berryToSpawn = null;
-            foreach (var berry in Scene.Entities.OfType<Strawberry>()) {
-                if (new Rectangle((int) last.X, (int) last.Y, (int) _width, (int) _height).Contains(new Point((int) berry.Position.X, (int) berry.Position.Y))) {
-                    _berryToSpawn = berry;
-                    break;
-                }
-            }
-            if (_berryToSpawn == null) {
-                NotificationHelper.Notify($"Didn't find a berry inside of the final node of the Speed Ring: {ChallengeNameId}, but there's {Scene.Entities.OfType<Strawberry>().Count()} berries");
-            } else {
-                _berryToSpawn.Active = _berryToSpawn.Visible = _berryToSpawn.Collidable = false;
-            }
+        if (SpawnBerry) {
+            _berryToSpawn = FindStrawberry();
         }
-
-        Collider.Position = Vector2.Zero;
     }
 
+    protected abstract Vector2 NodeCenterPos(int index);
+
+    protected abstract int NodeCount();
+
+    protected abstract bool CheckNodeCollision();
+    
     public override void Update() {
         base.Update();
         StopPlaybackIfAboutToLoop();
         Active = Visible = !_finished;
-        if (!_finished && CollideCheck<Player>()) {
+        if (!_finished && CheckNodeCollision()) {
             if (!_started) {
                 _startChapterTimer = SceneAs<Level>().Session.Time;
                 Scene.Add(_timer = new SpeedRingTimerDisplay(this));
@@ -139,14 +170,16 @@ internal sealed class SpeedRingChallenge : Entity {
                     _chaserStates = [];
             }
 
-            Vector2 particlePos = (_currentNodeId == -1 ? Position : _nodes[_currentNodeId]) + Height / 2 * Vector2.UnitY;
+            Vector2 particlePos = NodeCenterPos(CurrentNodeId) + base.Height / 2 * Vector2.UnitY;
             Scene.Add(new SummitCheckpoint.ConfettiRenderer(particlePos));
             Audio.Play("event:/game/07_summit/checkpoint_confetti", particlePos);
 
-            _currentNodeId++;
+            CurrentNodeId++;
+            
+            IncrementProgressCounter(Scene);
 
-            if (_currentNodeId + (_spawnBerry ? 1 : 0) < _nodes.Length) {
-                Collider.Position = _nodes[_currentNodeId] - Position;
+            if (CurrentNodeId < NodeCount()) {
+                MoveToNextNode();
             } else {
                 // last node
                 if (!_finished) {
@@ -161,13 +194,30 @@ internal sealed class SpeedRingChallenge : Entity {
                         // Finished the time trial in time
                         Scene.OnEndOfFrame += () => {
                             if (_berryToSpawn is { } berry) {
-                                berry.Active = berry.Collidable = true;
-                                berry.Seeds = [
-                                    new StrawberrySeed(berry, Scene.Tracker.GetEntity<Player>().Position, 1,
-                                        SaveData.Instance.CheckStrawberry(berry.ID))
-                                ];
-                                foreach (var item in berry.Seeds) {
-                                    Scene.Add(item);
+                                berry.Active = true;
+
+                                switch (berry)
+                                {
+                                    case IStrawberrySeeded seeded:
+                                    {
+                                        seeded.Seeds.Add(
+                                            new GenericStrawberrySeed(seeded, Scene.Tracker.GetEntity<Player>().Position, 1,
+                                                SaveData.Instance.CheckStrawberry(berry.SourceId))
+                                        );
+                                        foreach (var item in seeded.Seeds)
+                                            Scene.Add(item);
+                                        break;
+                                    }
+                                    case Strawberry strawberry:
+                                    {
+                                        strawberry.Seeds = [
+                                            new StrawberrySeed(strawberry, Scene.Tracker.GetEntity<Player>().Position, 1,
+                                                SaveData.Instance.CheckStrawberry(strawberry.ID))
+                                        ];
+                                        foreach (var item in strawberry.Seeds)
+                                            Scene.Add(item);
+                                        break;
+                                    }
                                 }
                             }
 
@@ -180,6 +230,7 @@ internal sealed class SpeedRingChallenge : Entity {
 
                         if (_recordPlayback && _chaserStates is { }) {
                             var e = new Entity { Active = true };
+                            e.AddTag(Tags.FrozenUpdate);
                             e.Add(new Coroutine(FinishRecordingRoutine()));
                             Scene.Add(e);
                         }
@@ -206,7 +257,7 @@ internal sealed class SpeedRingChallenge : Entity {
         // Wait for 0.5s to record a bit after the finish line:
         float t = 0f;
         while (t <= 0.5f && Scene.Tracker.SafeGetEntity<Player>() is {} player) {
-            t += Engine.DeltaTime;
+            t += 1f / 60f;
             _chaserStates.Add(new(player));
             yield return null;
         }
@@ -274,31 +325,32 @@ internal sealed class SpeedRingChallenge : Entity {
         if (_playback is null || !_playback.Active || _playback.Visible)
             return;
         StopPlayback();
-    } 
+    }
+
+    protected abstract void RenderRing();
+
+    protected abstract Vector2 ArrowPos();
     
     public override void Render() {
+        RenderRing();
+        
         base.Render();
+    }
 
-        if (!Scene.ToLevel().Paused) {
-            _lerp += 3f * Engine.DeltaTime;
-            if (_lerp >= 1f) {
-                _lerp = 0f;
-            }
-        }
-
-        DrawRing(Collider.Center + Position);
-
-        if (!_started)
+    internal void DrawArrow()
+    {
+        if (!_started || _finished)
             return;
-
-        #region Arrow
-
+        
         Player player = Scene.Tracker.GetEntity<Player>();
         if (player == null) {
             return;
         }
 
-        float direction = Calc.Angle(player.Center, Center);
+        var arrowPos = ArrowPos();
+        float direction = Calc.Angle(player.Center, arrowPos);
+        var dist = float.Min(40f, (player.Center - arrowPos).Length());
+        var alpha = Calc.Map(float.Min(120f, (player.Center - arrowPos).Length()), 0, 120f, 0f, 1f);
         const float scale = 1f;
         MTexture? mtexture = null;
         float rotation = float.MaxValue;
@@ -313,28 +365,7 @@ internal sealed class SpeedRingChallenge : Entity {
             if (Math.Abs(rotation) < 0.05f) {
                 rotation = 0f;
             }
-            mtexture.DrawOutlineCentered((player.Center + Calc.AngleToVector(direction, 40f)).Round(), Color.White, Ease.BounceOut(scale), rotation);
-        }
-        #endregion
-    }
-
-
-    private void DrawRing(Vector2 position) {
-        float maxRadiusY = MathHelper.Lerp(4f, Height / 2, _lerp);
-        float maxRadiusX = MathHelper.Lerp(4f, Width, _lerp);
-        Vector2 value = GetVectorAtAngle(0f);
-        for (int i = 1; i <= 8; i++) {
-            float radians = i * 0.3926991f;
-            Vector2 vectorAtAngle = GetVectorAtAngle(radians);
-            Draw.Line(position + value, position + vectorAtAngle, _ringColor);
-            Draw.Line(position - value, position - vectorAtAngle, _ringColor);
-            value = vectorAtAngle;
-        }
-
-        Vector2 GetVectorAtAngle(float radians) {
-            Vector2 vector = Calc.AngleToVector(radians, 1f);
-            Vector2 scaleFactor = new Vector2(MathHelper.Lerp(maxRadiusX, maxRadiusX * 0.5f, Math.Abs(Vector2.Dot(vector, Calc.AngleToVector(0f, 1f)))), MathHelper.Lerp(maxRadiusY, maxRadiusY * 0.5f, Math.Abs(Vector2.Dot(vector, Calc.AngleToVector(0f, 1f)))));
-            return vector * scaleFactor;
+            mtexture.DrawOutlineCentered((player.Center + Calc.AngleToVector(direction, dist)).Round(), Color.White, Ease.BounceOut(scale * alpha), rotation);
         }
     }
 }
@@ -355,6 +386,9 @@ internal sealed class SpeedRingTimerDisplay : Entity {
     private static float _numberWidth;
 
     private long TimeSpent => _trackedChallenge.TimeSpent;
+
+    private string? _pb;
+    private long _pbTime;
     
     public SpeedRingTimerDisplay(SpeedRingChallenge challenge) {
         Tag = Tags.HUD | Tags.PauseUpdate;
@@ -372,10 +406,12 @@ internal sealed class SpeedRingTimerDisplay : Entity {
     }
 
 
-    private void CreateTween(float fadeTime, Action<Tween> onUpdate) {
+    private Tween CreateTween(float fadeTime, Action<Tween> onUpdate) {
         Tween tween = Tween.Create(Tween.TweenMode.Oneshot, Ease.CubeInOut, fadeTime, true);
         tween.OnUpdate = onUpdate;
         Add(tween);
+
+        return tween;
     }
 
     public void FadeOut() {
@@ -419,26 +455,45 @@ internal sealed class SpeedRingTimerDisplay : Entity {
         }
     }
 
+    public override void Awake(Scene scene) {
+        base.Awake(scene);
+
+        _pbTime = FrostModule.SaveData.GetChallengeTime(SceneAs<Level>().Session.Area.SID, _trackedChallenge.ChallengeNameId);
+    }
 
     public override void Render() {
         base.Render();
         if (_fading) {
             _fadeTime -= Engine.DeltaTime;
             if (_fadeTime < 0) {
-                CreateTween(0.6f, (t) => {
+                var t = CreateTween(0.6f, (t) => {
                     Position = Vector2.Lerp(OnscreenPos, OffscreenPos, t.Eased);
                 });
+                t.OnComplete += _ => RemoveSelf();
                 _fading = false;
             }
         }
 
         //if (!(drawLerp <= 0f) && fadeTime > 0f)
         {
-            ActiveFont.DrawOutline(_name, Position - (_nameMeasure.X * Vector2.UnitX / 2 * 0.7f), new Vector2(0f, 1f), Vector2.One * 0.7f, Color.White, 2f, Color.Black);
+            var scale = 0.7f;
+            ActiveFont.DrawOutline(_name, Position - (_nameMeasure.X * Vector2.UnitX / 2 * scale), new Vector2(0f, 1f), Vector2.One * scale, Color.White, 2f, Color.Black);
             string txt = TimeSpan.FromTicks(TimeSpent).ShortGameplayFormat();
-            DrawTime(Position - (GetTimeWidth(txt) * Vector2.UnitX / 2) + _nameMeasure.Y * Vector2.UnitY * 1.2f * 0.7f, txt, TimeSpent > _trackedChallenge.TimeLimit ? Color.Gray : Color.Gold);
+            DrawTime(Position - (GetTimeWidth(txt) * Vector2.UnitX / 2) + _nameMeasure.Y * Vector2.UnitY * 1.2f * scale, txt, TimeSpent > _trackedChallenge.TimeLimit ? Color.Gray : Color.Gold);
             txt = TimeSpan.FromTicks(_trackedChallenge.TimeLimit).ShortGameplayFormat();
-            DrawTime(Position - (GetTimeWidth(txt) * Vector2.UnitX / 2 * 0.7f) + _nameMeasure.Y * Vector2.UnitY * 1.8f * 0.7f, txt, Color.Gold, 0.7f);
+            DrawTime(Position - (GetTimeWidth(txt) * Vector2.UnitX / 2 * scale) + _nameMeasure.Y * Vector2.UnitY * 1.8f * scale, txt, Color.Gold, scale);
+
+            if (_pbTime > 0) {
+                scale = 0.6f;
+                var pbDialog = Dialog.Clean("FH_PB");
+                _pb ??= $"{pbDialog}: {TimeSpan.FromTicks(_pbTime).ShortGameplayFormat()}";
+                DrawTime(Position - ((GetTimeWidth(_pb) + GetTimeWidth($"{pbDialog}: ")) * Vector2.UnitX / 2 * scale) + _nameMeasure.Y * Vector2.UnitY * 2.5f * 0.7f, _pb, Color.LightSkyBlue, 0.6f);
+
+                if (_fading && TimeSpent < _pbTime) {
+                    var newPbText = Dialog.Clean("FH_NewPB");
+                    DrawTime(Position - (GetTimeWidth(newPbText) * Vector2.UnitX / 2 * scale) + _nameMeasure.Y * Vector2.UnitY * 3.1f * 0.7f, newPbText, Color.LightSkyBlue, 0.6f);
+                }
+            }
         }
     }
 
@@ -452,5 +507,20 @@ internal sealed class SpeedRingTimerDisplay : Entity {
             currentWidth += (((c == ':' || c == '.') ? _spacerWidth : _numberWidth) + 4f) * currentScale;
         }
         return currentWidth;
+    }
+}
+
+internal sealed class ArrowDisplay : Entity {
+    private readonly SpeedRingChallenge _challenge;
+    
+    public ArrowDisplay(SpeedRingChallenge challenge) {
+        Depth = Depths.Top;
+        _challenge = challenge;
+        Visible = true;
+        Active = false;
+    }
+
+    public override void Render() {
+        _challenge.DrawArrow();
     }
 }

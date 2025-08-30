@@ -37,6 +37,14 @@ public class FrostMapDataProcessor : EverestMapDataProcessor {
                 }
             },
             {
+                "entity:FrostHelper/SpeedRingChallenge3d", speedBerry => {
+                    SpeedChallenges[AreaKey.GetSID() + '>' + speedBerry.Attr("name")] = new SpeedChallengeInfo() {
+                        ID = new EntityID(levelName, speedBerry.AttrInt("id")),
+                        GoalTime = speedBerry.AttrFloat("timeLimit"),
+                    };
+                }
+            },
+            {
                 "entity:FrostHelper/GlobalEntityMarker", container => {
                     GlobalEntityHelper.LoadIfNeeded();
 

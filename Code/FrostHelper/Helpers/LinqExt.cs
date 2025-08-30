@@ -83,6 +83,13 @@ internal static class LinqExt {
         }
     }
 
+    public static IEnumerable<TDest> SelectNotNull<T, TDest>(this IEnumerable<T> source, Func<T, TDest?> selector) {
+        foreach (var t in source) {
+            if (selector(t) is { } dest)
+                yield return dest;
+        }
+    }
+
     internal static ArrayEnumerator<T> GetArrayEnumerator<T>(this T[] arr) => new(arr);
 
     internal struct ArrayEnumerator<T>(T[] arr) : IEnumerator<T> {

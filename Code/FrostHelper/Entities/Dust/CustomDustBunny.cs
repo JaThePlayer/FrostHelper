@@ -114,7 +114,9 @@ internal sealed class DustGraphicsDirectory : ISavestatePersisted {
 }
 
 // attached to DustEdges, keeps track of which edges use which colors for more efficient rendering.
-internal sealed class DustEdgesTracker {
+internal sealed class DustEdgesTracker : IAttachable {
+    public static string DynamicDataName => "fh.DustEdgesTracker";
+    
     public readonly Dictionary<DustEdgeColors, List<CustomDustEdge>> EdgeColorCache = new();
 }
 

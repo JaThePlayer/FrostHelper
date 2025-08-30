@@ -1,5 +1,6 @@
 ﻿using FrostHelper.Helpers;
 using FrostHelper.ModIntegration;
+using FrostHelper.TweakManagers;
 
 namespace FrostHelper;
 

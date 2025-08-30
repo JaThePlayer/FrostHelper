@@ -314,8 +314,6 @@ public class FrostModule : EverestModule {
     }
     #endregion
 
-    public static FieldInfo player_boostTarget = typeof(Player).GetField("boostTarget", BindingFlags.Instance | BindingFlags.NonPublic)!;
-    public static FieldInfo player_calledDashEvents = typeof(Player).GetField("calledDashEvents", BindingFlags.Instance | BindingFlags.NonPublic)!;
     #region YellowBoost
 #if OLD_YELLOW_BOOSTER
     public static int YellowBoostState;
@@ -533,20 +531,5 @@ public class FrostModule : EverestModule {
         var shader = ShaderHelperIntegration.GetEffect(shaderName);
 
         Logger.Log(LogLevel.Info, "FrostHelper.ShaderInfo", $"{shaderName}:\n{shader.Parameters.Aggregate("Parameters:", (string p1, EffectParameter p2) => $"{p1}\n{p2.Name}: {p2.ParameterType}")}");
-    }
-
-    [Command("fh_attached", "[Frost Helper] Prints out information about all data attached to entities by Frost Helper")]
-    public static void CmdListAttached() {
-        StringBuilder res = new();
-        
-        res.AppendLine("fh_attached results:");
-        foreach (var item in Engine.Scene.Entities.entities.Cast<object>().Concat(GetCurrentLevel().Foreground.Backdrops).Concat(GetCurrentLevel().Background.Backdrops)) {
-            if (AttachedDataHelper.GetAllData(item) is { } data)
-                res.AppendLine($"{item} -> {string.Join(",", data)}");
-        }
-        
-        var msg = res.ToString();
-        Logger.Log(LogLevel.Info, "FrostHelper.ListAttached", msg);
-        Engine.Commands.Log(msg);
     }
 }

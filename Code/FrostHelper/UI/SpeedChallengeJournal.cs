@@ -8,13 +8,16 @@ public class SpeedChallengePage : CustomJournalPage {
         Color color = Color.Black * 0.6f;
         table = new Table().AddColumn(new TextCell(Dialog.Clean("journal_speedruns", null), new Vector2(1f, 0.5f), 0.7f, Color.Black * 0.7f, 0f, false)).AddColumn(new TextCell(Dialog.Clean("FH_PB", null), justify, num + 0.1f, color, 240f, false)).AddColumn(new TextCell(Dialog.Clean("FH_Goal", null), justify, num + 0.1f, color, 240f, false));
 
-        for (int i = 0; i < challenges.Length; i++) {
-            Logger.Log("", challenges[i]);
-            long time = FrostModule.SaveData.GetChallengeTime(challenges[i]);
-            long targetTime = TimeSpan.FromSeconds(FrostMapDataProcessor.SpeedChallenges[challenges[i]].GoalTime).Ticks;
-            table.AddRow().Add(new TextCell(Dialog.Clean(challenges[i].Remove(0, challenges[i].IndexOf('>') + 1)), new Vector2(1f, 0.5f), 0.6f, TextColor))
+        foreach (var t in challenges)
+        {
+            if (!FrostMapDataProcessor.SpeedChallenges.TryGetValue(t, out var challengeInfo))
+                continue;
+            
+            long time = FrostModule.SaveData.GetChallengeTime(t);
+            long targetTime = TimeSpan.FromSeconds(challengeInfo.GoalTime).Ticks;
+            table.AddRow().Add(new TextCell(Dialog.Clean(t.Remove(0, t.IndexOf('>') + 1)), new Vector2(1f, 0.5f), 0.6f, TextColor))
                 .Add(new TextCell(time == -1 ? "-" : TimeSpan.FromTicks(time).ShortGameplayFormat(), new Vector2(0.5f, 0.5f), 0.6f, time < targetTime ? Calc.HexToColor("B07A00") : TextColor)) // PB
-                .Add(new TextCell(TimeSpan.FromSeconds(FrostMapDataProcessor.SpeedChallenges[challenges[i]].GoalTime).ShortGameplayFormat(), new Vector2(0.5f, 0.5f), 0.6f, TextColor)); // Goal Time
+                .Add(new TextCell(TimeSpan.FromSeconds(FrostMapDataProcessor.SpeedChallenges[t].GoalTime).ShortGameplayFormat(), new Vector2(0.5f, 0.5f), 0.6f, TextColor)); // Goal Time
         }
     }
 

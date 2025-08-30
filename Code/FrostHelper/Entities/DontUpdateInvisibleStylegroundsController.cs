@@ -11,7 +11,9 @@ internal sealed class DontUpdateInvisibleStylegroundsController : Entity {
         il.Emit(OpCodes.Ret);
     });
 
-    internal class ParallaxWrapInfo {
+    internal class ParallaxWrapInfo : IAttachable {
+        public static string DynamicDataName => "fh.ParallaxWrapInfo";
+        
         public bool Wrapped;
     }
 
@@ -26,7 +28,7 @@ internal sealed class DontUpdateInvisibleStylegroundsController : Entity {
         IL.Celeste.Parallax.Update += Parallax_Update1;
     }
 
-    private static bool ShouldUpdate(Parallax self) => self.Visible || !self.GetOrCreateAttached<ParallaxWrapInfo>().Wrapped;// !self.GetAttached<ParallaxWrapInfo>().Wrapped || self.Visible;
+    private static bool ShouldUpdate(Parallax self) => self.Visible || !self.GetOrCreateDynamicDataAttached<ParallaxWrapInfo>().Wrapped;// !self.GetAttached<ParallaxWrapInfo>().Wrapped || self.Visible;
 
     private static void Parallax_Update1(ILContext il) {
         var cursor = new ILCursor(il);
@@ -81,7 +83,7 @@ internal sealed class DontUpdateInvisibleStylegroundsController : Entity {
             if (AffectedTypes.ContainsReference(backdrop.GetType())) {
                 if (backdrop is Parallax p) {
                     LoadParallaxHooksIfNeeded();
-                    p.GetOrCreateAttached<ParallaxWrapInfo>().Wrapped = true;
+                    p.GetOrCreateDynamicDataAttached<ParallaxWrapInfo>().Wrapped = true;
                 } else {
                     backdrops[i] = new Wrapper(backdrop);
                 }

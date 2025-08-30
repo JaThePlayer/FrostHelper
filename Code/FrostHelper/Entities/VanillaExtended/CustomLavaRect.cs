@@ -459,13 +459,14 @@ internal sealed class CustomLavaRect : Component {
 
 
         var buffer = RenderTargetHelper.RentFullScreenBuffer();
-        var targets = Draw.SpriteBatch.GraphicsDevice.GetRenderTargets();
-        Draw.SpriteBatch.GraphicsDevice.SetRenderTarget(buffer);
-        Draw.SpriteBatch.GraphicsDevice.Clear(Color.Transparent);
+        var gd = Draw.SpriteBatch.GraphicsDevice;
+        var targets = gd.StoreRenderTargets();
+        gd.SetRenderTarget(buffer);
+        gd.Clear(Color.Transparent);
         
         GFX.DrawVertices(Matrix.CreateTranslation(new Vector3(basePos, 0.0f)) * camera.Matrix, _verts, _vertCount, blendState: BlendState.Opaque);
 
-        Draw.SpriteBatch.GraphicsDevice.SetRenderTargets(targets);
+        targets.Restore();
         GameplayRenderer.Begin();
         Draw.SpriteBatch.Draw(buffer, camera.position, Color.White);
         RenderTargetHelper.ReturnFullScreenBuffer(buffer);

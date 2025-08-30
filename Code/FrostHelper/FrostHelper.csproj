@@ -42,6 +42,8 @@
     <Reference Include="MMHOOK_Celeste" HintPath="$(CELESTEGAMEPATH)\MMHOOK_Celeste.dll" Private="False" />
     <!-- There's no Nuget package for MonoModReorg.Patcher yet...-->
     <Reference Include="MMHOOK_Celeste" HintPath="$(CELESTEGAMEPATH)\MonoMod.Patcher.dll" Private="False" />
+
+    <Reference Include="CommunalHelper" HintPath="lib-stripped\CommunalHelper.dll" Private="False" />
   </ItemGroup>
 
   <Choose>

@@ -63,10 +63,7 @@ public class TemporaryKey : Key {
     public TemporaryKey(EntityData data, Vector2 offset, EntityID id) : base(data.Position + offset, id, data.NodesOffset(offset)) {
         LoadIfNeeded();
 
-        this.follower = Get<Follower>();
         // Create sprite
-        DynData<Key> dyndata = new DynData<Key>(this);
-        sprite = dyndata.Get<Sprite>("sprite");
         Remove(sprite);
         sprite = new Sprite(GFX.Game, data.Attr("directory", "collectables/FrostHelper/keytemp") + "/");
         sprite.Justify = new Vector2(0.5f, 0.5f);
@@ -74,10 +71,8 @@ public class TemporaryKey : Key {
         sprite.AddLoop("enter", "enter", 0.1f);
         sprite.Play("idle");
         Add(sprite);
-        dyndata.Set("sprite", sprite);
-        Follower follower = this.follower;
-        follower.OnLoseLeader = (Action) Delegate.Combine(follower.OnLoseLeader, new Action(Dissolve));
-        this.follower.PersistentFollow = false; // was false
+        follower.OnLoseLeader += Dissolve;
+        follower.PersistentFollow = false;
         Add(new TransitionListener {
             OnOut = f => {
                 StartedUsing = false;

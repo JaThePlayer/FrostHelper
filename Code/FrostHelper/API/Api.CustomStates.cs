@@ -6,7 +6,7 @@ namespace FrostHelper.API;
 // [ModExportName("FrostHelper")] - defined in API.cs
 public partial class API {
     public static void SetCustomBoostState(Player player, GenericCustomBooster booster) {
-        player.SetAttached(booster);
+        player.SetDynamicDataAttached(booster);
         player.StateMachine.State = GenericCustomBooster.CustomBoostState;
     }
 

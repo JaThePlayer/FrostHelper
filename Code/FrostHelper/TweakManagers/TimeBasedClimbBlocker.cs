@@ -1,12 +1,10 @@
-﻿namespace FrostHelper;
+﻿namespace FrostHelper.TweakManagers;
 
-public static class TimeBasedClimbBlocker {
-    private static float _NoClimbTimer;
-
+internal static class TimeBasedClimbBlocker {
     public static float NoClimbTimer { 
-        get => _NoClimbTimer; 
+        get => FrostModule.Session.NoClimbTimer; 
         set {
-            _NoClimbTimer = value;
+            FrostModule.Session.NoClimbTimer = value;
 
             LoadIfNeeded();
         } 
@@ -34,12 +32,12 @@ public static class TimeBasedClimbBlocker {
         On.Celeste.Level.Update -= Level_Update;
     }
 
-    private static void Level_Update(On.Celeste.Level.orig_Update orig, Celeste.Level self) {
+    private static void Level_Update(On.Celeste.Level.orig_Update orig, Level self) {
         orig(self);
         NoClimbTimer -= Engine.DeltaTime;
     }
 
-    private static bool Player_ClimbCheck(On.Celeste.Player.orig_ClimbCheck orig, Celeste.Player self, int dir, int yAdd) {
+    private static bool Player_ClimbCheck(On.Celeste.Player.orig_ClimbCheck orig, Player self, int dir, int yAdd) {
         if (NoClimbTimer > 0f) {
             return false;
         }

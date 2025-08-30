@@ -1,6 +1,7 @@
 ﻿using FrostHelper.Helpers;
 using System.Globalization;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace FrostHelper;
 
@@ -208,6 +209,10 @@ public static class Extensions {
     public static List<Entity> SafeGetEntities<T>(this Tracker t) where T : Entity {
         return SafeGetEntities(t, typeof(T));
     }
+    
+    public static Span<Entity> SafeGetEntitiesSpan<T>(this Tracker t) where T : Entity {
+        return CollectionsMarshal.AsSpan(SafeGetEntities(t, typeof(T)));
+    }
 
     public static List<Component> SafeGetComponents<T>(this Tracker t) where T : Component {
         if (t.Components.TryGetValue(typeof(T), out var components)) {
@@ -412,5 +417,10 @@ public static class Extensions {
 
     private static void ThrowCannotConvertToInt64Exception<TEnum>(TEnum value) where TEnum : struct, Enum {
         throw new InvalidOperationException($"Cannot convert {value} [{typeof(TEnum)}] to Int64");
+    }
+
+    internal static Rectangle GetAbsRect(this Hitbox h) {
+        var p = h.AbsolutePosition;
+        return new Rectangle((int)p.X, (int)p.Y, (int)h.Width, (int)h.Height);
     }
 }

@@ -41,7 +41,7 @@ internal sealed class CustomDustGraphic : DustGraphic {
     }
 
     internal static void Track(DustEdges controller, CustomDustEdge edge) {
-        var tracker = controller.GetOrCreateAttached<DustEdgesTracker>();
+        var tracker = controller.GetOrCreateDynamicDataAttached<DustEdgesTracker>();
 
         if (tracker.EdgeColorCache.TryGetValue(edge.Graphic.EdgeColors, out var cache)) {
             cache.Add(edge);
@@ -51,7 +51,7 @@ internal sealed class CustomDustGraphic : DustGraphic {
     }
 
     internal static void Untrack(DustEdges controller, CustomDustEdge edge) {
-        var tracker = controller.GetOrCreateAttached<DustEdgesTracker>();
+        var tracker = controller.GetOrCreateDynamicDataAttached<DustEdgesTracker>();
 
         if (tracker.EdgeColorCache.TryGetValue(edge.Graphic.EdgeColors, out var cache)) {
             cache.Remove(edge);
@@ -103,7 +103,7 @@ internal sealed class CustomDustGraphic : DustGraphic {
     // main rendering method
     private static void DustEdges_BeforeRender(On.Celeste.DustEdges.orig_BeforeRender orig, DustEdges self) {
         orig(self);
-        var edges = self.Scene.Tracker.GetComponents<CustomDustEdge>();
+        var edges = self.Scene.Tracker.SafeGetComponents<CustomDustEdge>();
         if (edges.Count == 0)
             return;
 
@@ -135,8 +135,8 @@ internal sealed class CustomDustGraphic : DustGraphic {
 
         var shaderColorParameter = GFX.FxDust.Parameters["colors"];
 
-        if (self.TryGetAttached<DustEdgesTracker>() is not { } tracker) {
-            tracker = self.GetOrCreateAttached<DustEdgesTracker>();
+        if (self.GetDynamicDataAttached<DustEdgesTracker>() is not { } tracker) {
+            tracker = self.GetOrCreateDynamicDataAttached<DustEdgesTracker>();
             
             // After a savestate load, the tracker goes null.
             // Even if it wasn't, it would point to invalid entities

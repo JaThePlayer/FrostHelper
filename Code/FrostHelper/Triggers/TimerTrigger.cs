@@ -26,8 +26,10 @@ internal abstract class BaseTimerEntity : Trigger {
 
     private readonly CounterAccessor? _outputCounter;
     private readonly CounterAccessor.CounterTimeUnits _outputCounterUnit;
+
+    private float? _capturedTimeLeft;
     
-    protected virtual string GetText() => TimeSpan.FromSeconds(TimeLeft).ShortGameplayFormat();
+    protected virtual string GetText() => TimeSpan.FromSeconds(_capturedTimeLeft ?? TimeLeft).ShortGameplayFormat();
     
     protected BaseTimerEntity(EntityData data, Vector2 offset) : base(data, offset)
     {
@@ -46,7 +48,12 @@ internal abstract class BaseTimerEntity : Trigger {
         if (data.Attr("icon", "frostHelper/time") is { } iconPath && !string.IsNullOrWhiteSpace(iconPath))
             Icon = GFX.Game[iconPath];
         
+        ResetDrawPos();
+    }
+
+    protected void ResetDrawPos() {
         DrawPos = new(Engine.Width / 2f, 0f);
+        _capturedTimeLeft = null;
     }
 
     public override void OnEnter(Player player) {
@@ -60,7 +67,12 @@ internal abstract class BaseTimerEntity : Trigger {
 
         Started = true;
         if (Visible) {
-            var timers = Scene.Tracker.GetEntities<BaseTimerEntity>()
+            _capturedTimeLeft = null;
+            Alpha = 1f;
+            Components.RemoveAll<Tween>();
+            ResetDrawPos();
+            
+            var timers = Scene.Tracker.SafeGetEntities<BaseTimerEntity>()
                 .OfType<BaseTimerEntity>()
                 .Where(t => t.Visible)
                 .ToList();
@@ -73,17 +85,20 @@ internal abstract class BaseTimerEntity : Trigger {
         if (!Started)
             return;
 
+        _capturedTimeLeft = TimeLeft;
         var startAlpha = Alpha;
         var tween = Tween.Create(Tween.TweenMode.Oneshot, Ease.Linear, duration: 1f, start: true);
-        tween.OnComplete = (t) => RemoveSelf();
+        tween.OnComplete = (t) => ResetDrawPos();
         tween.OnUpdate = (t) => Alpha = float.Max(0f, startAlpha - t.Eased);
         Add(tween);
     }
-    
+
+    internal virtual bool Reset() => false;
+
     public override void Render() {
         base.Render();
 
-        if (!Started)
+        if (!Started && _capturedTimeLeft is null)
             return;
 
         var pos = DrawPos;
@@ -107,18 +122,21 @@ internal abstract class BaseTimerEntity : Trigger {
 [CustomEntity("FrostHelper/Timer")]
 [Tracked]
 internal sealed class TimerEntity : BaseTimerEntity {
-    internal readonly string Flag;
+    private readonly string _flag;
+    private readonly bool _oneUse;
+    private readonly float _startTime;
 
     public TimerEntity(EntityData data, Vector2 offset) : base(data, offset)
     {
-        Flag = data.Attr("flag", "");
-        TimeLeft = data.Float("time", 1f);
+        _flag = data.Attr("flag", "");
+        TimeLeft = _startTime = data.Float("time", 1f);
+        _oneUse = data.Bool("once", true);
     }
     
     public override void Added(Scene scene) {
         base.Added(scene);
 
-        SceneAs<Level>()?.Session.SetFlag(Flag, false);
+        SceneAs<Level>()?.Session.SetFlag(_flag, false);
         UpdateTimeCounter();
     }
     
@@ -133,10 +151,20 @@ internal sealed class TimerEntity : BaseTimerEntity {
 
             if (TimeLeft <= 0) {
                 TimeLeft = 0;
-                SceneAs<Level>()?.Session.SetFlag(Flag, true);
+                SceneAs<Level>()?.Session.SetFlag(_flag, true);
                 RemoveIfNeeded();
             }
         }
+    }
+
+    internal override bool Reset() {
+        if (!Started)
+            return false;
+
+        RemoveIfNeeded();
+        Started = false;
+        TimeLeft = _startTime;
+        return true;
     }
 }
 
@@ -256,6 +284,27 @@ internal sealed class CounterDisplayEntity : BaseTimerEntity {
         } else {
             Alpha = Calc.Approach(Alpha, GetTargetAlpha(), Engine.DeltaTime);
         }
+    }
+}
+
+[CustomEntity("FrostHelper/TimerReset")]
+[Tracked]
+internal sealed class TimerReset(EntityData data, Vector2 offset) : Trigger(data, offset) {
+    private readonly string _timerId = data.Attr("timerId", "");
+    private readonly bool _oneUse = data.Bool("oneUse", false);
+
+    public override void OnEnter(Player player) {
+        base.OnEnter(player);
+
+        var anyReset = false;
+        foreach (BaseTimerEntity timer in Scene.Tracker.SafeGetEntities<BaseTimerEntity>()) {
+            if (timer.TimerId == _timerId) {
+                anyReset |= timer.Reset();
+            }
+        }
+        
+        if (anyReset && _oneUse)
+            RemoveSelf();
     }
 }
 
