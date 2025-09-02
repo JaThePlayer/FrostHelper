@@ -53,6 +53,8 @@ public class CustomSpinnerController : Entity {
 
     public override void Update() {
         TimeUnpaused += Engine.DeltaTime;
+        if (Player?.Scene != Scene)
+            Player = null;
     }
 }
 

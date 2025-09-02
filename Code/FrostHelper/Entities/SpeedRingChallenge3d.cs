@@ -146,8 +146,8 @@ internal sealed class SpeedRingChallenge3d : SpeedRingChallenge {
             back.RainbowMix = 0f;
         }
         
-        GFX.Game["frostHelper/speedRing3d/dot"]
-            .DrawCentered(node.Center, Color.White * 0.6f, 1f + (float) Math.Sin(Scene.TimeActive * 3) * 0.1f, 0f/*MathHelper.PiOver4 + node.Direction.Angle()*/);
+        //GFX.Game["frostHelper/speedRing3d/dot"]
+        //    .DrawCentered(node.Center, Color.White * 0.6f, 1f + (float) Math.Sin(Scene.TimeActive * 3) * 0.1f, 0f/*MathHelper.PiOver4 + node.Direction.Angle()*/);
     }
     
     protected override void RenderRing() {
