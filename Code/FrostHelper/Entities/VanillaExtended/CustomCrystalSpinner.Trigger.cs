@@ -52,7 +52,6 @@ internal sealed class TriggerSpinner : CustomSpinner {
     protected override void OnHoldable(Holdable h) {
         switch (_state) {
             case TriggerState.Inactive:
-                
                 switch (UnactivatedOnHoldable) {
                     case CollisionModes.Activate:
                         ActivateIfNeeded();

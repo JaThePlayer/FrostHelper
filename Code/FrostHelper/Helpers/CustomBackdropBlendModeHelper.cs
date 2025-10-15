@@ -62,7 +62,7 @@ internal static class CustomBackdropBlendModeHelper {
     }
     #endregion
 
-    internal class BlendModeAttachedData : IAttachable {
+    internal sealed class BlendModeAttachedData : IAttachable {
         public static string DynamicDataName => "fh.blendMode";
         
         public BlendState State;

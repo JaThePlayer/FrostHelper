@@ -34,6 +34,7 @@ jautils.createPlacementsPreserveOrder(incTimer, "default", {
     { "outputCounter", "", "sessionCounter" },
     { "outputCounterUnit", "Milliseconds", jautils.counterTimeUnits },
     { "visible", true },
+    { "savePb", false },
 }, true)
 
 jautils.createPlacementsPreserveOrder(counterDisplay, "default", {

@@ -13,6 +13,10 @@ function attachGroupHelper.findAllGroups(room)
 end
 
 function attachGroupHelper.findAllGroupsAsList(room)
+    if not room then
+        return {}
+    end
+
     local ids = attachGroupHelper.findAllGroups(room)
     local list = {}
     for key, value in pairs(ids) do

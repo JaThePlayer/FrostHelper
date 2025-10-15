@@ -1,7 +1,9 @@
-﻿namespace FrostHelper;
+﻿using Celeste.Mod.Helpers;
+
+namespace FrostHelper;
 
 [CustomEntity("FrostHelper/CustomFlutterBird")]
-public class CustomFlutterBird : FlutterBird {
+internal sealed class CustomFlutterBird : FlutterBird {
     public bool DontFlyAway;
     public string FlyAwaySfx, HopSfx;
 
@@ -70,7 +72,7 @@ public class CustomFlutterBird : FlutterBird {
     private static void IL_FlutterBird_ctor(ILContext il) {
         var cursor = new ILCursor(il);
 
-        if (cursor.TryGotoNext(MoveType.Before,
+        if (cursor.TryGotoNextBestFit(MoveType.Before,
             instr => instr.MatchLdsfld(typeof(GFX), nameof(GFX.SpriteBank))
                   && instr.Next.MatchLdstr("flutterbird")
         )) {
@@ -95,7 +97,7 @@ public class CustomFlutterBird : FlutterBird {
             cursor.Emit(OpCodes.Br, postCreate);
 
             cursor.MarkLabel(postCustomCreate);
-            // orig sprite bank creation code goes here..
+            // orig sprite bank creation code goes here...
 
             cursor.SeekVirtFunctionCall<SpriteBank>("Create", MoveType.After);
             cursor.MarkLabel(postCreate);
@@ -115,8 +117,12 @@ public class CustomFlutterBird : FlutterBird {
     }
 
     private static string GetFlyAwaySfx(string orig, FlutterBird self) {
-        if (self is CustomFlutterBird bird)
+        if (self is CustomFlutterBird bird) {
+            // Make sure the bird doesn't suddenly vanish if it flew off into a different room during a room transition.
+            bird.Tag |= Tags.Persistent;
             return bird.FlyAwaySfx;
+        }
+
         return orig;
     }
 
@@ -128,7 +134,7 @@ public class CustomFlutterBird : FlutterBird {
 
     private static Sprite CustomCreate(EntityData data) {
         var dir = data.Attr("directory", "scenery/flutterbird/");
-        if (!dir.EndsWith("/")) {
+        if (!dir.EndsWith('/')) {
             dir += "/";
             data.Values["directory"] = dir; // might as well fix up the path to reduce allocations later
         }

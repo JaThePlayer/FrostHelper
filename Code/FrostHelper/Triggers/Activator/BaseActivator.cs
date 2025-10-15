@@ -1,4 +1,6 @@
-﻿namespace FrostHelper.Triggers.Activator;
+﻿using FrostHelper.API;
+
+namespace FrostHelper.Triggers.Activator;
 
 internal interface IIfActivator {
     public bool IsElse { get; }
@@ -193,6 +195,8 @@ public class BaseActivator : Trigger {
         }
     }
 
+    internal static readonly ModEvent<Action<Trigger, Trigger, Player?>> OnActivatorActivateEvent = new(nameof(EventsApi.OnActivatorActivate));
+
     private void Activate(Player player, Trigger trigger) {
         if (trigger.Scene is null)
             return;
@@ -205,6 +209,7 @@ public class BaseActivator : Trigger {
 #warning TODO: Add setting to call this each frame...
         trigger.OnStay(player);
 
+        OnActivatorActivateEvent.Get()?.Invoke(this, trigger, player);
         lastActivatedTrigger = trigger;
     }
 

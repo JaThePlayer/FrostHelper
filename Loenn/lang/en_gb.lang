@@ -1045,6 +1045,7 @@ triggers.FrostHelper/Timer.attributes.description.visible=Whether this timer is 
 triggers.FrostHelper/Timer.attributes.description.timerId=The Timer ID, used by the Timer Change Trigger.
 triggers.FrostHelper/Timer.attributes.description.outputCounter=The Session Counter which should be set to the time of this Timer each frame.\nThe unit is chosen by the `Output Counter Unit` setting.
 triggers.FrostHelper/Timer.attributes.description.outputCounterUnit=The unit to use for the `Output Counter`.
+triggers.FrostHelper/Timer.attributes.description.savePb=Whether a Personal Best should be stored and displayed for this timer, based on the Timer ID.\nA PB is saved when a Timer Reset Trigger with the "Save PB" option enabled acted on this timer.
 
 triggers.FrostHelper/IncrementingTimer.placements.name.default=Incrementing Timer
 triggers.FrostHelper/IncrementingTimer.placements.description.default=Creates a visible timer which counts up until stopped by a flag.
@@ -1057,6 +1058,7 @@ triggers.FrostHelper/IncrementingTimer.attributes.description.visible=Whether th
 triggers.FrostHelper/IncrementingTimer.attributes.description.timerId=The Timer ID, used by the Timer Change Trigger.
 triggers.FrostHelper/IncrementingTimer.attributes.description.outputCounter=The Session Counter which should be set to the time of this Timer each frame.\nThe unit is chosen by the `Output Counter Unit` setting.
 triggers.FrostHelper/IncrementingTimer.attributes.description.outputCounterUnit=The unit to use for the `Output Counter`.
+triggers.FrostHelper/IncrementingTimer.attributes.description.savePb=Whether a Personal Best should be stored and displayed for this timer, based on the Timer ID.\nA PB is saved when Remove Flag is set while the timer is active,\nor a Timer Reset Trigger with the "Save PB" option enabled acted on this timer.
 
 triggers.FrostHelper/CounterDisplay.placements.name.default=Counter Display
 triggers.FrostHelper/CounterDisplay.placements.description.default=Creates a HUD display for a Session Counter or Session Expression, optionally with an icon.
@@ -1079,6 +1081,7 @@ triggers.FrostHelper/TimerReset.placements.name.default=Timer Reset
 triggers.FrostHelper/TimerReset.placements.description.default=Resets a timer started by the Timer trigger, allowing it to be started again.
 triggers.FrostHelper/TimerReset.attributes.description.timerId=The Timer ID of the timer that should be changed by this trigger.
 triggers.FrostHelper/TimerReset.attributes.description.oneUse=Whether the trigger should be one-use.
+triggers.FrostHelper/TimerReset.attributes.description.savePb=If enabled, and the Timer which got reset by this trigger has "Save PB" enabled as well, a Personal Best can be saved for the stopped trigger.
 
 triggers.FrostHelper/LightingBaseColorTrigger.placements.name.default=Darkness Base Color
 triggers.FrostHelper/LightingBaseColorTrigger.attributes.description.color=The new color to use.

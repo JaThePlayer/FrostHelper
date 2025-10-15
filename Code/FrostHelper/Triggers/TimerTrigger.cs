@@ -14,11 +14,16 @@ internal abstract class BaseTimerEntity : Trigger {
 
     internal float TimeLeft {
         get => _timeLeft;
-        set {
-            _timeLeft = value;
+        set => SetTimeLeft(value, updateCounters: true);
+    }
+
+    internal void SetTimeLeft(float time, bool updateCounters) {
+        _timeLeft = time;
+        if (updateCounters) {
             UpdateTimeCounter();
         }
     }
+    
     internal bool Started;
     protected Vector2 DrawPos;
 
@@ -28,6 +33,21 @@ internal abstract class BaseTimerEntity : Trigger {
     private readonly CounterAccessor.CounterTimeUnits _outputCounterUnit;
 
     private float? _capturedTimeLeft;
+
+    internal readonly bool SavePb;
+    private bool _pbExistedBeforeStart;
+
+    private const float PbTextScale = 0.6f;
+
+    private bool ShouldDisplayPb(out float pb) {
+        pb = 0f;
+        if (SavePb && FrostModule.SaveData.GetTimerBestInCurrentMap(TimerId) is { } actualPb) {
+            pb = actualPb;
+            return true;
+        }
+
+        return false;
+    }
     
     protected virtual string GetText() => TimeSpan.FromSeconds(_capturedTimeLeft ?? TimeLeft).ShortGameplayFormat();
     
@@ -38,6 +58,7 @@ internal abstract class BaseTimerEntity : Trigger {
         Visible = data.Bool("visible", true);
         TextColor = data.GetColor("textColor", "ffffff");
         IconColor = data.GetColor("iconColor", "ffffff");
+        SavePb = data.Bool("savePb");
         
         var outputCounterName = data.Attr("outputCounter");
         if (!string.IsNullOrWhiteSpace(outputCounterName)) {
@@ -76,8 +97,11 @@ internal abstract class BaseTimerEntity : Trigger {
                 .OfType<BaseTimerEntity>()
                 .Where(t => t.Visible)
                 .ToList();
+
+            var textHeight = TimerRenderHelper.Measure(GetText()).Y;
+            DrawPos.Y = textHeight + (timers.Count != 0 ? timers.Max(t => t.DrawPos.Y + (t.ShouldDisplayPb(out _) ? textHeight * PbTextScale : 0f)) : 0f);
             
-            DrawPos.Y = TimerRenderHelper.Measure(GetText()).Y + (timers.Any() ? timers.Max(t => t.DrawPos.Y) : 0f);
+            _pbExistedBeforeStart = ShouldDisplayPb(out _);
         }
     }
 
@@ -93,7 +117,9 @@ internal abstract class BaseTimerEntity : Trigger {
         Add(tween);
     }
 
-    internal virtual bool Reset() => false;
+    internal virtual bool Reset(bool resetCounters, bool savePb) => false;
+
+    internal virtual void SavePbToFile() { }
 
     public override void Render() {
         base.Render();
@@ -103,12 +129,19 @@ internal abstract class BaseTimerEntity : Trigger {
 
         var pos = DrawPos;
         var timeText = GetText();
+        var textSize = TimerRenderHelper.Measure(timeText);
         TimerRenderHelper.DrawTime(pos, timeText, TextColor, alpha: Alpha);
 
         if (Icon is { } icon) {
-            var iconPos = new Vector2(pos.X - (TimerRenderHelper.GetTimeWidth(timeText) / 2), pos.Y - TimerRenderHelper.Measure(timeText).Y / 2f);
+            var iconPos = new Vector2(pos.X - (TimerRenderHelper.GetTimeWidth(timeText) / 2), pos.Y - textSize.Y / 2f);
 
             icon.DrawJustified(iconPos, new(1f, 0.5f), IconColor * Alpha);
+        }
+
+        if (_pbExistedBeforeStart && ShouldDisplayPb(out var pb)) {
+            var pbDialog = Dialog.Clean("FH_PB");
+            var pbTextOffset = TimerRenderHelper.GetTimeWidth($"{pbDialog}: ") * Vector2.UnitX / 2 * PbTextScale;
+            TimerRenderHelper.DrawTime(pos + pbTextOffset + textSize.YComp() * PbTextScale, $"{pbDialog}: {TimeSpan.FromSeconds(pb).ShortGameplayFormat()}", TextColor, PbTextScale, alpha: Alpha);
         }
     }
 
@@ -157,14 +190,24 @@ internal sealed class TimerEntity : BaseTimerEntity {
         }
     }
 
-    internal override bool Reset() {
+    internal override bool Reset(bool resetCounters, bool savePb) {
         if (!Started)
             return false;
+        if (savePb)
+            SavePbToFile();
 
         RemoveIfNeeded();
         Started = false;
-        TimeLeft = _startTime;
+        SetTimeLeft(_startTime, resetCounters);
         return true;
+    }
+    
+    internal override void SavePbToFile() {
+        if (!SavePb)
+            return;
+
+        if (FrostModule.SaveData.GetTimerBestInCurrentMap(TimerId) is not { } prevPb || TimeLeft > prevPb)
+            FrostModule.SaveData.SetTimerBestInCurrentMap(TimerId, TimeLeft);
     }
 }
 
@@ -180,9 +223,8 @@ internal sealed class IncrementingTimerEntity : BaseTimerEntity {
         StopFlag = data.Attr("stopFlag", "");
         RemoveFlag = data.Attr("removeFlag", "");
 
-        if (RemoveFlag == "") {
+        if (RemoveFlag == "")
             RemoveFlag = StopFlag;
-        }
     }
 
     public override void Added(Scene scene) {
@@ -196,14 +238,36 @@ internal sealed class IncrementingTimerEntity : BaseTimerEntity {
         if (!Started || _removed)
             return;
         
-        if (!SceneAs<Level>().Session.GetFlag(StopFlag)) {
+        if (!SceneAs<Level>().Session.GetFlag(StopFlag))
             TimeLeft += Engine.DeltaTime;
-        }
 
         if (SceneAs<Level>().Session.GetFlag(RemoveFlag)) {
+            SavePbToFile();
+            
             _removed = true;
             RemoveIfNeeded();
         }
+    }
+
+    internal override void SavePbToFile() {
+        if (!SavePb)
+            return;
+
+        if (FrostModule.SaveData.GetTimerBestInCurrentMap(TimerId) is not { } prevPb || TimeLeft < prevPb)
+            FrostModule.SaveData.SetTimerBestInCurrentMap(TimerId, TimeLeft);
+    }
+
+    internal override bool Reset(bool resetCounters, bool savePb) {
+        if (!Started)
+            return false;
+        
+        if (savePb)
+            SavePbToFile();
+
+        RemoveIfNeeded();
+        Started = false;
+        SetTimeLeft(0f, resetCounters);
+        return true;
     }
 }
 
@@ -231,17 +295,20 @@ internal sealed class CounterDisplayEntity : BaseTimerEntity {
 
             _lastValue = valueObj;
 
-            if (valueObj is int i)
-                valueObj = (float)i;
-            
-            if (valueObj is float value)
+            switch (valueObj)
             {
-                value = float.Round(value, 4);
-                _lastValueStr = float.IsInteger(value) 
-                    ? ((int)value).ToString(CultureInfo.InvariantCulture)
-                    : value.ToString(CultureInfo.InvariantCulture);
-            } else {
-                _lastValueStr = valueObj.ToString()!;
+                case int i:
+                    _lastValueStr = i.ToString(CultureInfo.InvariantCulture);
+                    break;
+                case float value:
+                    value = float.Round(value, 4);
+                    _lastValueStr = float.IsInteger(value) 
+                        ? ((int)value).ToString(CultureInfo.InvariantCulture)
+                        : value.ToString(CultureInfo.InvariantCulture);
+                    break;
+                default:
+                    _lastValueStr = valueObj.ToString()!;
+                    break;
             }
             
 
@@ -292,17 +359,17 @@ internal sealed class CounterDisplayEntity : BaseTimerEntity {
 internal sealed class TimerReset(EntityData data, Vector2 offset) : Trigger(data, offset) {
     private readonly string _timerId = data.Attr("timerId", "");
     private readonly bool _oneUse = data.Bool("oneUse", false);
-
+    private readonly bool _resetCounters = data.Bool("resetCounters", false);
+    private readonly bool _savePb = data.Bool("savePb", false);
+    
     public override void OnEnter(Player player) {
         base.OnEnter(player);
 
         var anyReset = false;
-        foreach (BaseTimerEntity timer in Scene.Tracker.SafeGetEntities<BaseTimerEntity>()) {
-            if (timer.TimerId == _timerId) {
-                anyReset |= timer.Reset();
-            }
-        }
-        
+        foreach (BaseTimerEntity timer in Scene.Tracker.SafeGetEntities<BaseTimerEntity>())
+            if (timer.TimerId == _timerId)
+                anyReset |= timer.Reset(_resetCounters, _savePb);
+
         if (anyReset && _oneUse)
             RemoveSelf();
     }
@@ -378,9 +445,8 @@ static class TimerRenderHelper {
         float currentScale = scale;
         float currentWidth = 0f;
         foreach (char c in timeString) {
-            if (c == '.') {
+            if (c == '.')
                 currentScale = scale * 0.7f;
-            }
             currentWidth += (((c == ':' || c == '.') ? SpacerWidth : NumberWidth) + 4f) * currentScale;
         }
         return currentWidth;

@@ -6,7 +6,8 @@ local timerChange = {
 
 jautils.createPlacementsPreserveOrder(timerChange, "default", {
     { "timerId", "" },
-    { "oneUse", false }
+    { "oneUse", false },
+    { "savePb", false },
 })
 
 return timerChange

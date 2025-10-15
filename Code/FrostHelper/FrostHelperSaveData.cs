@@ -1,10 +1,12 @@
 ﻿namespace FrostHelper;
 
 public class FrostHelperSaveData : EverestModuleSaveData {
+    #region Speed Ring Challenges
+
     /// <summary>
     /// SID.ChallengeName -> BestTime(Ticks)
     /// </summary>
-    public Dictionary<string, long> ChallengeTimes = new Dictionary<string, long>();
+    public Dictionary<string, long> ChallengeTimes { get; set; } = [];
 
     private static string GetChallengeId(string sid, string name) => sid + '>' + name;
     
@@ -23,10 +25,10 @@ public class FrostHelperSaveData : EverestModuleSaveData {
         if (!ChallengeTimes.TryAdd(name, ticks)) {
             if (ticks < ChallengeTimes[name]) {
                 ChallengeTimes[name] = ticks;
-                FrostModule.Instance.WriteSaveData(Index, FrostModule.Instance.SerializeSaveData(Index));
+                Save();
             }
         } else {
-            FrostModule.Instance.WriteSaveData(Index, FrostModule.Instance.SerializeSaveData(Index));
+            Save();
         }
     }
 
@@ -38,5 +40,35 @@ public class FrostHelperSaveData : EverestModuleSaveData {
         }
 
         return ChallengeTimes.ContainsKey(name) && timeLimit > ChallengeTimes[name];
+    }
+    #endregion
+    
+    #region Timers
+
+    /// <summary>
+    /// SID.TimerId -> BestTime
+    /// </summary>
+    public Dictionary<string, float> TimerPersonalBests { get; set; } = [];
+
+    private static string GetTimerId(string sid, string name) => sid + '>' + name;
+    
+    internal float? GetTimerBestInCurrentMap(string timerId)
+        => GetTimerBest(FrostModule.GetCurrentLevel().Session.Area.SID, timerId);
+    
+    internal float? GetTimerBest(string sid, string timerId) {
+        return TimerPersonalBests.TryGetValue(GetTimerId(sid, timerId), out var time) ? time : null; 
+    }
+
+    internal void SetTimerBestInCurrentMap(string timerId, float time) {
+        var id = GetTimerId(FrostModule.GetCurrentLevel().Session.Area.SID, timerId);
+        
+        TimerPersonalBests[id] = time;
+        Save();
+    }
+    #endregion
+
+
+    private void Save() {
+        FrostModule.Instance.WriteSaveData(Index, FrostModule.Instance.SerializeSaveData(Index));
     }
 }

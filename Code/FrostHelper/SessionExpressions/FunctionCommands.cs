@@ -58,10 +58,34 @@ internal static class FunctionCommands {
         return true;
     }
 
+    private sealed class LazyFunctionArgumentList(IReadOnlyList<Condition> args) : IReadOnlyList<object> {
+        public Session Session { get; set; }
+        public object? UserData { get; set; }
+        
+        private readonly object?[] _cache = new object[args.Count];
+
+        public void Reset(Session session, object? userdata) {
+            Array.Clear(_cache);
+            Session = session;
+            UserData = userdata;
+        }
+        
+        public IEnumerator<object> GetEnumerator()
+            => args.Select(x => x.Get(Session, UserData)).GetEnumerator();
+
+        IEnumerator IEnumerable.GetEnumerator()
+            => GetEnumerator();
+
+        public int Count => args.Count;
+
+        public object this[int index] 
+            => args[index].Get(Session, UserData);
+    }
 
     private sealed class ModFunctionCondition(IReadOnlyList<Condition> args, Func<Session, object?, IReadOnlyList<object>, object> func) 
         : FunctionCondition(args) {
         private readonly object[] _array = new object[args.Count];
+        //private readonly LazyFunctionArgumentList _args = new(args);
         
         public override object Get(Session session, object? userdata) {
             for (int i = 0; i < args.Count; i++) {
@@ -69,6 +93,9 @@ internal static class FunctionCommands {
             }
             
             return func(session, userdata, _array);
+            // TODO: test!
+            //_args.Reset(session, userdata);
+            //return func(session, userdata, _args);
         }
     }
     

@@ -1,13 +1,9 @@
-﻿using Celeste.Mod;
-using FrostHelper.Entities;
-using FrostHelper.Entities.Boosters;
+﻿using FrostHelper.Entities.Boosters;
 using FrostHelper.EXPERIMENTAL;
-using FrostHelper.Helpers;
 using FrostHelper.ModIntegration;
 using MonoMod.ModInterop;
 using System.Text;
 using YamlDotNet.Serialization;
-using Commands = Monocle.Commands;
 
 namespace FrostHelper;
 
@@ -186,15 +182,16 @@ public class FrostModule : EverestModule {
             MonocleDrawShapeFixer.Load();
     }
 
-    private static List<ILHook> registeredHooks = [];
+    private static List<IDisposable> _onUnloadDisposables = [];
     public static void RegisterILHook(ILHook hook) {
-        registeredHooks.Add(hook);
+        _onUnloadDisposables.Add(hook);
     }
 
     // Set up any hooks, event handlers and your mod in general here.
     // Load runs before Celeste itself has initialized properly.
     public override void Load() {
         typeof(API.API).ModInterop();
+        typeof(API.EventsApi).ModInterop();
 
         AttributeHelper.InvokeAllWithAttribute(typeof(OnLoad));
 
@@ -210,10 +207,10 @@ public class FrostModule : EverestModule {
     
     // Unload the entirety of your mod's content, remove any event listeners and undo all hooks.
     public override void Unload() {
-        foreach (var hook in registeredHooks) {
+        foreach (var hook in _onUnloadDisposables) {
             hook.Dispose();
         }
-        registeredHooks = [];
+        _onUnloadDisposables = [];
 
         AttributeHelper.InvokeAllWithAttribute(typeof(OnUnload));
 
