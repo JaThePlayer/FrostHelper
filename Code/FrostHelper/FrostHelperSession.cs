@@ -7,6 +7,8 @@ public class FrostHelperSession : EverestModuleSession {
     public string? LightningColorB { get; set; }
     public string? LightningFillColor { get; set; }
     public float? LightningFillColorMultiplier { get; set; } = null;//0.1f;
+    
+    public Dictionary<string, ArbitraryLightningGroupChange> ArbitraryLightningGroupChanges { get; set; } = new();
 
     public Color BloomColor { get; set; } = Color.White;
     public bool RainbowBloom { get; set; } = false;
@@ -76,5 +78,17 @@ public class FrostHelperSession : EverestModuleSession {
         public override int GetHashCode() {
             return ID.GetHashCode();
         }
+    }
+    
+    // for anyone thinking about accessing this from another mod: don't even think about it, I will intentionally break your mod if you do that.
+    // this is public ONLY because of serialization!
+    public class ArbitraryLightningGroupChange {
+        public required Color[] Colors { get; set; }
+        
+        public required Color? FillColor { get; set; }
+        
+        public required float? FillColorMultiplier { get; set; }
+        
+        public required int? Depth { get; set; }
     }
 }

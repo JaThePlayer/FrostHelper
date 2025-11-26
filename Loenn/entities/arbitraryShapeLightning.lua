@@ -3,8 +3,7 @@ local arbitraryShapeEntity = require("mods").requireFromPlugin("libraries.arbitr
 
 local lightning = {
     name = "FrostHelper/ArbitraryShapeLightning",
-    nodeLimits = { 2, 999 },
-    depth = -math.huge + 6
+    nodeLimits = { 2, 999 }
 }
 
 jautils.createPlacementsPreserveOrder(lightning, "default", {
@@ -37,6 +36,7 @@ jautils.createPlacementsPreserveOrder(lightning, "default", {
     } },
     { "depth", -1000100, "depth"},
     { "fillColor", "18110919", "color" },
+    { "group", "" },
     { "affectedByLightningBoxes", false },
     { "fill", true },
 })

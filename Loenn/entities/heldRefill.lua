@@ -14,6 +14,14 @@ jautils.createPlacementsPreserveOrder(heldRefill, "normal", {
     { "directory", "objects/refill" },
     { "lineColor", "ffff00", "color" },
     { "hitbox", "R,24,24,-12,-12", "FrostHelper.collider" },
+    { "legacyOptions", 1, "FrostHelper.flagEnum", {
+        innerFields = {
+            {
+                name = "FrostHelper.fields.heldRefill.legacyOptions.fixGravityHelper",
+                value = 1,
+            }
+        }
+    }}
 })
 
 function heldRefill.nodeSprite() end

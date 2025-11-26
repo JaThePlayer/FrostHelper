@@ -39,9 +39,9 @@ public class LightningColorTrigger : Trigger {
         }
     }
 
-    internal static LightningColorTrigger? GetFirstEnteredTrigger() {
+    internal static LightningColorTrigger? GetFirstEnteredTrigger(string groupId = "") {
         foreach (LightningColorTrigger trigger in Engine.Scene.Tracker.SafeGetEntities<LightningColorTrigger>()) {
-            if (trigger.PlayerIsInside) {
+            if (trigger.PlayerIsInside && trigger._groupId == groupId) {
                 return trigger;
             }
         }
@@ -85,7 +85,7 @@ public class LightningColorTrigger : Trigger {
         {
             GetColors(out var a, out var b);
             if (FrostModule.Session.LightningColorA != null) {
-                ChangeLightningColor(self, a, b);
+                ChangeLightningColor(self, [a, b]);
             }
         }
     }
@@ -94,7 +94,7 @@ public class LightningColorTrigger : Trigger {
         if (self.Scene is Level) {
             GetColors(out var a, out var b);
             if (FrostModule.Session.LightningColorA != null) {
-                ChangeLightningColor(self, a, b);
+                ChangeLightningColor(self, [a, b]);
             }
         }
         orig(self);
@@ -105,6 +105,8 @@ public class LightningColorTrigger : Trigger {
     private Color[] electricityColors;
     public string FillColor;
     public float FillColorMultiplier;
+
+    private readonly string _groupId;
     
     private static FieldInfo? Bolt_color = null;
 
@@ -118,6 +120,7 @@ public class LightningColorTrigger : Trigger {
         Color c2 = ColorHelper.GetColor(data.Attr("color2", "8cf7e2"));
         FillColor = ColorHelper.ColorToHex(ColorHelper.GetColor(data.Attr("fillColor", "ffffff")));
         FillColorMultiplier = data.Float("fillColorMultiplier", 0.1f);
+        _groupId = data.Attr("targetGroup");
         electricityColors = [c1, c2];
 
         if (!string.IsNullOrWhiteSpace(data.Attr("depth")))
@@ -126,33 +129,36 @@ public class LightningColorTrigger : Trigger {
 
     public override void OnEnter(Player player) {
         base.OnEnter(player);
-        ChangeLightningColor(electricityColors, NewDepth);
+        
+        var change = new FrostHelperSession.ArbitraryLightningGroupChange {
+            Colors = electricityColors,
+            FillColor = ColorHelper.GetColor(FillColor),
+            FillColorMultiplier = FillColorMultiplier,
+            Depth = NewDepth
+        };
+        
+        ChangeLightningColor(electricityColors, NewDepth, _groupId, change);
         if (persistent) {
-            FrostModule.Session.LightningColorA = ColorHelper.ColorToHex(electricityColors[0]);
-            FrostModule.Session.LightningColorB = ColorHelper.ColorToHex(electricityColors[1]);
-            FrostModule.Session.LightningFillColor = FillColor;
-            FrostModule.Session.LightningFillColorMultiplier = FillColorMultiplier;
+            if (_groupId == "") {
+                FrostModule.Session.LightningColorA = ColorHelper.ColorToHex(electricityColors[0]);
+                FrostModule.Session.LightningColorB = ColorHelper.ColorToHex(electricityColors[1]);
+                FrostModule.Session.LightningFillColor = FillColor;
+                FrostModule.Session.LightningFillColorMultiplier = FillColorMultiplier;
+            }
+            
+            FrostModule.Session.ArbitraryLightningGroupChanges[_groupId] = change;
         }
     }
 
-    public static void ChangeLightningColor(LightningRenderer? renderer, Color colorA, Color colorB, int? newDepth = null) {
-        if (renderer is null)
-            return;
+    public static void ChangeLightningColor(Color[] colors, int? newDepth, string groupId, FrostHelperSession.ArbitraryLightningGroupChange change) {
+        if (groupId == "")
+            ChangeLightningColor(Engine.Scene.Tracker.SafeGetEntity<LightningRenderer>(), colors, newDepth);
 
-        ChangeLightningColor(renderer, [colorA, colorB], newDepth);
-    }
-
-    public static void ChangeLightningColor(Color colorA, Color colorB, int? newDepth = null) {
-        ChangeLightningColor([colorA, colorB], newDepth);
-    }
-
-    public static void ChangeLightningColor(Color[] colors, int? newDepth = null) {
-        ChangeLightningColor(Engine.Scene.Tracker.SafeGetEntity<LightningRenderer>(), colors, newDepth);
-
-        if (Engine.Scene.Tracker.SafeGetEntity<CustomLightningRenderer>() is { } customRenderer) {
-            if (newDepth is { } depth)
-                customRenderer.Depth = depth;
-            customRenderer.SetColors(colors);
+        foreach (CustomLightningRenderer customRenderer in Engine.Scene.Tracker.SafeGetEntities<CustomLightningRenderer>()) {
+            if (customRenderer.GroupId != groupId)
+                continue;
+            
+            customRenderer.Apply(change);
         }
     }
 

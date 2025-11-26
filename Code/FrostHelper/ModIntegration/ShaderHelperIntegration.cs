@@ -1,6 +1,7 @@
 ﻿//#define USE_SHADER_HELPER
 
 using FrostHelper.Helpers;
+using System.Globalization;
 
 namespace FrostHelper.ModIntegration;
 
@@ -248,6 +249,37 @@ public static class ShaderHelperIntegration {
         return effect;
     }
 
+    internal static void SetValueDispatched(this EffectParameter effectParameter, object value, CultureInfo? cultureInfo = null) {
+        cultureInfo ??= CultureInfo.InvariantCulture;
+        
+        switch (effectParameter.ParameterType) {
+            case EffectParameterType.Void:
+                break;
+            case EffectParameterType.Bool:
+                effectParameter.SetValue(Convert.ToBoolean(value, cultureInfo));
+                break;
+            case EffectParameterType.Int32:
+                effectParameter.SetValue(Convert.ToInt32(value, cultureInfo));
+                break;
+            case EffectParameterType.Single:
+                effectParameter.SetValue(Convert.ToSingle(value, cultureInfo));
+                break;
+            case EffectParameterType.String:
+                effectParameter.SetValue(Convert.ToString(value, cultureInfo));
+                break;
+            case EffectParameterType.Texture2D:
+                var path = Convert.ToString(value, cultureInfo);
+                effectParameter.SetValue(GFX.Game[path].Texture.Texture);
+                break;
+            case EffectParameterType.Texture:
+            case EffectParameterType.Texture1D:
+            case EffectParameterType.Texture3D:
+            case EffectParameterType.TextureCube:
+            default:
+                throw new ArgumentOutOfRangeException(nameof(effectParameter));
+        }
+    }
+
     public static void ApplyParametersFrom(this Effect shader, Dictionary<string, string> parameters) {
         foreach (var item in parameters) {
             var prop = shader.Parameters[item.Key];
@@ -269,6 +301,8 @@ public static class ShaderHelperIntegration {
         }
     }
 
+    internal static Effect ApplyParametersFrom(this Effect shader, EffectParams parameters, Session session) => parameters.ApplyTo(session, shader);
+    
     public static void ApplyParametersFrom(this Effect shader, Dictionary<string, object> parameters, bool throwOnMissingProp = true) {
         foreach (var item in parameters) {
             var prop = shader.Parameters[item.Key];

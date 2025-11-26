@@ -44,7 +44,7 @@ public class PlusOneRefill : Entity {
         sprite.CenterOrigin();
         Add(flash = new Sprite(GFX.Game, spritepath + "/flash"));
         flash.Add("flash", "", 0.05f);
-        flash.OnFinish = delegate (string anim) {
+        flash.OnFinish = _ => {
             flash.Visible = false;
         };
         flash.CenterOrigin();

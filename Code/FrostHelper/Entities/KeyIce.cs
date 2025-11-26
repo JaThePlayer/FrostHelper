@@ -65,8 +65,6 @@ public sealed class KeyIce : Key {
 
     public bool LoadedFromPersistence { get; private set; }
 
-    public EntityData SourceData { get; private set; }
-
     private FrostHelperSession.DissolvedIceKeyInfo? DissolveInfo { get; set; }
 
 

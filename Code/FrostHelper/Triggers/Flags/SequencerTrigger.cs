@@ -159,12 +159,18 @@ internal sealed class SetSliderCmd(string sliderName, ConditionHelper.Condition 
 }
 
 internal sealed class DelayCmd(ConditionHelper.Condition time) : SequencerCommand {
-    public override object Execute(SequencerTrigger trigger, Player player) => time.GetFloat(player.level.Session);
+    public override object? Execute(SequencerTrigger trigger, Player player) {
+        if (FrostModule.TryGetCurrentLevel() is {} level)
+            return time.GetFloat(level.Session);
+
+        return null;
+    }
 }
 
 internal sealed class ActivateAtCmd(ConditionHelper.Condition nodeIdx) : SequencerCommand {
     public override object? Execute(SequencerTrigger trigger, Player player) {
-        trigger.ActivateAtNode(player, nodeIdx.GetInt(player.level.Session));
+        if (FrostModule.TryGetCurrentLevel() is {} level)
+            trigger.ActivateAtNode(player, nodeIdx.GetInt(level.Session));
         
         return null;
     }

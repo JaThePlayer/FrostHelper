@@ -1,3 +1,4 @@
+---@module "nineSliceSolidEntity"
 local nineSliceSolidEntity = require("mods").requireFromPlugin("libraries.nineSliceSolidEntity")
 
 local solidTexturePath = "objects/FrostHelper/badelineChaserBlock/solid"

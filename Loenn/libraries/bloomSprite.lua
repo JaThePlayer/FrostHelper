@@ -3,6 +3,10 @@ local gradientPath = "util/bloomgradient"
 
 local bloomSprite = {}
 
+---@param position NamedVector2
+---@param alpha number
+---@param radius number
+---@return DrawableSprite
 function bloomSprite.getSprite(position, alpha, radius)
     local gradientSprite = drawableSprite.fromTexture(gradientPath, position)
     alpha = math.max(math.min(alpha / 2, 0.6), 0.33)

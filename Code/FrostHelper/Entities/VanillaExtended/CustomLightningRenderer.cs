@@ -40,8 +40,13 @@ public class CustomLightningRenderer : Entity {
     
     internal Config Cfg;
 
-    internal record struct Config(bool AffectedByBreakerBoxes, EquatableArray<Config.BoltConfig> Bolts, int Depth, Color FillColor) {
-        public static Config Default => new(false, DefaultBolts, -1000100, ColorHelper.GetColor("18110919"));
+    internal string GroupId => Cfg.GroupId;
+    
+    private FrostHelperSession.ArbitraryLightningGroupChange? SessionChange =>
+        FrostModule.Session.ArbitraryLightningGroupChanges.GetValueOrDefault(GroupId);
+
+    internal record struct Config(string GroupId, bool AffectedByBreakerBoxes, EquatableArray<Config.BoltConfig> Bolts, int Depth, Color FillColor) {
+        public static Config Default => new("", false, DefaultBolts, -1000100, ColorHelper.GetColor("18110919"));
 
         public record struct BoltConfig(Color Color, float Thickness) : ISpanParsable<BoltConfig> {
             public static BoltConfig Parse(string s, IFormatProvider? provider) {
@@ -99,6 +104,12 @@ public class CustomLightningRenderer : Entity {
         edgeVerts = new VertexPositionColor[1024];
         BloomVerts = new VertexPositionColor[1024];
     }
+    
+    public void Apply(FrostHelperSession.ArbitraryLightningGroupChange change) {
+        if (change.Depth is { } depth)
+            Depth = depth;
+        SetColors(change.Colors);
+    }
 
     public void SetColors(Color[] colors) {
         var span = ElectricityColors;
@@ -114,9 +125,13 @@ public class CustomLightningRenderer : Entity {
     public override void Awake(Scene scene) {
         base.Awake(scene);
 
-        if (FrostModule.Session.LightningColorA != null) {
-            API.API.GetLightningColors(out var a, out var b, out var _, out float _);
+        if (GroupId == "" && FrostModule.Session.LightningColorA != null) {
+            API.API.GetLightningColors(out var a, out var b, out _, out float _);
             SetColors([a, b]);
+        }
+
+        if (FrostModule.Session.ArbitraryLightningGroupChanges.TryGetValue(GroupId, out var change)) {
+            SetColors(change.Colors);
         }
     }
 
@@ -287,8 +302,8 @@ public class CustomLightningRenderer : Entity {
         base.Render();
         Camera camera = (Scene as Level)!.Camera;
         int num = 0;
-        var fillColor = LightningColorTrigger.GetFillColor(FillColor);
-        var fillColorMultiplier = LightningColorTrigger.GetLightningFillColorMultiplier(1f);
+        var fillColor = (LightningColorTrigger.GetFirstEnteredTrigger(GroupId)?.FillColor is {} f ? ColorHelper.GetColor(f) : default(Color?)) ?? SessionChange?.FillColor ?? Cfg.FillColor;
+        var fillColorMultiplier = LightningColorTrigger.GetFirstEnteredTrigger(GroupId)?.FillColorMultiplier ?? SessionChange?.FillColorMultiplier ?? 1f;
         RenderFills(ref num, ref edgeVerts, fillColor * fillColorMultiplier);
 
         if (edges.Count > 0 && electricityColorsLerped.Length > 0) {

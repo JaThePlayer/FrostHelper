@@ -1,3 +1,4 @@
+---@module "jautils"
 local jautils = require("mods").requireFromPlugin("libraries.jautils")
 
 local flagSequencer = {

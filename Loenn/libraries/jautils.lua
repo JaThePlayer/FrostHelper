@@ -224,6 +224,26 @@ jautils.spinnerDirectoryFieldData = {
     langDir = "customSpinner",
 }
 
+jautils.effectParametersFieldData = {
+    fieldType = "list",
+    elementSeparator = ";",
+    elementDefault = "key=1",
+    elementOptions = {
+        fieldType = "FrostHelper.complexField",
+            separator = "=",
+            innerFields = {
+                {
+                    name = "FrostHelper.fields.effectParams.key",
+                    default = "key"
+                },
+                {
+                    name = "FrostHelper.fields.effectParams.value",
+                    default = 1,
+                },
+            }
+    },
+}
+
 function jautils.counterConditionToString(counter, operation, target)
     return string.format("%s %s %s", counter, jautils.counterOperationToMathExpr[operation], target)
 end
@@ -570,11 +590,13 @@ end
 ---@alias fieldType string|table|nil
 ---@alias fieldData any|nil
 
+---@alias JaUtilsPlacementData { [1]: fieldName, [2]: fieldDefaultValue, [3]: fieldType, [4]: fieldData, [5]: placementEntryConfig<T>|nil }[]
+
 ---Creates placements for this entity handler, as well as ignoredFields, fieldOrder and fieldInformation
 ---@generic T
 ---@param handler EntityHandler<T>
 ---@param placementName string
----@param placementData { [1]: fieldName, [2]: fieldDefaultValue, [3]: fieldType, [4]: fieldData, [5]: placementEntryConfig<T>|nil }[]
+---@param placementData JaUtilsPlacementData
 ---@param appendSize boolean|nil
 function jautils.createPlacementsPreserveOrder(handler, placementName, placementData, appendSize)
     handler.placements = {{

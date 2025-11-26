@@ -1,4 +1,5 @@
 ﻿using FrostHelper.Helpers;
+using FrostHelper.ModIntegration;
 
 namespace FrostHelper;
 
@@ -18,7 +19,21 @@ public class HeldRefill : Entity {
 
     private readonly Color LineColor;
 
+    [Flags]
+    private enum LegacyOptions {
+        Original = 0,
+        FixGravityHelper = 1,
+        
+        /// <summary>
+        /// Most up-to-date, default in Loenn
+        /// </summary>
+        Modern = FixGravityHelper,
+    }
+    
+    private readonly LegacyOptions _legacyOption;
+
     public HeldRefill(EntityData data, Vector2 offset) : base(data.Position + offset) {
+        _legacyOption = data.Enum("legacyOptions", LegacyOptions.Original);
         var directory = data.Attr("directory", "objects/refill").TrimEnd('/');
         LineColor = data.GetColor("lineColor", "ffff00");
         
@@ -172,7 +187,6 @@ public class HeldRefill : Entity {
         float travelPercentDelta = Engine.DeltaTime * (refill.SpeedMult / (Vector2.Distance(start, end) / 64f));
         refill.TravelPercent += travelPercentDelta;
 
-        // new:
         player.Speed = Calc.AngleToVector(Calc.Angle(start, end), Vector2.Distance(start, end) * travelPercentDelta / Engine.DeltaTime).Floor();
 
         if (refill.TravelPercent > refill.Nodes.Length - 1) {
@@ -180,23 +194,23 @@ public class HeldRefill : Entity {
             return Player.StNormal;
         }
 
-        // new if
         if (refill.PercentageToIndex(refill.TravelPercent) != index) {
             index = refill.PercentageToIndex(refill.TravelPercent);
             start = refill.Nodes[index - 1];
             end = refill.Nodes[index];
 
-            //player.Speed = ((start +Calc.AngleToVector(Calc.Angle(start, end), Vector2.Distance(start, end) * (refill.TravelPercent - (int)Math.Floor(refill.TravelPercent)))).Floor() - player.Position) * (1f / Engine.DeltaTime);
             player.Position = start;
             player.Speed = Calc.AngleToVector(Calc.Angle(start, end), Vector2.Distance(start, end) * travelPercentDelta / Engine.DeltaTime).Floor();
         }
 
+        if (refill._legacyOption.HasFlag(LegacyOptions.FixGravityHelper)) {
+            player.Speed = GravityHelperIntegration.InvertIfPlayerInverted(player.Speed);
+        }
+        
         refill.Position = player.Position + player.Speed * Engine.DeltaTime;
 
         if (player.OnGround() && player.CanUnDuck) {
-
             if (Input.Jump.Pressed && player.jumpGraceTimer > 0f) {
-                //player.Invoke("SuperJump");
                 player.Jump(true, true);
             }
 

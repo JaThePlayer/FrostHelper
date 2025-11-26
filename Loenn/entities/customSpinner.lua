@@ -197,7 +197,7 @@ end
 triggerSpinner.associatedMods = spinner.associatedMods
 
 function spinner.sprite(room, entity)
-    local color = utils.getColor(entity.tint or "ffffff")
+    local color = utils.getColor(entity.tint or "ffffff") or "ffffff"
     local cache = getSpriteCache(entity)
     local imageScale = entity.imageScale or 1
 

@@ -3,7 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace FrostHelper.Helpers;
 
-internal readonly record struct Recovery(int DashRecovery, int StaminaRecovery, int JumpRecovery) : ISpanParsable<Recovery> {
+internal readonly record struct Recovery(int DashRecovery, int StaminaRecovery, int JumpRecovery) : IDetailedParsable<Recovery> {
     internal struct SavedPlayerData(Player player) {
         public int PrevDashes = player.Dashes;
         public float PrevStamina = player.Stamina;
@@ -111,31 +111,18 @@ internal readonly record struct Recovery(int DashRecovery, int StaminaRecovery, 
         }
     }
 
-    public static Recovery Parse(string s, IFormatProvider? provider) => Parse(s.AsSpan(), provider);
-
-    public static bool TryParse([NotNullWhen(true)] string? s, IFormatProvider? provider, out Recovery result)
-        => TryParse(s.AsSpan(), provider, out result);
-
-    public static Recovery Parse(ReadOnlySpan<char> s, IFormatProvider? provider) {
-        if (!TryParse(s, provider, out var result)) {
-            NotificationHelper.Notify($"Failed to parse {s} as a Recovery.");
-        }
-
-        return result;
-    }
-
-    public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, out Recovery result) {
+    public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, out Recovery result, [NotNullWhen(false)] out string? error) {
         var parser = new SpanParser(s);
         result = default;
-        if (!parser.ReadUntil<int>(';').TryUnpack(out var dash))
+        if (!parser.ReadUntil<int>(';', provider).TryUnpack(out var dash)
+         || !parser.ReadUntil<int>(';', provider).TryUnpack(out var stamina)
+         || !parser.Read<int>(provider).TryUnpack(out var jumps)
+         || !parser.IsEmpty) {
+            error = $"Couldn't parse '{s}' as a Recovery.";
             return false;
-        if (!parser.ReadUntil<int>(';').TryUnpack(out var stamina))
-            return false;
-        if (!parser.Read<int>().TryUnpack(out var jumps))
-            return false;
-        if (!parser.IsEmpty)
-            return false;
-        
+        }
+
+        error = null;
         result = new Recovery(dash, stamina, jumps);
         return true;
     }

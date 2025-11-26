@@ -10,12 +10,12 @@ internal static class FastDynamicData {
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static T? GetDynamicDataAttached<T>(this object obj) where T : class, IAttachable {
-        return DynamicData.For(obj).Data.TryGetValue(T.DynamicDataName, out var ret) ? (T?) ret : default;
+        return DynamicData.For(obj).Data.TryGetValue(typeof(T).Name /*T.DynamicDataName*/, out var ret) ? (T?) ret : default;
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static T GetOrCreateDynamicDataAttached<T>(this object obj) where T : class, IAttachable, new() {
-        ref var sl = ref CollectionsMarshal.GetValueRefOrAddDefault(DynamicData.For(obj).Data, T.DynamicDataName, out var exists);
+        ref var sl = ref CollectionsMarshal.GetValueRefOrAddDefault(DynamicData.For(obj).Data, typeof(T).Name /*T.DynamicDataName*/, out var exists);
         sl ??= new T();
         
         return (T)sl;
@@ -27,7 +27,7 @@ internal static class FastDynamicData {
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void SetDynamicDataAttached<T>(this object obj, T? value) where T : class, IAttachable {
-        DynamicData.For(obj).Data[T.DynamicDataName] = value;
+        DynamicData.For(obj).Data[typeof(T).Name /*T.DynamicDataName*/] = value;
     }
     /*
     // ConditionalWeakTable<object, _Data_>
@@ -134,5 +134,7 @@ internal static class FastDynamicData {
 }
 
 internal interface IAttachable {
-    public static abstract string DynamicDataName { get; }
+    // Causes crashes in eevee helper due to it using dynamiddata on an interface?!?!
+    // Bring this back once MonoMod is updated to fix the crash:
+    // public static abstract string DynamicDataName { get; }
 }

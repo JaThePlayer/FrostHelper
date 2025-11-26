@@ -1,10 +1,11 @@
 local jautils = require("mods").requireFromPlugin("libraries.jautils")
 
-local flashlightColor = {}
-
-flashlightColor.name = "FrostHelper/FlashlightColorTrigger"
-flashlightColor.depth = 2000
-flashlightColor.category = "visual"
+---@type TriggerHandler
+local flashlightColor = {
+    name = "FrostHelper/FlashlightColorTrigger",
+    depth = 2000,
+    category = "visual"
+}
 
 flashlightColor.placements = {
     name = "default",

@@ -40,30 +40,12 @@
   <ItemGroup>
     <Reference Include="Celeste" HintPath="$(CELESTEGAMEPATH)\Celeste.dll" Private="False" Publicize="True" />
     <Reference Include="MMHOOK_Celeste" HintPath="$(CELESTEGAMEPATH)\MMHOOK_Celeste.dll" Private="False" />
+    <Reference Include="FNA" HintPath="$(CELESTEGAMEPATH)\FNA.dll" Private="False" />
     <!-- There's no Nuget package for MonoModReorg.Patcher yet...-->
     <Reference Include="MMHOOK_Celeste" HintPath="$(CELESTEGAMEPATH)\MonoMod.Patcher.dll" Private="False" />
 
     <Reference Include="CommunalHelper" HintPath="lib-stripped\CommunalHelper.dll" Private="False" />
   </ItemGroup>
-
-  <Choose>
-    <When Condition="'$(OS)' != 'Windows_NT' Or Exists('$(CELESTEGAMEPATH)\FNA.dll')">
-      <ItemGroup>
-        <Reference Include="FNA">
-          <HintPath>$(CELESTEGAMEPATH)\FNA.dll</HintPath>
-          <Private>False</Private>
-        </Reference>
-      </ItemGroup>
-    </When>
-
-    <Otherwise>
-      <ItemGroup>
-        <Reference Include="Microsoft.Xna.Framework" HintPath="$(WINDIR)\Microsoft.NET\assembly\GAC_32\Microsoft.Xna.Framework\v4.0_4.0.0.0__842cf8be1de50553\Microsoft.Xna.Framework.dll" />
-        <Reference Include="Microsoft.Xna.Framework.Game" HintPath="$(WINDIR)\Microsoft.NET\assembly\GAC_32\Microsoft.Xna.Framework.Game\v4.0_4.0.0.0__842cf8be1de50553\Microsoft.Xna.Framework.Game.dll" />
-        <Reference Include="Microsoft.Xna.Framework.Graphics" HintPath="$(WINDIR)\Microsoft.NET\assembly\GAC_32\Microsoft.Xna.Framework.Graphics\v4.0_4.0.0.0__842cf8be1de50553\Microsoft.Xna.Framework.Graphics.dll" />
-      </ItemGroup>
-    </Otherwise>
-  </Choose>
 
   <Target Name="CopyFiles" AfterTargets="Build">
     <Copy SourceFiles="$(OutputPath)\$(AssemblyName).dll" DestinationFolder="bin" />

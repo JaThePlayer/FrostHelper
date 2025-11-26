@@ -11,8 +11,9 @@ jautils.createPlacementsPreserveOrder(lightningColorTrigger, "normal", {
     { "color2", "8cf7e2", "color" },
     { "fillColor", "ffffff", "color" },
     { "fillColorMultiplier", 0.1 },
+    { "depth", -1000100, "depth" },
+    { "targetGroup", "" },
     { "persistent", true },
-    { "depth", -1000100, "depth" }
 })
 
 return lightningColorTrigger

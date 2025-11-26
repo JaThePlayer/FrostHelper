@@ -1,17 +1,22 @@
 local attachGroupHelper = {}
 
+---@param room Room
+---@return { [string]: true }
 function attachGroupHelper.findAllGroups(room)
     local ids = {}
 
     for _, target in ipairs(room.entities) do
-        if (target.attachGroup) then
-            ids[target.attachGroup] = true
+        local gr = target["attachGroup"]
+        if gr then
+            ids[gr] = true
         end
     end
 
     return ids
 end
 
+---@param room Room
+---@return string[]
 function attachGroupHelper.findAllGroupsAsList(room)
     if not room then
         return {}
@@ -26,6 +31,8 @@ function attachGroupHelper.findAllGroupsAsList(room)
     return list
 end
 
+---@param room Room
+---@return integer
 function attachGroupHelper.findNewGroup(room)
     local ids = attachGroupHelper.findAllGroups(room)
 

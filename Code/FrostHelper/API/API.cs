@@ -191,21 +191,26 @@ public static partial class API {
     /// Sets the current Lightning block colors for the current <see cref="LightningRenderer"/>
     /// </summary>
     public static void SetLightningColors(Color colorA, Color colorB) {
-        LightningColorTrigger.ChangeLightningColor(colorA, colorB);
+        SetLightningColors([colorA, colorB]);
     }
 
     /// <summary>
     /// Sets the current Lightning block colors for the current <see cref="LightningRenderer"/>
     /// </summary>
     public static void SetLightningColors(Color[] colors) {
-        LightningColorTrigger.ChangeLightningColor(colors);
+        LightningColorTrigger.ChangeLightningColor(colors, null, "", new FrostHelperSession.ArbitraryLightningGroupChange {
+            Colors = colors,
+            Depth = null,
+            FillColor = null,
+            FillColorMultiplier = null,
+        });
     }
 
     /// <summary>
     /// Sets the current Lightning block colors for a given <paramref name="renderer"/>
     /// </summary>
     public static void SetLightningColors(LightningRenderer? renderer, Color colorA, Color colorB) {
-        LightningColorTrigger.ChangeLightningColor(renderer, colorA, colorB);
+        LightningColorTrigger.ChangeLightningColor(renderer, [colorA, colorB]);
     }
 
     /// <summary>

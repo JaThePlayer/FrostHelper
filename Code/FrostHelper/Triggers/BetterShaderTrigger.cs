@@ -11,6 +11,10 @@ public class BetterShaderTrigger : Trigger {
     public bool Activated;
     public bool Clear;
     public ConditionHelper.Condition Flag;
+    
+    private readonly EffectParams _effectParams;
+
+    private string? _startingRoom;
 
     public BetterShaderTrigger(EntityData data, Vector2 offset) : base(data, offset) {
         Effects = data.Attr("effects").Split(',');
@@ -18,6 +22,12 @@ public class BetterShaderTrigger : Trigger {
         Activated = data.Bool("alwaysOn", true);
         Clear = data.Bool("clear", false);
         Flag = data.GetCondition("flag", "");
+        _effectParams = data.Parse("parameters", EffectParams.Empty);
+    }
+
+    public override void Added(Scene scene) {
+        base.Added(scene);
+        _startingRoom = SceneAs<Level>().Session.Level;
     }
 
     public override void OnEnter(Player player) {
@@ -36,18 +46,23 @@ public class BetterShaderTrigger : Trigger {
 
     public static void Apply_HOOK(On.Celeste.Glitch.orig_Apply orig, VirtualRenderTarget source, float timer, float seed, float amplitude) {
         orig(source, timer, seed, amplitude);
-        foreach (var trigger in FrostModule.GetCurrentLevel().Tracker.SafeGetEntities<BetterShaderTrigger>()) {
-            if (trigger is BetterShaderTrigger s && s.Activated && s.Flag.Check())
-                foreach (var item in s.Effects) {
-                    Apply(source, source, ShaderHelperIntegration.GetEffect(item), s.Clear);
-
-                }
+        
+        if (FrostModule.TryGetCurrentLevel() is not { } level)
             return;
+        
+        foreach (var trigger in level.Tracker.SafeGetEntities<BetterShaderTrigger>()) {
+            if (trigger is BetterShaderTrigger s && s.Activated && s.Flag.Check() && s._startingRoom == level.Session.Level) {
+                
+                foreach (var item in s.Effects) {
+                    Apply(source, source, ShaderHelperIntegration.GetEffect(item).ApplyParametersFrom(s._effectParams, level.Session), s.Clear);
+                }
+            }
+            //return;
         }
     }
 
     public static void Apply(VirtualRenderTarget source, VirtualRenderTarget target, Effect eff, bool clear = false) {
-        ShaderHelperIntegration.ApplyStandardParameters(eff);
+        eff.ApplyStandardParameters();
         VirtualRenderTarget tempA = GameplayBuffers.TempA;
 
         Engine.Instance.GraphicsDevice.SetRenderTarget(tempA);
@@ -73,7 +88,7 @@ public class BetterShaderTrigger : Trigger {
     }
 
     public static void SimpleApply(RenderTarget2D source, VirtualRenderTarget target, Effect eff) {
-        ShaderHelperIntegration.ApplyStandardParameters(eff);
+        eff.ApplyStandardParameters();
 
         Engine.Instance.GraphicsDevice.SetRenderTarget(target);
 

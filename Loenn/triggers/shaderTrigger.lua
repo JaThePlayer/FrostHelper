@@ -1,3 +1,4 @@
+---@module "jautils"
 local jautils = require("mods").requireFromPlugin("libraries.jautils")
 
 local shaderTrigger = {
@@ -9,6 +10,7 @@ jautils.createPlacementsPreserveOrder(shaderTrigger, "default", {
     { "effects", "", "list" },
     { "flag", "", "FrostHelper.condition" },
     { "alwaysOn", true },
+    { "parameters", "", jautils.effectParametersFieldData }
 }, true)
 
 jautils.addExtendedText(shaderTrigger, function (trigger)

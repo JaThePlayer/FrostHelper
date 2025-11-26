@@ -56,14 +56,14 @@ public static class Extensions {
         return parser.ParseList<T>(separator).ToArray();
     }
     
-    internal static T Parse<T>(this EntityData data, string key, T def) where T : ISpanParsable<T> {
+    internal static T Parse<T>(this EntityData data, string key, T def) where T : IDetailedParsable<T> {
         if (data.String(key) is not { } str)
             return def;
 
-        if (T.TryParse(str, null, out var result))
+        if (T.TryParse(str, null, out var result, out var errorMessage))
             return result;
 
-        NotificationHelper.Notify($"Failed to parse {str} as a {typeof(T)}!");
+        NotificationHelper.Notify(errorMessage);
         return def;
     }
 

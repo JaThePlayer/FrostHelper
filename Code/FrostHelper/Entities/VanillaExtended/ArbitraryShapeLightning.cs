@@ -144,7 +144,8 @@ public class ArbitraryShapeLightning : Entity {
         Fill = data.Bool("fill", true);
         Depth = data.Int("depth", -1000100);
 
-        _config = new(
+        _config = new CustomLightningRenderer.Config(
+            data.Attr("group", ""),
             data.Bool("affectedByLightningBoxes"), 
             data.ParseArray("edgeBolts", ';', CustomLightningRenderer.DefaultBolts.Backing).ToArray(),
             Depth, 

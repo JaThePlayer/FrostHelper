@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Runtime.CompilerServices;
 
 namespace FrostHelper.Helpers;
@@ -15,7 +16,6 @@ internal ref struct SpanParser(ReadOnlySpan<char> input)
     {
         var success = T.TryParse(_remaining[..len], format ?? CultureInfo.InvariantCulture, out var ret);
 
-        //Remaining = Remaining.Length >= len ? Remaining[len..] : Remaining[(len + 1)..];
         _remaining = _remaining[len..];
         
         if (!success)
@@ -24,6 +24,17 @@ internal ref struct SpanParser(ReadOnlySpan<char> input)
         }
 
         return new Res<T>(ret!, true);
+    }
+    
+    private bool TryReadSliceDetailed<T>(IFormatProvider? format, int len, 
+        [NotNullWhen(true)] out T? res, [NotNullWhen(false)] out string? errorMsg) 
+        where T : IDetailedParsable<T>
+    {
+        var success = T.TryParse(_remaining[..len], format ?? CultureInfo.InvariantCulture, out res, out errorMsg);
+
+        _remaining = _remaining[len..];
+
+        return success;
     }
     
     private ReadOnlySpan<char> ReadSliceStr(int len)
@@ -64,6 +75,21 @@ internal ref struct SpanParser(ReadOnlySpan<char> input)
             return ReadSlice<T>(format, rem.Length);
         
         var ret = ReadSlice<T>(format, len);
+        _remaining = _remaining[1..];
+
+        return ret;
+    }
+    
+    public bool TryReadUntil<T>(char until, [NotNullWhen(true)] out T? res, 
+        [NotNullWhen(false)] out string? errorMsg, IFormatProvider? format = null) 
+        where T : IDetailedParsable<T>
+    {
+        var rem = _remaining;
+        var len = rem.IndexOf(until);
+        if (len == -1)
+            return TryReadSliceDetailed(format, rem.Length, out res, out errorMsg);
+        
+        var ret = TryReadSliceDetailed(format, len, out res, out errorMsg);
         _remaining = _remaining[1..];
 
         return ret;
@@ -247,6 +273,46 @@ internal ref struct SpanParser(ReadOnlySpan<char> input)
             }
         }
         
+        return true;
+    }
+    
+    public bool TryParseList<T>(char separator, out List<T> res, [NotNullWhen(false)] out string? errorMsg, 
+        IFormatProvider? provider = null) where T : IDetailedParsable<T> {
+        res = [];
+        
+        while (!IsEmpty) {
+            if (TryReadUntil<T>(separator, out var t, out errorMsg, provider)) 
+            {
+                res.Add(t);
+            }
+            else
+            {
+                return false;
+            }
+        }
+        
+        errorMsg = null;
+        return true;
+    }
+
+    public bool TryParsePair<TLeft, TRight>(char separator, [NotNullWhen(true)] out TLeft? left,
+        [NotNullWhen(true)] out TRight? right) 
+        where TLeft : ISpanParsable<TLeft>
+        where TRight : ISpanParsable<TRight> {
+        right = default;
+        
+        return ReadUntil<TLeft>(separator).TryUnpack(out left) 
+            && Read<TRight>().TryUnpack(out right);
+    }
+    
+    public bool TryReadStrPair(char separator, out ReadOnlySpan<char> left, out ReadOnlySpan<char> right) {
+        left = ReadStrUntil(separator);
+        if (IsEmpty) {
+            right = default;
+            return false;
+        }
+
+        right = ReadStr();
         return true;
     }
 }

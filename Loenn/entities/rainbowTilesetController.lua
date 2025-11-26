@@ -1,3 +1,4 @@
+---@module "controllerEntity"
 local controllerEntity = require("mods").requireFromPlugin("libraries.controllerEntity")
 local fakeTilesHelper = require("helpers.fake_tiles")
 
