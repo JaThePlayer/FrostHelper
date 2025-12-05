@@ -270,18 +270,23 @@ internal static class FunctionCommands {
         }
     }
 
-    private sealed class PowerCondition(Condition x, Condition y) : FunctionCondition(x, y) {
-
+    private sealed class PowerCondition(Condition x, Condition y, Type type) : FunctionCondition(x, y) {
+        protected internal override Type ReturnType => type;
         public override object Get(Session session, object? userdata) {
-            return Math.Pow(x.GetFloat(session, userdata), y.GetFloat(session, userdata));
+            return (float)Math.Pow(x.GetFloat(session, userdata), y.GetFloat(session, userdata));
         }
         
         public static bool TryCreate(IReadOnlyList<Condition> args, [NotNullWhen(true)] out Condition? condition, [NotNullWhen(false)] out string? errorMessage) {
             if (args is not [var x, var y]) {
                 return ArgumentAmtMismatch(args.Count, 2, out condition, out errorMessage);
             }
+            if (x.ReturnType == typeof(int)) {
+                if (y.ReturnType == typeof(int)) {
+                    return Ok(new PowerCondition(x, y, typeof(int)), out condition, out errorMessage);
+                } 
+            }
+            return Ok(new PowerCondition(x, y, typeof(float)), out condition, out errorMessage);
 
-            return Ok(new PowerCondition(x, y), out condition, out errorMessage);
         }
     }
 
