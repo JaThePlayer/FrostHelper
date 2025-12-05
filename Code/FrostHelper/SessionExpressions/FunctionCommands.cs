@@ -23,6 +23,7 @@ internal static class FunctionCommands {
         ["truncate"] = PureMathCondition.TryCreateFloat<TruncateFunc>,
         ["round"] = PureMathCondition.TryCreateFloat<RoundFunc>,
         ["vec"] = VecCondition.TryCreate,
+        ["pow"] = PowerCondition.TryCreate,
     };
 
     public static void Register(string modName, string cmdName, Func<Session, object?, IReadOnlyList<object>, object> func) {
@@ -266,6 +267,24 @@ internal static class FunctionCommands {
                     return T.Clamp(xVal, maxVal, minVal);
                 return T.Clamp(xVal, minVal, maxVal);
             }
+        }
+    }
+
+    private sealed class PowerCondition(Condition x, Condition y) : FunctionCondition(x, y) {
+        protected internal override Type ReturnType => type;
+
+        public override object Get(Session session, object? userdata) {
+            if (ReturnType == typeof(int))
+                return Get<int>(session, userdata);
+            return Get<float>(session, userdata);
+        }
+        
+        public static bool TryCreate(IReadOnlyList<Condition> args, [NotNullWhen(true)] out Condition? condition, [NotNullWhen(false)] out string? errorMessage) {
+            if (args is not [var x, var y]) {
+                return ArgumentAmtMismatch(args.Count, 2, out condition, out errorMessage);
+            }
+
+            return Ok(new PowerCondition(x, y), out condition, out errorMessage);
         }
     }
 
