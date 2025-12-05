@@ -271,12 +271,9 @@ internal static class FunctionCommands {
     }
 
     private sealed class PowerCondition(Condition x, Condition y) : FunctionCondition(x, y) {
-        protected internal override Type ReturnType => type;
 
         public override object Get(Session session, object? userdata) {
-            if (ReturnType == typeof(int))
-                return Get<int>(session, userdata);
-            return Get<float>(session, userdata);
+            return Math.Pow(x.GetFloat(session, userdata), y.GetFloat(session, userdata));
         }
         
         public static bool TryCreate(IReadOnlyList<Condition> args, [NotNullWhen(true)] out Condition? condition, [NotNullWhen(false)] out string? errorMessage) {
