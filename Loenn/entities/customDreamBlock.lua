@@ -28,6 +28,7 @@ jautils.createPlacementsPreserveOrder(dreamBlock, "custom_dream_block", {
     { "disabledLineColor", "6a8480", "color" },
     { "moveEase", "SineInOut", jautils.easings },
     { "moveSpeedMult", 1.0 },
+    { "particlePath", "objects/dreamblock/particles" },
     { "oneUse", false },
     { "below", false },
     { "conserveSpeed", false },

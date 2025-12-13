@@ -30,6 +30,8 @@ internal sealed class DynamicRainGroup() : Component(true, false) {
     
     public ParticleSystem Particles = new(Depths.Particles, 100);
 
+    public Action<Player, Color>? OnPlayer { get; init; }
+
     private static Type[]? _defaultEntityFilter;
     public Type[] EntityFilter { get; set; } = 
         _defaultEntityFilter ??= FrostModule.GetTypes("Celeste.Player,Celeste.Solid,Celeste.Water");
@@ -191,7 +193,7 @@ internal sealed class DynamicRainGenerator : Component {
         // Since none of this is visible, there is no point in simulating precision differences from TimeRate changes anyway -
         // - this only needs to be a rough estimate.
         for (float f = 0; f < PreSimulationTime; f += 1f / 60f)
-            UpdateSimulation();
+            UpdateSimulation(1f / 60f);
     }
 
     public override void Update() {
@@ -199,7 +201,7 @@ internal sealed class DynamicRainGenerator : Component {
         if (!Visible)
             return;
 
-        UpdateSimulation();
+        UpdateSimulation(Engine.DeltaTime);
     }
 
     private Rectangle _bounds;
@@ -256,7 +258,7 @@ internal sealed class DynamicRainGenerator : Component {
         }
     }
     
-    private void UpdateSimulation() {
+    private void UpdateSimulation(float deltaTime) {
         if (Scene is not Level level)
             return;
         var cam = level.Camera;
@@ -283,7 +285,8 @@ internal sealed class DynamicRainGenerator : Component {
             }
         }
 
-        var playerInside = false;
+        Player? playerInside = null;
+        Color firstPlayerCollidedColor = default;
         
         var rains = _rains;
         var targetEntities = CollectionsMarshal.AsSpan(_potentialCollisionTargets);
@@ -295,18 +298,21 @@ internal sealed class DynamicRainGenerator : Component {
             if (rain.Color == default)
                 continue;
 
-            rain.Position += rain.Speed * Engine.DeltaTime;
+            rain.Position += rain.Speed * deltaTime;
             var shouldInit = false;
             if (rain.Position.Y > bottom) {
                 shouldInit = true;
             } else if (colliderBounds.Contains(rain.Position)) {
-                if (CheckCollision(i, rain.Position, targetRainColliders) is { } rainCollider) {
+                if (CheckCollision(i, ref rain, targetRainColliders) is { } rainCollider) {
                     shouldInit = true;
                     if (rainCollider.MakeSplashes && CameraCullHelper.IsPointVisible(rain.Position, 8f, cam)) {
                         rainCollider.MakeSplashesImpl(Group.Particles, ref rain);
                     }
                 } else if (CheckCollision(rain.Position, targetEntities) is { } collidedEntity) {
-                    playerInside |= collidedEntity.GetType() == typeof(Player);
+                    if (playerInside is null) {
+                        playerInside = collidedEntity.GetType() == typeof(Player) ? (Player)collidedEntity : null;
+                        firstPlayerCollidedColor = rain.Color;
+                    }
 
                     if (CameraCullHelper.IsPointVisible(rain.Position, 8f, cam)) {
                         Group.Particles.Emit(
@@ -330,9 +336,11 @@ internal sealed class DynamicRainGenerator : Component {
         _potentialCollisionTargets.Clear();
         _potentialRainColliders.Clear();
         _wasEnabled = enabled;
-        
-        if (playerInside)
-            Group.PlayerInsideTimer = Engine.DeltaTime * 45f;
+
+        if (playerInside is {} player) {
+            Group.PlayerInsideTimer = deltaTime * 45f;
+            Group.OnPlayer?.Invoke(player, firstPlayerCollidedColor);
+        }
     }
 
     private Entity? CheckCollision(NumVector2 point, Span<Entity> collidedEntities) {
@@ -343,9 +351,9 @@ internal sealed class DynamicRainGenerator : Component {
         return null;
     }
     
-    private RainCollider? CheckCollision(int rainIdx, NumVector2 point, Span<RainCollider> collidedEntities) {
+    private RainCollider? CheckCollision(int rainIdx, ref Rain rain, Span<RainCollider> collidedEntities) {
         foreach (RainCollider e in collidedEntities)
-            if (FastPointCollision(point, e.Collider)) {
+            if (FastPointCollision(rain.Position, e.Collider)) {
                 if (e.PassThroughChance > 0f) {
                     var store = _collidersWithin[rainIdx] ??= [];
                     if (!store.Add(e) || _random.NextFloat(1f) < e.PassThroughChance) {
@@ -353,7 +361,7 @@ internal sealed class DynamicRainGenerator : Component {
                     }
                 }
 
-                if (e.TryHit(point)) {
+                if (e.TryHit(ref rain)) {
                     return e;
                 }
             }
@@ -404,7 +412,7 @@ internal sealed class DynamicRainGenerator : Component {
         if (collider.GetType() == typeof(Hitbox)) {
             // Fast path, because Hitbox collisions are stupidly slow
             var hitbox = (Hitbox) collider;
-            var pos = hitbox.Position + hitbox.Entity.Position;
+            var pos = hitbox.Position + (hitbox.Entity?.Position ?? default);
             var bounds = new Rectangle((int)pos.X, (int)pos.Y, (int)hitbox.width, (int)hitbox.height);
             if (bounds.Intersects(rect)) {
                 colliderBounds = colliderBounds.Width == 0 ? bounds : RectangleExt.Merge(colliderBounds, bounds);

@@ -229,10 +229,12 @@ internal sealed class ArbitraryLight : VertexLight {
         if (Fill is null)
             return;
         
+        var lightPos = Position + Entity.Position;
+        Draw.HollowRect(Bounds.MovedBy(lightPos), Color.Pink);
         for (int i = 0; i < Fill.Length - 2; i += 3) {
-            var vert1 = Fill[i];
-            var vert2 = Fill[i + 1];
-            var vert3 = Fill[i + 2];
+            var vert1 = Fill[i].AddXY(lightPos);
+            var vert2 = Fill[i + 1].AddXY(lightPos);
+            var vert3 = Fill[i + 2].AddXY(lightPos);
             
             Draw.Line(new Vector2(vert1.X, vert1.Y), new Vector2(vert2.X, vert2.Y), Color.Pink);
             Draw.Line(new Vector2(vert2.X, vert2.Y), new Vector2(vert3.X, vert3.Y), Color.Pink);

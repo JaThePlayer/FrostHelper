@@ -172,7 +172,30 @@ internal static class DecalContainerHelpers {
         var w = t.Width * Math.Abs(item.Scale.X);
         var h = t.Height * Math.Abs(item.Scale.Y);
 
-        return new() { decal = item, HalfWidth = w / 2f, HalfHeight = h / 2f };
+        if (item.Rotation == 0f)
+            return new() { decal = item, HalfWidth = w / 2f, HalfHeight = h / 2f };
+
+        var size = new Vector2(w, h);
+        // rotate our points, by rotating the offset
+        var off = new Vector2(-0.5f, -0.5f) * size;
+
+        var p1 = off.Rotate(item.Rotation);
+        var p2 = (off + new Vector2(size.X, 0)).Rotate(item.Rotation);
+        var p3 = (off + new Vector2(0, size.Y)).Rotate(item.Rotation);
+        var p4 = (off + size).Rotate(item.Rotation);
+
+        var r1 = new Vector2(
+            Math.Min(p4.X, Math.Min(p3.X, Math.Min(p1.X, p2.X))),
+            Math.Min(p4.Y, Math.Min(p3.Y, Math.Min(p1.Y, p2.Y)))
+        );// + image.Texture.DrawOffset.Rotate(item.Rotation);
+        var r2 = new Vector2(
+            Math.Max(p4.X, Math.Max(p3.X, Math.Max(p1.X, p2.X))),
+            Math.Max(p4.Y, Math.Max(p3.Y, Math.Max(p1.Y, p2.Y)))
+        );// + image.Texture.DrawOffset.Rotate(item.Rotation);
+
+        var rect = RectangleExt.FromPoints(r1, r2);
+        
+        return new() { decal = item, HalfWidth = rect.Width / 2f, HalfHeight = rect.Height / 2f };
     }
 
     internal static bool IsInside(Vector2 cam, DecalInfo decal) {

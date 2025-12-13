@@ -1,4 +1,5 @@
 ﻿using FrostHelper.Components;
+using FrostHelper.Entities.FrozenWaterfall;
 using FrostHelper.Helpers;
 
 namespace FrostHelper;
@@ -34,6 +35,7 @@ internal sealed class DynamicRainGeneratorEntity : Entity
 
         var group = new DynamicRainGroup() {
             FlagIfPlayerInside = flagIfPlayerInside,
+            OnPlayer = DynamicWaterBehaviorController.OnPlayerTouchedRain,
             EntityFilter = FrostModule.GetTypes(data.Attr("collideWith", "Celeste.Player,Celeste.Solid")),
         };
         Add(group);

@@ -1,4 +1,5 @@
 ﻿using FrostHelper.Helpers;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 
 namespace FrostHelper;
@@ -45,6 +46,16 @@ public static class ColorHelper {
         Cache[color] = Color.Transparent;
 
         return parsed;
+    }
+    
+    public static bool TryGetColor(string colorCode, out Color color) {
+        if (Cache.TryGetValue(colorCode, out color))
+            return true;
+        
+        if (TryHexToColor(colorCode, out color))
+            return true;
+
+        return false;
     }
 
     public static Color Clone(this Color c, float a) {
@@ -117,28 +128,33 @@ public static class ColorHelper {
     }
 }
 
-internal readonly struct RGBAOrXnaColor : ISpanParsable<RGBAOrXnaColor> {
-    public Color Color { get; init; }
-    
-    public static RGBAOrXnaColor Parse(string s, IFormatProvider? provider) 
-        => Parse(s.AsSpan(), provider);
+internal readonly struct RgbaOrXnaColor(Color color) : IDetailedParsable<RgbaOrXnaColor>, IEquatable<RgbaOrXnaColor> {
+    public Color Color { get; } = color;
 
-    public static bool TryParse(string? s, IFormatProvider? provider, out RGBAOrXnaColor result) =>
-        TryParse(s.AsSpan(), provider, out result);
-
-    public static RGBAOrXnaColor Parse(ReadOnlySpan<char> s, IFormatProvider? provider)
-    {
-        if (!TryParse(s, provider, out var parsed))
-        {
-            throw new Exception($"Invalid RGBA color: {s}");
+    public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, out RgbaOrXnaColor result, [NotNullWhen(false)] out string? errorMessage) {
+        if (ColorHelper.TryGetColor(s.ToString(), out var color)) {
+            result = new RgbaOrXnaColor(color);
+            errorMessage = null;
+            return true;
         }
 
-        return parsed;
+        result = default;
+        errorMessage = $"Invalid color: '{s}'";
+        return false;
     }
 
-    public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, out RGBAOrXnaColor result) {
-        result = new() { Color = ColorHelper.GetColor(s.ToString()) };
+    public bool Equals(RgbaOrXnaColor other)
+    {
+        return Color.Equals(other.Color);
+    }
 
-        return true;
+    public override bool Equals(object? obj)
+    {
+        return obj is RgbaOrXnaColor other && Equals(other);
+    }
+
+    public override int GetHashCode()
+    {
+        return Color.GetHashCode();
     }
 }

@@ -95,6 +95,7 @@ entities.FrostHelper/CustomDreamBlock.attributes.description.disabledLineColor=L
 entities.FrostHelper/CustomDreamBlock.attributes.description.disabledBackColor=Background color to use when the player doesn't have the dream blocks enabled.
 entities.FrostHelper/CustomDreamBlock.attributes.description.activeLineColor=Line color to use
 entities.FrostHelper/CustomDreamBlock.attributes.description.activeBackColor=Background color to use
+entities.FrostHelper/CustomDreamBlock.attributes.description.particlePath=Path of the texture to use for particles.\nThe texture should have the same layout as the vanilla texture.
 
 # Custom Fire Barrier
 entities.FrostHelper/CustomFireBarrier.placements.name.normal=Custom Fire Barrier
@@ -656,6 +657,7 @@ entities.FrostHelper/ArbitraryShapeCloud.attributes.description.cache=Determines
 entities.FrostHelper/ArbitraryShapeCloud.attributes.description.windingOrder=The winding order of the polygon.\nIf your shape looks broken in-game, try changing this property until it looks correctly.
 entities.FrostHelper/ArbitraryShapeCloud.attributes.description.rainbow=Whether the cloud has rainbow colors.
 entities.FrostHelper/ArbitraryShapeCloud.attributes.description.cloudTag=A tag for this cloud. Used by Arbitrary Shape Cloud Edit triggers.\nMultiple tags can be specified by using commas.
+entities.FrostHelper/ArbitraryShapeCloud.attributes.description.maskToRoomBounds=If enabled, the cloud will not render outside of this room's boundaries during room transitions, useful for connecting clouds between rooms.
 
 entities.FrostHelper/BloomBlocker.placements.name.default=Arbitrary Shape Bloom Blocker
 entities.FrostHelper/BloomBlocker.placements.description.default=Blocks bloom (either fully or partially) in a polygonal area defined by nodes.
@@ -723,6 +725,39 @@ entities.FrostHelper/DynamicRainGenerator.attributes.description.opacity=The opa
 entities.FrostHelper/RainCollider.placements.name.default=Dynamic Rain Collider
 entities.FrostHelper/RainCollider.placements.description.default=Invisible collider that blocks Dynamic Rain.
 entities.FrostHelper/RainCollider.attributes.description.makeSplashes=Whether rain droplets hitting this collider should create splash particles.
+
+entities.FrostHelper/DynamicWaterBehaviorController.placements.name.default=Dynamic Water Behavior Controller
+entities.FrostHelper/DynamicWaterBehaviorController.placements.description.default=Configures what happens when the player enters a Dynamic Waterfall, like in Frozen Waterfall.
+entities.FrostHelper/DynamicWaterBehaviorController.attributes.description.behaviors=A list of color-behavior pairs, which determine what happens when the player enters water of the given color.
+entities.FrostHelper/DynamicWaterBehaviorController.attributes.description.rainBehaviors=A list of color-behavior pairs, which determine what happens when the player enters Dynamic Rain or Rain Clouds of the given color.
+
+
+FrostHelper.fields.DynamicWaterBehavior.color=Color
+FrostHelper.fields.DynamicWaterBehavior.color.tooltip=The water color that will use this behavior.
+FrostHelper.fields.DynamicWaterBehavior.behavior=Behavior
+FrostHelper.fields.DynamicWaterBehavior.behavior.tooltip=The action triggered when the player enters water of this color.
+
+entities.FrostHelper/DynamicWaterfall.placements.name.default=Dynamic Waterfall
+entities.FrostHelper/DynamicWaterfall.placements.description.default=A waterfall which dynamically resizes.\nUse a Dynamic Water Behavior Controller to configure behavior when the player enters the waterfall, akin to Frozen Waterfall.
+entities.FrostHelper/DynamicWaterfall.attributes.description.color=The color of the waterfall.\nUse a Dynamic Water Behavior Controller to configure behavior when the player enters water of this color, akin to Frozen Waterfall.
+entities.FrostHelper/DynamicWaterfall.attributes.description.fallSpeed=How fast the waterfall falls (pixels/second).
+entities.FrostHelper/DynamicWaterfall.attributes.description.drainSpeed=How fast the waterfall drains (pixels/second).
+entities.FrostHelper/DynamicWaterfall.attributes.description.drainCondition=Session Expression, which, if met, makes the waterfall drain.
+
+
+entities.FrostHelper/BathBomb.placements.name.default=Bath Bomb
+entities.FrostHelper/BathBomb.placements.description.default=A holdable that sets the color of Dynamic Waterfalls upon touching them.\nFrom Frozen Waterfall.
+entities.FrostHelper/BathBomb.attributes.description.color=The color of the Bath Bomb.\nWater will also be set to this color.
+entities.FrostHelper/BathBomb.attributes.description.bubble=Whether the entity should start in a bubble, like Jellies.
+
+entities.FrostHelper/RecolorableWater.placements.name.default=Recolorable Water
+entities.FrostHelper/RecolorableWater.placements.description.default=Water that can be recolored by Bath Bombs.\n\nUse a Dynamic Water Behavior Controller to configure behavior when the player enters the Water.\nNot as optimised as Pandora's Box Colored Water, use that if possible instead.\nFrom Frozen Waterfall.
+entities.FrostHelper/RecolorableWater.attributes.description.color=The color of the Water.\nUse a Dynamic Water Behavior Controller to configure behavior when the player enters water of this color, akin to Frozen Waterfall.
+entities.FrostHelper/RecolorableWater.attributes.description.triggerOnJump=Whether the behavior set by a Dynamic Water Behavior Controller should run if the player buffers a jump off of this water.
+
+entities.FrostHelper/Raincloud.placements.name.default=Rain Cloud
+entities.FrostHelper/Raincloud.placements.description.default=A cloud that emits Dynamic Rain.\nUse a Dynamic Water Behavior Controller to configure behavior when the player enters the rain, akin to Frozen Waterfall.
+entities.FrostHelper/Raincloud.attributes.description.color=The color of the cloud and rain.\nUse a Dynamic Water Behavior Controller to configure behavior when the player enters rain of this color, akin to Frozen Waterfall.
 
 # -- Mod Names --
 # mods.modName.*
@@ -1192,6 +1227,17 @@ FrostHelper.fields.sequence.activateAt.dropdown=Activate Trigger At Node
 FrostHelper.fields.sequence.activateAt=Node Index
 FrostHelper.fields.sequence.activateAt.tooltip=The 0-based index of the node to activate trigger below, like an Activator.\nSo, to activate the trigger at the first node, use '0', second - '1', and so on.\nSession expressions are supported, refer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Session-Expressions
 
+FrostHelper.fields.sequence.setDashes.dropdown=Set Dashes
+FrostHelper.fields.sequence.setDashes.setMax=Set Max Dashes
+FrostHelper.fields.sequence.setDashes.setMax.tooltip=Also sets the maximum dash count.
+FrostHelper.fields.sequence.setDashes.value=Value
+FrostHelper.fields.sequence.setDashes.value.tooltip=The Session Expression value to set the dash count to.\nRefer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Session-Expressions for more info.
+
+FrostHelper.fields.sequence.kill.dropdown=Kill Player
+
+FrostHelper.fields.sequence.blockDashRecovery.dropdown=Block Dash Recovery
+FrostHelper.fields.sequence.blockDashRecovery=Duration
+FrostHelper.fields.sequence.blockDashRecovery.tooltip=How long to block dash recovery for (in seconds).
 
 # effects
 style.effects.FrostHelper/ShaderWrapper.name=Shader Wrapper

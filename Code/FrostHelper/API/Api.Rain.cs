@@ -26,7 +26,7 @@ public partial class Api_NOT_YET_READY {
     /// <param name="tryCollide">The callback.</param>
     public static void SetRainColliderTryCollide(Component component, Func<System.Numerics.Vector2, bool> tryCollide) {
         if (component is RainCollider collider) {
-            collider.TryCollide = tryCollide;
+            collider.TryCollide = (r) => tryCollide(r.Position);
         }
     }
     

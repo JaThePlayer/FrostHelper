@@ -64,6 +64,16 @@ internal static class CollideExt {
         return null;
     }
     
+    public static T? CollideFirst<T>(Rectangle rect, List<T> hits) where T : Entity {
+        foreach (var e in hits)
+        {
+            if (e.Collidable && e.CollideRect(rect))
+                return e;
+        }
+
+        return null;
+    }
+    
     /// <summary>
     /// Assumes that `hits` only stores `T` elements (due to using CollideIntoBroadPhase earlier)
     /// </summary>

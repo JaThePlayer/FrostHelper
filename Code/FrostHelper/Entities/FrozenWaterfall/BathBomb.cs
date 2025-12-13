@@ -1,36 +1,39 @@
-﻿namespace FrostHelper;
+﻿using FrostHelper.Components;
+using FrostHelper.Entities.FrozenWaterfall;
+
+namespace FrostHelper;
 
 [Tracked]
-[CustomEntity("fh/blah")]
-internal sealed class Paintball : Actor {
+[CustomEntity("FrostHelper/BathBomb")]
+internal sealed class BathBomb : Actor {
     private readonly bool _tutorial;
     private bool _bubble;
     private readonly SineWave _bubbleWave;
-    public readonly Color Color;
+    private Color _color;
 
-    public Paintball(EntityData data, Vector2 offset) : base(data.Position + offset) {
+    public BathBomb(EntityData data, Vector2 offset) : base(data.Position + offset) {
         _tutorial = data.Bool("tutorial", false);
-        Color = ColorHelper.GetColor(data.Attr("color", "87CEFA"));
+        _color = ColorHelper.GetColor(data.Attr("color", "87CEFA"));
         _bubble = data.Bool("bubble", false);
 
         if (_bubble) {
             _bubbleWave = new SineWave(0.3f, 0f);
             Add(_bubbleWave);
         }
-        hardVerticalHitSoundCooldown = 0f;
-        tutorialTimer = 0f;
+        _hardVerticalHitSoundCooldown = 0f;
+        _tutorialTimer = 0f;
         Depth = 100;
         Collider = new Hitbox(8f, 10f, -4f, -2f); // -10f
         Add(Sprite = GFX.SpriteBank.Create("snowball"));
-        Sprite.Color = Color;
-        if (Color == Color.Black)
+        Sprite.Color = _color;
+        if (_color == Color.Black)
             Sprite.Color = new Color(0.15f, 0.15f, 0.15f);
         Sprite.Scale.X = -1f;
         Sprite.Play("spin");
         Sprite.Position.Y += 1f;
 
         Add(Hold = new Holdable(0.1f) {
-            PickupCollider = new Hitbox(16f, 22f, -8f, -14f),
+            PickupCollider = new Hitbox(16f, 16f, -8f, -8f), // 16f, 22f, -8f, -14f
             SlowFall = false,
             SlowRun = true,
             OnPickup = OnPickup,
@@ -41,33 +44,56 @@ internal sealed class Paintball : Actor {
             OnHitSpring = HitSpring,
             OnHitSpinner = HitSpinner,
             SpeedGetter = () => Speed,
+            SpeedSetter = v => Speed = v,
         });
-
-
-        onCollideH = OnCollideH;
-        onCollideV = OnCollideV;
+        Hold.PickupCollider.Entity = this;
+        
+        _onCollideH = OnCollideH;
+        _onCollideV = OnCollideV;
         LiftSpeedGraceTime = 0.1f;
         Add(new VertexLight(Collider.Center, Color.White, 1f, 32, 64));
         Tag = Tags.TransitionUpdate;
         Add(new MirrorReflection());
+        
+        Add(new RainCollider(Hold.PickupCollider, false) {
+           // OnMakeSplashes = OnMakeSplashes,
+            TryCollide = TryCollideWithRain,
+        });
+    }
+
+    private bool TryCollideWithRain(DynamicRainGenerator.Rain rain) {
+        SetColor(rain.Color);
+
+        return false;
+    }
+
+    private void SetColor(Color newColor) {
+        _color = newColor;
+        Sprite.Color = _color;
+    }
+
+    private bool OnMakeSplashes(ParticleSystem particleSystem, ref DynamicRainGenerator.Rain rain) {
+        SetColor(rain.Color);
+
+        return false;
     }
 
     public override void Added(Scene scene) {
         base.Added(scene);
-        Level = SceneAs<Level>();
+        _level = SceneAs<Level>();
 
         if (_tutorial) {
-            tutorialGui = new BirdTutorialGui(this, new Vector2(0f, -10f), Dialog.Clean("tutorial_carry", null), 
+            _tutorialGui = new BirdTutorialGui(this, new Vector2(0f, -10f), Dialog.Clean("tutorial_carry", null), 
                 Dialog.Clean("tutorial_hold", null), 
                 Input.Grab);
-            tutorialGui.Open = false;
-            Scene.Add(tutorialGui);
+            _tutorialGui.Open = false;
+            Scene.Add(_tutorialGui);
         }
     }
 
     #region bubble
     public override void Render() {
-        Sprite.DrawOutline(1);
+        Sprite.DrawOutline();
         base.Render();
 
         if (_bubble) {
@@ -81,9 +107,9 @@ internal sealed class Paintball : Actor {
     private Color PlatformColor(int num) {
         if (num is <= 1 or >= 22) {
             return Color.White * 0.4f;
-        } else {
-            return Color.White * 0.8f;
         }
+
+        return Color.White * 0.8f;
     }
 
     private Vector2 PlatformAdd(int num) {
@@ -92,33 +118,30 @@ internal sealed class Paintball : Actor {
     #endregion
     
     public override void Update() {
-        /*
-        foreach (ColoredWaterfall water in Scene.Tracker.GetEntities<ColoredWaterfall>()) {
-            if (color != water.baseColor) {
-                if (water.CollideRect(new Rectangle((int) X, (int) Y, (int) Width, (int) Height))) {
-                    water.baseColor = color;
-                    water.surfaceColor = water.baseColor * 0.8f;
-                    water.fillColor = water.baseColor * 0.3f;
-                    water.rayTopColor = water.baseColor * 0.6f;
-                }
+        Hold.PickupCollider.Entity = this;
+        
+        foreach (DynamicWaterfall waterfall in Scene.Tracker.SafeGetEntities<DynamicWaterfall>()) {
+            if (_color == waterfall.Color)
+                continue;
+            
+            if (Hold.PickupCollider.Collide(waterfall.Collider)) {
+                waterfall.SetColor(_color);
             }
         }
-        if (!shattering) {
-            foreach (ColoredWater water in Scene.Tracker.GetEntities<ColoredWater>()) {
-                if (color != water.baseColor) {
-                    if (water.CollideRect(new Rectangle((int) X, (int) Y, (int) Width, (int) Height))) {
-                        water.prevColor = water.baseColor;
-                        water.baseColor = color;
-                        water.surfaceColor = water.baseColor * 0.8f;
-                        water.fillColor = water.baseColor * 0.3f;
-                        water.rayTopColor = water.baseColor * 0.6f;
-                        water.fixedSurfaces = false;
-                        Add(new Coroutine(Shatter()));
+        
+        if (!_shattering) {
+            foreach (RecolorableWater water in Scene.Tracker.SafeGetEntities<RecolorableWater>()) {
+                if (_color == water.Color)
+                    continue;
+                
+                if (Hold.PickupCollider.Collide(water.Collider)) {
+                    water.SetColor(_color);
+                    Add(new Coroutine(Shatter()));
 
-                        break;
-                    }
+                    break;
                 }
             }
+            
             foreach (SeekerBarrier seekerBarrier in Scene.Tracker.GetEntities<SeekerBarrier>()) {
                 seekerBarrier.Collidable = true;
                 bool collided = CollideCheck(seekerBarrier);
@@ -126,25 +149,23 @@ internal sealed class Paintball : Actor {
                 if (collided)
                     Add(new Coroutine(Shatter()));
             }
-        }*/
+        }
 
 
         base.Update();
-        if (!(shattering || dead)) {
-            if (swatTimer > 0f) {
-                swatTimer -= Engine.DeltaTime;
+        if (!(_shattering || _dead)) {
+            if (_swatTimer > 0f) {
+                _swatTimer -= Engine.DeltaTime;
             }
-            hardVerticalHitSoundCooldown -= Engine.DeltaTime;
+            _hardVerticalHitSoundCooldown -= Engine.DeltaTime;
 
-            if (OnPedestal) {
-                Depth = 8999;
-            } else if (_bubble) {
+            if (_bubble) {
                 Depth = 100;
             } else {
                 Depth = 100;
 
                 if (Hold.IsHeld) {
-                    prevLiftSpeed = Vector2.Zero;
+                    _prevLiftSpeed = Vector2.Zero;
                 } else {
                     if (OnGround(1)) {
                         float target;
@@ -159,18 +180,18 @@ internal sealed class Paintball : Actor {
                         Speed.X = Calc.Approach(Speed.X, target, 800f * Engine.DeltaTime);
                         Vector2 liftSpeed = LiftSpeed;
 
-                        if (liftSpeed == Vector2.Zero && prevLiftSpeed != Vector2.Zero) {
-                            Speed = prevLiftSpeed;
-                            prevLiftSpeed = Vector2.Zero;
+                        if (liftSpeed == Vector2.Zero && _prevLiftSpeed != Vector2.Zero) {
+                            Speed = _prevLiftSpeed;
+                            _prevLiftSpeed = Vector2.Zero;
                             Speed.Y = Math.Min(Speed.Y * 0.6f, 0f);
                             if (Speed.X != 0f && Speed.Y == 0f) {
                                 Speed.Y = -60f;
                             }
                             if (Speed.Y < 0f) {
-                                noGravityTimer = 0.15f;
+                                _noGravityTimer = 0.15f;
                             }
                         } else {
-                            prevLiftSpeed = liftSpeed;
+                            _prevLiftSpeed = liftSpeed;
                             if (liftSpeed.Y < 0f && Speed.Y < 0f) {
                                 Speed.Y = 0f;
                             }
@@ -185,20 +206,20 @@ internal sealed class Paintball : Actor {
                             xMove *= 0.5f;
                         }
                         Speed.X = Calc.Approach(Speed.X, 0f, xMove * Engine.DeltaTime);
-                        if (noGravityTimer > 0f) {
-                            noGravityTimer -= Engine.DeltaTime;
+                        if (_noGravityTimer > 0f) {
+                            _noGravityTimer -= Engine.DeltaTime;
                         } else {
                             Speed.Y = Calc.Approach(Speed.Y, 200f, yMove * Engine.DeltaTime);
                         }
                     }
-                    previousPosition = ExactPosition;
-                    MoveH(Speed.X * Engine.DeltaTime, onCollideH, null);
-                    MoveV(Speed.Y * Engine.DeltaTime, onCollideV, null);
-                    if (Center.X <= Level.Bounds.Right && Left >= Level.Bounds.Left) {
-                        if (Top < Level.Bounds.Top - 4) {
-                            Top = Level.Bounds.Top + 4;
+
+                    MoveH(Speed.X * Engine.DeltaTime, _onCollideH, null);
+                    MoveV(Speed.Y * Engine.DeltaTime, _onCollideV, null);
+                    if (Center.X <= _level.Bounds.Right && Left >= _level.Bounds.Left) {
+                        if (Top < _level.Bounds.Top - 4) {
+                            Top = _level.Bounds.Top + 4;
                             Speed.Y = 0f;
-                        } else if (Top > Level.Bounds.Bottom) {
+                        } else if (Top > _level.Bounds.Bottom) {
                             return;
                         }
                     }
@@ -210,29 +231,29 @@ internal sealed class Paintball : Actor {
                         templeGate.Collidable = true;
                     }
                 }
-                if (!dead) {
+                if (!_dead) {
                     Hold.CheckAgainstColliders();
                 }
-                if (hitSeeker != null && swatTimer <= 0f && !hitSeeker.Check(Hold)) {
-                    hitSeeker = null;
+                if (_hitSeeker != null && _swatTimer <= 0f && !_hitSeeker.Check(Hold)) {
+                    _hitSeeker = null;
                 }
-                if (tutorialGui != null) {
-                    if (!OnPedestal && !Hold.IsHeld && OnGround(1)) {
-                        tutorialTimer += Engine.DeltaTime;
+                if (_tutorialGui != null) {
+                    if (!Hold.IsHeld && OnGround(1)) {
+                        _tutorialTimer += Engine.DeltaTime;
                     } else {
-                        tutorialTimer = 0f;
+                        _tutorialTimer = 0f;
                     }
-                    tutorialGui.Open = tutorialTimer > 0.25f;
+                    _tutorialGui.Open = _tutorialTimer > 0.25f;
                 }
             }
         }
-        if (shattering) {
+        if (_shattering) {
             Speed = Vector2.Zero;
         }
     }
 
     public IEnumerator Shatter() {
-        shattering = true;
+        _shattering = true;
         Collidable = false;
         AllowPushing = false;
         if (Hold.IsHeld) {
@@ -243,7 +264,6 @@ internal sealed class Paintball : Actor {
         Sprite.Play("break", false, false);
         yield return 0.3f;
         RemoveSelf();
-        yield break;
     }
 
     public void ExplodeLaunch(Vector2 from) {
@@ -254,15 +274,15 @@ internal sealed class Paintball : Actor {
     }
 
     public void Swat(HoldableCollider hc, int dir) {
-        if (Hold.IsHeld && hitSeeker is null) {
-            swatTimer = 0.1f;
-            hitSeeker = hc;
+        if (Hold.IsHeld && _hitSeeker is null) {
+            _swatTimer = 0.1f;
+            _hitSeeker = hc;
             Hold.Holder.Swat(dir);
         }
     }
 
     public bool Dangerous(HoldableCollider holdableCollider) {
-        return !Hold.IsHeld && Speed != Vector2.Zero && hitSeeker != holdableCollider;
+        return !Hold.IsHeld && Speed != Vector2.Zero && _hitSeeker != holdableCollider;
     }
 
     public void HitSeeker(Seeker seeker) {
@@ -280,7 +300,7 @@ internal sealed class Paintball : Actor {
             if (spring.Orientation == Spring.Orientations.Floor && Speed.Y >= 0f) {
                 Speed.X *= 0.5f;
                 Speed.Y = -160f;
-                noGravityTimer = 0.15f;
+                _noGravityTimer = 0.15f;
                 return true;
             }
 
@@ -288,7 +308,7 @@ internal sealed class Paintball : Actor {
                 MoveTowardsY(spring.CenterY + 5f, 4f, null);
                 Speed.X = 220f;
                 Speed.Y = -80f;
-                noGravityTimer = 0.1f;
+                _noGravityTimer = 0.1f;
                 return true;
             }
 
@@ -296,9 +316,18 @@ internal sealed class Paintball : Actor {
                 MoveTowardsY(spring.CenterY + 5f, 4f, null);
                 Speed.X = -220f;
                 Speed.Y = -80f;
-                noGravityTimer = 0.1f;
+                _noGravityTimer = 0.1f;
                 return true;
             }
+
+            /*
+            if (spring is CustomSpring { Orientation: CustomSpring.CustomOrientations.Ceiling } && Speed.Y <= 0f) {
+                Speed.X *= 0.5f;
+                Speed.Y = -160f;
+                _noGravityTimer = 0.15f;
+                return true;
+            }
+            */
         }
         return false;
     }
@@ -330,9 +359,9 @@ internal sealed class Paintball : Actor {
         }*/
 
         if (Speed.Y > 0f) {
-            if (hardVerticalHitSoundCooldown <= 0f) {
+            if (_hardVerticalHitSoundCooldown <= 0f) {
                 Audio.Play("event:/game/05_mirror_temple/crystaltheo_hit_ground", Position, "crystal_velocity", Calc.ClampedMap(Speed.Y, 0f, 200f, 0f, 1f));
-                hardVerticalHitSoundCooldown = 0.5f;
+                _hardVerticalHitSoundCooldown = 0.5f;
             } else {
                 Audio.Play("event:/game/05_mirror_temple/crystaltheo_hit_ground", Position, "crystal_velocity", 0f);
             }
@@ -377,7 +406,7 @@ internal sealed class Paintball : Actor {
                 break;
         }
 
-        Level.Particles.Emit(TheoCrystal.P_Impact, 12, position, positionRange, direction);
+        _level.Particles.Emit(TheoCrystal.P_Impact, 12, position, positionRange, direction);
     }
 
     public override bool IsRiding(Solid solid) {
@@ -409,48 +438,44 @@ internal sealed class Paintball : Actor {
         }
         Speed = force * 200f;
         if (Speed != Vector2.Zero) {
-            noGravityTimer = 0.1f;
+            _noGravityTimer = 0.1f;
         }
     }
 
     public void Die() {
-        if (!dead) {
-            dead = true;
+        if (!_dead) {
+            _dead = true;
             Add(new Coroutine(Shatter()));
         }
     }
 
     public Vector2 Speed;
 
-    public bool OnPedestal;
+    public readonly Holdable Hold;
 
-    public Holdable Hold;
+    public readonly Sprite Sprite;
 
-    public Sprite Sprite;
+    private bool _dead;
 
-    private bool dead;
+    private Level _level;
 
-    private Level Level;
+    private readonly Collision _onCollideH;
 
-    private Collision onCollideH;
+    private readonly Collision _onCollideV;
 
-    private Collision onCollideV;
+    private float _noGravityTimer;
 
-    private float noGravityTimer;
+    private Vector2 _prevLiftSpeed;
 
-    private Vector2 prevLiftSpeed;
+    private HoldableCollider? _hitSeeker;
 
-    private Vector2 previousPosition;
+    private float _swatTimer;
 
-    private HoldableCollider? hitSeeker;
+    private bool _shattering;
 
-    private float swatTimer;
+    private float _hardVerticalHitSoundCooldown;
 
-    private bool shattering;
+    private BirdTutorialGui? _tutorialGui;
 
-    private float hardVerticalHitSoundCooldown;
-
-    private BirdTutorialGui tutorialGui;
-
-    private float tutorialTimer;
+    private float _tutorialTimer;
 }

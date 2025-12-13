@@ -27,6 +27,7 @@ jautils.createPlacementsPreserveOrder(cloud, "default", {
     { "cloudTag", "", "cloudTag" },
     { "blockBloom", false },
     { "rainbow", false },
+    { "maskToRoomBounds", true }
 })
 
 cloud.sprite = arbitraryShapeEntity.getSpriteFunc("00ff00", "fcf579", function (entity)

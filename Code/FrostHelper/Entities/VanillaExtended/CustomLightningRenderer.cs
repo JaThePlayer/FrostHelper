@@ -65,7 +65,7 @@ public class CustomLightningRenderer : Entity {
                 result = default;
                 
                 var parser = new SpanParser(s);
-                if (!parser.ReadUntil<RGBAOrXnaColor>(',').TryUnpack(out var color))
+                if (!parser.ReadUntil<RgbaOrXnaColor>(',').TryUnpack(out var color))
                     return false;
                 float thickness = 1f;
                 if (!parser.IsEmpty && !parser.Read<float>().TryUnpack(out thickness))

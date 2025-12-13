@@ -128,4 +128,13 @@ public static class CameraCullHelper {
 
         return new(left, top, right - left, bot - top);
     }
+    
+    internal static Rectangle GetVisibleSection(Rectangle r, Rectangle camera, int lenience = 4) {
+        var left = int.Max(r.X, camera.Left - lenience);
+        var top = int.Max(r.Y, camera.Top - lenience);
+        var right = int.Min(r.Right, camera.Right + lenience);
+        var bot = int.Min(r.Bottom, camera.Bottom + lenience);
+
+        return new(left, top, right - left, bot - top);
+    }
 }

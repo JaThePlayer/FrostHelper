@@ -57,11 +57,16 @@ function frostSettings.useDebugRC()
     return frostSettings.get("debugRC", false)
 end
 
+function frostSettings.devMode()
+    return frostSettings.get("devMode", false)
+end
+
 -- setup default values immediately
 frostSettings.spinnersConnect()
 frostSettings.spinnerBorder()
 frostSettings.rainbowsUseControllers()
 frostSettings.useDebugRC()
 frostSettings.fancyDreamBlocks()
+frostSettings.devMode()
 
 return frostSettings

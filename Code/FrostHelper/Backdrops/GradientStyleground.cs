@@ -222,10 +222,10 @@ internal class Gradient : ISpanParsable<Gradient>
         while (p.SliceUntil(';').TryUnpack(out var entryParser))
         {
             entryParser.TrimStart();
-            if (!entryParser.ReadUntil<RGBAOrXnaColor>(',').TryUnpack(out var colorFrom))
+            if (!entryParser.ReadUntil<RgbaOrXnaColor>(',').TryUnpack(out var colorFrom))
                 return false;
             entryParser.TrimStart();
-            if (!entryParser.ReadUntil<RGBAOrXnaColor>(',').TryUnpack(out var colorTo))
+            if (!entryParser.ReadUntil<RgbaOrXnaColor>(',').TryUnpack(out var colorTo))
                 return false;
             entryParser.TrimStart();
             if (!entryParser.TryRead<float>(out var percent))

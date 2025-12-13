@@ -23,6 +23,17 @@ internal static class FunctionCommands {
         ["truncate"] = PureMathCondition.TryCreateFloat<TruncateFunc>,
         ["round"] = PureMathCondition.TryCreateFloat<RoundFunc>,
         ["vec"] = VecCondition.TryCreate,
+        ["pow"] = PureMathCondition.TryCreateTwoArgFloat<PowFunc<float>>,
+        ["pow2"] = PureMathCondition.TryCreateIntOrFloat<Pow2Func<int>, Pow2Func<float>>,
+        ["sqrt"] = PureMathCondition.TryCreateFloat<SqrtFunc>,
+        ["cbrt"] = PureMathCondition.TryCreateFloat<CbrtFunc>,
+        ["exp"] = PureMathCondition.TryCreateFloat<ExpFunc>,
+        ["exp2"] = PureMathCondition.TryCreateFloat<Exp2Func>,
+        ["log"] = PureMathCondition.TryCreateTwoArgFloat<LogFunc<float>>,
+        ["logn"] = PureMathCondition.TryCreateFloat<LognFunc>,
+        ["log2"] = PureMathCondition.TryCreateFloat<Log2Func>,
+        ["log10"] = PureMathCondition.TryCreateFloat<Log10Func>,
+        ["lerp"] = PureMathCondition.TryCreatThreeArgFloat<LerpFunc>,
     };
 
     public static void Register(string modName, string cmdName, Func<Session, object?, IReadOnlyList<object>, object> func) {
@@ -103,6 +114,14 @@ internal static class FunctionCommands {
         public static abstract object Get(T x);
     }
     
+    private interface IPureTwoArgMathFunc<T> where T : struct, INumber<T> {
+        public static abstract object Get(T x, T y);
+    }
+    
+    private interface IPureThreeArgMathFunc<T> where T : struct, INumber<T> {
+        public static abstract object Get(T x, T y, T z);
+    }
+    
     private struct SinFunc : IPureMathFunc<float> {
         public static object Get(float x) => float.Sin(x);
     }
@@ -119,6 +138,34 @@ internal static class FunctionCommands {
         public static object Get(float x) => float.Truncate(x);
     }
     
+    private struct SqrtFunc : IPureMathFunc<float> {
+        public static object Get(float x) => float.Sqrt(x);
+    }
+    
+    private struct CbrtFunc : IPureMathFunc<float> {
+        public static object Get(float x) => float.Cbrt(x);
+    }
+    
+    private struct ExpFunc : IPureMathFunc<float> {
+        public static object Get(float x) => float.Exp(x);
+    }
+    
+    private struct Exp2Func : IPureMathFunc<float> {
+        public static object Get(float x) => float.Exp2(x);
+    }
+    
+    private struct LognFunc : IPureMathFunc<float> {
+        public static object Get(float x) => float.Log(x);
+    }
+    
+    private struct Log10Func : IPureMathFunc<float> {
+        public static object Get(float x) => float.Log10(x);
+    }
+    
+    private struct Log2Func : IPureMathFunc<float> {
+        public static object Get(float x) => float.Log2(x);
+    }
+    
     private struct RoundFunc : IPureMathFunc<float> {
         public static object Get(float x) => float.Round(x);
     }
@@ -127,12 +174,49 @@ internal static class FunctionCommands {
         public static object Get(T x) => T.Abs(x);
     }
 
+    private struct PowFunc<T> : IPureTwoArgMathFunc<T> where T : struct, INumber<T>, IPowerFunctions<T> {
+        public static object Get(T x, T y) => T.Pow(x, y);
+    }
+    
+    private struct Pow2Func<T> : IPureMathFunc<T> where T : struct, INumber<T> {
+        public static object Get(T x) => x * x;
+    }
+    
+    private struct LogFunc<T> : IPureTwoArgMathFunc<T> where T : struct, INumber<T>, ILogarithmicFunctions<T> {
+        public static object Get(T x, T y) => T.Log(x, y);
+    }
+    
+    private struct LerpFunc : IPureThreeArgMathFunc<float> {
+        public static object Get(float x, float y, float z) => float.Lerp(x, y, z);
+    }
+
     private sealed class PureMathCondition<TNum, TOp>(Condition x) : FunctionCondition(x)
         where TNum : struct, INumber<TNum>
         where TOp : struct, IPureMathFunc<TNum> {
         
         public override object Get(Session session, object? userdata) {
             return TOp.Get(x.GetNumber<TNum>(session, userdata));
+        }
+    }
+    
+    private sealed class PureMathTwoArgCondition<TNum, TOp>(Condition x, Condition y) : FunctionCondition(x)
+        where TNum : struct, INumber<TNum>
+        where TOp : struct, IPureTwoArgMathFunc<TNum> {
+        
+        public override object Get(Session session, object? userdata) {
+            return TOp.Get(x.GetNumber<TNum>(session, userdata), y.GetNumber<TNum>(session, userdata));
+        }
+    }
+    
+    private sealed class PureMathThreeArgCondition<TNum, TOp>(Condition x, Condition y, Condition z) : FunctionCondition(x)
+        where TNum : struct, INumber<TNum>
+        where TOp : struct, IPureThreeArgMathFunc<TNum> {
+        
+        public override object Get(Session session, object? userdata) {
+            return TOp.Get(
+                x.GetNumber<TNum>(session, userdata), 
+                y.GetNumber<TNum>(session, userdata), 
+                z.GetNumber<TNum>(session, userdata));
         }
     }
 
@@ -162,6 +246,28 @@ internal static class FunctionCommands {
             }
 
             return FunctionCondition.Ok(new PureMathCondition<float, TFloat>(only), out condition, out errorMessage);
+        }
+        
+        public static bool TryCreateTwoArgFloat<TFloat>(IReadOnlyList<Condition> args, [NotNullWhen(true)] out Condition? condition,
+            [NotNullWhen(false)] out string? errorMessage) 
+            where TFloat : struct, IPureTwoArgMathFunc<float>
+        {
+            if (args is not [var left, var right]) {
+                return FunctionCondition.ArgumentAmtMismatch(args.Count, 2, out condition, out errorMessage);
+            }
+
+            return FunctionCondition.Ok(new PureMathTwoArgCondition<float, TFloat>(left, right), out condition, out errorMessage);
+        }
+        
+        public static bool TryCreatThreeArgFloat<TFloat>(IReadOnlyList<Condition> args, [NotNullWhen(true)] out Condition? condition,
+            [NotNullWhen(false)] out string? errorMessage) 
+            where TFloat : struct, IPureThreeArgMathFunc<float>
+        {
+            if (args is not [var a, var b, var c]) {
+                return FunctionCondition.ArgumentAmtMismatch(args.Count, 3, out condition, out errorMessage);
+            }
+
+            return FunctionCondition.Ok(new PureMathThreeArgCondition<float, TFloat>(a, b, c), out condition, out errorMessage);
         }
     }
 

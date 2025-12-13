@@ -29,6 +29,8 @@ internal sealed class ArbitraryShapeCloud : Entity {
     private Rectangle? Bounds;
     private List<SealedImage> Images = [];
 
+    private Rectangle RoomBounds;
+
     public enum CachingOptions {
         Auto,
         Never,
@@ -37,6 +39,8 @@ internal sealed class ArbitraryShapeCloud : Entity {
 
     private Vector2 RenderTargetRenderPos;
     private RenderTarget2D? RenderTarget;
+
+    private readonly bool _maskToRoomBounds;
 
     public ArbitraryShapeCloud(EntityData data, Vector2 offset) : base(data.Position + offset) {
         Color = data.GetColor("color", "ffffff");
@@ -49,6 +53,7 @@ internal sealed class ArbitraryShapeCloud : Entity {
         Depth = data.Int("depth");
         Textures = ParseTextureList(data.Attr("textures", @"decals/10-farewell/clouds/cloud_c,decals/10-farewell/clouds/cloud_cc,decals/10-farewell/clouds/cloud_cd,decals/10-farewell/clouds/cloud_ce"));
 
+        _maskToRoomBounds = data.Bool("maskToRoomBounds");
         CreateImages();
 
         switch (CachingStrategy = data.Enum("cache", CachingOptions.Auto)) {
@@ -101,6 +106,12 @@ internal sealed class ArbitraryShapeCloud : Entity {
         return ret;
     }
 
+    public override void Awake(Scene scene) {
+        base.Awake(scene);
+
+        RoomBounds = scene.ToLevel().Bounds;
+    }
+
     private void BeforeRender() {
         if (RenderTarget is { IsDisposed: false }) {
             return;
@@ -120,7 +131,7 @@ internal sealed class ArbitraryShapeCloud : Entity {
         var h = bounds.Height;
 
         // todo: handle huge areas
-        if (w > 4098 || h > 4098) {
+        if (w > 4096 || h > 4096) {
             CachingStrategy = CachingOptions.Never;
             return;
         }
@@ -176,7 +187,25 @@ internal sealed class ArbitraryShapeCloud : Entity {
         }
         
         if (RenderTarget is { IsDisposed: false }) {
-            Draw.SpriteBatch.Draw(RenderTarget, RenderTargetRenderPos + CalcParallaxOffset(RenderTargetRenderPos), color);
+            var pos = RenderTargetRenderPos + CalcParallaxOffset(RenderTargetRenderPos);
+            if (_maskToRoomBounds) {
+                var roomBounds = RoomBounds;
+                // TODO: huh, why is this necessary for vertical transitions??
+                roomBounds.Y -= 2;
+                roomBounds.Height += 4;
+                var visiblePart = CameraCullHelper.GetVisibleSection(
+                    new Rectangle((int) pos.X, (int) pos.Y, RenderTarget.Width, RenderTarget.Height), roomBounds, lenience: 0);
+
+                var ox = visiblePart.Left - (int)pos.X;
+                var oy = visiblePart.Top - (int)pos.Y;
+            
+                Draw.SpriteBatch.Draw(RenderTarget,
+                    pos + new Vector2(ox, oy),
+                    new Rectangle(ox, oy, visiblePart.Width, visiblePart.Height),
+                    color);
+            } else {
+                Draw.SpriteBatch.Draw(RenderTarget, pos, color);
+            }
         } else {
             // in case of savestates, the render target will get cleared before loading a state, but we should still cache after loading back.
             if (CachingStrategy == CachingOptions.RenderTarget) {

@@ -294,6 +294,51 @@ internal ref struct SpanParser(ReadOnlySpan<char> input)
         errorMsg = null;
         return true;
     }
+    
+    public bool TryParseDict<TKey, TValue>(char entrySeparator, char kvSeparator, out Dictionary<TKey, TValue> res, [NotNullWhen(false)] out string? errorMsg, 
+        IFormatProvider? provider = null) 
+        where TKey : IDetailedParsable<TKey>
+        where TValue : IDetailedParsable<TValue>
+    {
+        res = [];
+        
+        while (!IsEmpty) {
+            if (TryReadUntil<TKey>(kvSeparator, out var key, out errorMsg, provider)
+                && TryReadUntil<TValue>(entrySeparator, out var value, out errorMsg, provider)) {
+                res[key] = value;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        
+        errorMsg = null;
+        return true;
+    }
+    
+    public bool TryParseDictWithRepeats<TKey, TValue>(char entrySeparator, char kvSeparator, out Dictionary<TKey, List<TValue>> res, [NotNullWhen(false)] out string? errorMsg, 
+        IFormatProvider? provider = null) 
+        where TKey : IDetailedParsable<TKey>
+        where TValue : IDetailedParsable<TValue>
+    {
+        res = [];
+        
+        while (!IsEmpty) {
+            if (TryReadUntil<TKey>(kvSeparator, out var key, out errorMsg, provider)
+                && TryReadUntil<TValue>(entrySeparator, out var value, out errorMsg, provider)) {
+                res.TryAdd(key, []);
+                res[key].Add(value);
+            }
+            else
+            {
+                return false;
+            }
+        }
+        
+        errorMsg = null;
+        return true;
+    }
 
     public bool TryParsePair<TLeft, TRight>(char separator, [NotNullWhen(true)] out TLeft? left,
         [NotNullWhen(true)] out TRight? right) 

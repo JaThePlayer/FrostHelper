@@ -27,6 +27,7 @@ internal static class SimpleCommands {
         ["speed.x"] = new PlayerSpeedXAccessor(),
         ["speed.y"] = new PlayerSpeedYAccessor(),
         ["pi"] = new PiAccessor(),
+        ["e"] = new EAccessor(),
         ["dtime"] = new DeltaTimeAccessor(),
         ["roomName"] = new RoomNameAccessor(),
     };
@@ -70,6 +71,12 @@ internal static class SimpleCommands {
     
     private sealed class PiAccessor : Condition {
         public override object Get(Session session, object? userdata) => float.Pi;
+
+        protected internal override Type ReturnType => typeof(float);
+    }
+    
+    private sealed class EAccessor : Condition {
+        public override object Get(Session session, object? userdata) => float.E;
 
         protected internal override Type ReturnType => typeof(float);
     }

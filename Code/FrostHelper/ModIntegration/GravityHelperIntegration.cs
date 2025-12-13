@@ -24,6 +24,8 @@ public static class GravityHelperIntegration {
 
     public static Func<bool>? IsPlayerInverted;
 
+    public static Func<Actor?, bool>? IsActorInverted;
+
     public static Action? BeginOverride;
 
     public static Action? EndOverride;
@@ -36,6 +38,11 @@ public static class GravityHelperIntegration {
     //NON-API
     public static Vector2 InvertIfPlayerInverted(Vector2 v) {
         return IsPlayerInverted?.Invoke() ?? false ? new(v.X, -v.Y) : v;
+    }
+    
+    //NON-API
+    public static float InvertIfActorInverted(Actor? actor, float f) {
+        return IsActorInverted?.Invoke(actor) ?? false ? -f : f;
     }
 
     //NON-API

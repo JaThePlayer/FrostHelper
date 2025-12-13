@@ -10,13 +10,13 @@ internal sealed class RainCollider(Collider collider, bool stationary) : Compone
     
     internal float PassThroughChance { get; init; } = 0f;
     
-    internal Func<NumVector2, bool>? TryCollide { get; set; } = null;
+    internal Func<DynamicRainGenerator.Rain, bool>? TryCollide { get; set; } = null;
     
     internal delegate bool OnHitCallback(ParticleSystem particleSystem, ref DynamicRainGenerator.Rain rain);
     
     internal OnHitCallback? OnMakeSplashes { get; set; } = null;
     
-    internal bool TryHit(NumVector2 pos) {
+    internal bool TryHit(ref DynamicRainGenerator.Rain pos) {
         return TryCollide?.Invoke(pos) ?? true;
     }
 

@@ -13,6 +13,9 @@ namespace FrostHelper.Helpers;
 public static class ConditionHelper {
     internal static readonly Condition EmptyCondition = new Empty();
 
+    internal static readonly Condition TrueCondition = new ConstInt(1);
+    internal static readonly Condition FalseCondition = new ConstInt(0);
+
     internal static Condition CreateOrDefault(string txt, string defaultValue, ExpressionContext? ctx = null) {
         ctx ??= ExpressionContext.Default;
         

@@ -70,18 +70,12 @@ public static class RectangleExt {
             var p = points.Current;
 
             var x = TGetX.Invoke(p);
-            if (x < smallestX) {
-                smallestX = x;
-            } else if (x > largestX) {
-                largestX = x;
-            }
-            
             var y = TGetY.Invoke(p);
-            if (y < smallestY) {
-                smallestY = y;
-            } else if (y > largestY) {
-                largestY = y;
-            }
+            
+            smallestX = int.Min(smallestX, x);
+            smallestY = int.Min(smallestY, y);
+            largestX = int.Max(largestX, x);
+            largestY = int.Max(largestY, y);
         }
 
         return new Rectangle(smallestX, smallestY, largestX - smallestX, largestY - smallestY);

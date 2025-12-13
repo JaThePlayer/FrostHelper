@@ -30,9 +30,9 @@ public class CustomDreamBlockV2 : DreamBlock {
 #pragma warning disable CS0618 // Type or member is obsolete
             return new CustomDreamBlock(entityData, offset);
 #pragma warning restore CS0618 // Type or member is obsolete
-        } else {
-            return new CustomDreamBlockV2(entityData, offset);
         }
+
+        return new CustomDreamBlockV2(entityData, offset);
     }
 
     public CustomDreamBlockV2(EntityData data, Vector2 offset) : base(data, offset) {
@@ -51,6 +51,14 @@ public class CustomDreamBlockV2 : DreamBlock {
         easer = EaseHelper.GetEase(data.Attr("moveEase", "SineInOut"));
         ConserveSpeed = data.Bool("conserveSpeed", false);
         fastMoving = data.Bool("fastMoving", false);
+
+        var particleTexture = GFX.Game[data.Attr("particlePath", "objects/dreamblock/particles")];
+        particleTextures = [
+            particleTexture.GetSubtexture(14, 0, 7, 7),
+            particleTexture.GetSubtexture(7, 0, 7, 7),
+            particleTexture.GetSubtexture(0, 0, 7, 7),
+            particleTexture.GetSubtexture(7, 0, 7, 7)
+        ];
     }
 
     public override void Added(Scene scene) {
@@ -79,91 +87,28 @@ public class CustomDreamBlockV2 : DreamBlock {
 
     public override void Render() {
         Color prevBackColor, prevLineColor;
-        Color backColor, lineColor;
 
         if (playerHasDreamDash) {
-            lineColor = ActiveLineColor;
-            backColor = ActiveBackColor;
-            prevBackColor = _getActiveBack();
-            prevLineColor = _getActiveLine();
+            prevBackColor = DreamBlock.activeBackColor;
+            prevLineColor = DreamBlock.activeLineColor;
+            DreamBlock.activeLineColor = ActiveLineColor;
+            DreamBlock.activeBackColor = ActiveBackColor;
         } else {
-            lineColor = DisabledLineColor;
-            backColor = DisabledBackColor;
-            prevBackColor = _getDisabledBack();
-            prevLineColor = _getDisabledLine();
+            prevBackColor = DreamBlock.disabledBackColor;
+            prevLineColor = DreamBlock.disabledLineColor;
+            DreamBlock.disabledLineColor = DisabledLineColor;
+            DreamBlock.disabledBackColor = DisabledBackColor;
         }
-        
-        SetDreamBlockColors(backColor, lineColor, playerHasDreamDash);
 
         base.Render();
 
-        SetDreamBlockColors(prevBackColor, prevLineColor, playerHasDreamDash);
-
-        /*
         if (playerHasDreamDash) {
-            // change the colors
-            DreamBlock_activeBackColor.SetValue(null, ActiveBackColor);
-            DreamBlock_activeLineColor.SetValue(null, ActiveLineColor);
-            base.Render();
-            // revert changes
-            DreamBlock_activeBackColor.SetValue(null, baseActiveBackColor);
-            DreamBlock_activeLineColor.SetValue(null, baseActiveLineColor);
+            DreamBlock.activeLineColor = prevLineColor;
+            DreamBlock.activeBackColor = prevBackColor;
         } else {
-            var back = (Color)DreamBlock_disabledBackColor.GetValue(null);
-            var line = (Color) DreamBlock_disabledLineColor.GetValue(null);
-
-            // change the colors
-            DreamBlock_disabledBackColor.SetValue(null, DisabledBackColor);
-            DreamBlock_disabledLineColor.SetValue(null, DisabledLineColor);
-            base.Render();
-            // revert changes
-            DreamBlock_disabledBackColor.SetValue(null, back);
-            DreamBlock_disabledLineColor.SetValue(null, line);
+            DreamBlock.disabledLineColor = prevLineColor;
+            DreamBlock.disabledBackColor = prevBackColor;
         }
-
-        */
-    }
-
-    private static readonly FieldInfo DreamBlock_activeBackColor = typeof(DreamBlock).GetField("activeBackColor", BindingFlags.NonPublic | BindingFlags.Static)!;
-    private static readonly FieldInfo DreamBlock_disabledBackColor = typeof(DreamBlock).GetField("disabledBackColor", BindingFlags.NonPublic | BindingFlags.Static)!;
-    private static readonly FieldInfo DreamBlock_activeLineColor = typeof(DreamBlock).GetField("activeLineColor", BindingFlags.NonPublic | BindingFlags.Static)!;
-    private static readonly FieldInfo DreamBlock_disabledLineColor = typeof(DreamBlock).GetField("disabledLineColor", BindingFlags.NonPublic | BindingFlags.Static)!;
-
-    public static void SetDreamBlockColors(Color back, Color line, bool active) {
-        var method = active ? _setActiveDreamBlockColors : _setDisabledDreamBlockColors;
-
-        method(back, line);
-    }
-
-    private static readonly Action<Color, Color> _setActiveDreamBlockColors = _getIL_setDreamBlockColors(DreamBlock_activeBackColor, DreamBlock_activeLineColor, true);
-    private static readonly Action<Color, Color> _setDisabledDreamBlockColors = _getIL_setDreamBlockColors(DreamBlock_disabledBackColor, DreamBlock_disabledLineColor, false);
-    private static readonly Func<Color> _getActiveLine = _getIL_getDreamBlockColor(DreamBlock_activeLineColor);
-    private static readonly Func<Color> _getDisabledLine = _getIL_getDreamBlockColor(DreamBlock_disabledLineColor);
-    private static readonly Func<Color> _getActiveBack = _getIL_getDreamBlockColor(DreamBlock_activeBackColor);
-    private static readonly Func<Color> _getDisabledBack = _getIL_getDreamBlockColor(DreamBlock_disabledBackColor);
-
-    private static Func<Color> _getIL_getDreamBlockColor(FieldInfo field) {
-        return EasierILHook.CreateDynamicMethod<Func<Color>>($"CustomDreamBlockV2._getDreamBlockColor_{field.Name}", (ILProcessor gen) => {
-            gen.Emit(OpCodes.Ldsfld, field);
-            gen.Emit(OpCodes.Ret);
-        });
-    }
-
-    private static Action<Color, Color> _getIL_setDreamBlockColors(FieldInfo back, FieldInfo line, bool active) {
-        string methodName = $"CustomDreamBlockV2._setDreamBlockColors_{(active ? "active" : "_disabled")}";
-
-        DynamicMethodDefinition method = new DynamicMethodDefinition(methodName, null, new[] { typeof(Color), typeof(Color) });
-        var gen = method.GetILProcessor();
-
-        gen.Emit(OpCodes.Ldarg_0);
-        gen.Emit(OpCodes.Stsfld, back);
-
-        gen.Emit(OpCodes.Ldarg_1);
-        gen.Emit(OpCodes.Stsfld, line);
-
-        gen.Emit(OpCodes.Ret);
-
-        return (Action<Color, Color>) method.Generate().CreateDelegate(typeof(Action<Color, Color>));
     }
 
     #region Hooks

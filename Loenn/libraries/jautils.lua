@@ -19,6 +19,7 @@ local compat = mods.requireFromPlugin("libraries.compat")
 local mapScanHelper = mods.requireFromPlugin("libraries.mapScanHelper")
 local easings = mods.requireFromPlugin("libraries.easings")
 local fakeTilesHelper = require("helpers.fake_tiles")
+local frostSettings = mods.requireFromPlugin("libraries.settings")
 
 local celesteDepths = --require("consts.object_depths")
 {
@@ -50,6 +51,8 @@ local celesteDepths = --require("consts.object_depths")
 }
 
 local jautils = {}
+
+jautils.devMode = frostSettings.devMode()
 
 jautils.windingOrders = {
     "Clockwise", "CounterClockwise", "Auto"
@@ -522,6 +525,130 @@ jautils.fieldTypeOverrides = {
         }
     end
 }
+
+jautils.sequencerFields = {
+    delay = {
+        {
+            name = "delay",
+            default = "0",
+            defaultValue = "delay:0",
+            info = {}
+        }
+    },
+    flag = {
+        name = "flag",
+        default = "",
+        defaultValue = "flag:myFlag=1",
+        info = {
+            fieldType = "FrostHelper.complexField",
+            separator = "=",
+            innerFields = {
+                {
+                    name = "FrostHelper.fields.sequence.flag.name",
+                    default = "myFlag",
+                    info = {}
+                },
+                {
+                    name = "FrostHelper.fields.sequence.flag.value",
+                    default = "1",
+                    info = {}
+                }
+            }
+        }
+    },
+    counter = {
+        name = "counter",
+        default = "",
+        defaultValue = "counter:myCounter=0",
+        info = {
+            fieldType = "FrostHelper.complexField",
+            separator = "=",
+            innerFields = {
+                {
+                    name = "FrostHelper.fields.sequence.counter.name",
+                    default = "myCounter",
+                    info = {}
+                },
+                {
+                    name = "FrostHelper.fields.sequence.counter.value",
+                    default = "0",
+                    info = {}
+                }
+            }
+        }
+    },
+    slider = {
+        name = "slider",
+        default = "",
+        defaultValue = "slider:mySlider=0",
+        info = {
+            fieldType = "FrostHelper.complexField",
+            separator = "=",
+            innerFields = {
+                {
+                    name = "FrostHelper.fields.sequence.slider.name",
+                    default = "mySlider",
+                    info = {}
+                },
+                {
+                    name = "FrostHelper.fields.sequence.slider.value",
+                    default = "0",
+                    info = {}
+                }
+            }
+        }
+    },
+    activateAt = {
+        name = "activateAt",
+        default = "0",
+        defaultValue = "activateAt:0",
+        info = {}
+    },
+    setDashes = {
+        name = "setDashes",
+        default = "",
+        defaultValue = "setDashes:true=0",
+        info = {
+            fieldType = "FrostHelper.complexField",
+            separator = "=",
+            innerFields = {
+                {
+                    name = "FrostHelper.fields.sequence.setDashes.setMax",
+                    default = "true",
+                    info = {
+                        fieldType = "boolean"
+                    }
+                },
+                {
+                    name = "FrostHelper.fields.sequence.setDashes.value",
+                    default = "0",
+                    info = {}
+                }
+            }
+        }
+    },
+    kill = {
+        name = "kill",
+        default = "",
+        defaultValue = "kill:",
+        info = {
+            fieldType = "nil"
+        }
+    },
+    blockDashRecovery = {
+        name = "blockDashRecovery",
+        default = "0",
+        defaultValue = "blockDashRecovery:0.18",
+        info = {}
+    },
+    blockDash = {
+        name = "blockDash",
+        default = "0",
+        defaultValue = "blockDash:0.18",
+        info = {}
+    }
+}
+
 
 local fieldTypesWhichNeedLiveUpdate = {
     typesList = true,

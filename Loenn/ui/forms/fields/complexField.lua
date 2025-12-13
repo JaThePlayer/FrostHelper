@@ -118,6 +118,12 @@ end
 
 local function fieldChanged(formField, col)
     return function(element, new, old)
+        if new == true then
+            new = "true"
+        end
+        if new == false then
+            new = "false"
+        end
         new = string.gsub(new or "", formField.separator, "") or ""
 
         local values = formField:splitValue(formField.currentValue)
@@ -178,6 +184,19 @@ local fieldTypeToStringToValue = {
     ["integer"] = function(v, def)
         return tonumber(v) or def or 0
     end,
+    ["boolean"] = function(v, def)
+        if v == nil then
+            return def or false
+        end
+        if v == "false" then
+            return false
+        end
+        if v == "true" then
+            return true
+        end
+
+        return not not v
+    end,
 }
 
 function complexField.getElement(name, value, options)
@@ -235,8 +254,10 @@ function complexField.getElement(name, value, options)
                 elElement.interactive = 1
             end
 
-
             table.insert(gridContents, elElement)
+            if fieldData.info and fieldData.info.fieldType == "boolean" then
+                table.insert(gridContents, uiElements.label(""))
+            end
         end
 
         table.insert(formField.uiForms, el)

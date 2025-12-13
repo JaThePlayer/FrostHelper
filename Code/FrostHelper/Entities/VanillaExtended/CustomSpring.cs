@@ -15,8 +15,6 @@ public class CustomSpring : Spring {
             return;
         _hooksLoaded = true;
 
-        On.Celeste.TheoCrystal.HitSpring += TheoCrystal_HitSpring;
-        On.Celeste.Glider.HitSpring += Glider_HitSpring;
         On.Celeste.Puffer.HitSpring += Puffer_HitSpring;
         IL.Celeste.Spring.BounceAnimate += SpringOnBounceAnimate;
     }
@@ -27,8 +25,6 @@ public class CustomSpring : Spring {
             return;
         _hooksLoaded = false;
 
-        On.Celeste.TheoCrystal.HitSpring -= TheoCrystal_HitSpring;
-        On.Celeste.Glider.HitSpring -= Glider_HitSpring;
         On.Celeste.Puffer.HitSpring -= Puffer_HitSpring;
         IL.Celeste.Spring.BounceAnimate -= SpringOnBounceAnimate;
     }
@@ -43,38 +39,9 @@ public class CustomSpring : Spring {
                 return true;
             }
             return false;
-        } else {
-            return orig(self, spring);
         }
-    }
 
-    private static bool Glider_HitSpring(On.Celeste.Glider.orig_HitSpring orig, Glider self, Spring spring) {
-        if (spring is CustomSpring { Orientation: CustomOrientations.Ceiling }) {
-            if (!self.Hold.IsHeld && self.Speed.Y <= 0f) {
-                self.Speed.X *= 0.5f;
-                self.Speed.Y = -160f;
-                self.noGravityTimer = 0.15f;
-                self.wiggler.Start();
-                return true;
-            }
-            return false;
-        } else {
-            return orig(self, spring);
-        }
-    }
-
-    private static bool TheoCrystal_HitSpring(On.Celeste.TheoCrystal.orig_HitSpring orig, TheoCrystal self, Spring spring) {
-        if (spring is CustomSpring { Orientation: CustomOrientations.Ceiling }) {
-            if (!self.Hold.IsHeld && self.Speed.Y <= 0f) {
-                self.Speed.X *= 0.5f;
-                self.Speed.Y = -160f;
-                self.noGravityTimer = 0.15f;
-                return true;
-            }
-            return false;
-        } else {
-            return orig(self, spring);
-        }
+        return orig(self, spring);
     }
     
     // Patch sfx
@@ -116,6 +83,7 @@ public class CustomSpring : Spring {
     // 0, 1 - original
     // 2 - new gravity helper physics
     // 3 - communal helper dream tunnel support.
+    // 4 - upside down spring holdable auto-support
     private readonly int _version;
 
     private readonly bool _multiplyPlayerY;
@@ -444,8 +412,28 @@ public class CustomSpring : Spring {
         yield break;
     }
 
+    private bool CallHitSpring(Holdable h) {
+        // Holdables have a speed.Y >= 0f check for floor springs,
+        // so we'll invert the gravity seen by the holdable so that the check passes.
+        if (Orientation is CustomOrientations.Ceiling && (_version >= 4 || h.Entity is Glider or TheoCrystal)
+            && h is { SpeedGetter: { } getSpeed, SpeedSetter: { } setSpeed }
+            // Inverted gravity holdables are weird, leave them alone (broken) right now.
+            && !(GravityHelperIntegration.IsActorInverted?.Invoke(h.Entity as Actor) ?? false)) {
+            
+            var speed = getSpeed();
+            setSpeed(new Vector2(speed.X, -speed.Y));
+            var ret = h.HitSpring(this);
+            if (!ret)
+                setSpeed(speed);
+            
+            return ret;
+        }
+
+        return h.HitSpring(this);
+    }
+
     private void NewOnHoldable(Holdable h) {
-        if (h.HitSpring(this)) {
+        if (CallHitSpring(h)) {
             BounceAnimate();
             OnSuccessfulHit();
 
