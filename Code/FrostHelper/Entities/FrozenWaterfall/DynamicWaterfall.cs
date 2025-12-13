@@ -51,7 +51,6 @@ internal sealed class DynamicWaterfall : WaterFall {
         var curr = ConditionHelper.Condition.CoerceToBool(newValue ?? false);
 
         _draining = curr;
-        Console.WriteLine(_draining);
     }
 
     internal void SetColor(Color color) {
