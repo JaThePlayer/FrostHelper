@@ -565,7 +565,7 @@ public static class ConditionHelper {
         
         public bool Inverted => inverted;
         
-        public override bool OnlyChecksFlags() => true;
+        public override bool OnlyChecksFlags() => nameCond.OnlyChecksFlags();
         
         protected internal override Type ReturnType => typeof(int);
 
@@ -728,6 +728,22 @@ public static class ConditionHelper {
                 return f.ToString(null, CultureInfo.InvariantCulture);
 
             return obj.ToString() ?? "";
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal T Get<T>(Session session, object? userdata = null) {
+            if (typeof(T) == typeof(bool))
+                return (T)(object)Check(session, userdata);
+            if (typeof(T) == typeof(int))
+                return (T)(object)GetInt(session, userdata);
+            if (typeof(T) == typeof(float))
+                return (T)(object)GetFloat(session, userdata);
+            if (typeof(T) == typeof(string))
+                return (T)(object)GetString(session, userdata);
+            if (typeof(T) == typeof(object))
+                return (T)Get(session, userdata);
+
+            throw new ArgumentException($"Unsupported T for Session Expression: {typeof(T).FullName}");
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

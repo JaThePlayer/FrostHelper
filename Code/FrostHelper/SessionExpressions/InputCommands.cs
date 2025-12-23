@@ -127,6 +127,7 @@ internal static class InputCommands {
                 OperatorCheckJoystick.Modes mode = action.ToLowerInvariant() switch {
                     "x" => OperatorCheckJoystick.Modes.X,
                     "y" => OperatorCheckJoystick.Modes.Y,
+                    "" => OperatorCheckJoystick.Modes.Vec2,
                     _ => OperatorCheckJoystick.Modes.Unknown,
                 };
 
@@ -182,6 +183,7 @@ internal static class InputCommands {
             return mode switch {
                 Modes.X => joystick.Value.X,
                 Modes.Y => joystick.Value.Y,
+                Modes.Vec2 => joystick.Value,
                 _ => Zero
             };
         }
@@ -191,6 +193,7 @@ internal static class InputCommands {
         internal enum Modes {
             X,
             Y,
+            Vec2,
             Unknown = -1,
         }
     }

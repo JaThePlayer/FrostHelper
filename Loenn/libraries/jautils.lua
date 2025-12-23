@@ -278,6 +278,7 @@ jautils.fieldTypeOverrides = {
         elementOptions = {
             fieldType = "color",
             allowXNAColors = true,
+            useAlpha = true,
         },
         elementSeparator = ",",
         elementDefault = "ffffff",
@@ -1069,7 +1070,7 @@ end
 ---@param spritePostfix string
 ---@param fallback string
 ---@param spriteTintPropertyName string?
----@return sprite?
+---@return DrawableSprite
 function jautils.getCustomSprite(entity, spritePropertyName, spritePostfix, fallback, spriteTintPropertyName)
     local spritePath, sprite = jautils.getCustomSpritePath(entity, spritePropertyName, spritePostfix, fallback)
 
@@ -1083,7 +1084,7 @@ end
 ---Returns a list of sprites needed to render a block using a 24x24 texture, split and tiled into 8x8 chunks
 ---@param entity table
 ---@param blockSpritePath string
----@return table<integer, sprite>
+---@return table<integer, DrawableSprite>
 function jautils.getBlockSprites(entity, blockSpritePath)
     local sprites = {}
 

@@ -301,11 +301,13 @@ entities.FrostHelper/CustomZipMover.attributes.description.coldLineColor=Hex col
 entities.FrostHelper/CustomZipMover.attributes.description.coldLineLightColor=Hex color used for drawing the light parts of the zipper's path if isCore is true and the core mode is set to Cold
 entities.FrostHelper/CustomZipMover.attributes.description.tint=Hex color used to tint the images of this zipper
 entities.FrostHelper/CustomZipMover.attributes.description.showLine=Whether the zipper's path should be visible
-entities.FrostHelper/CustomZipMover.attributes.description.fillMiddle=Whether the middle of the zipper should be filled in with black
+entities.FrostHelper/CustomZipMover.attributes.description.fillMiddle=[LEGACY, use 'Fill Color` and 'Outline Color' instead]\nWhether the middle of the zipper should be filled in with black.
 entities.FrostHelper/CustomZipMover.attributes.description.bloomAlpha=If not zero, determines the alpha value for the bloom point of this zipper
 entities.FrostHelper/CustomZipMover.attributes.description.bloomRadius=The radius of the bloom point of this zipper.
 entities.FrostHelper/CustomZipMover.attributes.description.rainbow=Whether this zip mover should be rainbow. Supports Maddie's Helping Hand's rainbow spinner controller.
 entities.FrostHelper/CustomZipMover.attributes.description.canActivateFlag=Flag which needs to be set for this zipper to react to the player.\nUse a '!' before the flag name to invert the condition.\nSession expressions are supported, refer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Session-Expressions
+entities.FrostHelper/CustomZipMover.attributes.description.fillColor=Color used to fill the inside of the zipper, behind the cogs.\nSet to 00000000 to disable.
+entities.FrostHelper/CustomZipMover.attributes.description.outlineColor=Color used to render the outline of this zipper.\nSet to 00000000 to disable, like vanilla Moon Zip Movers.
 
 # Entity Mover
 entities.FrostHelper/EntityMover.placements.name.normal=Entity Mover
@@ -681,6 +683,17 @@ entities.FrostHelper/FlagIfExpressionController.placements.description.default=S
 entities.FrostHelper/FlagIfExpressionController.attributes.description.flag=The Session Flag which should be controlled by this entity.
 entities.FrostHelper/FlagIfExpressionController.attributes.description.expression=The Session Expression which should be checked.\nIf it returns non-zero, the flag gets set.\nRefer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Session-Expressions
 
+entities.FrostHelper/ExpressionToCounterController.placements.name.default=Expression To Counter Controller
+entities.FrostHelper/ExpressionToCounterController.placements.description.default=Sets a Session Counter to the value of a Session Expression each frame.
+entities.FrostHelper/ExpressionToCounterController.attributes.description.counter=The Session Counter which should be controlled by this entity.
+entities.FrostHelper/ExpressionToCounterController.attributes.description.expression=The Session Expression which should be checked.\nRefer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Session-Expressions
+
+entities.FrostHelper/ExpressionToSliderController.placements.name.default=Expression To Slider Controller
+entities.FrostHelper/ExpressionToSliderController.placements.description.default=Sets a Session Slider to the value of a Session Expression each frame.
+entities.FrostHelper/ExpressionToSliderController.attributes.description.slider=The Session Slider which should be controlled by this entity.
+entities.FrostHelper/ExpressionToSliderController.attributes.description.expression=The Session Expression which should be checked.\nRefer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Session-Expressions
+
+
 entities.FrostHelper/TimeToCounterController.placements.name.default=Time To Counter Controller
 entities.FrostHelper/TimeToCounterController.placements.description.default=Sets a Session Counter to the value of the Session Timer or the Savefile Timer.
 entities.FrostHelper/TimeToCounterController.attributes.description.counter=The Session Counter which should be set by this entity.
@@ -743,12 +756,13 @@ entities.FrostHelper/DynamicWaterfall.attributes.description.color=The color of 
 entities.FrostHelper/DynamicWaterfall.attributes.description.fallSpeed=How fast the waterfall falls (pixels/second).
 entities.FrostHelper/DynamicWaterfall.attributes.description.drainSpeed=How fast the waterfall drains (pixels/second).
 entities.FrostHelper/DynamicWaterfall.attributes.description.drainCondition=Session Expression, which, if met, makes the waterfall drain.
-
+entities.FrostHelper/DynamicWaterfall.attributes.description.shatterBathBombs=Whether Bath Bombs should be shattered when they recolor this waterfall.
 
 entities.FrostHelper/BathBomb.placements.name.default=Bath Bomb
 entities.FrostHelper/BathBomb.placements.description.default=A holdable that sets the color of Dynamic Waterfalls upon touching them.\nFrom Frozen Waterfall.
 entities.FrostHelper/BathBomb.attributes.description.color=The color of the Bath Bomb.\nWater will also be set to this color.
 entities.FrostHelper/BathBomb.attributes.description.bubble=Whether the entity should start in a bubble, like Jellies.
+entities.FrostHelper/BathBomb.attributes.description.directory=Directory to pull sprites from.\nThe directory should contain sprites from `snowball00.png` to `snowball16.png`.
 
 entities.FrostHelper/RecolorableWater.placements.name.default=Recolorable Water
 entities.FrostHelper/RecolorableWater.placements.description.default=Water that can be recolored by Bath Bombs.\n\nUse a Dynamic Water Behavior Controller to configure behavior when the player enters the Water.\nNot as optimised as Pandora's Box Colored Water, use that if possible instead.\nFrom Frozen Waterfall.

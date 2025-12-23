@@ -21,7 +21,7 @@ internal sealed class DynamicWaterfall : WaterFall {
     
     private Color _surfaceColor, _fillColor, _rayTopColor;
 
-    internal Color Color;
+    internal Color Color { get; private set; }
 
     private readonly Hitbox _hitbox;
     private readonly ConditionHelper.Condition? _drainCondition;
@@ -42,15 +42,22 @@ internal sealed class DynamicWaterfall : WaterFall {
         var drainCond = data.Attr("drainCondition", "");
         if (!string.IsNullOrWhiteSpace(drainCond)) {
             _drainCondition = data.GetCondition("drainCondition", "");
-            Add(new ExpressionListener(_drainCondition, OnDrainCondition, true));
+            Add(new ExpressionListener<bool>(_drainCondition, OnDrainCondition, true));
         }
+
+        var shatterBathBombs = data.Bool("shatterBathBombs", false);
+        Add(new BathBombCollider {
+            CanCollideWith = b => b.Color != Color,
+            OnCollide = b => {
+                SetColor(b.Color);
+                if (shatterBathBombs)
+                    b.ShatterIfPossible();
+            }
+        });
     }
 
-    private void OnDrainCondition(Entity self, object? lastValue, object newValue) {
-        //var last = ConditionHelper.Condition.CoerceToBool(lastValue ?? false);
-        var curr = ConditionHelper.Condition.CoerceToBool(newValue ?? false);
-
-        _draining = curr;
+    private void OnDrainCondition(Entity self, Maybe<bool> lastValue, bool newValue) {
+        _draining = newValue;
     }
 
     internal void SetColor(Color color) {

@@ -114,7 +114,8 @@ public sealed class CustomZipMover : Solid {
     private bool drawLine;
     private Color tint = Color.White;
     
-    private bool FillMiddle;
+    private readonly Color _fillColor;
+    private readonly Color _outlineColor;
 
     private ConditionHelper.Condition CanActivate;
 
@@ -243,7 +244,6 @@ public sealed class CustomZipMover : Solid {
         Add(sfx);
         _sfxPath = data.Attr("sfx", "event:/game/01_forsaken_city/zip_mover");
 
-        //percentage = data.Float("percentage", 100f);
         if (data.Has("percentage")) {
             SpeedMultNormal = data.Float("percentage", 100f) / 100f;
             SpeedMultIce = SpeedMultNormal / 4;
@@ -254,7 +254,9 @@ public sealed class CustomZipMover : Solid {
 
         SpeedMult = SpeedMultNormal;
 
-        FillMiddle = data.Bool("fillMiddle", true);
+        var legacyFillMiddle = data.Bool("fillMiddle", true);
+        _fillColor = data.GetColor("fillColor", legacyFillMiddle ? "000000" : "00000000");
+        _outlineColor = data.GetColor("outlineColor", legacyFillMiddle ? "000000" : "00000000");
         CanActivate = data.GetCondition("canActivateFlag");
     }
 
@@ -295,14 +297,14 @@ public sealed class CustomZipMover : Solid {
         
         Vector2 position = Position;
         Position += Shake;
-        if (FillMiddle) {
+        if (_fillColor != Color.Transparent) {
             var pixel = CurrentSource.Pixel();
             // Render the rect manually, to make use of our own pixel sprite,
             // which is packed to the same atlas as all the other sprites, saving a draw call.
             // We could set Draw.Pixel and call Draw.Rect as well, but this is slightly lower overhead and roughly same code size :shrug:
             Draw.SpriteBatch.Draw(pixel.Texture.Texture,
-                new Rectangle((int)Position.X, (int)Position.Y, (int)Width, (int)Height), 
-                pixel.ClipRect, Color.Black
+                new Rectangle((int)Position.X + 1, (int)Position.Y + 1, (int)Width - 2, (int)Height - 2), 
+                pixel.ClipRect, _fillColor
             );
         }
 
@@ -580,17 +582,6 @@ public sealed class CustomZipMover : Solid {
                 if (CameraCullHelper.IsLineVisible(from, to)) {
                     DrawCogs(zipper, Vector2.Zero, null);
                 }
-
-                if (zipper.FillMiddle) {
-                    var rect = new Rectangle((int) (zipper.X + zipper.Shake.X - 1f), (int) (zipper.Y + zipper.Shake.Y - 1f),
-                        (int) zipper.Width + 2, (int) zipper.Height + 2);
-                    // reduce height by one, as this rect is part of the render buffer which will get rendered 1px lower afterwards for the shadow effect
-                    rect.Height -= 1;
-                
-                    if (CameraCullHelper.IsRectangleVisible(rect))
-                        Draw.Rect(rect, Color.Black);
-                }
-
             }
             Draw.Pixel = oldPixel;
             
@@ -603,6 +594,16 @@ public sealed class CustomZipMover : Solid {
             b.Draw(target, cam, Color.White);
             
             RenderTargetHelper.ReturnFullScreenBuffer(target);
+
+            foreach (CustomZipMover zipper in zippers) {
+                if (zipper._outlineColor != Color.Transparent) {
+                    var rect = new Rectangle((int) (zipper.X + zipper.Shake.X - 1f), (int) (zipper.Y + zipper.Shake.Y - 1f),
+                        (int) zipper.Width + 2, (int) zipper.Height + 2);
+                
+                    if (CameraCullHelper.IsRectangleVisible(rect))
+                        Draw.Rect(rect, zipper._outlineColor);
+                }
+            }
         }
 
         private void DrawCogs(CustomZipMover zipper, Vector2 offset, Color? colorOverride = null) {

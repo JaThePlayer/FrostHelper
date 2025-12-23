@@ -55,6 +55,14 @@ internal sealed class RecolorableWater : Water {
         _triggerOnJump = data.Bool("triggerOnJump");
         SetColor(data.GetColor("color", "LightSkyBlue"));
         Add(new PlayerCollider(OnPlayer));
+        
+        Add(new BathBombCollider {
+            CanCollideWith = b => b.Color != Color,
+            OnCollide = b => {
+                SetColor(b.Color);
+                b.ShatterIfPossible();
+            }
+        });
     }
 
     private void OnPlayer(Player player) {

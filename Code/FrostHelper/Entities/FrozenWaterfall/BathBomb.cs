@@ -9,11 +9,11 @@ internal sealed class BathBomb : Actor {
     private readonly bool _tutorial;
     private bool _bubble;
     private readonly SineWave _bubbleWave;
-    private Color _color;
+    internal Color Color { get; private set; }
 
     public BathBomb(EntityData data, Vector2 offset) : base(data.Position + offset) {
         _tutorial = data.Bool("tutorial", false);
-        _color = ColorHelper.GetColor(data.Attr("color", "87CEFA"));
+        Color = ColorHelper.GetColor(data.Attr("color", "87CEFA"));
         _bubble = data.Bool("bubble", false);
 
         if (_bubble) {
@@ -24,9 +24,9 @@ internal sealed class BathBomb : Actor {
         _tutorialTimer = 0f;
         Depth = 100;
         Collider = new Hitbox(8f, 10f, -4f, -2f); // -10f
-        Add(Sprite = GFX.SpriteBank.Create("snowball"));
-        Sprite.Color = _color;
-        if (_color == Color.Black)
+        Add(Sprite = CustomSpriteHelper.CreateCustomSprite("snowball", data.Attr("directory", "danger/")));
+        Sprite.Color = Color;
+        if (Color == Color.Black)
             Sprite.Color = new Color(0.15f, 0.15f, 0.15f);
         Sprite.Scale.X = -1f;
         Sprite.Play("spin");
@@ -68,8 +68,8 @@ internal sealed class BathBomb : Actor {
     }
 
     private void SetColor(Color newColor) {
-        _color = newColor;
-        Sprite.Color = _color;
+        Color = newColor;
+        Sprite.Color = Color;
     }
 
     private bool OnMakeSplashes(ParticleSystem particleSystem, ref DynamicRainGenerator.Rain rain) {
@@ -119,26 +119,11 @@ internal sealed class BathBomb : Actor {
     
     public override void Update() {
         Hold.PickupCollider.Entity = this;
-        
-        foreach (DynamicWaterfall waterfall in Scene.Tracker.SafeGetEntities<DynamicWaterfall>()) {
-            if (_color == waterfall.Color)
-                continue;
-            
-            if (Hold.PickupCollider.Collide(waterfall.Collider)) {
-                waterfall.SetColor(_color);
-            }
-        }
-        
-        if (!_shattering) {
-            foreach (RecolorableWater water in Scene.Tracker.SafeGetEntities<RecolorableWater>()) {
-                if (_color == water.Color)
-                    continue;
-                
-                if (Hold.PickupCollider.Collide(water.Collider)) {
-                    water.SetColor(_color);
-                    Add(new Coroutine(Shatter()));
 
-                    break;
+        if (!_shattering) {
+            foreach (BathBombCollider collider in Scene.Tracker.SafeGetComponents<BathBombCollider>()) {
+                if (collider.CanCollideWith(this) && Hold.PickupCollider.Collide(collider.Collider)) {
+                    collider.OnCollide(this);
                 }
             }
             
@@ -147,10 +132,9 @@ internal sealed class BathBomb : Actor {
                 bool collided = CollideCheck(seekerBarrier);
                 seekerBarrier.Collidable = false;
                 if (collided)
-                    Add(new Coroutine(Shatter()));
+                    ShatterIfPossible();
             }
         }
-
 
         base.Update();
         if (!(_shattering || _dead)) {
@@ -252,6 +236,15 @@ internal sealed class BathBomb : Actor {
         }
     }
 
+    public void ShatterIfPossible() {
+        if (_shattering) {
+            return;
+        }
+
+        _shattering = true;
+        Add(new Coroutine(Shatter()));
+    }
+
     public IEnumerator Shatter() {
         _shattering = true;
         Collidable = false;
@@ -319,15 +312,6 @@ internal sealed class BathBomb : Actor {
                 _noGravityTimer = 0.1f;
                 return true;
             }
-
-            /*
-            if (spring is CustomSpring { Orientation: CustomSpring.CustomOrientations.Ceiling } && Speed.Y <= 0f) {
-                Speed.X *= 0.5f;
-                Speed.Y = -160f;
-                _noGravityTimer = 0.15f;
-                return true;
-            }
-            */
         }
         return false;
     }
@@ -336,10 +320,7 @@ internal sealed class BathBomb : Actor {
         if (data.Hit is DashSwitch dashSwitch) {
             dashSwitch.OnDashCollide(null, Vector2.UnitX * Math.Sign(Speed.X));
         }
-        /*
-        if (data.Hit is WaterDashSwitch.DashWaterSwitch waterSwitch) {
-            waterSwitch.OnDashCollide(null, Vector2.UnitX * (float) Math.Sign(Speed.X));
-        }*/
+
         Audio.Play("event:/game/05_mirror_temple/crystaltheo_hit_side", Position);
 
         if (Math.Abs(Speed.X) > 100f) {
@@ -352,11 +333,6 @@ internal sealed class BathBomb : Actor {
         if (data.Hit is DashSwitch dashSwitch) {
             dashSwitch.OnDashCollide(null, Vector2.UnitY * Math.Sign(Speed.Y));
         }
-        /*
-        if (data.Hit is WaterDashSwitch.DashWaterSwitch waterDashSwitch) {
-            waterDashSwitch.OnDashCollide(null, Vector2.UnitY * Math.Sign(Speed.Y));
-            waterDashSwitch.OnDashed(null, Vector2.UnitY * Math.Sign(Speed.Y));
-        }*/
 
         if (Speed.Y > 0f) {
             if (_hardVerticalHitSoundCooldown <= 0f) {
@@ -445,7 +421,7 @@ internal sealed class BathBomb : Actor {
     public void Die() {
         if (!_dead) {
             _dead = true;
-            Add(new Coroutine(Shatter()));
+            ShatterIfPossible();
         }
     }
 

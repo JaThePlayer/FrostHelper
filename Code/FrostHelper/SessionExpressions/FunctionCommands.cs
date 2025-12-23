@@ -272,7 +272,7 @@ internal static class FunctionCommands {
     }
 
     private sealed class MinCondition(IEnumerable<Condition> x, Type type) : FunctionCondition(x) {
-        private T Get<T>(Session session, object? userdata) where T : struct, INumber<T>, IMinMaxValue<T> {
+        private T GetImpl<T>(Session session, object? userdata) where T : struct, INumber<T>, IMinMaxValue<T> {
             T min = T.MaxValue;
             foreach (var c in Conditions) {
                 min = T.Min(c.GetNumber<T>(session, userdata), min);
@@ -285,8 +285,8 @@ internal static class FunctionCommands {
 
         public override object Get(Session session, object? userdata) {
             if (ReturnType == typeof(int))
-                return Get<int>(session, userdata);
-            return Get<float>(session, userdata);
+                return GetImpl<int>(session, userdata);
+            return GetImpl<float>(session, userdata);
         }
         
         public static bool TryCreate(IReadOnlyList<Condition> args, [NotNullWhen(true)] out Condition? condition, [NotNullWhen(false)] out string? errorMessage) {
@@ -303,7 +303,7 @@ internal static class FunctionCommands {
     }
     
     private sealed class MaxCondition(IEnumerable<Condition> x, Type type) : FunctionCondition(x) {
-        private T Get<T>(Session session, object? userdata) where T : struct, INumber<T>, IMinMaxValue<T> {
+        private T GetImpl<T>(Session session, object? userdata) where T : struct, INumber<T>, IMinMaxValue<T> {
             T max = T.MinValue;
             foreach (var c in Conditions) {
                 max = T.Max(c.GetNumber<T>(session, userdata), max);
@@ -316,8 +316,8 @@ internal static class FunctionCommands {
 
         public override object Get(Session session, object? userdata) {
             if (ReturnType == typeof(int))
-                return Get<int>(session, userdata);
-            return Get<float>(session, userdata);
+                return GetImpl<int>(session, userdata);
+            return GetImpl<float>(session, userdata);
         }
         
         public static bool TryCreate(IReadOnlyList<Condition> args, [NotNullWhen(true)] out Condition? condition, [NotNullWhen(false)] out string? errorMessage) {

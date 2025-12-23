@@ -2,7 +2,6 @@
 local jautils = require("mods").requireFromPlugin("libraries.jautils")
 
 local waterfallHelper = require("helpers.waterfalls")
-local utils = require("utils")
 
 local waterfall = {}
 
@@ -14,11 +13,12 @@ jautils.createPlacementsPreserveOrder(waterfall, "default", {
     { "fallSpeed", 120 },
     { "drainSpeed", 480 },
     { "drainCondition", "" },
+    { "shatterBathBombs", false },
 })
 
 function waterfall.sprite(room, entity)
     local rawColor = entity.color or "LightSkyBlue"
-    local color = utils.getColor(rawColor)
+    local color = jautils.getColor(rawColor)
 
     local fillColor = {color[1] * 0.3, color[2] * 0.3, color[3] * 0.3, 0.3}
     local borderColor = {color[1] * 0.8, color[2] * 0.8, color[3] * 0.8, 0.8}
