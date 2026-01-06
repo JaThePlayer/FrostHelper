@@ -2,7 +2,10 @@
 using System.Runtime.CompilerServices;
 
 namespace FrostHelper.Helpers;
+
 public static class NotificationHelper {
+    internal static INotificationSink NotificationSink { get; set; } = new CelesteNotificationSink();
+    
     // note: used internally by lua badeline boss
     public static void NotifyInfo(string notif) {
         Notify(new Notification(LogLevel.Info, notif));
@@ -19,16 +22,32 @@ public static class NotificationHelper {
     }
 
     public static void Notify(Notification notification) {
+        NotificationSink.Push(notification);
+    }
+
+    public record struct Notification(LogLevel Level, string Message) {
+        internal DateTime Time;
+        internal float Alpha = 1f;
+        internal string? Source;
+    }
+}
+
+internal interface INotificationSink {
+    public void Push(NotificationHelper.Notification notification);
+}
+
+internal sealed class CelesteNotificationSink : INotificationSink {
+    public void Push(NotificationHelper.Notification notification) {
         var controller = ControllerHelper<NotificationController>.AddToSceneIfNeeded(FrostModule.TryGetCurrentLevel() ?? Engine.Scene);
 
         controller.Push(notification);
     }
-
-
+    
+    
     public class NotificationController : Entity {
-        public List<Notification> Notifications = new();
+        public List<NotificationHelper.Notification> Notifications = new();
         
-        public void Push(Notification notification) {
+        public void Push(NotificationHelper.Notification notification) {
             notification.Time = DateTime.Now;
             notification.Alpha += 0.25f * Notifications.Count;
             Notifications.Add(notification);
@@ -81,13 +100,7 @@ public static class NotificationHelper {
             Notifications.RemoveAll(n => n.Alpha <= 0f);
         }
     }
-
-    public record struct Notification(LogLevel Level, string Message) {
-        internal DateTime Time;
-        internal float Alpha = 1f;
-        internal string? Source;
-    }
-}
+} 
 
 internal static class NotificationExt {
     public static List<MTexture> GetAtlasSubtexturesWithNotif(this Atlas atlas, string key) {

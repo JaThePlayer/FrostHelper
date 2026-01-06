@@ -213,7 +213,7 @@ public static class ConditionHelper {
         return false;
     }
 
-    private sealed class StringInterpolationOperator(List<Condition> args) : Condition {
+    internal sealed class StringInterpolationOperator(List<Condition> args) : Condition {
         private readonly StringBuilder _stringBuilder = new();
         
         public override object Get(Session session, object? userdata) {
@@ -237,7 +237,7 @@ public static class ConditionHelper {
         protected override IEnumerable<object> GetArgsForDebugPrint() => args;
     }
 
-    private sealed class OperatorAnd(Condition a, Condition b) : Condition {
+    internal sealed class OperatorAnd(Condition a, Condition b) : Condition {
         public override object Get(Session session, object? userdata) {
             return CoerceToBool(a.Get(session, userdata)) && CoerceToBool(b.Get(session, userdata)) ? 1 : 0;
         }
@@ -249,7 +249,7 @@ public static class ConditionHelper {
         protected override IEnumerable<object> GetArgsForDebugPrint() => [a, b];
     }
     
-    private sealed class OperatorOr(Condition a, Condition b) : Condition {
+    internal sealed class OperatorOr(Condition a, Condition b) : Condition {
         public override object Get(Session session, object? userdata) {
             return CoerceToBool(a.Get(session, userdata)) || CoerceToBool(b.Get(session, userdata)) ? 1 : 0;
         }
@@ -261,19 +261,19 @@ public static class ConditionHelper {
         protected override IEnumerable<object> GetArgsForDebugPrint() => [a, b];
     }
     
-    private sealed class OperatorBitwiseOr(Condition a, Condition b) : BitwiseOperator(a, b) {
+    internal sealed class OperatorBitwiseOr(Condition a, Condition b) : BitwiseOperator(a, b) {
         protected override object Perform<T>(T a, T b) {
             return a | b;
         }
     }
     
-    private sealed class OperatorBitwiseAnd(Condition a, Condition b) : BitwiseOperator(a, b) {
+    internal sealed class OperatorBitwiseAnd(Condition a, Condition b) : BitwiseOperator(a, b) {
         protected override object Perform<T>(T a, T b) {
             return a & b;
         }
     }
 
-    private abstract class BitwiseOperator(Condition condA, Condition condB) : BinaryOperator(condA, condB) {
+    internal abstract class BitwiseOperator(Condition condA, Condition condB) : BinaryOperator(condA, condB) {
         protected override object Operate(object a, object b) {
             return (a, b) switch {
                 (int aInt, int bInt) => Perform(aInt, bInt),
@@ -290,7 +290,7 @@ public static class ConditionHelper {
         }
     }
     
-    private sealed class OperatorAdd(Condition a, Condition b) : MathOperator(a, b) {
+    internal sealed class OperatorAdd(Condition a, Condition b) : MathOperator(a, b) {
         protected override object Perform<T>(T a, T b) {
             return a + b;
         }
@@ -304,7 +304,7 @@ public static class ConditionHelper {
         }
     }
     
-    private sealed class OperatorSub(Condition a, Condition b) : MathOperator(a, b) {
+    internal sealed class OperatorSub(Condition a, Condition b) : MathOperator(a, b) {
         protected override object Perform<T>(T a, T b) {
             return a - b;
         }
@@ -318,7 +318,7 @@ public static class ConditionHelper {
         }
     }
     
-    private sealed class OperatorMul(Condition a, Condition b) : MathOperator(a, b) {
+    internal sealed class OperatorMul(Condition a, Condition b) : MathOperator(a, b) {
         protected override object Perform<T>(T a, T b) {
             return a * b;
         }
@@ -332,7 +332,7 @@ public static class ConditionHelper {
         }
     }
     
-    private sealed class OperatorDiv(Condition a, Condition b) : MathOperator(a, b) {
+    internal sealed class OperatorDiv(Condition a, Condition b) : MathOperator(a, b) {
         protected override object Perform<T>(T a, T b) {
             if (T.IsZero(b)) {
                 return T.Zero;
@@ -349,7 +349,7 @@ public static class ConditionHelper {
         }
     }
     
-    private sealed class OperatorDivFloat(Condition a, Condition b) : MathOperator(a, b) {
+    internal sealed class OperatorDivFloat(Condition a, Condition b) : MathOperator(a, b) {
         protected override object Perform<T>(T a, T b) {
             if (T.IsZero(b)) {
                 return 0f;
@@ -374,7 +374,7 @@ public static class ConditionHelper {
         }
     }
     
-    private sealed class OperatorModulo(Condition a, Condition b) : MathOperator(a, b) {
+    internal sealed class OperatorModulo(Condition a, Condition b) : MathOperator(a, b) {
         protected override object Perform<T>(T a, T b) {
             return a % b;
         }
@@ -388,43 +388,43 @@ public static class ConditionHelper {
         }
     }
     
-    private sealed class OperatorEq(Condition a, Condition b) : ComparisonOperator(a, b) {
+    internal sealed class OperatorEq(Condition a, Condition b) : ComparisonOperator(a, b) {
         protected override bool Compare<T>(T a, T b) {
             return a == b;
         }
     }
     
-    private sealed class OperatorNe(Condition a, Condition b) : ComparisonOperator(a, b) {
+    internal sealed class OperatorNe(Condition a, Condition b) : ComparisonOperator(a, b) {
         protected override bool Compare<T>(T a, T b) {
             return a != b;
         }
     }
     
-    private sealed class OperatorGt(Condition a, Condition b) : ComparisonOperator(a, b) {
+    internal sealed class OperatorGt(Condition a, Condition b) : ComparisonOperator(a, b) {
         protected override bool Compare<T>(T a, T b) {
             return a > b;
         }
     }
     
-    private sealed class OperatorLt(Condition a, Condition b) : ComparisonOperator(a, b) {
+    internal sealed class OperatorLt(Condition a, Condition b) : ComparisonOperator(a, b) {
         protected override bool Compare<T>(T a, T b) {
             return a < b;
         }
     }
     
-    private sealed class OperatorGte(Condition a, Condition b) : ComparisonOperator(a, b) {
+    internal sealed class OperatorGte(Condition a, Condition b) : ComparisonOperator(a, b) {
         protected override bool Compare<T>(T a, T b) {
             return a >= b;
         }
     }
     
-    private sealed class OperatorLte(Condition a, Condition b) : ComparisonOperator(a, b) {
+    internal sealed class OperatorLte(Condition a, Condition b) : ComparisonOperator(a, b) {
         protected override bool Compare<T>(T a, T b) {
             return a <= b;
         }
     }
 
-    private abstract class ComparisonOperator(Condition condA, Condition condB) : BinaryOperator(condA, condB) {
+    internal abstract class ComparisonOperator(Condition condA, Condition condB) : BinaryOperator(condA, condB) {
         protected abstract bool Compare<T>(T a, T b) where T : IComparisonOperators<T, T, bool>;
 
         protected override object Operate(object a, object b) {
@@ -444,7 +444,7 @@ public static class ConditionHelper {
         protected internal override Type ReturnType => typeof(int);
     }
 
-    private abstract class MathOperator(Condition condA, Condition condB) : BinaryOperator(condA, condB) {
+    internal abstract class MathOperator(Condition condA, Condition condB) : BinaryOperator(condA, condB) {
         protected abstract object Perform<T>(T a, T b) where T : INumber<T>;
         
         protected abstract object Perform(Vector2 a, float b);
@@ -487,7 +487,7 @@ public static class ConditionHelper {
         }
     }
     
-    private abstract class BinaryOperator(Condition condA, Condition condB) : Condition {
+    internal abstract class BinaryOperator(Condition condA, Condition condB) : Condition {
         public override object Get(Session session, object? userdata) {
             var a = condA.Get(session, userdata);
             var b = condB.Get(session, userdata);
@@ -512,7 +512,7 @@ public static class ConditionHelper {
         protected override IEnumerable<object> GetArgsForDebugPrint() => [condA, condB];
     }
 
-    private sealed class OperatorInvert(Condition x) : Condition {
+    internal sealed class OperatorInvert(Condition x) : Condition {
         public override object Get(Session session, object? userdata) {
             return CoerceToBool(x.Get(session, userdata)) ? 0 : 1;
         }
@@ -524,7 +524,7 @@ public static class ConditionHelper {
         protected override IEnumerable<object> GetArgsForDebugPrint() => [x];
     }
 
-    private sealed class ConstInt(int x) : Condition {
+    internal sealed class ConstInt(int x) : Condition {
         private readonly object _boxed = x;
         
         public override object Get(Session session, object? userdata) => _boxed;
@@ -536,7 +536,7 @@ public static class ConditionHelper {
         protected override IEnumerable<object> GetArgsForDebugPrint() => [ _boxed ];
     }
     
-    private sealed class ConstFloat(float x) : Condition {
+    internal sealed class ConstFloat(float x) : Condition {
         private readonly object _boxed = x;
         
         public override object Get(Session session, object? userdata) => _boxed;
@@ -548,7 +548,7 @@ public static class ConditionHelper {
         protected override IEnumerable<object> GetArgsForDebugPrint() => [x];
     }
     
-    private sealed class ConstString(string x) : Condition {
+    internal sealed class ConstString(string x) : Condition {
         public string Value => x;
         
         public override object Get(Session session, object? userdata) => x;
@@ -560,7 +560,7 @@ public static class ConditionHelper {
         protected override IEnumerable<object> GetArgsForDebugPrint() => [x];
     }
 
-    private sealed class FlagAccessor(Condition nameCond, bool inverted) : Condition, IInvertible {
+    internal sealed class FlagAccessor(Condition nameCond, bool inverted) : Condition, IInvertible {
         public string? Flag => nameCond is ConstString c ? c.Value : null;
         
         public bool Inverted => inverted;

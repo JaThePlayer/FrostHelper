@@ -12,6 +12,8 @@ public class BaseActivator : Trigger {
     public readonly float Delay;
     public bool ActivateAfterDeath;
 
+    private readonly bool _scanEachActivation;
+
 
     internal (List<Trigger> main, List<Trigger> elseBranch)? ToActivate;
 
@@ -41,11 +43,22 @@ public class BaseActivator : Trigger {
         Delay = data.Float("delay", 0f);
         ActivationMode = data.Enum("activationMode", ActivationModes.All);
         ActivateAfterDeath = data.Bool("activateAfterDeath", false);
+        _scanEachActivation = data.Bool("scanEachActivation");
     }
 
+    internal (List<Trigger> main, List<Trigger> elseBranch) ScanToActivateIfNeeded() {
+        if (_scanEachActivation) {
+            return (ToActivate = FastCollideAll()).Value;
+        }
+        
+        return ToActivate ??= FastCollideAll();
+    }
+    
     public override void Awake(Scene scene) {
         base.Awake(scene);
-        ToActivate ??= FastCollideAll();
+
+        if (!_scanEachActivation)
+            ScanToActivateIfNeeded();
     }
 
     public void ActivateAll(Player player) {
@@ -71,7 +84,7 @@ public class BaseActivator : Trigger {
     }
 
     public void ActivateAtNode(Player player, int nodeIdx) {
-        ToActivate ??= FastCollideAll();
+        ScanToActivateIfNeeded();
 
         if (ToActivatePerNode is null)
             throw new Exception(
@@ -158,16 +171,15 @@ public class BaseActivator : Trigger {
     }
     
     private IEnumerator DelayedActivateAll(Player player, List<Trigger> toActivate) {
-        ToActivate ??= FastCollideAll();
         yield return Delay;
         InstantActivateAll(player, toActivate);
     }
 
     public void InstantActivateAll(Player player, bool activateElseBranch = false) {
         // There's a chance for an activator to get triggered *before* Awake.
-        ToActivate ??= FastCollideAll();
+        ScanToActivateIfNeeded();
 
-        InstantActivateAll(player, activateElseBranch ? ToActivate.Value.elseBranch : ToActivate.Value.main);
+        InstantActivateAll(player, activateElseBranch ? ToActivate!.Value.elseBranch : ToActivate!.Value.main);
     }
 
     internal void InstantActivateAll(Player player, List<Trigger> toActivate) {

@@ -82,16 +82,16 @@ internal partial class AbstractExpression {
         Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
     };
 
-    private static readonly Dictionary<string, AbstractExpression> Cache = [];
+    private static readonly Dictionary<string, AbstractExpression?> Cache = [];
 
     public override string ToString() {
         return JsonSerializer.Serialize<object>(this, JsonOptions);
     }
 
     public static bool TryParseCached(string str, [NotNullWhen(true)] out AbstractExpression? expression) {
-        ref var cacheRef = ref CollectionsMarshal.GetValueRefOrAddDefault(Cache, str, out _);
+        ref var cacheRef = ref CollectionsMarshal.GetValueRefOrAddDefault(Cache, str, out var exists);
 
-        if (cacheRef is null) {
+        if (!exists) {
             if (ReservedCharsRegex().IsMatch(str)) {
                 NotificationHelper.Notify(
                     $$"""
@@ -118,7 +118,7 @@ internal partial class AbstractExpression {
         }
         
         expression = cacheRef;
-        return true;
+        return expression is {};
     }
 
     internal static bool Parse(ReadOnlySpan<ExpressionToken> tokens, [NotNullWhen(true)] out AbstractExpression? expression)

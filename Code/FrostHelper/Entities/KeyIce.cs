@@ -114,17 +114,19 @@ public sealed class KeyIce : Key {
             OnDash = OnDash
         });
         Add(new TransitionListener {
-            OnOut = delegate (float f) {
+            OnOut = _ => {
                 StartedUsing = false;
                 if (!IsUsed) {
                     if (tween != null) {
                         tween.RemoveSelf();
                         tween = null;
                     }
+
                     if (alarm != null) {
                         alarm.RemoveSelf();
                         alarm = null;
                     }
+
                     Turning = false;
 
                     if (Visible) {
@@ -151,7 +153,10 @@ public sealed class KeyIce : Key {
         start = Position;
     }
 
-    public KeyIce(Player player, FrostHelperSession.IceKeyInfo info) : this(new() { Values = info.Data }, player.Position + new Vector2((-12) * (int) player.Facing, -8f), info.ID) {
+    public KeyIce(Player player, FrostHelperSession.IceKeyInfo info) : this(new() {
+        Values = info.Data,
+        Name = "FrostHelper/KeyIce",
+    }, player.Position + new Vector2((-12) * (int) player.Facing, -8f), info.ID) {
         player.Leader.GainFollower(follower);
         Collidable = false;
         Depth = -1000000;

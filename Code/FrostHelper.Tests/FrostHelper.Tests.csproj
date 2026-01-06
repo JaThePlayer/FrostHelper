@@ -1,0 +1,64 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <LangVersion>latest</LangVersion>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <IsPackable>false</IsPackable>
+        <RootNamespace>FrostHelper.Tests</RootNamespace>
+
+        <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
+        <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
+
+        <CelesteGamePath Condition="'$(CELESTEGAMEPATH)' == '' And Exists('..\..\..\..\Celeste.dll')">..\..\..\..</CelesteGamePath>
+        <CelesteGamePath Condition="'$(CELESTEGAMEPATH)' == '' And Exists('..\..\..\Celeste.dll')">..\..\..</CelesteGamePath>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
+        <PackageReference Include="xunit.v3" Version="3.2.1" />
+    </ItemGroup>
+    
+    <ItemGroup>
+        <PackageReference Include="Mono.Cecil" PrivateAssets="all" Version="0.11.6.0" IncludeAssets="compile;runtime" />
+        <PackageReference Include="YamlDotNet" PrivateAssets="all" Version="11.2.1" IncludeAssets="compile;runtime" />
+        <PackageReference Include="NLua" Version="1.4.25" IncludeAssets="compile;runtime" />
+        <PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild" Version="0.4.0">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Reference Include="Celeste" HintPath="$(CELESTEGAMEPATH)\Celeste.dll" Private="True" Publicize="True" />
+        <Reference Include="MMHOOK_Celeste" HintPath="$(CELESTEGAMEPATH)\MMHOOK_Celeste.dll" Private="True" />
+        <Reference Include="FNA" HintPath="$(CELESTEGAMEPATH)\FNA.dll" Private="True" />
+        <!-- There's no Nuget package for MonoModReorg.Patcher yet...-->
+        <Reference Include="MonoMod.Patcher" HintPath="$(CELESTEGAMEPATH)\MonoMod.Patcher.dll" Private="True" />
+        <Reference Include="MonoMod.Backports" HintPath="$(CELESTEGAMEPATH)\MonoMod.Backports.dll" Private="True" />
+        <Reference Include="MonoMod.RuntimeDetour" HintPath="$(CELESTEGAMEPATH)\MonoMod.RuntimeDetour.dll" Private="True" />
+        <Reference Include="MonoMod.Utils" HintPath="$(CELESTEGAMEPATH)\MonoMod.Utils.dll" Private="True" />
+
+        <Reference Include="CommunalHelper" HintPath="lib-stripped\CommunalHelper.dll" Private="True" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Using Include="Xunit" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\FrostHelper\FrostHelper.csproj" />
+    </ItemGroup>
+
+    <Target Name="CopyFiles" AfterTargets="Build">
+        <!-- Expose libraries at runtime -->
+        <Copy SourceFiles="$(CELESTEGAMEPATH)\everest-lib\lib64-win-x64\SDL2.dll" DestinationFolder="$(OutputPath)" SkipUnchangedFiles="true" />
+        <Copy SourceFiles="$(CELESTEGAMEPATH)\MonoMod.Utils.dll" DestinationFolder="$(OutputPath)" SkipUnchangedFiles="true" />
+        <Copy SourceFiles="$(CELESTEGAMEPATH)\MonoMod.Backports.dll" DestinationFolder="$(OutputPath)" SkipUnchangedFiles="true" />
+        <Copy SourceFiles="$(CELESTEGAMEPATH)\MonoMod.RuntimeDetour.dll" DestinationFolder="$(OutputPath)" SkipUnchangedFiles="true" />
+        <Copy SourceFiles="$(CELESTEGAMEPATH)\Mono.Cecil.dll" DestinationFolder="$(OutputPath)" SkipUnchangedFiles="true" />
+        <Copy SourceFiles="$(CELESTEGAMEPATH)\YamlDotNet.dll" DestinationFolder="$(OutputPath)" SkipUnchangedFiles="true" />
+    </Target>
+
+</Project>

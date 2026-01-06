@@ -11,9 +11,12 @@ waterfall.depth = -9999
 jautils.createPlacementsPreserveOrder(waterfall, "default", {
     { "color", "LightSkyBlue", "color" },
     { "fallSpeed", 120 },
+    { "depth", -9999, "depth" },
     { "drainSpeed", 480 },
     { "drainCondition", "" },
     { "shatterBathBombs", false },
+    { "collideWithPlatforms", false },
+    { "collideWithHoldables", false },
 })
 
 function waterfall.sprite(room, entity)

@@ -3,13 +3,19 @@
 internal sealed class SliderAccessor {
     private readonly string _counterName;
     private Session.Slider? _slider;
+    private Session? _lastSession;
     
     public SliderAccessor(string name) {
         _counterName = name;
     }
 
     public Session.Slider GetObj(Session session) {
-        _slider ??= session.GetSliderObject(_counterName);
+        if (session != _lastSession) {
+            _slider = session.GetSliderObject(_counterName);
+            _lastSession = session;
+        } else {
+            _slider ??= session.GetSliderObject(_counterName);
+        }
 
         return _slider;
     }

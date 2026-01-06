@@ -8,7 +8,7 @@ internal sealed class ExpressionListener<T>(ConditionHelper.Condition cond, Acti
     private Maybe<T> _lastValue;
     
     public override void Update() {
-        var value = cond.Get<T>(FrostModule.GetCurrentLevel().Session, userdata: null);
+        var value = cond.Get<T>(Scene.ToLevel().Session, userdata: null);
         if (!_lastValue.HasValue) {
             if (activateOnStart) {
                 onCondition(Entity, _lastValue, value);

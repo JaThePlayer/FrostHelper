@@ -158,6 +158,19 @@ public static partial class API {
             cs.SetBorderColor(color);
         }
     }
+    
+    /// <summary>
+    /// Sets the collision mode of a given custom spinner.
+    /// <param name="spinner">The CustomSpinner to change. While this function accepts any entity, it will only change entities of type CustomSpinner.</param>
+    /// <param name="mode">The collision mode, can be one of "Kill", "PassThrough", "Shatter", "ShatterGroup".</param>
+    /// </summary>
+    public static void SetCustomSpinnerDashThrough(Entity spinner, string mode) {
+        if (spinner is CustomSpinner cs && Enum.TryParse<CustomSpinner.CollisionModes>(mode, out var modeParsed)
+            && modeParsed is CustomSpinner.CollisionModes.Kill or CustomSpinner.CollisionModes.PassThrough 
+                          or CustomSpinner.CollisionModes.Shatter or CustomSpinner.CollisionModes.ShatterGroup) {
+            cs.DashThrough = modeParsed;
+        }
+    }
 
     public static Collider CreateShapeCollider(Vector2[] points) {
          return new ShapeHitbox(points);

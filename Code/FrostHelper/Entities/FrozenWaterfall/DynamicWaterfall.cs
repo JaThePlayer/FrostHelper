@@ -15,6 +15,7 @@ TODO:
 internal sealed class DynamicWaterfall : WaterFall {
     private bool _draining;
     private bool _checkForResize;
+    private bool _shatterBathBombs;
 
     private readonly float _fallSpeed;
     private readonly float _drainSpeed;
@@ -25,10 +26,15 @@ internal sealed class DynamicWaterfall : WaterFall {
 
     private readonly Hitbox _hitbox;
     private readonly ConditionHelper.Condition? _drainCondition;
+    private readonly bool _collideWithPlatforms;
+    private readonly bool _collideWithHoldables;
     
     public DynamicWaterfall(EntityData data, Vector2 offset) : base(data, offset) {
         _fallSpeed = data.Float("fallSpeed", 2f * 60f);
         _drainSpeed = data.Float("drainSpeed", 8f * 60f);
+        _collideWithPlatforms = data.Bool("collideWithPlatforms", false);
+        _collideWithHoldables = data.Bool("collideWithHoldables", false);
+        Depth = data.Int("depth", Depth);
 
         SetColor(data.GetColor("color", "LightSkyBlue"));
 
@@ -45,15 +51,17 @@ internal sealed class DynamicWaterfall : WaterFall {
             Add(new ExpressionListener<bool>(_drainCondition, OnDrainCondition, true));
         }
 
-        var shatterBathBombs = data.Bool("shatterBathBombs", false);
+        _shatterBathBombs = data.Bool("shatterBathBombs", false);
         Add(new BathBombCollider {
             CanCollideWith = b => b.Color != Color,
-            OnCollide = b => {
-                SetColor(b.Color);
-                if (shatterBathBombs)
-                    b.ShatterIfPossible();
-            }
+            OnCollide = OnBathBomb,
         });
+    }
+
+    private void OnBathBomb(BathBomb b) {
+        SetColor(b.Color);
+        if (_shatterBathBombs)
+            b.ShatterIfPossible();
     }
 
     private void OnDrainCondition(Entity self, Maybe<bool> lastValue, bool newValue) {
@@ -73,7 +81,8 @@ internal sealed class DynamicWaterfall : WaterFall {
     }
 
     private readonly List<Water> _tempWaters = [];
-    private readonly List<Solid> _tempSolids = [];
+    private readonly List<Platform> _tempPlatforms = [];
+    private readonly List<Holdable> _tempHoldables = [];
 
     public override void Awake(Scene scene) {
         base.Awake(scene);
@@ -85,10 +94,31 @@ internal sealed class DynamicWaterfall : WaterFall {
         UpdateCollider();
     }
 
+    private struct PlatformBlockWaterfallsFilter : IFunc<Platform, bool> {
+        public bool Invoke(Platform arg) {
+            return arg.BlockWaterfalls;
+        }
+    }
+    
+    private struct HoldableColliderGetter : IFunc<Holdable, Collider?> {
+        public Collider? Invoke(Holdable arg) {
+            return arg.PickupCollider;
+        }
+    }
+
+    private float GetTopOf(object? obj) =>
+        obj switch {
+            Entity e => e.Top,
+            Holdable h => h.PickupCollider?.AbsoluteTop ?? h.Entity?.Top ?? Y + height,
+            _ => Y + height
+        };
+
     public override void Update() {
         Components.Update();
         
         Level level = Scene.ToLevel();
+
+        object? collisionTarget = null;
         
         if (_checkForResize)
         {
@@ -98,7 +128,7 @@ internal sealed class DynamicWaterfall : WaterFall {
             float heightIncrement = 2f;
             height = heightIncrement;
             water = null;
-            solid = null;
+            collisionTarget = null;
             var maxHeight = prevHeight 
                             + (_draining ? (-_drainSpeed * Engine.DeltaTime) : (_fallSpeed * Engine.DeltaTime));
             maxHeight = float.Max(maxHeight, 0f);
@@ -106,32 +136,63 @@ internal sealed class DynamicWaterfall : WaterFall {
             var maxBounds = new Rectangle((int) X, (int) (Y + height), 8, (int)float.Ceiling(maxHeight));
             
             _tempWaters.Clear();
-            _tempSolids.Clear();
+            _tempPlatforms.Clear();
+            _tempHoldables.Clear();
             Scene.CollideInto(maxBounds, _tempWaters);
-            Scene.CollideInto(maxBounds, _tempSolids);
+            if (_collideWithPlatforms)
+                CollideExt.CollideInto<Platform, Platform, PlatformBlockWaterfallsFilter>(Scene, maxBounds, _tempPlatforms);
+            else
+                CollideExt.CollideInto<Platform, Solid, PlatformBlockWaterfallsFilter>(Scene, maxBounds, _tempPlatforms);
+
+            List<Component>? allHoldables = null;
+            if (_collideWithHoldables) {
+                allHoldables = Scene.Tracker.SafeGetComponents<Holdable>();
+                foreach (Holdable holdable in allHoldables) {
+                    holdable.PickupCollider.Entity = holdable.Entity;
+                }
+                CollideExt.CollideIntoComponents(allHoldables, maxBounds, _tempHoldables, new HoldableColliderGetter());
+            }
+
+            var bounds = new Rectangle((int) X, (int) (Y + height), 8, (int) float.Ceiling(heightIncrement));
             
-            while (Y + height < level.Bounds.Bottom 
-                   && (water = CollideExt.CollideFirst(new Rectangle((int)X, (int)(Y + height), 8, (int)float.Ceiling(heightIncrement)), _tempWaters)) == null 
-                   && ((solid = CollideExt.CollideFirst(new Rectangle((int)X, (int)(Y + height), 8, (int)float.Ceiling(heightIncrement)), _tempSolids)) == null 
-                       || !solid.BlockWaterfalls))
+            while (Y + height < level.Bounds.Bottom
+                   && (collisionTarget = CollideExt.CollideFirstAssumeCollideable(bounds, _tempWaters)) == null
+                   && (collisionTarget = CollideExt.CollideFirstAssumeCollideable(bounds, _tempPlatforms)) == null
+                   && (collisionTarget = CollideExt.CollideFirstComponent(bounds, _tempHoldables, new HoldableColliderGetter())) == null)
             {
                 height += heightIncrement;
+                bounds.Y = (int) (Y + height);
                 if (height >= maxHeight) {
                     height = maxHeight;
                     break;
                 }
-                solid = null;
             }
+
+            water = collisionTarget as Water;
+            solid = collisionTarget as Solid;
+
+            if (collisionTarget != null) {
+                if (collisionTarget is BathBomb bomb)
+                    OnBathBomb(bomb);
+                if (collisionTarget is Holdable { Entity: BathBomb holdableBomb })
+                    OnBathBomb(holdableBomb);
+
+                height = float.Max(Y + height, GetTopOf(collisionTarget)) - Y;
+            }
+            
+            if (allHoldables is {})
+                foreach (Holdable holdable in allHoldables)
+                    holdable.PickupCollider.Entity = null;
+            
             if (prevHeight != height)
-            {
                 UpdateCollider();
-            }
         }
         
         loopingSfx.Position.Y = Calc.Clamp(level.Camera.Position.Y + 90f, Y, height);
+        enteringSfx.Position.Y = height;
         if (water != null && Scene.OnInterval(0.3f))
             water.TopSurface.DoRipple(new Vector2(X + 4f, water.Y), 0.75f);
-        if (water != null || solid != null)
+        if (water != null || collisionTarget != null)
         {
             level.ParticlesFG.Emit(Water.P_Splash, 1,
                 new Vector2(X + 4f, Y + height + 2.0f), 

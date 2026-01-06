@@ -27,7 +27,7 @@ public sealed class FlagListener : Component {
         base.EntityAwake();
 
         if (TriggerOnRoomBegin) {
-            var session = FrostModule.GetCurrentLevel().Session;
+            var session = Scene.ToLevel().Session;
             OnSet(session, Flag, session.GetFlag(Flag));
         }
     }

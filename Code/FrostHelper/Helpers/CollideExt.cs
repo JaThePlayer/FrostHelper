@@ -3,6 +3,30 @@
 namespace FrostHelper.Helpers;
 
 internal static class CollideExt {
+    public static void CollideInto<TList, TEntity, TFilter>(Scene scene, Rectangle rect, List<TList> hits, TFilter filter = default) 
+        where TList : Entity
+        where TEntity : TList
+        where TFilter : struct, IFunc<TEntity, bool> {
+        foreach (TEntity t in scene.Tracker.SafeGetEntitiesSpan<TEntity>())
+        {
+            if (t.Collidable && filter.Invoke(t) && t.CollideRect(rect))
+                hits.Add(t);
+        }
+    }
+    
+    public static void CollideIntoComponents<TList, TColliderGetter>(List<Component> src, Rectangle rect, List<TList> hits, TColliderGetter colliderGetter = default) 
+        where TList : Component
+        where TColliderGetter : struct, IFunc<TList, Collider?> {
+        foreach (TList t in src)
+        {
+            if (!t.Entity.Collidable)
+                continue;
+            var collider = colliderGetter.Invoke(t);
+            if (collider != null && collider.Collide(rect))
+                hits.Add(t);
+        }
+    }
+    
     public static void CollideIntoBroadPhase(List<Entity> src, Rectangle rect, List<Entity> hits) {
         foreach (var t in src) {
             if (!t.Collidable || t.Collider is not {} c) continue;
@@ -64,10 +88,25 @@ internal static class CollideExt {
         return null;
     }
     
-    public static T? CollideFirst<T>(Rectangle rect, List<T> hits) where T : Entity {
-        foreach (var e in hits)
+    /// <summary>
+    /// CollideFirst, but all input elements in <see cref="hits"/> are assumed to be Collideable and have a not-null Collider.
+    /// </summary>
+    public static T? CollideFirstAssumeCollideable<T>(Rectangle rect, List<T> hits) where T : Entity {
+        foreach (var e in CollectionsMarshal.AsSpan(hits))
         {
-            if (e.Collidable && e.CollideRect(rect))
+            if (e.Collider.Collide(rect))
+                return e;
+        }
+
+        return null;
+    }
+    
+    public static T? CollideFirstComponent<T, TColliderGetter>(Rectangle rect, List<T> hits, TColliderGetter colliderGetter = default) 
+        where T : Component
+        where TColliderGetter : struct, IFunc<T, Collider?>{
+        foreach (var e in CollectionsMarshal.AsSpan(hits))
+        {
+            if (colliderGetter.Invoke(e)?.Collide(rect) ?? false)
                 return e;
         }
 

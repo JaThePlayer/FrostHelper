@@ -45,6 +45,7 @@ local function makeActivator(name, placement, extTextCallback, extra)
     if extra.disableOnce ~= true then
         table.insert(placement, { "once", false })
     end
+    table.insert(placement, { "scanEachActivation", false })
 
     jautils.createPlacementsPreserveOrder(h, "default", placement, true)
     jautils.addExtendedText(h, extTextCallback)

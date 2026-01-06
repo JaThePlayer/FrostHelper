@@ -757,6 +757,9 @@ entities.FrostHelper/DynamicWaterfall.attributes.description.fallSpeed=How fast 
 entities.FrostHelper/DynamicWaterfall.attributes.description.drainSpeed=How fast the waterfall drains (pixels/second).
 entities.FrostHelper/DynamicWaterfall.attributes.description.drainCondition=Session Expression, which, if met, makes the waterfall drain.
 entities.FrostHelper/DynamicWaterfall.attributes.description.shatterBathBombs=Whether Bath Bombs should be shattered when they recolor this waterfall.
+entities.FrostHelper/DynamicWaterfall.attributes.description.collideWithPlatforms=Whether Platforms (like Jumpthrus) should block this waterfall.
+entities.FrostHelper/DynamicWaterfall.attributes.description.collideWithHoldables=Whether Holdables should block this waterfall.
+entities.FrostHelper/DynamicWaterfall.attributes.description.depth=The depth this waterfall is rendered at.
 
 entities.FrostHelper/BathBomb.placements.name.default=Bath Bomb
 entities.FrostHelper/BathBomb.placements.description.default=A holdable that sets the color of Dynamic Waterfalls upon touching them.\nFrom Frozen Waterfall.
@@ -878,6 +881,7 @@ triggers.FrostHelper/DelayActivator.placements.description.default=Activates tri
 triggers.FrostHelper/DelayActivator.attributes.description.once=Whether this trigger should only activate once, and then get deleted.
 triggers.FrostHelper/DelayActivator.attributes.description.delay=How long to wait (in seconds) before actually activating the triggers.
 triggers.FrostHelper/DelayActivator.attributes.description.activationMode=How the activation should work:\nAll: All triggers get activated at once, in node order.\nCycle: When this trigger activates for the n-th time, the n-th trigger will be chosen.\nRandom: A random (seeded) trigger will be chosen.
+triggers.FrostHelper/DelayActivator.attributes.description.scanEachActivation=If enabled, the activator will scan for triggers to activate each time it is activated, instead of once on room load.\nWARNING: Can cause lag, use sparingly and only if absolutely necessary.
 
 # Loop
 triggers.FrostHelper/LoopActivator.placements.name.default=Activator (Loop)
@@ -889,6 +893,7 @@ triggers.FrostHelper/LoopActivator.attributes.description.activationMode=How the
 triggers.FrostHelper/LoopActivator.attributes.description.condition=The flag that needs to be set in order for this to trigger anything. Write a ! at the beginning of the flag name to invert this logic.\nSession expressions are supported, refer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Session-Expressions
 triggers.FrostHelper/LoopActivator.attributes.description.requireActivation=Whether this activator needs to be activated by some other source before starting the loop. If off, the loop will begin as soon as the level begins.
 triggers.FrostHelper/LoopActivator.attributes.description.activateAfterDeath=Whether this activator can activate triggers even after the player dies.\nThis might cause crashes when used with certain triggers which assume the player is still alive.
+triggers.FrostHelper/LoopActivator.attributes.description.scanEachActivation=If enabled, the activator will scan for triggers to activate each time it is activated, instead of once on room load.\nWARNING: Can cause lag, use sparingly and only if absolutely necessary.
 
 # If
 triggers.FrostHelper/IfActivator.placements.name.default=Activator (If)
@@ -897,6 +902,7 @@ triggers.FrostHelper/IfActivator.attributes.description.once=Whether this trigge
 triggers.FrostHelper/IfActivator.attributes.description.delay=How long to wait (in seconds) before actually activating the triggers.
 triggers.FrostHelper/IfActivator.attributes.description.activationMode=How the activation should work:\nAll: All triggers get activated at once, in node order.\nCycle: When this trigger activates for the n-th time, the n-th trigger will be chosen.\nRandom: A random (seeded) trigger will be chosen.
 triggers.FrostHelper/IfActivator.attributes.description.condition=The flag that needs to be set in order for this to trigger anything. Write a ! at the beginning of the flag name to invert this logic.\nSession expressions are supported, refer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Session-Expressions
+triggers.FrostHelper/IfActivator.attributes.description.scanEachActivation=If enabled, the activator will scan for triggers to activate each time it is activated, instead of once on room load.\nWARNING: Can cause lag, use sparingly and only if absolutely necessary.
 
 # If Random
 triggers.FrostHelper/IfRandomActivator.placements.name.default=Activator (If Random)
@@ -907,6 +913,7 @@ triggers.FrostHelper/IfRandomActivator.attributes.description.activationMode=How
 triggers.FrostHelper/IfRandomActivator.attributes.description.chance=Percent chance of this Activator activating triggers.\nSession expressions are supported, refer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Session-Expressions
 triggers.FrostHelper/IfRandomActivator.attributes.description.seedMode=Determines how the RNG should be seeded.\n- SessionTime: Based on the session timer, great for TAS-friendly pseudo-rng that appears random to casuals.\n- RoomSeed: Random values will always be the same in the same room, even between deaths.\n- FullRandom: The RNG is completely random, not TAS-friendly.\n- Custom: Allows providing a custom seed via the `seed` parameter.
 triggers.FrostHelper/IfRandomActivator.attributes.description.seed=If `Seed Mode` is `Custom`, specifies the custom seed to use for this trigger.
+triggers.FrostHelper/IfRandomActivator.attributes.description.scanEachActivation=If enabled, the activator will scan for triggers to activate each time it is activated, instead of once on room load.\nWARNING: Can cause lag, use sparingly and only if absolutely necessary.
 
 # Else
 triggers.FrostHelper/ElseActivator.placements.name.default=Activator (Else)
@@ -914,6 +921,7 @@ triggers.FrostHelper/ElseActivator.placements.description.default=When an If-sty
 triggers.FrostHelper/ElseActivator.attributes.description.once=Whether this trigger should only activate once, and then get deleted.
 triggers.FrostHelper/ElseActivator.attributes.description.delay=How long to wait (in seconds) before actually activating the triggers.
 triggers.FrostHelper/ElseActivator.attributes.description.activationMode=How the activation should work:\nAll: All triggers get activated at once, in node order.\nCycle: When this trigger activates for the n-th time, the n-th trigger will be chosen.\nRandom: A random (seeded) trigger will be chosen.
+triggers.FrostHelper/ElseActivator.attributes.description.scanEachActivation=If enabled, the activator will scan for triggers to activate each time it is activated, instead of once on room load.\nWARNING: Can cause lag, use sparingly and only if absolutely necessary.
 
 
 # FrostHelper/OnPlayerEnterActivator
@@ -922,6 +930,7 @@ triggers.FrostHelper/OnPlayerEnterActivator.placements.description.default=When 
 triggers.FrostHelper/OnPlayerEnterActivator.attributes.description.once=Whether this trigger should only activate once, and then get deleted.
 triggers.FrostHelper/OnPlayerEnterActivator.attributes.description.delay=How long to wait (in seconds) before actually activating the triggers.
 triggers.FrostHelper/OnPlayerEnterActivator.attributes.description.activationMode=How the activation should work:\nAll: All triggers get activated at once, in node order.\nCycle: When this trigger activates for the n-th time, the n-th trigger will be chosen.\nRandom: A random (seeded) trigger will be chosen.
+triggers.FrostHelper/OnPlayerEnterActivator.attributes.description.scanEachActivation=If enabled, the activator will scan for triggers to activate each time it is activated, instead of once on room load.\nWARNING: Can cause lag, use sparingly and only if absolutely necessary.
 
 # FrostHelper/OnPlayerDashingActivator
 triggers.FrostHelper/OnPlayerDashingActivator.placements.name.default=Activator (On Player Dashing)
@@ -931,6 +940,7 @@ triggers.FrostHelper/OnPlayerDashingActivator.attributes.description.delay=How l
 triggers.FrostHelper/OnPlayerDashingActivator.attributes.description.activationMode=How the activation should work:\nAll: All triggers get activated at once, in node order.\nCycle: When this trigger activates for the n-th time, the n-th trigger will be chosen.\nRandom: A random (seeded) trigger will be chosen.
 triggers.FrostHelper/OnPlayerDashingActivator.attributes.description.onlyWhenJustDashed=If enabled, then the trigger will only activate if the player has just dashed this frame. Otherwise, it'll activate the triggers each frame the player is dash attacking. (If disabled, you should probably make this one use)
 triggers.FrostHelper/OnPlayerDashingActivator.attributes.description.hasToBeInside=If enabled, the player has to be inside of this activator for it to activate.
+triggers.FrostHelper/OnPlayerDashingActivator.attributes.description.scanEachActivation=If enabled, the activator will scan for triggers to activate each time it is activated, instead of once on room load.\nWARNING: Can cause lag, use sparingly and only if absolutely necessary.
 
 # FrostHelper/OnPlayerOnGroundActivator
 triggers.FrostHelper/OnPlayerOnGroundActivator.placements.name.default=Activator (On Player On Ground)
@@ -940,6 +950,7 @@ triggers.FrostHelper/OnPlayerOnGroundActivator.attributes.description.delay=How 
 triggers.FrostHelper/OnPlayerOnGroundActivator.attributes.description.activationMode=How the activation should work:\nAll: All triggers get activated at once, in node order.\nCycle: When this trigger activates for the n-th time, the n-th trigger will be chosen.\nRandom: A random (seeded) trigger will be chosen.
 triggers.FrostHelper/OnPlayerOnGroundActivator.attributes.description.onlyWhenJustLanded=If enabled, then the trigger will only activate if the player has just landed this frame. Otherwise, it'll activate the triggers each frame the player is on the ground. (If disabled, you should probably make this one use)
 triggers.FrostHelper/OnPlayerOnGroundActivator.attributes.description.hasToBeInside=If enabled, the player has to be inside of this activator for it to activate.
+triggers.FrostHelper/OnPlayerOnGroundActivator.attributes.description.scanEachActivation=If enabled, the activator will scan for triggers to activate each time it is activated, instead of once on room load.\nWARNING: Can cause lag, use sparingly and only if absolutely necessary.
 
 # FrostHelper/OnSpawnActivator
 triggers.FrostHelper/OnSpawnActivator.placements.name.default=Activator (On Spawn)
@@ -948,6 +959,7 @@ triggers.FrostHelper/OnSpawnActivator.attributes.description.once=Whether this t
 triggers.FrostHelper/OnSpawnActivator.attributes.description.delay=How long to wait (in seconds) before actually activating the triggers.
 triggers.FrostHelper/OnSpawnActivator.attributes.description.activationMode=How the activation should work:\nAll: All triggers get activated at once, in node order.\nCycle: When this trigger activates for the n-th time, the n-th trigger will be chosen.\nRandom: A random (seeded) trigger will be chosen.
 triggers.FrostHelper/OnSpawnActivator.attributes.description.activateOnTransition=Whether the activator should trigger when transitioning into this room.
+triggers.FrostHelper/OnSpawnActivator.attributes.description.scanEachActivation=If enabled, the activator will scan for triggers to activate each time it is activated, instead of once on room load.\nWARNING: Can cause lag, use sparingly and only if absolutely necessary.
 
 # FrostHelper/OnDeathActivator
 triggers.FrostHelper/OnDeathActivator.placements.name.default=Activator (On Death)
@@ -955,6 +967,7 @@ triggers.FrostHelper/OnDeathActivator.placements.description.default=When a play
 triggers.FrostHelper/OnDeathActivator.attributes.description.once=Whether this trigger should only activate once, and then get deleted.
 triggers.FrostHelper/OnDeathActivator.attributes.description.delay=How long to wait (in seconds) before actually activating the triggers.
 triggers.FrostHelper/OnDeathActivator.attributes.description.activationMode=How the activation should work:\nAll: All triggers get activated at once, in node order.\nCycle: When this trigger activates for the n-th time, the n-th trigger will be chosen.\nRandom: A random (seeded) trigger will be chosen.
+triggers.FrostHelper/OnDeathActivator.attributes.description.scanEachActivation=If enabled, the activator will scan for triggers to activate each time it is activated, instead of once on room load.\nWARNING: Can cause lag, use sparingly and only if absolutely necessary.
 
 # FrostHelper/OnEntityEnterActivator
 triggers.FrostHelper/OnEntityEnterActivator.placements.name.default=Activator (On Entity Enter)
@@ -965,6 +978,7 @@ triggers.FrostHelper/OnEntityEnterActivator.attributes.description.activationMod
 triggers.FrostHelper/OnEntityEnterActivator.attributes.description.types=A comma-seperated list of SID's (preferred) or C# type names that should be affected by this activator.\nWhen left blank, the activator will DO NOTHING!
 triggers.FrostHelper/OnEntityEnterActivator.attributes.description.cache=Whether to cache the list of possible entities that match the `types` list.\nDisabling this is horrible for performance, but will allow detecting entities that get added to the scene after loading.
 triggers.FrostHelper/OnEntityEnterActivator.attributes.description.activateAfterDeath=Whether this activator can activate triggers even after the player dies.\nThis might cause crashes when used with certain triggers which assume the player is still alive.
+triggers.FrostHelper/OnEntityEnterActivator.attributes.description.scanEachActivation=If enabled, the activator will scan for triggers to activate each time it is activated, instead of once on room load.\nWARNING: Can cause lag, use sparingly and only if absolutely necessary.
 
 # FrostHelper/OnFlagActivator
 triggers.FrostHelper/OnFlagActivator.placements.name.default=Activator (On Flag)
@@ -977,6 +991,7 @@ triggers.FrostHelper/OnFlagActivator.attributes.description.targetState=The stat
 triggers.FrostHelper/OnFlagActivator.attributes.description.mustChange=Whether the state of the flag must be changed for this to activate triggers.\nFor example if your flag is ON, then a trigger sets it to ON again, if this setting is disabled, then the activator will still trigger.\nHowever, if this setting is enabled, it will not trigger, because the value of this flag didn't change.
 triggers.FrostHelper/OnFlagActivator.attributes.description.triggerOnRoomBegin=Whether this activator should also immediately activate upon loading the room, if the flag is in the correct state.
 triggers.FrostHelper/OnFlagActivator.attributes.description.activateAfterDeath=Whether this activator can activate triggers even after the player dies.\nThis might cause crashes when used with certain triggers which assume the player is still alive.
+triggers.FrostHelper/OnFlagActivator.attributes.description.scanEachActivation=If enabled, the activator will scan for triggers to activate each time it is activated, instead of once on room load.\nWARNING: Can cause lag, use sparingly and only if absolutely necessary.
 
 # FrostHelper/OnCassetteSwapActivator
 triggers.FrostHelper/OnCassetteSwapActivator.placements.name.default=Activator (On Cassette Block Swap)
@@ -986,6 +1001,7 @@ triggers.FrostHelper/OnCassetteSwapActivator.attributes.description.delay=How lo
 triggers.FrostHelper/OnCassetteSwapActivator.attributes.description.activationMode=How the activation should work:\nAll: All triggers get activated at once, in node order.\nCycle: When this trigger activates for the n-th time, the n-th trigger will be chosen.\nRandom: A random (seeded) trigger will be chosen.
 triggers.FrostHelper/OnCassetteSwapActivator.attributes.description.targetIndex=The cassette index to react to. Leave at -1 to trigger on every swap
 triggers.FrostHelper/OnCassetteSwapActivator.attributes.description.activateAfterDeath=Whether this activator can activate triggers even after the player dies.\nThis might cause crashes when used with certain triggers which assume the player is still alive.
+triggers.FrostHelper/OnCassetteSwapActivator.attributes.description.scanEachActivation=If enabled, the activator will scan for triggers to activate each time it is activated, instead of once on room load.\nWARNING: Can cause lag, use sparingly and only if absolutely necessary.
 
 # On (Session) Counter
 triggers.FrostHelper/OnCounterActivator.placements.name.default=Activator (On Counter)
@@ -996,6 +1012,7 @@ triggers.FrostHelper/OnCounterActivator.attributes.description.activationMode=Ho
 triggers.FrostHelper/OnCounterActivator.attributes.description.counter=The session counter to check.
 triggers.FrostHelper/OnCounterActivator.attributes.description.target=Target value of the counter. Can be an integer, OR the name of a different session counter.\nDecimal numbers are NOT supported.
 triggers.FrostHelper/OnCounterActivator.attributes.description.operation=The comparison operation to use to compare the counter to target.
+triggers.FrostHelper/OnCounterActivator.attributes.description.scanEachActivation=If enabled, the activator will scan for triggers to activate each time it is activated, instead of once on room load.\nWARNING: Can cause lag, use sparingly and only if absolutely necessary.
 
 # On Expression Counter
 triggers.FrostHelper/OnExpressionActivator.placements.name.default=Activator (On Session Expression)
@@ -1005,6 +1022,7 @@ triggers.FrostHelper/OnExpressionActivator.attributes.description.delay=How long
 triggers.FrostHelper/OnExpressionActivator.attributes.description.activationMode=How the activation should work:\nAll: All triggers get activated at once, in node order.\nCycle: When this trigger activates for the n-th time, the n-th trigger will be chosen.\nRandom: A random (seeded) trigger will be chosen.
 triggers.FrostHelper/OnExpressionActivator.attributes.description.expression=Session Expression to react to, refer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Session-Expressions
 triggers.FrostHelper/OnExpressionActivator.attributes.description.activateAfterDeath=Whether this activator can activate triggers even after the player dies.\nThis might cause crashes when used with certain triggers which assume the player is still alive.
+triggers.FrostHelper/OnExpressionActivator.attributes.description.scanEachActivation=If enabled, the activator will scan for triggers to activate each time it is activated, instead of once on room load.\nWARNING: Can cause lag, use sparingly and only if absolutely necessary.
 
 # On Expression Changed Counter
 triggers.FrostHelper/OnExpressionChangedActivator.placements.name.default=Activator (On Expression Changed)
@@ -1014,6 +1032,7 @@ triggers.FrostHelper/OnExpressionChangedActivator.attributes.description.delay=H
 triggers.FrostHelper/OnExpressionChangedActivator.attributes.description.activationMode=How the activation should work:\nAll: All triggers get activated at once, in node order.\nCycle: When this trigger activates for the n-th time, the n-th trigger will be chosen.\nRandom: A random (seeded) trigger will be chosen.
 triggers.FrostHelper/OnExpressionChangedActivator.attributes.description.expression=Session Expression to react to, refer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Session-Expressions
 triggers.FrostHelper/OnExpressionChangedActivator.attributes.description.activateAfterDeath=Whether this activator can activate triggers even after the player dies.\nThis might cause crashes when used with certain triggers which assume the player is still alive.
+triggers.FrostHelper/OnExpressionChangedActivator.attributes.description.scanEachActivation=If enabled, the activator will scan for triggers to activate each time it is activated, instead of once on room load.\nWARNING: Can cause lag, use sparingly and only if absolutely necessary.
 
 # If (Session) Counter
 triggers.FrostHelper/IfCounterActivator.placements.name.default=Activator (If Counter)
@@ -1024,6 +1043,7 @@ triggers.FrostHelper/IfCounterActivator.attributes.description.activationMode=Ho
 triggers.FrostHelper/IfCounterActivator.attributes.description.counter=The session counter to check.
 triggers.FrostHelper/IfCounterActivator.attributes.description.target=Target value of the counter.\nCan be an integer, OR the name of a different session counter.\nDecimal numbers are NOT supported.
 triggers.FrostHelper/IfCounterActivator.attributes.description.operation=The comparison operation to use to compare the counter to target.
+triggers.FrostHelper/IfCounterActivator.attributes.description.scanEachActivation=If enabled, the activator will scan for triggers to activate each time it is activated, instead of once on room load.\nWARNING: Can cause lag, use sparingly and only if absolutely necessary.
 
 # Counter Switch Activator
 triggers.FrostHelper/SwitchOnCounterActivator.placements.name.default=Activator (Switch on Counter)
@@ -1032,6 +1052,7 @@ triggers.FrostHelper/SwitchOnCounterActivator.attributes.description.once=Whethe
 triggers.FrostHelper/SwitchOnCounterActivator.attributes.description.delay=How long to wait (in seconds) before actually activating the triggers.
 triggers.FrostHelper/SwitchOnCounterActivator.attributes.description.counter=The session counter to check.
 triggers.FrostHelper/SwitchOnCounterActivator.attributes.description.cases=Comma-seperated list of switch cases.\nEach case should be a number or name of another counter.\nWhen this activator is activated, each case gets checked in-order, and the node corresponding to the first met condition will get activated.
+triggers.FrostHelper/SwitchOnCounterActivator.attributes.description.scanEachActivation=If enabled, the activator will scan for triggers to activate each time it is activated, instead of once on room load.\nWARNING: Can cause lag, use sparingly and only if absolutely necessary.
 
 # On Strawberry Collect
 triggers.FrostHelper/OnBerryCollectActivator.placements.name.default=Activator (On Berry Collect)
@@ -1039,6 +1060,7 @@ triggers.FrostHelper/OnBerryCollectActivator.placements.description.default=Acti
 triggers.FrostHelper/OnBerryCollectActivator.attributes.description.once=Whether this trigger should only activate once, and then get deleted.
 triggers.FrostHelper/OnBerryCollectActivator.attributes.description.delay=How long to wait (in seconds) before actually activating the triggers.
 triggers.FrostHelper/OnBerryCollectActivator.attributes.description.activationMode=How the activation should work:\nAll: All triggers get activated at once, in node order.\nCycle: When this trigger activates for the n-th time, the n-th trigger will be chosen.\nRandom: A random (seeded) trigger will be chosen.
+triggers.FrostHelper/OnBerryCollectActivator.attributes.description.scanEachActivation=If enabled, the activator will scan for triggers to activate each time it is activated, instead of once on room load.\nWARNING: Can cause lag, use sparingly and only if absolutely necessary.
 
 # On Elytra Wing
 triggers.FrostHelper/OnElytraRingActivator.placements.name.default=Activator (On Elytra Ring)
@@ -1046,6 +1068,7 @@ triggers.FrostHelper/OnElytraRingActivator.placements.description.default=Activa
 triggers.FrostHelper/OnElytraRingActivator.attributes.description.once=Whether this trigger should only activate once, and then get deleted.
 triggers.FrostHelper/OnElytraRingActivator.attributes.description.delay=How long to wait (in seconds) before actually activating the triggers.
 triggers.FrostHelper/OnElytraRingActivator.attributes.description.activationMode=How the activation should work:\nAll: All triggers get activated at once, in node order.\nCycle: When this trigger activates for the n-th time, the n-th trigger will be chosen.\nRandom: A random (seeded) trigger will be chosen.
+triggers.FrostHelper/OnElytraRingActivator.attributes.description.scanEachActivation=If enabled, the activator will scan for triggers to activate each time it is activated, instead of once on room load.\nWARNING: Can cause lag, use sparingly and only if absolutely necessary.
 
 # On Jump
 triggers.FrostHelper/OnJumpActivator.placements.name.default=Activator (On Jump)
@@ -1060,6 +1083,7 @@ triggers.FrostHelper/OnJumpActivator.attributes.description.hiccupJump=Whether t
 triggers.FrostHelper/OnJumpActivator.attributes.description.wallJump=Whether to activate for wall jumps.
 triggers.FrostHelper/OnJumpActivator.attributes.name.superWallJump=Wallbounce
 triggers.FrostHelper/OnJumpActivator.attributes.description.superWallJump=Whether to activate for wallbounces.\n(Anything using Player.SuperWallJump).
+triggers.FrostHelper/OnJumpActivator.attributes.description.scanEachActivation=If enabled, the activator will scan for triggers to activate each time it is activated, instead of once on room load.\nWARNING: Can cause lag, use sparingly and only if absolutely necessary.
 
 # Session Counter Trigger
 triggers.FrostHelper/SessionCounterTrigger.placements.name.default=Session Counter
