@@ -117,7 +117,7 @@ internal class CustomBloomCutout : EffectCutout {
 }
 
 [Tracked]
-public class CustomBloomBlocker : Component {
+internal sealed class CustomBloomBlocker : Component {
     public CustomBloomBlocker() : base(false, false) {
         CustomBloomCutout.LoadHooksIfNeeded();
     }
@@ -129,8 +129,9 @@ public class CustomBloomBlocker : Component {
 
     public void RenderCutout() => OnRender?.Invoke();
 
-    public static void DrawVertices(VertexPositionColor[] fill, Camera camera, Vector2 parallaxOffset) {
+    public static void DrawVertices(VertexPositionColor[] fill, Level scene, Vector2 parallaxOffset, Camera? camera = null) {
         Draw.SpriteBatch.End();
+        camera ??= scene.Camera;
 
         var cam = camera.Matrix * Matrix.CreateTranslation(parallaxOffset.X, parallaxOffset.Y, 0f);
         GFX.DrawVertices(cam, fill, fill.Length,
@@ -138,24 +139,24 @@ public class CustomBloomBlocker : Component {
             ReverseCutoutState
         );
 
-        BeginBloomBlockerBatch();
+        BeginBloomBlockerBatch(scene, camera);
     }
 
-    internal static void BeginBloomBlockerBatch() {
-        var level = FrostModule.GetCurrentLevel();
-        Camera camera = level.Camera;
-
+    internal static void BeginBloomBlockerBatch(Scene scene, Camera? camera) {
         var effect = BloomBlockEffect;
-        effect.ApplyStandardParameters(camera);
+        camera ??= scene.ToLevel().Camera;
+        
+        effect.ApplyStandardParameters(scene, camera);
 
         Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, ReverseCutoutState, SamplerState.PointClamp, null, null, effect, camera.Matrix);
     }
 
     internal static void DrawBloomBlockers() {
-        var cutouts = Engine.Scene.Tracker.GetComponents<CustomBloomBlocker>();
+        var scene = Engine.Scene;
+        var cutouts = scene.Tracker.GetComponents<CustomBloomBlocker>();
 
         if (cutouts.Count > 0) {
-            BeginBloomBlockerBatch();
+            BeginBloomBlockerBatch(scene, null);
 
             foreach (CustomBloomBlocker cutout in cutouts) {
                 cutout.RenderCutout();

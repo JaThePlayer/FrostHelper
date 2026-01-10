@@ -12,8 +12,8 @@ internal sealed class ColorgradeWrapper : ShaderWrapperBackdrop {
         _colorGradeImage = GFX.ColorGrades[child.Attr("colorgrade", "none")];
     }
 
-    protected override void SetEffectParams(Effect effect) {
-        base.SetEffectParams(effect);
+    protected override void SetEffectParams(Scene scene, Effect effect) {
+        base.SetEffectParams(scene, effect);
 
         var prevColorGrading = GFX.FxColorGrading;
         GFX.FxColorGrading = effect;

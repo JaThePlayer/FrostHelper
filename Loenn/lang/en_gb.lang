@@ -170,6 +170,7 @@ entities.FrostHelper/IceSpinner.attributes.description.destroyColor=Hex color to
 entities.FrostHelper/IceSpinner.attributes.description.attachToSolid=Whether this spinner should attach to solid entities.
 entities.FrostHelper/IceSpinner.attributes.description.moveWithWind=Whether this spinner should move with wind. Cursed
 entities.FrostHelper/IceSpinner.attributes.description.dashThrough=Determines what happens when the player dashes into this spinner.\nKill - Kills the player (default)\nPassThrough - Does not kill the player, allowing the spinner to be dashed through.\nShatter - Shatters this spinner\nShatterGroup - Shatters all spinnners with the same Attach Group.
+entities.FrostHelper/IceSpinner.attributes.description.onPlayer=Determines what happens when the player collides with this spinner WHILE NOT DASHING.\nKill - Kills the player (default)\nPassThrough - Does nothing.\nShatter - Shatters this spinner\nShatterGroup - Shatters all spinnners with the same Attach Group.
 entities.FrostHelper/IceSpinner.attributes.description.onHoldable=Determines what happens when a holdable collides with this spinner.\nPassThrough - Nothing (default)\nShatter - Shatters this spinner\nShatterGroup - Shatters all spinners with the same Attach Group.
 entities.FrostHelper/IceSpinner.attributes.description.bloomAlpha=If not zero, determines the alpha value for the bloom point of this spinner
 entities.FrostHelper/IceSpinner.attributes.description.bloomRadius=The radius of the bloom point of this spinner.
@@ -196,6 +197,7 @@ entities.FrostHelper/TriggerSpinner.attributes.description.destroyColor=Hex colo
 entities.FrostHelper/TriggerSpinner.attributes.description.attachToSolid=Whether this spinner should attach to solid entities.
 entities.FrostHelper/TriggerSpinner.attributes.description.dashThrough=Determines what happens when the player dashes into this spinner when its been activated already.\nKill - Kills the player (default)\nPassThrough - Does not kill the player, allowing the spinner to be dashed through.\nShatter - Shatters this spinner\nShatterGroup - Shatters all spinnners with the same Attach Group.
 entities.FrostHelper/TriggerSpinner.attributes.description.onHoldable=Determines what happens when a holdable collides with this spinner when its been activated already.\nPassThrough - Nothing (default)\nShatter - Shatters this spinner\nShatterGroup - Shatters all spinners with the same Attach Group.
+entities.FrostHelper/TriggerSpinner.attributes.description.onPlayer=Determines what happens when the player collides with this spinner WHILE NOT DASHING when its been activated already.\nKill - Kills the player (default)\nPassThrough - Does nothing.\nShatter - Shatters this spinner\nShatterGroup - Shatters all spinnners with the same Attach Group.
 entities.FrostHelper/TriggerSpinner.attributes.description.bloomAlpha=If not zero, determines the alpha value for the bloom point of this spinner
 entities.FrostHelper/TriggerSpinner.attributes.description.bloomRadius=The radius of the bloom point of this spinner.
 entities.FrostHelper/TriggerSpinner.attributes.description.rainbow=Whether this spinner is rainbow. Supports Maddie's Helping Hand's rainbow spinner controller.
@@ -559,7 +561,7 @@ entities.FrostHelper/EntityBatcher.attributes.description.flagInverted=Whether t
 entities.FrostHelper/EntityBatcher.attributes.description.effect=The path to a Shader Helper shader to use with this batcher
 entities.FrostHelper/EntityBatcher.attributes.description.depth=The depth of this batcher. All entities drawn by this batcher will be rendered at this depth, regardless of their depth
 entities.FrostHelper/EntityBatcher.attributes.description.types=List of types of entities that will be affected by this batcher
-entities.FrostHelper/EntityBatcher.attributes.description.parameters=The parameters to pass to the shader. Each parameter is a key:value pair. Each pair is separated by | Example: cool:true|bad:false
+entities.FrostHelper/EntityBatcher.attributes.description.parameters=The parameters to pass to the shader. Each parameter is a key:value pair. Each pair is separated by | Example: cool:true|bad:false.
 entities.FrostHelper/EntityBatcher.attributes.description.dynamicDepthBatchSplitField=Use only if you need to preserve depth, as this has huge performance implications. If set, the entities will be drawn several times, depending on their depth. Set this to a comma-seperated list of possible depths of the entities that will be drawn. 
 
 entities.FrostHelper/FallingBlockIgnoreSolids.placements.name.default=Falling Block (Ignore Solids)
@@ -860,6 +862,7 @@ triggers.FrostHelper/BloomColorPulseTrigger.attributes.description.easing=The Ea
 triggers.FrostHelper/ScreenwideShaderTrigger.placements.name.default=Screenwide Shader
 triggers.FrostHelper/ScreenwideShaderTrigger.attributes.description.effects=A comma-seperated list of effect names that will be activated by this trigger. Effect names provided here should not start with "Effects/"
 triggers.FrostHelper/ScreenwideShaderTrigger.attributes.description.flag=The flag that needs to be enabled for this shader to be active. Write a '!' before the flag name to invert the condition.\nSession expressions are supported, refer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Session-Expressions
+triggers.FrostHelper/ScreenwideShaderTrigger.attributes.description.parameters=List of parameters to pass to the shader.\nSession Expressions are supported for values.
 
 triggers.FrostHelper/EasedCameraZoomTrigger.placements.name.default=Eased Camera Zoom
 triggers.FrostHelper/EasedCameraZoomTrigger.attributes.description.easing=The Easing type used for the movement.\nYou can either pick one of the presets, or use a Session Expression returning a number, typically between 0 and 1, by prefixing it with `expr:`\n The $p command can be used to access tween.Percent - a number between (0.0, 1.0), which is the percent/100 of the move time elapsed.\nOr, you can write lua code that returns a number (typically between 0.0 and 1.0).\n In this case, your input will be converted to:\n return function(p){(name.Contains("return") ? "" : " return")} {name} end\n where 'p' is tween.Percent - a number between (0.0, 1.0), which is the percent/100 of the move time elapsed.
@@ -1224,6 +1227,7 @@ triggers.FrostHelper/ChangeSpinnersTrigger.attributes.description.newRainbow=If 
 triggers.FrostHelper/ChangeSpinnersTrigger.attributes.description.newTint=If not blank, changes the spinner's Tint.
 triggers.FrostHelper/ChangeSpinnersTrigger.attributes.description.newBorderColor=If not blank, changes the spinner's Border Color.
 triggers.FrostHelper/ChangeSpinnersTrigger.attributes.description.newDashThrough=If not `LeaveUnchanged`, changes the spinner's Dash Through.
+triggers.FrostHelper/ChangeSpinnersTrigger.attributes.description.newOnPlayer=If not `LeaveUnchanged`, changes the spinner's On Player.
 triggers.FrostHelper/ChangeSpinnersTrigger.attributes.description.newOnHoldable=If not `LeaveUnchanged`, changes the spinner's On Holdable.
 triggers.FrostHelper/ChangeSpinnersTrigger.attributes.description.nextTriggerDelay=If this trigger has a node pointing at another Change Spinners trigger,\nthat trigger will get get activated after this delay,\nand it will attempt to change the spinner that got changed by this trigger.\nFor example, this trigger could start playing an animation,\nthen point to another Change Spinners trigger to make that spinner collideable after a delay,\nimitating Trigger Spikes.
 
@@ -1282,12 +1286,14 @@ style.effects.FrostHelper/ShaderWrapper.name=Shader Wrapper
 style.effects.FrostHelper/ShaderWrapper.description.wrappedTag=The tag which will be affected by this wrapper.
 style.effects.FrostHelper/ShaderWrapper.description.shader=The path to the shader to use with this backdrop, relative to the Effects/ folder
 style.effects.FrostHelper/ShaderWrapper.description.shaderFlag=Flag that needs to be enabled for the shader to be rendered.\nBegin the flag with ! to invert the condition.\nIf the shader doesn't get rendered, the affected stylegrounds will be rendered normally.\nIf VivHelper is an everest.yaml dependency, you can use !VH_Photosensitive to only run the shader if photosensitive mode is disabled.\nSession expressions are supported, refer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Session-Expressions
+style.effects.FrostHelper/ShaderWrapper.description.parameters=List of parameters to pass to the shader.\nSession Expressions are supported for values.
 
 style.effects.FrostHelper/ShaderWrapperColorList.name=Shader Wrapper (Color List)
 style.effects.FrostHelper/ShaderWrapperColorList.description.wrappedTag=The tag which will be affected by this wrapper.
 style.effects.FrostHelper/ShaderWrapperColorList.description.shader=The path to the shader to use with this backdrop, relative to the Effects/ folder
 style.effects.FrostHelper/ShaderWrapperColorList.description.shaderFlag=Flag that needs to be enabled for the shader to be rendered.\nBegin the flag with ! to invert the condition.\nIf the shader doesn't get rendered, the affected stylegrounds will be rendered normally.\nIf VivHelper is an everest.yaml dependency, you can use !VH_Photosensitive to only run the shader if photosensitive mode is disabled.\nSession expressions are supported, refer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Session-Expressions
 style.effects.FrostHelper/ShaderWrapperColorList.description.colors=Comma-seperated list of hex colors, which will be passed to the `Colors` uniform on the provided shader.
+style.effects.FrostHelper/ShaderWrapperColorList.description.parameters=List of parameters to pass to the shader.\nSession Expressions are supported for values.
 
 style.effects.FrostHelper/ColorgradeWrapper.name=Colorgrade Wrapper
 style.effects.FrostHelper/ColorgradeWrapper.description.wrappedTag=The tag which will be affected by this wrapper.

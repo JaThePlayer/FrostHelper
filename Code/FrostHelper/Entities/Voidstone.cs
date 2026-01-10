@@ -125,7 +125,7 @@ public class VoidstoneRenderer : Entity {
         GameplayRenderer.End();
 
         Effect eff = ShaderHelperIntegration.GetEffect(Shader);
-        ShaderHelperIntegration.ApplyStandardParameters(eff, c);
+        eff.ApplyStandardParameters(Scene, c);
 
         Engine.Instance.GraphicsDevice.SetRenderTarget(GameplayBuffers.Gameplay);
         int s = GameplayBuffers.Gameplay.Width / 320;

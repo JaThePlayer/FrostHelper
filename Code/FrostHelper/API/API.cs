@@ -315,6 +315,14 @@ public static partial class API {
     /// </summary>
     /// <param name="viewMatrix">The shader's ViewMatrix uniform will be set to this matrix. In most cases, this should be camera.Matrix</param>
     public static void ApplyStandardParameters(Effect effect, Matrix viewMatrix) {
-        effect.ApplyStandardParameters(viewMatrix);
+        effect.ApplyStandardParameters(Engine.Scene, viewMatrix);
+    }
+    
+    /// <summary>
+    /// Applies FrostHelper-standard parameters for the given effect. Should be called each frame the effect is used.
+    /// </summary>
+    /// <param name="viewMatrix">The shader's ViewMatrix uniform will be set to this matrix. In most cases, this should be camera.Matrix</param>
+    public static void ApplyStandardParameters(Effect effect, Scene scene, Matrix viewMatrix) {
+        effect.ApplyStandardParameters(scene, viewMatrix);
     }
 }

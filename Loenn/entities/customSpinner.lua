@@ -55,6 +55,7 @@ jautils.createPlacementsPreserveOrder(spinner, "custom_spinner", {
     { "imageScale", 1 },
     { "depth", -8500, "depth" },
     { "onHoldable", "PassThrough", collisionModesForHoldables },
+    { "onPlayer", "Kill", collisionModes },
     { "dashThrough", "Kill", collisionModes }, -- Dash Through needs to be last, because it used to be a bool, and it will break the layout if its not last and uses the old bool value.
     { "attachToSolid", false },
     { "rainbow", false },
@@ -80,6 +81,7 @@ jautils.createPlacementsPreserveOrder(triggerSpinner, "default", {
     { "depth", -8500, "depth" },
     { "onHoldable", "PassThrough", collisionModesForHoldables },
     { "unactivatedOnHoldable", "PassThrough", collisionModesForHoldables_Unactivated },
+    { "onPlayer", "Kill", collisionModes },
     { "dashThrough", "Kill", collisionModes }, -- Dash Through needs to be last, because it used to be a bool, and it will break the layout if its not last and uses the old bool value.
     { "attachToSolid", false },
     { "rainbow", false },

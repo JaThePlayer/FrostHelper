@@ -30,14 +30,14 @@ internal sealed class DynamicWaterBehaviorController : Entity {
     public void HandleBehaviorFor(Player player, Color color) {
         if (_behaviors.TryGetValue(new RgbaOrXnaColor(color), out var behaviors)) {
             foreach (var behavior in behaviors)
-                behavior.Execute(null, player);
+                behavior.Execute(player.Scene.ToLevel(), null, player);
         }
     }
     
     public void HandleRainBehaviorFor(Player player, Color color) {
         if (_rainBehaviors.TryGetValue(new RgbaOrXnaColor(color), out var behaviors)) {
             foreach (var behavior in behaviors)
-                behavior.Execute(null, player);
+                behavior.Execute(player.Scene.ToLevel(), null, player);
         }
     }
     

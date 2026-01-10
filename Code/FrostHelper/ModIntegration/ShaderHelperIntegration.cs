@@ -169,7 +169,7 @@ public static class ShaderHelperIntegration {
         Effect effect = GetEffect(id);
         var cam = GameplayRenderer.instance.Camera;
 
-        ApplyStandardParameters(effect, cam);
+        ApplyStandardParameters(effect, Engine.Scene, cam);
 
         if (endBatch) {
             Draw.SpriteBatch.End();
@@ -206,7 +206,7 @@ public static class ShaderHelperIntegration {
         GameplayRenderer.End();
 
         Effect eff = GetEffect(id);
-        ApplyStandardParameters(eff);
+        ApplyStandardParameters(eff, Engine.Scene);
 
         Engine.Instance.GraphicsDevice.SetRenderTarget(GameplayBuffers.Gameplay);
 
@@ -219,19 +219,21 @@ public static class ShaderHelperIntegration {
         GameplayRenderer.Begin();
     }
 
-    public static Effect ApplyStandardParameters(this Effect effect, Camera? camera = null)
-        => ApplyStandardParameters(effect, camera?.Matrix);
+    public static Effect ApplyStandardParameters(this Effect effect, Scene scene, Camera? camera = null)
+        => ApplyStandardParameters(effect, scene, camera?.Matrix);
 
     // exposed via the API
-    public static Effect ApplyStandardParameters(this Effect effect, Matrix? camera) {
-        var level = FrostModule.GetCurrentLevel() ?? throw new Exception("Not in a level when applying shader parameters! How did you...");
+    public static Effect ApplyStandardParameters(this Effect effect, Scene scene, Matrix? camera) {
+        var level = scene as Level;
         var parameters = effect.Parameters;
 
         parameters["DeltaTime"]?.SetValue(Engine.DeltaTime);
         parameters["Time"]?.SetValue(Engine.Scene.TimeActive);
         parameters["Dimensions"]?.SetValue(new Vector2(GameplayBuffers.Gameplay.Width, GameplayBuffers.Gameplay.Height));
-        parameters["CamPos"]?.SetValue(level.Camera.Position);
-        parameters["ColdCoreMode"]?.SetValue(level.CoreMode == Session.CoreModes.Cold);
+        if (level is { }) {
+            parameters["CamPos"]?.SetValue(level.Camera.Position);
+            parameters["ColdCoreMode"]?.SetValue(level.CoreMode == Session.CoreModes.Cold);
+        }
 
         Viewport viewport = Engine.Graphics.GraphicsDevice.Viewport;
 

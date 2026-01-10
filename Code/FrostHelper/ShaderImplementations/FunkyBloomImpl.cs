@@ -5,7 +5,7 @@ namespace FrostHelper.ShaderImplementations;
 public static class FunkyBloomShaderImpl {
     public static void Apply(RenderTarget2D colorMap, RenderTarget2D shatterMap, RenderTarget2D target, string effectName) {
         var eff = ShaderHelperIntegration.GetEffect(effectName);
-        ShaderHelperIntegration.ApplyStandardParameters(eff);
+        eff.ApplyStandardParameters(Engine.Scene);
 
         // apply the shader
         Draw.SpriteBatch.GraphicsDevice.SetRenderTarget(GameplayBuffers.TempB);

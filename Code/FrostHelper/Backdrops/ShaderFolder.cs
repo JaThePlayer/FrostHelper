@@ -6,6 +6,7 @@ namespace FrostHelper.Backdrops;
 internal class ShaderFolder : Backdrop {
     protected readonly EffectRef Effect;
     protected readonly ConditionHelper.Condition Condition;
+    protected readonly EffectParams _effectParams;
     
     protected List<Backdrop> Inner { get; private init; }
 
@@ -24,6 +25,7 @@ internal class ShaderFolder : Backdrop {
     public ShaderFolder(BinaryPacker.Element element, EffectRef effect) {
         Effect = effect;
         Condition = element.GetCondition("shaderFlag");
+        _effectParams = element.Parse("parameters", EffectParams.Empty);
         
         Inner = [];
     }
@@ -58,8 +60,8 @@ internal class ShaderFolder : Backdrop {
         }
     }
 
-    protected virtual void SetEffectParams(Effect effect) {
-        effect.ApplyStandardParameters();
+    protected virtual void SetEffectParams(Scene scene, Effect effect) {
+        effect.ApplyStandardParameters(scene).ApplyParametersFrom(_effectParams, scene.ToLevel().Session);
     }
 
     public override void Render(Scene scene) {
@@ -104,7 +106,7 @@ internal class ShaderFolder : Backdrop {
 
         RenderStyles(renderer, scene, backdrops, fakeVisibility);
 
-        SetEffectParams(eff);
+        SetEffectParams(scene, eff);
         BetterShaderTrigger.SimpleApply(tempBuffer, renderTargets, eff);
         renderer.StartSpritebatch(prevBlendState);
         

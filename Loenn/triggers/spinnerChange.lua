@@ -45,6 +45,7 @@ jautils.createPlacementsPreserveOrder(spinnerChange, "default", {
     { "newTint", "", "colorOrEmpty" },
     { "newBorderColor", "", "colorOrEmpty" },
     { "newDashThrough", "LeaveUnchanged", collisionModes },
+    { "newOnPlayer", "LeaveUnchanged", collisionModes },
     { "newOnHoldable", "LeaveUnchanged", collisionModesForHoldables },
     { "newDepth", "", "depthOrEmpty" },
 

@@ -118,6 +118,7 @@ public class CustomSpinner : Entity {
     
     internal CollisionModes DashThrough;
     internal CollisionModes HoldableCollisionMode;
+    internal CollisionModes PlayerCollisionMode;
     
     
     // used by maddie's helping hand
@@ -206,6 +207,7 @@ public class CustomSpinner : Entity {
                     _ => CollisionModes.Kill,
                 } : CollisionModes.Kill;
         HoldableCollisionMode = data.Enum("onHoldable", CollisionModes.PassThrough);
+        PlayerCollisionMode = data.Enum("onPlayer", CollisionModes.Kill);
         
         Tint = ColorHelper.GetColor(tint);
         // for VivHelper compatibility
@@ -782,6 +784,9 @@ public class CustomSpinner : Entity {
         if (player.DashAttacking) {
             if (DispatchStandardCollisionMode(DashThrough))
                 return;
+        } else {
+            if (DispatchStandardCollisionMode(PlayerCollisionMode))
+                return;
         }
         
         player.Die((player.Position - Position).SafeNormalize(), false, true);
@@ -975,7 +980,7 @@ public class SpinnerBorderRenderer : Entity, ISpinnerRenderer<SpinnerBorderRende
 
         if (controller.OutlineShader is { } outlineShader) {
             var cam = GameplayRenderer.instance.Camera;
-            var eff = outlineShader.ApplyStandardParameters(cam);
+            var eff = outlineShader.ApplyStandardParameters(Scene, cam);
 
             if (controller.CanUseRenderTargetRender) {
                 RenderTargetRender(controller, eff);

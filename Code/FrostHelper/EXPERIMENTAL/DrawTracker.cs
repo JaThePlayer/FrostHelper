@@ -27,7 +27,7 @@ public static class DrawTracker {
         DrawAmts = new();
         Hooks = new();
 
-        FrostModule.GetCurrentLevel().OnEndOfFrame += () => {
+        Engine.Scene.OnEndOfFrame += () => {
             foreach (var method in typeof(SpriteBatch).GetMethods()) {
                 if (method.GetMethodBody() is { } && method.Name == "Draw") {
                     Hooks.Add(new(method, Track));
@@ -36,9 +36,9 @@ public static class DrawTracker {
 
             Engine.Commands.Open = false;
 
-            FrostModule.GetCurrentLevel().BeforeRender();
-            FrostModule.GetCurrentLevel().Render();
-            FrostModule.GetCurrentLevel().AfterRender();
+            Engine.Scene.BeforeRender();
+            Engine.Scene.Render();
+            Engine.Scene.AfterRender();
 
             On.Celeste.BackdropRenderer.Render -= BackdropRenderer_Render;
             On.Celeste.BackdropRenderer.BeforeRender -= BackdropRenderer_BeforeRender;

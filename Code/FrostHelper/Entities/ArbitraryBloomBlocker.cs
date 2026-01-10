@@ -8,7 +8,7 @@ internal sealed class ArbitraryBloomBlocker : Entity {
         var verts = ArbitraryShapeEntityHelper.GetFillVertsFromNodes(data, offset, Color.White * data.Float("alpha", 1f));
 
         Add(new CustomBloomBlocker() {
-            OnRender = () => CustomBloomBlocker.DrawVertices(verts, SceneAs<Level>().Camera, parallaxOffset: default),
+            OnRender = () => CustomBloomBlocker.DrawVertices(verts, SceneAs<Level>(), parallaxOffset: default),
         });
     }
 }

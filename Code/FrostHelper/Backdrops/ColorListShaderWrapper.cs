@@ -10,8 +10,8 @@ internal sealed class ColorListShaderWrapper : ShaderWrapperBackdrop {
         _colors = ColorHelper.GetColors(child.Attr("colors", "ffffff")).Select(c => c.ToVector4()).ToArray();
     }
 
-    protected override void SetEffectParams(Effect effect) {
-        base.SetEffectParams(effect);
+    protected override void SetEffectParams(Scene scene, Effect effect) {
+        base.SetEffectParams(scene, effect);
 
         effect.Parameters["Colors"].SetValue(_colors);
     }

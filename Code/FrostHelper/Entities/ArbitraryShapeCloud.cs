@@ -165,7 +165,7 @@ internal sealed class ArbitraryShapeCloud : Entity {
     }
 
     private Vector2 CalcParallaxOffset(Vector2 pos) {
-        Vector2 screenCenter = FrostModule.GetCurrentLevel().Camera.Position + new Vector2(320f / 2, 180f / 2);
+        Vector2 screenCenter = Scene.ToLevel().Camera.Position + new Vector2(320f / 2, 180f / 2);
 
         if (Parallax != 0f) {
             return ((pos - screenCenter) * Parallax).Floor();
@@ -222,7 +222,8 @@ internal sealed class ArbitraryShapeCloud : Entity {
 
         GameplayRenderer.End();
 
-        var cam = SceneAs<Level>().Camera.Matrix * Matrix.CreateTranslation(parallaxOffset.X, parallaxOffset.Y, 0f);
+        var camera = Scene.ToLevel().Camera;
+        var cam = camera.Matrix * Matrix.CreateTranslation(parallaxOffset.X, parallaxOffset.Y, 0f);
         GFX.DrawVertices(cam, Fill, Fill.Length,
             bloomBlocker ? CustomBloomBlocker.BloomBlockVertsEffect : EffectRef.SolidColorVerts(color),
             //null,
@@ -231,7 +232,7 @@ internal sealed class ArbitraryShapeCloud : Entity {
 
         // draw sprites
         if (bloomBlocker) {
-            CustomBloomBlocker.BeginBloomBlockerBatch();
+            CustomBloomBlocker.BeginBloomBlockerBatch(Scene, camera);
         } else {
             GameplayRenderer.Begin();
         }

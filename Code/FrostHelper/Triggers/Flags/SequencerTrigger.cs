@@ -40,7 +40,7 @@ internal sealed class SequencerTrigger(EntityData data, Vector2 offset) : BaseAc
             if (!_terminateCondition.Empty && _terminateCondition.Check(player.level.Session))
                 yield break;
             
-            switch (cmd.Execute(this, player)) {
+            switch (cmd.Execute(Scene.ToLevel(), this, player)) {
                 case IEnumerator enumerator:
                     while (enumerator.MoveNext()) {
                         yield return enumerator.Current;
@@ -58,7 +58,7 @@ internal sealed class SequencerTrigger(EntityData data, Vector2 offset) : BaseAc
 }
 
 internal abstract class SequencerCommand : IDetailedParsable<SequencerCommand> {
-    public abstract object? Execute(SequencerTrigger? trigger, Player? player);
+    public abstract object? Execute(Level level, SequencerTrigger? trigger, Player? player);
 
     private static bool TryParseNameValuePair(ref SpanParser parser, [NotNullWhen(true)] out string? name, 
         [NotNullWhen(true)] out ConditionHelper.Condition? condition) {
@@ -135,47 +135,38 @@ internal abstract class SequencerCommand : IDetailedParsable<SequencerCommand> {
 }
 
 internal sealed class SetFlagCmd(string flagName, ConditionHelper.Condition value) : SequencerCommand {
-    public override object? Execute(SequencerTrigger? trigger, Player? player) {
-        if (FrostModule.TryGetCurrentLevel() is {} level) {
-            level.Session.SetFlag(flagName, value.Check(level.Session));
-        }
+    public override object? Execute(Level level, SequencerTrigger? trigger, Player? player) {
+        level.Session.SetFlag(flagName, value.Check(level.Session));
         
         return null;
     }
 }
 
 internal sealed class SetCounterCmd(string counterName, ConditionHelper.Condition value) : SequencerCommand {
-    public override object? Execute(SequencerTrigger? trigger, Player? player) {
-        if (FrostModule.TryGetCurrentLevel() is {} level) {
-            level.Session.SetCounter(counterName, value.GetInt(level.Session));
-        }
+    public override object? Execute(Level level, SequencerTrigger? trigger, Player? player) {
+        level.Session.SetCounter(counterName, value.GetInt(level.Session));
         
         return null;
     }
 }
 
 internal sealed class SetSliderCmd(string sliderName, ConditionHelper.Condition value) : SequencerCommand {
-    public override object? Execute(SequencerTrigger? trigger, Player? player) {
-        if (FrostModule.TryGetCurrentLevel() is {} level) {
-            level.Session.SetSlider(sliderName, value.GetFloat(level.Session));
-        }
+    public override object? Execute(Level level, SequencerTrigger? trigger, Player? player) {
+        level.Session.SetSlider(sliderName, value.GetFloat(level.Session));
         
         return null;
     }
 }
 
 internal sealed class DelayCmd(ConditionHelper.Condition time) : SequencerCommand {
-    public override object? Execute(SequencerTrigger? trigger, Player? player) {
-        if (FrostModule.TryGetCurrentLevel() is {} level)
-            return time.GetFloat(level.Session);
-
-        return null;
+    public override object? Execute(Level level, SequencerTrigger? trigger, Player? player) {
+        return time.GetFloat(level.Session);
     }
 }
 
 internal sealed class ActivateAtCmd(ConditionHelper.Condition nodeIdx) : SequencerCommand {
-    public override object? Execute(SequencerTrigger? trigger, Player? player) {
-        if (trigger is not null && FrostModule.TryGetCurrentLevel() is {} level)
+    public override object? Execute(Level level, SequencerTrigger? trigger, Player? player) {
+        if (trigger is not null)
             trigger.ActivateAtNode(player!, nodeIdx.GetInt(level.Session));
         
         return null;
@@ -183,7 +174,7 @@ internal sealed class ActivateAtCmd(ConditionHelper.Condition nodeIdx) : Sequenc
 }
 
 internal sealed class KillCmd : SequencerCommand {
-    public override object? Execute(SequencerTrigger? trigger, Player? player) {
+    public override object? Execute(Level level, SequencerTrigger? trigger, Player? player) {
         player?.Die(Vector2.Zero);
         
         return null;
@@ -191,8 +182,8 @@ internal sealed class KillCmd : SequencerCommand {
 }
 
 internal sealed class SetDashesCmd(ConditionHelper.Condition dashCount, bool shouldSetMax) : SequencerCommand {
-    public override object? Execute(SequencerTrigger? trigger, Player? player) {
-        var session = FrostModule.GetCurrentLevel().Session;
+    public override object? Execute(Level level, SequencerTrigger? trigger, Player? player) {
+        var session = level.Session;
         var count = dashCount.GetInt(session);
         player?.Dashes = count;
         if (shouldSetMax) {
@@ -204,7 +195,7 @@ internal sealed class SetDashesCmd(ConditionHelper.Condition dashCount, bool sho
 }
 
 internal sealed class BlockDashRecoveryCmd(ConditionHelper.Condition duration) : SequencerCommand {
-    public override object? Execute(SequencerTrigger? trigger, Player? player) {
+    public override object? Execute(Level level, SequencerTrigger? trigger, Player? player) {
         player?.dashRefillCooldownTimer = duration.GetFloat(FrostModule.GetCurrentLevel().Session);
         
         return null;
@@ -212,7 +203,7 @@ internal sealed class BlockDashRecoveryCmd(ConditionHelper.Condition duration) :
 }
 
 internal sealed class BlockDashCmd(ConditionHelper.Condition duration) : SequencerCommand {
-    public override object? Execute(SequencerTrigger? trigger, Player? player) {
+    public override object? Execute(Level level, SequencerTrigger? trigger, Player? player) {
         player?.dashCooldownTimer = duration.GetFloat(FrostModule.GetCurrentLevel().Session);
         
         return null;

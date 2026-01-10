@@ -66,6 +66,18 @@ public static class Extensions {
         NotificationHelper.Notify(errorMessage);
         return def;
     }
+    
+    internal static T Parse<T>(this BinaryPacker.Element data, string key, T def) where T : IDetailedParsable<T> {
+        var str = data.Attr(key);
+        if (string.IsNullOrWhiteSpace(str))
+            return def;
+
+        if (T.TryParse(str, null, out var result, out var errorMessage))
+            return result;
+
+        NotificationHelper.Notify(errorMessage);
+        return def;
+    }
 
     /// <summary>
     /// Gets a hashset out of a comma-seperated list of elements. Each element in the hashset is trimmed

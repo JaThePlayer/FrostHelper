@@ -8,10 +8,10 @@ namespace FrostHelper.Triggers.Activator;
 /// </summary>
 [CustomEntity("FrostHelper/IfActivator")]
 internal sealed class IfActivator : BaseActivator, IIfActivator {
-    readonly Condition condition;
+    private readonly Condition _condition;
 
     public IfActivator(EntityData data, Vector2 offset) : base(data, offset) {
-        condition = data.GetCondition("condition", "");
+        _condition = data.GetCondition("condition", "");
         IsElse = data.Bool("isElse", false);
 
         Collidable = false;
@@ -20,7 +20,7 @@ internal sealed class IfActivator : BaseActivator, IIfActivator {
     public override void OnEnter(Player player) {
         base.OnEnter(player);
 
-        if (condition.Check())
+        if (_condition.Check())
             ActivateAll(player);
         else
             ActiveElseBlocks(player);

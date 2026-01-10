@@ -6,7 +6,7 @@ internal sealed class ChangeSpinnersTrigger : SpinnerTrigger {
     private readonly Tristate _newCollidable, _newRainbow;
     private readonly Color? _newTint, _newBorderTint;
     private readonly AnimationBehavior _animationBehavior;
-    private readonly CustomSpinner.CollisionModes _newDashThrough, _newOnHoldable;
+    private readonly CustomSpinner.CollisionModes _newDashThrough, _newOnHoldable, _newOnPlayer;
     private readonly int? _newDepth;
     
     private enum Tristate {
@@ -35,6 +35,7 @@ internal sealed class ChangeSpinnersTrigger : SpinnerTrigger {
         _animationBehavior = data.Enum("animationBehavior", AnimationBehavior.LeaveUnchanged);
         _newDashThrough = data.Enum("newDashThrough", CustomSpinner.CollisionModes.LeaveUnchanged);
         _newOnHoldable = data.Enum("newOnHoldable", CustomSpinner.CollisionModes.LeaveUnchanged);
+        _newOnPlayer = data.Enum("newOnPlayer", CustomSpinner.CollisionModes.LeaveUnchanged);
         _newDepth = data.GetIntNullable("newDepth");
     }
 
@@ -74,6 +75,7 @@ internal sealed class ChangeSpinnersTrigger : SpinnerTrigger {
 
         SetCollisionMode(ref spinner.DashThrough, _newDashThrough);
         SetCollisionMode(ref spinner.HoldableCollisionMode, _newOnHoldable);
+        SetCollisionMode(ref spinner.PlayerCollisionMode, _newOnPlayer);
 
         if (_newDepth is { } newDepth) {
             spinner.SetDepth(newDepth);
