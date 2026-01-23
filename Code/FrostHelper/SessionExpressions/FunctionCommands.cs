@@ -46,7 +46,7 @@ internal static class FunctionCommands {
     }
 
     internal static FunctionCommandFactory CreateFactoryForCustomCommand(Func<Session, object?, IReadOnlyList<object>, object> func) {
-        return (IReadOnlyList<Condition> args, out Condition? result, out string? message) => {
+        return (args, out result, out message) => {
             result = new ModFunctionCondition(args, func);
             message = null;
             return true;

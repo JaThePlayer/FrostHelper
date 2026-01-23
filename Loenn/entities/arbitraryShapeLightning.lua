@@ -1,3 +1,4 @@
+---@module 'jautils'
 local jautils = require("mods").requireFromPlugin("libraries.jautils")
 local arbitraryShapeEntity = require("mods").requireFromPlugin("libraries.arbitraryShapeEntity")
 
@@ -8,28 +9,21 @@ local lightning = {
 
 jautils.createPlacementsPreserveOrder(lightning, "default", {
     { "windingOrder", "Auto", jautils.windingOrders },
-    { "edgeBolts", "fcf579,1;8cf7e2,1", "list", {
+    { "edgeBolts", "fcf579,1;8cf7e2,1", jautils.fields.list {
         elementSeparator = ";",
         elementDefault = "fcf579,1",
-        elementOptions = {
-            fieldType = "FrostHelper.complexField",
+        elementOptions = jautils.fields.complex {
             separator = ",",
             innerFields = {
                 {
                     name = "FrostHelper.fields.lightning.boltColor",
                     default = "fcf579",
-                    info = {
-                        fieldType = "color",
-                        allowXNAColors = true,
-                        useAlpha = true,
-                    }
+                    info = jautils.fields.color { }
                 },
                 {
                     name = "FrostHelper.fields.lightning.boltThickness",
                     default = 1,
-                    info = {
-                        fieldType = "number",
-                    }
+                    info = jautils.fields.nonNegativeNumber { }
                 },
             }
         },

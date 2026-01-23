@@ -1,5 +1,6 @@
 local utils = require("utils")
 local mods = require("mods")
+---@module 'jautils'
 local jautils = mods.requireFromPlugin("libraries.jautils")
 local frostSettings = mods.requireFromPlugin("libraries.settings")
 local bloomSprite = mods.requireFromPlugin("libraries.bloomSprite")
@@ -35,20 +36,19 @@ local collisionModesForHoldables_Unactivated = {
     "ShatterGroup",
 }
 
-
 function spinner.depth(room, entity)
     return entity.depth or -8500
 end
 triggerSpinner.depth = spinner.depth
 
 jautils.createPlacementsPreserveOrder(spinner, "custom_spinner", {
-    { "directory", "danger/crystal>_white", "FrostHelper.texturePath", jautils.spinnerDirectoryFieldData },
+    { "directory", "danger/crystal>_white", jautils.fields.spinnerDirectory { } },
     { "tint", "ffffff", "color" },
     { "borderColor", "000000", "color" },
     { "destroyColor", "b0eaff", "color" },
     { "bloomAlpha", 0.0 },
     { "bloomRadius", 0.0 },
-    { "debrisCount", 8, "integer" },
+    { "debrisCount", 8, jautils.fields.nonNegativeInteger { } },
     { "attachGroup", -1, "FrostHelper.attachGroup" },
     { "hitbox", "C,6,0,0;R,16,4,-8,-3", "FrostHelper.collider"},
     { "scale", 1 },
@@ -65,8 +65,8 @@ jautils.createPlacementsPreserveOrder(spinner, "custom_spinner", {
 })
 
 jautils.createPlacementsPreserveOrder(triggerSpinner, "default", {
-    { "directory", "danger/FrostHelper/triggerSpinner>_off!", "FrostHelper.texturePath", jautils.spinnerDirectoryFieldData },
-    { "onDirectory", "danger/FrostHelper/triggerSpinner>_on!", "FrostHelper.texturePath", jautils.spinnerDirectoryFieldData },
+    { "directory", "danger/FrostHelper/triggerSpinner>_off!", jautils.fields.spinnerDirectory { } },
+    { "onDirectory", "danger/FrostHelper/triggerSpinner>_on!", jautils.fields.spinnerDirectory { } },
     { "delay", 0.3 },
     { "hitbox", "C,6,0,0;R,16,4,-8,-3", "FrostHelper.collider"},
     { "tint", "ffffff", "color" },

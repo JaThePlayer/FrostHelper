@@ -89,7 +89,7 @@ internal static class InputCommands {
                     p.Name.Equals(settingNameStr, StringComparison.OrdinalIgnoreCase)
                     && p.PropertyType.IsAssignableTo(typeof(ButtonBinding))
                     && p.GetMethod is { });
-            } catch (Exception ex) {
+            } catch (Exception) {
                 matchingInput = null;
             }
 

@@ -1,21 +1,21 @@
-﻿namespace FrostHelper;
+﻿using System.Threading;
+
+namespace FrostHelper;
 public static class GlobalEntityHelper {
-    private static bool _hooksLoaded;
+    private static int _hooksLoaded;
 
     [HookPreload]
     public static void LoadIfNeeded() {
-        if (_hooksLoaded)
+        if (Interlocked.Exchange(ref _hooksLoaded, 1) != 0)
             return;
-        _hooksLoaded = true;
 
         On.Celeste.Level.LoadLevel += Level_LoadLevel;
     }
 
     [OnUnload]
     public static void Unload() {
-        if (!_hooksLoaded)
+        if (Interlocked.Exchange(ref _hooksLoaded, 0) == 0)
             return;
-        _hooksLoaded = false;
 
         On.Celeste.Level.LoadLevel -= Level_LoadLevel;
     }
@@ -41,7 +41,6 @@ public static class GlobalEntityHelper {
     }
 
     private static void AddGlobals(Level self) {
-#if MAP_PROCESSOR
         // load global entities
         if (FrostMapDataProcessor.GlobalEntityMarkers.TryGetValue(self.Session.Area.SID, out var globalEntities)) {
             // prevent global entity duplication
@@ -52,17 +51,16 @@ public static class GlobalEntityHelper {
             }
             mapDataDynData.Set(dynDataAddedGlobalsKey, true);
 
-            var globalRooms = globalEntities.Select(p => p.Key).ToList();
+            var globalRooms = globalEntities.Select(p => p.RoomName).ToList();
             foreach (var item in globalEntities) {
                 AddFromMarker(self, item, globalRooms);
             }
         }
-#endif
     }
 
-    private static void AddFromMarker(Level self, KeyValuePair<string, BinaryPacker.Element> globalEntity, List<string> allGlobalRooms) {
-        var globalEntityRoomName = globalEntity.Key;
-        var container = globalEntity.Value;
+    private static void AddFromMarker(Level self, FrostMapDataProcessor.EntityMarker globalEntity, List<string> allGlobalRooms) {
+        var globalEntityRoomName = globalEntity.RoomName;
+        var container = globalEntity.Marker;
         var mapData = self.Session.MapData;
 
         bool triggerTriggers = container.AttrBool("triggerTriggers", true);

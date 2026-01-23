@@ -34,6 +34,7 @@ namespace Triangulator {
         /// </summary>
         /// <param name="inputVertices">The polygon vertices in counter-clockwise winding order.</param>
         /// <param name="desiredWindingOrder">The desired output winding order.</param>
+        /// <param name="inputWindingOrder"></param>
         /// <param name="outputVertices">The resulting vertices that include any reversals of winding order and holes.</param>
         /// <param name="indices">The resulting indices for rendering the shape as a triangle list.</param>
         public static void Triangulate(

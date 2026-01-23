@@ -7,11 +7,10 @@ local flagSequencer = {
 }
 
 jautils.createPlacementsPreserveOrder(flagSequencer, "default", {
-    { "sequence", "", "list", {
+    { "sequence", "", jautils.fields.list {
         elementSeparator = ";",
         elementDefault = "delay:0",
-        elementOptions = {
-            fieldType = "FrostHelper.polymorphicComplexField",
+        elementOptions = jautils.fields.polymorphicComplex {
             separator = ":",
             langPrefix = "FrostHelper.fields.sequence",
             types = {
@@ -23,7 +22,7 @@ jautils.createPlacementsPreserveOrder(flagSequencer, "default", {
             }
         },
     }},
-    { "terminationCondition", "", "FrostHelper.condition" },
+    { "terminationCondition", "", jautils.fields.sessionExpression{} },
     { "loop", false },
     { "oneUse", true },
 }, true)

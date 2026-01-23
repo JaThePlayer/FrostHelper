@@ -7,24 +7,19 @@ local controller = {
     texture = "editor/FrostHelper/SpinnerController",
 }
 
-local behaviorsFieldInfo = {
+local behaviorsFieldInfo = jautils.fields.list {
     elementSeparator = ";",
     elementDefault = "0000ff~setDashes:true=0",
-    elementOptions = {
-        fieldType = "FrostHelper.complexField",
+    elementOptions = jautils.fields.complex {
         separator = "~",
         innerFields = {
             {
                 name = "FrostHelper.fields.DynamicWaterBehavior.color",
-                info = {
-                    fieldType = "color",
-                    allowXNAColors = true,
-                }
+                info = jautils.fields.color { }
             },
             {
                 name = "FrostHelper.fields.DynamicWaterBehavior.behavior",
-                info = {
-                    fieldType = "FrostHelper.polymorphicComplexField",
+                info = jautils.fields.polymorphicComplex {
                     separator = ":",
                     langPrefix = "FrostHelper.fields.sequence",
                     types = {
@@ -43,7 +38,7 @@ local behaviorsFieldInfo = {
 }
 
 jautils.createPlacementsPreserveOrder(controller, "default", {
-    { "behaviors", "Blue~setDashes:true=0;Red~setDashes:true=1;Pink~setDashes:true=2;Black~kill:", "list", behaviorsFieldInfo },
+    { "behaviors", "Blue~setDashes:true=0;Red~setDashes:true=1;Pink~setDashes:true=2;Black~kill:", behaviorsFieldInfo },
     --{ "rainBehaviors", "Blue~blockDash:0.18;Blue~blockDashRecovery:0.18;Red~setDashes:false=1;Pink~setDashes:false=2;Black~kill:", "list", behaviorsFieldInfo }
 })
 

@@ -1,5 +1,5 @@
 ﻿namespace FrostHelper;
-#if MAP_PROCESSOR
+
 public class SpeedChallengePage : CustomJournalPage {
     public SpeedChallengePage(CustomJournal journal, string[] challenges) : base(journal) {
         PageTexture = "page";
@@ -17,7 +17,7 @@ public class SpeedChallengePage : CustomJournalPage {
             long targetTime = TimeSpan.FromSeconds(challengeInfo.GoalTime).Ticks;
             table.AddRow().Add(new TextCell(Dialog.Clean(t.Remove(0, t.IndexOf('>') + 1)), new Vector2(1f, 0.5f), 0.6f, TextColor))
                 .Add(new TextCell(time == -1 ? "-" : TimeSpan.FromTicks(time).ShortGameplayFormat(), new Vector2(0.5f, 0.5f), 0.6f, time < targetTime ? Calc.HexToColor("B07A00") : TextColor)) // PB
-                .Add(new TextCell(TimeSpan.FromSeconds(FrostMapDataProcessor.SpeedChallenges[t].GoalTime).ShortGameplayFormat(), new Vector2(0.5f, 0.5f), 0.6f, TextColor)); // Goal Time
+                .Add(new TextCell(TimeSpan.FromSeconds(challengeInfo.GoalTime).ShortGameplayFormat(), new Vector2(0.5f, 0.5f), 0.6f, TextColor)); // Goal Time
         }
     }
 
@@ -507,4 +507,3 @@ public class CustomJournal : Entity {
 
     private float rightArrowEase;
 }
-#endif

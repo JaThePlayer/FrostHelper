@@ -3,6 +3,7 @@ local drawableSprite = require("structs.drawable_sprite")
 local enums = require("consts.celeste_enums")
 local utils = require("utils")
 local drawableSpriteStruct = require("structs.drawable_sprite")
+---@module 'jautils'
 local jautils = require("mods").requireFromPlugin("libraries.jautils")
 
 local switchGate = {}
@@ -30,7 +31,7 @@ switchGate.fieldInformation = {
 local frameTexture = "objects/switchgate/%s"
 
 jautils.createPlacementsPreserveOrder(switchGate, "default", {
-    { "sprite", "block", "FrostHelper.texturePath", {
+    { "sprite", "block", jautils.fields.texturePath {
         baseFolder = "objects/switchgate",
         pattern = "^objects/switchgate/(.*)$",
         captureConverter = function(dir)

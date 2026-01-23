@@ -147,16 +147,12 @@ public class FrostModule : EverestModule {
     public override Type SettingsType => typeof(FrostHelperSettings);
     public static FrostHelperSettings Settings => (FrostHelperSettings) Instance._Settings;
 
-#if MAP_PROCESSOR
     public override void PrepareMapDataProcessors(MapDataFixup context) {
         base.PrepareMapDataProcessors(context);
 
-        FrostMapDataProcessor.GlobalEntityMarkers.Remove(context.AreaKey.SID);
         context.Add<FrostMapDataProcessor>();
     }
-#else
-#warning ENABLE MAP PROCESSOR IN RELEASES!!!
-#endif
+
     public override void LoadContent(bool firstLoad) {
         SpriteBank = new SpriteBank(GFX.Game, "Graphics/FrostHelper/CustomSprites.xml");
         BadelineChaserBlock.Load();

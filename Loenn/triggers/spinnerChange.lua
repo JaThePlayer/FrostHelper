@@ -1,3 +1,4 @@
+---@module 'jautils'
 local jautils = require("mods").requireFromPlugin("libraries.jautils")
 
 local spinnerChange = {
@@ -38,7 +39,7 @@ local collisionModesForHoldables = {
 jautils.createPlacementsPreserveOrder(spinnerChange, "default", {
     { "filter", "", "FrostHelper.condition" },
     { "cacheFilter", "", "FrostHelper.condition" },
-    { "newDirectory", "", "FrostHelper.texturePath", jautils.spinnerDirectoryFieldData },
+    { "newDirectory", "", jautils.fields.spinnerDirectory { } },
     { "animationBehavior", "LeaveUnchanged", animationBehaviors },
     { "newCollidable", "LeaveUnchanged", tristate },
     { "newRainbow", "LeaveUnchanged", tristate },

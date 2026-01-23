@@ -89,7 +89,7 @@ internal static class CollideExt {
     }
     
     /// <summary>
-    /// CollideFirst, but all input elements in <see cref="hits"/> are assumed to be Collideable and have a not-null Collider.
+    /// CollideFirst, but all input elements in hits are assumed to be Collideable and have a not-null Collider.
     /// </summary>
     public static T? CollideFirstAssumeCollideable<T>(Rectangle rect, List<T> hits) where T : Entity {
         foreach (var e in CollectionsMarshal.AsSpan(hits))

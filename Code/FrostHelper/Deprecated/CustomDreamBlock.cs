@@ -435,7 +435,7 @@ public class CustomDreamBlock : Solid {
                             bool flag9 = player.ClimbCheck(-1, 0);
                             bool flag10 = player.ClimbCheck(1, 0);
                             int moveX = data.Get<int>("moveX");
-                            bool flag11 = Input.Grab.Check && ((moveX == 1 && flag10) || (moveX == -1 && flag9));
+                            bool flag11 = Input.GrabCheck && ((moveX == 1 && flag10) || (moveX == -1 && flag9));
                             if (flag11) {
                                 player.Facing = (Facings) moveX;
                                 bool noGrabbing = SaveData.Instance.Assists.NoGrabbing;

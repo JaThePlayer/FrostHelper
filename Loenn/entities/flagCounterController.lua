@@ -1,3 +1,4 @@
+---@module 'jautils'
 local jautils = require("mods").requireFromPlugin("libraries.jautils")
 local drawableSpriteStruct = require("structs.drawable_sprite")
 local drawableTextStruct = require("structs.drawable_text")
@@ -19,20 +20,20 @@ end
 
 jautils.createPlacementsPreserveOrder(controller, "default", {
     { "counter", "", "sessionCounter" },
-    { "flags", "", "list", {
+    { "flags", "", jautils.fields.list {
+        elementSeparator = ",",
         elementDefault = "",
-        elementOptions = {
-            fieldType = "FrostHelper.complexField",
-                separator = ";",
-                innerFields = {
-                    {
-                        name = "FrostHelper.fields.flagCounterController.flag",
-                    },
-                    {
-                        name = "FrostHelper.fields.flagCounterController.value",
-                        default = 1,
-                    },
-                }
+        elementOptions = jautils.fields.complex {
+            separator = ";",
+            innerFields = {
+                {
+                    name = "FrostHelper.fields.flagCounterController.flag",
+                },
+                {
+                    name = "FrostHelper.fields.flagCounterController.value",
+                    default = 1,
+                },
+            }
         },
     }},
 })

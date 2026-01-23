@@ -332,6 +332,8 @@ public static class EasierILHook {
     /// Utility method to patch "coroutine" kinds of methods with IL.
     /// Those methods' code reside in a compiler-generated method, and IL.Celeste.* do not allow manipulating them directly.
     /// </summary>
+    /// <param name="typeName">Full type name containing the hooked method</param>
+    /// <param name="methodName">The name of the method to hook</param>
     /// <param name="manipulator">Method taking care of the patching</param>
     /// <returns>The IL hook if the actual code was found, null otherwise</returns>
     public static ILHook HookCoroutine(string typeName, string methodName, ILContext.Manipulator manipulator) {

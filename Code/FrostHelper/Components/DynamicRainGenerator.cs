@@ -118,7 +118,6 @@ internal sealed class DynamicRainGenerator : Component {
     internal float PreSimulationTime { get; set; } = 1f;
     
     private bool _wasEnabled;
-    private Hitbox? _playerReplacementHitbox = null;
     private readonly Random _random;
     private readonly int _length;
     private Rectangle _levelBounds;
@@ -405,7 +404,7 @@ internal sealed class DynamicRainGenerator : Component {
     }
 
     /// <summary>
-    /// Performs a fast collision against this collider for broad-phase checking, expanding <see cref="colliderBounds"/> as needed.
+    /// Performs a fast collision against this collider for broad-phase checking, expanding colliderBounds as needed.
     /// Might not do a full collision check if its deemed worth it for perf, for example grids always return true.
     /// </summary>
     private static bool FastBroadCollision(ref Rectangle rect, Collider collider, ref Rectangle colliderBounds) {

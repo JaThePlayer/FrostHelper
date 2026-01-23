@@ -66,7 +66,12 @@ jautils.inRysy = compat.inRysy
 jautils.inSnowberry = compat.inSnowberry
 
 jautils.easings = "FrostHelper.easing"
+
+---@module 'tweenModes'
 jautils.tweenModes = mods.requireFromPlugin("libraries.tweenModes")
+
+---@module 'typedFields'
+jautils.fields = mods.requireFromPlugin("libraries.typedFields")
 
 ---Tries to require a file, returns nil if it doesn't exist
 jautils.tryRequire = utils.tryrequire
@@ -200,51 +205,6 @@ jautils.counterOperationToMathExpr = {
     ["LessThan"] = "<",
     ["GreaterThanOrEqual"] = ">=",
     ["LessThanOrEqual"] = "<=",
-}
-
-jautils.spinnerDirectoryFieldData = {
-    baseFolder = "danger",
-    pattern = "^(danger/.*)/fg(.-)%d+$",
-    captureConverter = function(dir, subdir)
-        local animationless = string.match(dir, "(.-)/%d%d$")
-        if animationless then
-            return animationless .. ">" .. subdir .. "!"
-        end
-
-        return dir .. ">" .. subdir
-    end,
-    displayConverter = function(dir, subdir)
-        dir = string.match(dir, "(.-)/%d%d$") or dir
-
-        local humanizedDir = utils.humanizeVariableName(string.match(dir, "^.*/(.*/hot)$") or string.match(dir, "^.*/(.*)$") or dir)
-        if subdir and #subdir > 0 then
-            return humanizedDir .. " (" .. utils.humanizeVariableName(subdir) .. ")"
-        end
-
-        return humanizedDir
-    end,
-    vanillaSprites = { "danger/crystal/fg_white00", "danger/crystal/fg_red00", "danger/crystal/fg_blue00", "danger/crystal/fg_purple00" },
-    langDir = "customSpinner",
-}
-
-jautils.effectParametersFieldData = {
-    fieldType = "list",
-    elementSeparator = ";",
-    elementDefault = "key=1",
-    elementOptions = {
-        fieldType = "FrostHelper.complexField",
-            separator = "=",
-            innerFields = {
-                {
-                    name = "FrostHelper.fields.effectParams.key",
-                    default = "key"
-                },
-                {
-                    name = "FrostHelper.fields.effectParams.value",
-                    default = 1,
-                },
-            }
-    },
 }
 
 function jautils.counterConditionToString(counter, operation, target)
@@ -398,17 +358,7 @@ jautils.fieldTypeOverrides = {
         }
     end,
     ["FrostHelper.texturePath"] = function (data)
-        if not compat.inSnowberry then
-            data.fieldType = "FrostHelper.texturePath"
-            return data
-        end
-
-        if data.fallback then
-            return {
-                options = data.fallback,
-                editable = true,
-            }
-        end
+        return jautils.fields.texturePath(data)
     end,
     ["FrostHelper.collider"] = function (data)
         return {
@@ -431,8 +381,7 @@ jautils.fieldTypeOverrides = {
         }
     end,
     ["range"] = function (data)
-        return {
-            fieldType = "FrostHelper.complexField",
+        return jautils.fields.complex {
             separator = ",",
             innerFields = {
                 {
@@ -447,15 +396,13 @@ jautils.fieldTypeOverrides = {
         }
     end,
     ["statRecovery"] = function (data)
-        return {
-            fieldType = "FrostHelper.complexField",
+        return jautils.fields.complex {
             separator = ";",
             innerFields = {
                 {
                     name = "FrostHelper.fields.statRecovery.dashes",
                     default = 10000,
-                    info = {
-                        fieldType = "integer",
+                    info = jautils.fields.integer {
                         options = {
                             ["10000 (Refill)"] = 10000,
                             ["10001 (No Change)"] = 10001,
@@ -466,8 +413,7 @@ jautils.fieldTypeOverrides = {
                 {
                     name = "FrostHelper.fields.statRecovery.stamina",
                     default = 10000,
-                    info = {
-                        fieldType = "integer",
+                    info = jautils.fields.integer {
                         options = {
                             ["10000 (Refill)"] = 10000,
                             ["10001 (No Change)"] = 10001,
@@ -478,8 +424,7 @@ jautils.fieldTypeOverrides = {
                 {
                     name = "FrostHelper.fields.statRecovery.jumps",
                     default = 10000,
-                    info = {
-                        fieldType = "integer",
+                    info = jautils.fields.integer {
                         options = {
                             ["10000 (Refill)"] = 10000,
                             ["10001 (No Change)"] = 10001,
@@ -527,14 +472,13 @@ jautils.fieldTypeOverrides = {
     end
 }
 
+---@type {[string]: PolymorphicComplexFieldInfoEntry}
 jautils.sequencerFields = {
     delay = {
-        {
-            name = "delay",
-            default = "0",
-            defaultValue = "delay:0",
-            info = {}
-        }
+        name = "delay",
+        default = "0",
+        defaultValue = "delay:0",
+        info = {}
     },
     flag = {
         name = "flag",
@@ -833,6 +777,24 @@ function jautils.addPlacement(handler, placementName, ...)
     table.insert(handler.placements, newPlacement)
 end
 
+jautils.effectParametersFieldData = jautils.fields.list {
+    elementSeparator = ";",
+    elementDefault = "key=1",
+    elementOptions = jautils.fields.complex {
+        separator = "=",
+        innerFields = {
+            {
+                name = "FrostHelper.fields.effectParams.key",
+                default = "key"
+            },
+            {
+                name = "FrostHelper.fields.effectParams.value",
+                default = 1,
+            },
+        }
+    },
+}
+
 local emptyTable = { }
 
 ---Returns all mods associated with the texture used by the sprite at the given path
@@ -882,7 +844,7 @@ end
     SPRITES
 ]]
 
----@type color
+---@type NormalizedColorTable
 jautils.colorWhite = utils.getColor("ffffff")
 jautils.colorBlack = {0, 0, 0, 1}
 jautils.radian = math.pi / 180

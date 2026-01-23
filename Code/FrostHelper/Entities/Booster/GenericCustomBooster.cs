@@ -576,7 +576,7 @@ namespace FrostHelper.Entities.Boosters {
                     }
                 } else if (Input.Jump.Pressed && player.CanUnDuck) {
                     if (player.WallJumpCheck(1)) {
-                        if (player.Facing == Facings.Right && Input.Grab.Check && player.Stamina > 0f && player.Holding == null && !ClimbBlocker.Check(player.Scene, player, player.Position + Vector2.UnitX * 3f)) {
+                        if (player.Facing == Facings.Right && Input.GrabCheck && player.Stamina > 0f && player.Holding == null && !ClimbBlocker.Check(player.Scene, player, player.Position + Vector2.UnitX * 3f)) {
                             player.ClimbJump();
                         } else {
                             player.WallJump(-1);
@@ -584,7 +584,7 @@ namespace FrostHelper.Entities.Boosters {
                         return 0;
                     }
                     if (player.WallJumpCheck(-1)) {
-                        if (player.Facing == Facings.Left && Input.Grab.Check && player.Stamina > 0f && player.Holding == null && !ClimbBlocker.Check(player.Scene, player, player.Position + Vector2.UnitX * -3f)) {
+                        if (player.Facing == Facings.Left && Input.GrabCheck && player.Stamina > 0f && player.Holding == null && !ClimbBlocker.Check(player.Scene, player, player.Position + Vector2.UnitX * -3f)) {
                             player.ClimbJump();
                         } else {
                             player.WallJump(1);

@@ -238,7 +238,7 @@ public static partial class API {
 
 
     /// <summary>
-    /// Checks whether the given spring is a <see cref="CustomSpring"/> with Orientation set to <see cref="CustomOrientations.Ceiling"/>
+    /// Checks whether the given spring is a <see cref="CustomSpring"/> with Orientation set to <see cref="CustomSpring.CustomOrientations.Ceiling"/>
     /// </summary>
     public static bool IsCeilingSpring(Spring spring) => spring is CustomSpring { Orientation: CustomSpring.CustomOrientations.Ceiling };
 
@@ -277,7 +277,7 @@ public static partial class API {
     }
 
     /// <summary>
-    /// Returns a tween mode of the name specified by <paramref name="name"/>, defaulting to <paramref name="defaultValue"/> if the string was invalid. Case-sensitive.
+    /// Returns a tween mode of the name specified by <paramref name="mode"/>, defaulting to <paramref name="defaultValue"/> if the string was invalid. Case-sensitive.
     /// </summary>
     public static Tween.TweenMode GetTweenMode(string mode, Tween.TweenMode defaultValue) {
         return EaseHelper.GetTweenMode(mode, defaultValue);
@@ -313,6 +313,7 @@ public static partial class API {
     /// <summary>
     /// Applies FrostHelper-standard parameters for the given effect. Should be called each frame the effect is used.
     /// </summary>
+    /// <param name="effect">The effect to apply parameters to.</param>
     /// <param name="viewMatrix">The shader's ViewMatrix uniform will be set to this matrix. In most cases, this should be camera.Matrix</param>
     public static void ApplyStandardParameters(Effect effect, Matrix viewMatrix) {
         effect.ApplyStandardParameters(Engine.Scene, viewMatrix);
@@ -321,6 +322,8 @@ public static partial class API {
     /// <summary>
     /// Applies FrostHelper-standard parameters for the given effect. Should be called each frame the effect is used.
     /// </summary>
+    /// <param name="effect">The effect to apply parameters to.</param>
+    /// <param name="scene">The current scene, used to calculate some parameters.</param>
     /// <param name="viewMatrix">The shader's ViewMatrix uniform will be set to this matrix. In most cases, this should be camera.Matrix</param>
     public static void ApplyStandardParameters(Effect effect, Scene scene, Matrix viewMatrix) {
         effect.ApplyStandardParameters(scene, viewMatrix);

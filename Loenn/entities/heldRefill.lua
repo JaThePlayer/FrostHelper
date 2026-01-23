@@ -1,3 +1,4 @@
+---@module 'jautils'
 local jautils = require("mods").requireFromPlugin("libraries.jautils")
 local drawableSpriteStruct = require("structs.drawable_sprite")
 local drawableLine = require("structs.drawable_line")
@@ -14,7 +15,7 @@ jautils.createPlacementsPreserveOrder(heldRefill, "normal", {
     { "directory", "objects/refill" },
     { "lineColor", "ffff00", "color" },
     { "hitbox", "R,24,24,-12,-12", "FrostHelper.collider" },
-    { "legacyOptions", 1, "FrostHelper.flagEnum", {
+    { "legacyOptions", 1, jautils.fields.flagEnum {
         innerFields = {
             {
                 name = "FrostHelper.fields.heldRefill.legacyOptions.fixGravityHelper",

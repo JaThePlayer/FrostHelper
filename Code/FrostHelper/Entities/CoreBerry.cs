@@ -3,83 +3,65 @@
 [CustomEntity("FrostHelper/CoreBerry")]
 [RegisterStrawberry(true, false)]
 public class CoreBerry : Strawberry, IStrawberry {
-    public bool IsIce;
-    Sprite indicator;
+    private readonly bool _isIce;
+    private Sprite _indicator;
+
     public CoreBerry(EntityData data, Vector2 position, EntityID gid) : base(data, position, gid) {
         ID = gid;
-        IsIce = data.Bool("isIce", false);
-        Add(new CoreModeListener(new Action<Session.CoreModes>(OnChangeMode)));
+        _isIce = data.Bool("isIce", false);
+        Add(new CoreModeListener(OnChangeMode));
     }
 
     private void OnChangeMode(Session.CoreModes mode) {
-        if (!IsIce) {
+        if (!_isIce) {
             // berry hot
             if (mode == Session.CoreModes.Cold) {
                 Dissolve();
                 sprite.Visible = false;
-                indicator.Visible = true;
+                _indicator.Visible = true;
             }
         } else {
             // berry cold
-            if (mode == Session.CoreModes.Hot || mode == Session.CoreModes.None) {
+            if (mode is Session.CoreModes.Hot or Session.CoreModes.None) {
                 Dissolve();
                 sprite.Visible = false;
-                indicator.Visible = true;
+                _indicator.Visible = true;
             }
         }
     }
 
-    //Sprite sprite;
     public override void Added(Scene scene) {
         base.Added(scene);
         Remove(Get<BloomPoint>());
+        var isGhost = SaveData.Instance.CheckStrawberry(ID);
         string spr;
         string ind;
-        if (IsIce) {
+        if (_isIce) {
             ind = "collectables/FrostHelper/CoreBerry/Cold/CoreBerry_Cold_Indicator";
-            if (SaveData.Instance.CheckStrawberry(ID)) {
-                spr = "coldberryghost";
-
-            } else {
-                spr = "coldberry";
-            }
+            spr = isGhost ? "coldberryghost" : "coldberry";
         } else {
             ind = "collectables/FrostHelper/CoreBerry/Hot/CoreBerry_Hot_Indicator";
-            if (SaveData.Instance.CheckStrawberry(ID)) {
-                spr = "hotberryghost";
-            } else {
-                spr = "hotberry";
-            }
+            spr = isGhost ? "hotberryghost" : "hotberry";
         }
 
         Remove(sprite);
         sprite = FrostHelper.FrostModule.SpriteBank.Create(spr);
         Add(sprite);
 
-        indicator = new Sprite(GFX.Game, ind);
-        indicator.AddLoop("idle", "", 0.1f);
-        indicator.Play("idle", false, false);
-        indicator.CenterOrigin();
-        indicator.Visible = false;
-        Add(indicator);
+        _indicator = new Sprite(GFX.Game, ind);
+        _indicator.AddLoop("idle", "", 0.1f);
+        _indicator.Play("idle", false, false);
+        _indicator.CenterOrigin();
+        _indicator.Visible = false;
+        Add(_indicator);
+    }
 
+    public override void Awake(Scene scene) {
+        base.Awake(scene);
+        
         Level level = (scene as Level)!;
         Session.CoreModes mode = level.Session.CoreMode;
-        if (!IsIce) {
-            // berry hot
-            if (mode == Session.CoreModes.Cold) {
-                Dissolve(false);
-                sprite.Visible = false;
-                indicator.Visible = true;
-            }
-        } else {
-            // berry cold
-            if (mode == Session.CoreModes.Hot || mode == Session.CoreModes.None) {
-                Dissolve(false);
-                sprite.Visible = false;
-                indicator.Visible = true;
-            }
-        }
+        OnChangeMode(mode);
     }
 
     public void Dissolve(bool visible = true) {
@@ -108,7 +90,7 @@ public class CoreBerry : Strawberry, IStrawberry {
 
         sprite.Scale = Vector2.Zero;
         sprite.Visible = false;
-        indicator.Visible = true;
+        _indicator.Visible = true;
         yield break;
     }
 }

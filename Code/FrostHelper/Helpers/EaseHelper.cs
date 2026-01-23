@@ -79,7 +79,7 @@ public static class EaseHelper {
         return ease;
     }
 
-    /// <summary>Calls <see cref="GetEaser(string, Ease.Easer)"/> on the <paramref name="data"/>'s attribute <paramref name="key"/>, using <paramref name="defaultValue"/> if it's not a valid easing type/is empty</summary>
+    /// <summary>Calls <see cref="GetEase(string, Ease.Easer)"/> on the <paramref name="data"/>'s attribute <paramref name="key"/>, using <paramref name="defaultValue"/> if it's not a valid easing type/is empty</summary>
     public static Ease.Easer Easing(this EntityData data, string key, Ease.Easer defaultValue) {
         return GetEase(data.Attr(key), defaultValue);
     }

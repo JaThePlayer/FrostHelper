@@ -1,3 +1,10 @@
+---@class PolymorphicComplexFieldInfoEntry : FieldInformationEntry
+---@field name string The name of this class type, used as a prefix, needs to be unique among all possible classes in this polymorphic field.
+---@field default any Default value of the underlying field, used if none is present.
+---@field defaultValue string Default text used when setting an entry to this class. Should be of format 'prefix:default'.
+---@field info FieldInformationEntry Field information used for the underlying field.
+
+
 local uiElements = require("ui.elements")
 local contextMenu = require("ui.context_menu")
 --local configs = require("configs")
@@ -249,6 +256,10 @@ local function generateTypeDropdown(formField, options)
     local types = formField.types
 
     for i, value in ipairs(types) do
+        if not value.name then
+            error("One of the types in a polymorphicComplexField does not have a 'name' field!")
+        end
+
         value.displayName = getLangKey(language, formField.langPrefix .. "." .. value.name .. ".dropdown", value.name)
 
         table.insert(optionStrings, value.displayName)

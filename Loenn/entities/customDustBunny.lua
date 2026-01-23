@@ -1,3 +1,4 @@
+---@module 'jautils'
 local jautils = require("mods").requireFromPlugin("libraries.jautils")
 local drawableSpriteStruct = require("structs.drawable_sprite")
 local utils = require("utils")
@@ -11,7 +12,7 @@ local dust = {
 
 jautils.createPlacementsPreserveOrder(dust, "default", {
     { "edgeColors", "f25a10,ff0000,f21067", "colorList" },
-    { "directory", "danger/FrostHelper/whiteDust", "FrostHelper.texturePath", {
+    { "directory", "danger/FrostHelper/whiteDust", jautils.fields.texturePath {
         baseFolder = "danger",
         pattern = "^(danger/.*)/base00$",
         filter = function(dir) return

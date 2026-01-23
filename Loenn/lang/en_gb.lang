@@ -434,13 +434,15 @@ entities.FrostHelper/PlusOneRefill.attributes.description.hitbox=Controls the hi
 entities.FrostHelper/SlowCrushBlock.placements.name.both=Custom Kevin (Both)
 entities.FrostHelper/SlowCrushBlock.placements.name.horizontal=Custom Kevin (Horizontal)
 entities.FrostHelper/SlowCrushBlock.placements.name.vertical=Custom Kevin (Vertical)
+entities.FrostHelper/SlowCrushBlock.placements.name.slow=Custom Kevin (Slow, Horizontal)
 entities.FrostHelper/SlowCrushBlock.attributes.description.directory=The directory from which the sprites are taken, relative to Atlases/Gameplay/
 entities.FrostHelper/SlowCrushBlock.attributes.description.chillout=Whether the block should have the large face and get tired after being hit.
-entities.FrostHelper/SlowCrushBlock.attributes.description.crushSpeed=The block's crushing speed
-entities.FrostHelper/SlowCrushBlock.attributes.description.returnSpeed=The block's return speed
-entities.FrostHelper/SlowCrushBlock.attributes.description.returnAcceleration=The block's return acceleration
-entities.FrostHelper/SlowCrushBlock.attributes.description.crushAcceleration=The block's crushing acceleration
+entities.FrostHelper/SlowCrushBlock.attributes.description.crushSpeed=The block's crushing speed.
+entities.FrostHelper/SlowCrushBlock.attributes.description.returnSpeed=The block's return speed (px/second). Set to 0 to make this a No Return Kevin.
+entities.FrostHelper/SlowCrushBlock.attributes.description.returnAcceleration=The block's return acceleration (px/second^2). Set to 0 to make this a No Return Kevin.
+entities.FrostHelper/SlowCrushBlock.attributes.description.crushAcceleration=The block's crushing acceleration.
 entities.FrostHelper/SlowCrushBlock.attributes.description.axes=Which axes can be activated by dashing.
+entities.FrostHelper/SlowCrushBlock.attributes.description.sfxPrefix=The prefix for sound effects used by this block.\nExpected sounds are in format: `prefix_activate`, `prefix_move_loop`, `prefix_impact`, `prefix_return_loop`, `prefix_rest`, `prefix_rest_waypoint`
 
 # Custom Bumper
 entities.FrostHelper/StaticBumper.placements.name.normal=Static Bumper

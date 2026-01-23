@@ -69,7 +69,7 @@ local function createSpringHandler(name, spriteRotation, speedAsVector)
 
     jautils.createPlacementsPreserveOrder(handler, "normal", {
         { "color", "ffffff", "color" },
-        { "directory", "objects/spring/", "FrostHelper.texturePath", {
+        { "directory", "objects/spring/", jautils.fields.texturePath {
             baseFolder = "objects",
             pattern = "^(objects/.*/)00$",
             filter = function(dir) return not not drawableSpriteStruct.fromTexture(dir .. "white", {}) end,

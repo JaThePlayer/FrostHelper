@@ -54,13 +54,10 @@ internal sealed class ArbitraryBloom {
 internal sealed class ArbitraryBloomRenderer : Entity {
     private readonly List<ArbitraryBloom> _blooms = [];
     private VertexPositionColor[] _verts;
-    
-    private static VertexPositionColor DefaultVertValue => new(Vector3.Zero, new Color(255, 255, 255, 0));
 
     public ArbitraryBloomRenderer() {
         Add(new CustomBloom(RenderBloom));
         _verts = new VertexPositionColor[128];
-        _verts.AsSpan().Fill(DefaultVertValue);
 
         Tag = (Tags.Global | Tags.TransitionUpdate);
     }
@@ -68,12 +65,12 @@ internal sealed class ArbitraryBloomRenderer : Entity {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void NextVertex(ref int index, Vector3 pos, float alpha) {
         if (index >= _verts.Length) {
-            var prevSize = _verts.Length;
             Array.Resize(ref _verts, _verts.Length + 128);
-            _verts.AsSpan()[prevSize..].Fill(DefaultVertValue);
         }
 
-        _verts[index].Color.A = (byte) (alpha * 255f);
+        // For LuckyHelper compat, we must set R,G,B values as well as alpha.
+        // Non-white colors won't allow for colored bloom!
+        _verts[index].Color = Color.White * alpha;
         _verts[index].Position = pos;
         index++;
     }

@@ -1,6 +1,4 @@
-﻿#if MAP_PROCESSOR
-
-namespace FrostHelper;
+﻿namespace FrostHelper;
 
 [CustomEntity("FrostHelper/SpeedChallengeJournal")]
 class SpeedChallengeTalker : Trigger {
@@ -53,4 +51,3 @@ class SpeedChallengeTalker : Trigger {
         }
     }
 }
-#endif

@@ -1,6 +1,7 @@
 local utils = require("utils")
 local drawableSpriteStruct = require("structs.drawable_sprite")
 local drawableRectangle = require("structs.drawable_rectangle")
+---@module 'jautils'
 local jautils = require("mods").requireFromPlugin("libraries.jautils")
 
 local particlePath = "particles/bubble"
@@ -22,68 +23,55 @@ jautils.createPlacementsPreserveOrder(customFireBarrier, "normal", {
     { "surfaceColor", "ff8933", "color" },
     { "edgeColor", "f25e29", "color" },
     { "centerColor", "d01c01", "color" },
-    { "waves", "2,0.25,4.0;1,0.05000000074505806,0.5", "list", {
+    { "waves", "2,0.25,4.0;1,0.05000000074505806,0.5", jautils.fields.list {
         elementSeparator = ";",
         elementDefault = "2,0.25,4.0",
-        elementOptions = {
-            fieldType = "FrostHelper.complexField",
+        elementOptions = jautils.fields.complex {
             separator = ",",
             innerFields = {
                 {
                     name = "FrostHelper.fields.customFireBarrier.amplitude",
                     default = 2,
-                    info = {
-                        fieldType = "number",
-                    }
+                    info = jautils.fields.number { }
                 },
                 {
                     name = "FrostHelper.fields.customFireBarrier.waveNumber",
                     default = 0.25,
-                    info = {
-                        fieldType = "number",
-                    }
+                    info = jautils.fields.number { }
                 },
                 {
                     name = "FrostHelper.fields.customFireBarrier.frequency",
                     default = 4.0,
-                    info = {
-                        fieldType = "number",
-                    }
+                    info = jautils.fields.number { }
                 },
                 {
                     name = "FrostHelper.fields.customFireBarrier.phase",
                     default = 0,
-                    info = {
-                        fieldType = "number",
-                    }
+                    info = jautils.fields.number { }
                 },
             }
         },
     } },
     { "curveAmplitude", 1 },
-    { "bubbleAmountMultiplier", "1|particles/bubble|danger/lava/bubble_a", "FrostHelper.complexField", {
+    { "bubbleAmountMultiplier", "1|particles/bubble|danger/lava/bubble_a", jautils.fields.complex {
         separator = "|",
         innerFields = {
             {
                 name = "FrostHelper.fields.customFireBarrier.bubble.amountMultiplier",
                 default = 1,
-                info = {
-                    fieldType = "number",
-                }
+                info = jautils.fields.number { }
             },
             {
                 name = "FrostHelper.fields.customFireBarrier.bubble.path",
                 default = "particles/bubble",
-                info = {
-                    fieldType = "list",
+                info = jautils.fields.list {
                     elementSeparator = ";",
                 }
             },
             {
                 name = "FrostHelper.fields.customFireBarrier.bubble.surfaceAnimations",
                 default = "danger/lava/bubble_a",
-                info = {
-                    fieldType = "list",
+                info = jautils.fields.list {
                     elementSeparator = ";",
                 }
             },
@@ -92,7 +80,7 @@ jautils.createPlacementsPreserveOrder(customFireBarrier, "normal", {
     { "surfaces", "All", onlyModes },
     { "silentFlag", "" },
     { "fade", 16 },
-    { "rainbow", 0, "FrostHelper.flagEnum", {
+    { "rainbow", 0, jautils.fields.flagEnum {
         innerFields = {
             {
                 name = "FrostHelper.fields.customFireBarrier.rainbow.surface",

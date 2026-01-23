@@ -1,4 +1,6 @@
 local blendStates = require("mods").requireFromPlugin("libraries.blendStates", "FrostHelper")
+---@module "jautils"
+local jautils = require("mods").requireFromPlugin("libraries.jautils", "FrostHelper")
 
 return {
     name = "FrostHelper/Gradient",
@@ -20,12 +22,10 @@ return {
             editable = false,
             options = blendStates.blendModes
         },
-        gradient = {
-            fieldType = "list",
+        gradient = jautils.fields.list {
             elementSeparator = ";",
             elementDefault = "ffffff,000000,100",
-            elementOptions = {
-                fieldType = "FrostHelper.complexField",
+            elementOptions = jautils.fields.complex {
                 separator = ",",
                 innerFields = {
                     {

@@ -56,7 +56,7 @@ internal static class RenderTargetHelper {
     private static int _createdCount;
     
     /// <summary>
-    /// Rents out a buffer that fills the whole screen. Make sure to call <see cref="ReturnFullScreenBuffer"/> afterwards.
+    /// Rents out a buffer that fills the whole screen. Make sure to call <see cref="ReturnFullScreenBuffer(VirtualRenderTarget)"/> afterwards.
     /// </summary>
     public static VirtualRenderTargetRef RentFullScreenBufferRef() {
         while (_refPool.TryPop(out var nextRef)) {

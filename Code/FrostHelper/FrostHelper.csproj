@@ -13,14 +13,17 @@
     <Nullable>enable</Nullable>
     <Optimize>True</Optimize>
     <DebugType>embedded</DebugType>
-
-    <DefineConstants>$(DefineConstants)TRACE;MAP_PROCESSOR;SPEEDCHALLENGES</DefineConstants>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <DefineConstants>$(DefineConstants)TRACE;SPEEDCHALLENGES</DefineConstants>
 
     <CelesteGamePath Condition="'$(CELESTEGAMEPATH)' == '' And Exists('..\..\..\..\Celeste.dll')">..\..\..\..</CelesteGamePath>
     <CelesteGamePath Condition="'$(CELESTEGAMEPATH)' == '' And Exists('..\..\..\Celeste.dll')">..\..\..</CelesteGamePath>
     <!-- 
     <CelesteGamePath Condition="'$(CELESTEGAMEPATH)' == ''">lib-stripped</CelesteGamePath>
     -->
+  </PropertyGroup>
+  <PropertyGroup>
+      <NoWarn>1591</NoWarn>
   </PropertyGroup>
 
   <!-- Packages -->
@@ -49,6 +52,6 @@
 
   <Target Name="CopyFiles" AfterTargets="Build">
     <Copy SourceFiles="$(OutputPath)\$(AssemblyName).dll" DestinationFolder="bin" />
-    <!--<Copy SourceFiles="$(OutputPath)\$(AssemblyName).pdb" DestinationFolder="bin" />-->
+    <Copy SourceFiles="$(OutputPath)\$(AssemblyName).xml" DestinationFolder="bin" />
   </Target>
 </Project>

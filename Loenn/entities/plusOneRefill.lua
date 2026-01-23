@@ -1,3 +1,4 @@
+---@module 'jautils'
 local jautils = require("mods").requireFromPlugin("libraries.jautils")
 local drawableSpriteStruct = require("structs.drawable_sprite")
 local utils = require("utils")
@@ -7,7 +8,7 @@ plusOneRefill.name = "FrostHelper/PlusOneRefill"
 plusOneRefill.depth = -100
 
 jautils.createPlacementsPreserveOrder(plusOneRefill, "normal", {
-    { "directory", "objects/FrostHelper/plusOneRefill", "FrostHelper.texturePath", {
+    { "directory", "objects/FrostHelper/plusOneRefill", jautils.fields.texturePath {
         baseFolder = "objects",
         pattern = "^(objects/.*)/outline$",
         filter = function(dir) return

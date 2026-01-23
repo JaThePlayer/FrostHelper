@@ -264,7 +264,7 @@ public class CustomFeather : Entity {
                 }
             }
 
-            if (Input.Grab.Check) {
+            if (Input.GrabCheck) {
                 bool startClimb = false;
                 int dir = 0;
                 if (Input.MoveX.Value != -1 && player.ClimbCheck(1, 0)) {

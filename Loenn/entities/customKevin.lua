@@ -1,6 +1,7 @@
 local utils = require("utils")
 local drawableSpriteStruct = require("structs.drawable_sprite")
 
+---@module 'jautils'
 local jautils = require("mods").requireFromPlugin("libraries.jautils")
 
 local axesEnum = {
@@ -15,18 +16,17 @@ customKevin.name = "FrostHelper/SlowCrushBlock"
 customKevin.depth = -9000
 
 jautils.createPlacementsPreserveOrder(customKevin, "horizontal", {
-    { "width", 16 },
-    { "height", 16 },
-    { "directory", "objects/FrostHelper/slowcrushblock/" },
-    { "crushSpeed", 120.0 },
+    { "directory", "objects/crushblock/" },
+    { "axes", "Horizontal", axesEnum },
+    { "crushSpeed", 240.0 },
+    { "crushAcceleration", 500.0 },
     { "returnSpeed", 60.0 },
     { "returnAcceleration", 160.0 },
-    { "crushAcceleration", 250.0 },
-    { "axes", "Horizontal", axesEnum },
     { "fillColor", "62222b", "color" },
+    { "sfxPrefix", "event:/game/06_reflection/crushblock" },
     { "chillout", false },
     { "reskinFace", false },
-})
+}, true)
 
 jautils.addPlacement(customKevin, "vertical", {
     { "axes", "Vertical"}
@@ -34,6 +34,13 @@ jautils.addPlacement(customKevin, "vertical", {
 
 jautils.addPlacement(customKevin, "both", {
     { "axes", "Both" }
+})
+
+-- Legacy slow option, back from when these kevins were very hardcoded still
+jautils.addPlacement(customKevin, "slow", {
+    { "directory", "objects/FrostHelper/slowcrushblock/" },
+    { "crushSpeed", 120.0 },
+    { "crushAcceleration", 250.0 },
 })
 
 local axesToBlockIndex = {
