@@ -661,6 +661,7 @@ public class CustomBossBeam : Entity {
         followTimer = args.GetOrDefault("followTime", 0.9f);
         chargeTimer = followTimer + args.GetOrDefault("lockTime", 0.5f);
         activeTimer = args.GetOrDefault("activeTime", 0.12f); // todo: fix
+        followTargetAngleOffset = args.GetOrDefault("followTargetAngleOffset", 0f).ToRad();
 
         beamSprite.Play("charge", false, false);
         sideFadeAlpha = 0f;
@@ -680,8 +681,6 @@ public class CustomBossBeam : Entity {
             chargeTimer -= followTimer;
             followTimer = 0;
         } else {
-            if (args?["followTargetAngleOffset"] is { })
-                followTargetAngleOffset = args.GetOrDefault("followTargetAngleOffset", float.MinValue).ToRad();
             Vector2 targetPosition = GetRotatedBeamTargetPosition(target.Center, followTargetAngleOffset);
             
             angle = Calc.Angle(boss.BeamOrigin, targetPosition);
