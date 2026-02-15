@@ -644,7 +644,7 @@ internal sealed class DreamBlockGroup : Entity {
         // Vertical lines
         for (int x = 0; x < w; x++) {
             // Left lines
-            for (int y = 0; y < h - 1; y++) {
+            for (int y = 0; y < h; y++) {
                 var yIdx = y * w;
                 if (existMap[yIdx + x] == 0)
                     continue;
@@ -672,7 +672,7 @@ internal sealed class DreamBlockGroup : Entity {
             }
             
             // Right lines
-            for (int y = 0; y < h - 1; y++) {
+            for (int y = 0; y < h; y++) {
                 var yIdx = y * w;
                 if (existMap[yIdx + x] == 0)
                     continue;
