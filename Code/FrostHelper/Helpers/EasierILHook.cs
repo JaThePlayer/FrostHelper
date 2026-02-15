@@ -1,4 +1,6 @@
-﻿using Mono.Cecil;
+﻿using Celeste.Mod.Helpers;
+using Mono.Cecil;
+using System.Runtime.CompilerServices;
 
 namespace FrostHelper;
 
@@ -408,4 +410,75 @@ public static class EasierILHook {
 
         return false;
     }
+
+    public static bool TryGotoNextBestFitLogged(this ILCursor cursor, MoveType moveType,
+        Func<Instruction, bool>[] conds, [CallerArgumentExpression(nameof(conds))] string condsStr = "") {
+        if (cursor.TryGotoNextBestFit(moveType, conds)) {
+            return true;
+        }
+
+        Logger.Error("FrostHelper.IL", $"Failed to apply IL hook to '{cursor.Method}':\nCondition '{condsStr}' not matched.");
+        return false;
+    }
+    
+    public static bool TryGotoNextBestFitLogged(this ILCursor cursor, MoveType moveType,
+        Func<Instruction, bool> conds, [CallerArgumentExpression(nameof(conds))] string condsStr = "") {
+        if (cursor.TryGotoNextBestFit(moveType, conds)) {
+            return true;
+        }
+
+        Logger.Error("FrostHelper.IL", $"Failed to apply IL hook to '{cursor.Method}':\nCondition '{condsStr}' not matched.");
+        return false;
+    }
+    
+    public static bool TryGotoPrevBestFitLogged(this ILCursor cursor, MoveType moveType,
+        Func<Instruction, bool>[] conds, [CallerArgumentExpression(nameof(conds))] string condsStr = "") {
+        if (cursor.TryGotoPrevBestFit(moveType, conds)) {
+            return true;
+        }
+
+        Logger.Error("FrostHelper.IL", $"Failed to apply IL hook to '{cursor.Method}':\nCondition '{condsStr}' not matched.");
+        return false;
+    }
+    
+    public static bool TryGotoPrevBestFitLogged(this ILCursor cursor, MoveType moveType,
+        Func<Instruction, bool> conds, [CallerArgumentExpression(nameof(conds))] string condsStr = "") {
+        if (cursor.TryGotoPrevBestFit(moveType, conds)) {
+            return true;
+        }
+
+        Logger.Error("FrostHelper.IL", $"Failed to apply IL hook to '{cursor.Method}':\nCondition '{condsStr}' not matched.");
+        return false;
+    }
+
+    /*
+    public static IDisposable OverrideNonVirtual<T, TDerived>(string methodName, Delegate overriden)
+        where T : class
+        where TDerived : T {
+        if (typeof(T).GetMethod(methodName) is not { } method) {
+            Logger.Error("FrostHelper.IL", $"Failed to override non-virtual method '{methodName}' on type '{typeof(T).FullName}' - couldn't find MethodInfo.");
+            return new EmptyDisposable();
+        }
+        
+        return OverrideNonVirtual<T, TDerived>(method);
+    }
+    
+    public static ILHook OverrideNonVirtual<T, TDerived>(MethodInfo method, Delegate overriden) 
+        where T : class
+        where TDerived : T {
+
+        var hook = new ILHook(method, il => {
+            var cursor = new ILCursor(il);
+            
+            
+        });
+
+        return hook;
+    }
+
+    class EmptyDisposable : IDisposable {
+        public void Dispose() {
+        }
+    }
+    */
 }

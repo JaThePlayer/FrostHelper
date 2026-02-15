@@ -650,25 +650,40 @@ local function createFieldInfoFromJaUtilsPlacement(placementData)
 end
 
 ---@class placementEntryConfig<T> : {
+---doNotAddToPlacement?: boolean,
+---hidden?: boolean,
 ---hideIf?: (fun(entity: T):boolean),
+---hideIfMissing?: boolean,
 ---}
----@field doNotAddToPlacement boolean|nil If true, this field will not be added to the placement, meaning newly placed entities will not have this field.
----@field hidden boolean|nil If true, the field will not show up in the entity edit window.
----@field hideIf nil Callback to determine whether this field should show up in the entity edit window.
----@field hideIfMissing boolean|nil If true, the field will not show up in the entity edit window if the field is not present on the entity. 
+---
+---If true, this field will not be added to the placement, meaning newly placed entities will not have this field.
+---@field doNotAddToPlacement boolean?
+---
+---If true, the field will not show up in the entity edit window.
+---@field hidden boolean?
+---
+---Callback to determine whether this field should show up in the entity edit window.
+---@field hideIf nil
+---
+---If true, the field will not show up in the entity edit window if the field is not present on the entity. 
+---@field hideIfMissing boolean?
+---
+local placementEntryConfig = {
+    hidden = false,
+}
 
 ---@alias fieldName string
 ---@alias fieldDefaultValue MapSaveable
 ---@alias fieldType string|table|nil
 ---@alias fieldData any|nil
 
----@alias JaUtilsPlacementData { [1]: fieldName, [2]: fieldDefaultValue, [3]: fieldType, [4]: fieldData, [5]: placementEntryConfig<T>|nil }[]
+---@alias JaUtilsPlacementData<T> { [1]: fieldName, [2]: fieldDefaultValue, [3]: fieldType, [4]: fieldData, [5]: placementEntryConfig<T>|nil }[]
 
 ---Creates placements for this entity handler, as well as ignoredFields, fieldOrder and fieldInformation
 ---@generic T
 ---@param handler EntityHandler<T>
 ---@param placementName string
----@param placementData JaUtilsPlacementData
+---@param placementData JaUtilsPlacementData<T>
 ---@param appendSize boolean|nil
 function jautils.createPlacementsPreserveOrder(handler, placementName, placementData, appendSize)
     handler.placements = {{
@@ -1177,7 +1192,7 @@ end
 ---@param y number
 ---@param rx number
 ---@param ry number
----@param color AnyColor
+---@param color AnyColor?
 ---@return DrawableLine
 function jautils.getEllipseSprite(x, y, rx, ry, color)
     local segments = 24
@@ -1196,7 +1211,7 @@ end
 ---@param x number
 ---@param y number
 ---@param r number
----@param color AnyColor
+---@param color AnyColor?
 ---@return DrawableLine
 function jautils.getCircleSprite(x, y, r, color)
     return jautils.getEllipseSprite(x, y, r, r, color)

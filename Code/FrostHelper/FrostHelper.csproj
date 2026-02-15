@@ -43,7 +43,7 @@
   <ItemGroup>
     <Reference Include="Celeste" HintPath="$(CELESTEGAMEPATH)\Celeste.dll" Private="False" Publicize="True" />
     <Reference Include="MMHOOK_Celeste" HintPath="$(CELESTEGAMEPATH)\MMHOOK_Celeste.dll" Private="False" />
-    <Reference Include="FNA" HintPath="$(CELESTEGAMEPATH)\FNA.dll" Private="False" />
+    <Reference Include="FNA" HintPath="$(CELESTEGAMEPATH)\FNA.dll" Private="False" Publicize="True" />
     <!-- There's no Nuget package for MonoModReorg.Patcher yet...-->
     <Reference Include="MMHOOK_Celeste" HintPath="$(CELESTEGAMEPATH)\MonoMod.Patcher.dll" Private="False" />
 

@@ -1,3 +1,4 @@
+---@module 'jautils'
 local jautils = require("mods").requireFromPlugin("libraries.jautils")
 local utils = require("utils")
 local drawableSprite = require("structs.drawable_sprite")
@@ -29,11 +30,57 @@ jautils.createPlacementsPreserveOrder(dreamBlock, "custom_dream_block", {
     { "moveEase", "SineInOut", jautils.easings },
     { "moveSpeedMult", 1.0 },
     { "particlePath", "objects/dreamblock/particles" },
+    { "particles", "6969697f;ffef11,ff00d0,08a310;0.3;3,2,1,0;1~9e9e9ebf;5fcde4,7fb25e,e0564c;0.55;1,2;2~d3d3d3ff;5b6ee1,cc3b3b,7daa64;0.80;2;3", jautils.fields.list {
+        elementSeparator = '~',
+        elementDefault = "6969697f;ffef11,ff00d0,08a310;0.3;3,2,1,0;1",
+        elementOptions = jautils.fields.complex {
+            separator = ';',
+            innerFields = {
+                {
+                    name = "FrostHelper.fields.dreamBlockParticles.inactiveColor",
+                    default = "6969697f",
+                    info = jautils.fields.color {}
+                },
+                {
+                    name = "FrostHelper.fields.dreamBlockParticles.colors",
+                    default = "ffef11,ff00d0,08a310",
+                    info = jautils.fields.list {
+                        elementSeparator = ',',
+                        elementDefault = "ffffff",
+                        elementOptions = jautils.fields.color {}
+                    }
+                },
+                {
+                    name = "FrostHelper.fields.dreamBlockParticles.parallax",
+                    default = 0.3,
+                    info = jautils.fields.number {}
+                },
+                {
+                    name = "FrostHelper.fields.dreamBlockParticles.frames",
+                    default = "3,2,1,0",
+                    info = jautils.fields.csvWithTricks {}
+                },
+                {
+                    name = "FrostHelper.fields.dreamBlockParticles.weight",
+                    default = 1,
+                    info = jautils.fields.positiveInteger {}
+                }
+            },
+        }
+    }},
+    { "depth", -11000, "depth", nil, {
+        hideIfMissing = true,
+    } },
     { "oneUse", false },
-    { "below", false },
     { "conserveSpeed", false },
     { "allowRedirects", false },
     { "allowSameDirectionDash", false },
+    { "connected", false },
+    -- Legacy option, replaced with 'depth'
+    { "below", false, "boolean", nil, {
+        hideIf = function (entity) return entity.depth ~= nil end,
+        doNotAddToPlacement = true,
+    }},
 })
 
 local function addParticles(sprites, entity)
@@ -58,15 +105,19 @@ function dreamBlock.sprite(room, entity)
 
     local sprites = jautils.getBorderedRectangleSprites(rectangle, entity.activeBackColor or "000000", entity.activeLineColor or "ffffff")
 
-    if frostSettings.fancyDreamBlocks() then
-        addParticles(sprites, entity)
-    end
+   -- if frostSettings.fancyDreamBlocks() then
+   --     addParticles(sprites, entity)
+   -- end
 
     return sprites
 end
 
 
 function dreamBlock.depth(room, entity)
+    if entity.depth then
+        return entity.depth
+    end
+
     return entity.below and 5000 or -11000
 end
 

@@ -96,6 +96,20 @@ entities.FrostHelper/CustomDreamBlock.attributes.description.disabledBackColor=B
 entities.FrostHelper/CustomDreamBlock.attributes.description.activeLineColor=Line color to use
 entities.FrostHelper/CustomDreamBlock.attributes.description.activeBackColor=Background color to use
 entities.FrostHelper/CustomDreamBlock.attributes.description.particlePath=Path of the texture to use for particles.\nThe texture should have the same layout as the vanilla texture.
+entities.FrostHelper/CustomDreamBlock.attributes.description.particles=Describes all layers of particles rendered inside the block.
+entities.FrostHelper/CustomDreamBlock.attributes.description.connected=Whether this block can visually connect to other connected blocks with the same settings.
+entities.FrostHelper/CustomDreamBlock.attributes.description.depth=The depth the block is rendered at.\nVanilla 'below' Dream Blocks are at 5000.
+
+FrostHelper.fields.dreamBlockParticles.inactiveColor=Inactive Color
+FrostHelper.fields.dreamBlockParticles.inactiveColor.tooltip=Color used for all particles in this layer if the block is inactive.
+FrostHelper.fields.dreamBlockParticles.colors=Colors
+FrostHelper.fields.dreamBlockParticles.colors.tooltip=List of colors to use for active particles, each particle chooses a random color from this list.
+FrostHelper.fields.dreamBlockParticles.parallax=Parallax
+FrostHelper.fields.dreamBlockParticles.parallax.tooltip=The parallax of this layer.
+FrostHelper.fields.dreamBlockParticles.frames=Frames
+FrostHelper.fields.dreamBlockParticles.frames.tooltip=List of frame IDs to use for the animation of this particle layer.\nSame format as Sprites.xml.
+FrostHelper.fields.dreamBlockParticles.weight=Weight
+FrostHelper.fields.dreamBlockParticles.weight.tooltip=How often this layer will be chosen for any given particle.
 
 # Custom Fire Barrier
 entities.FrostHelper/CustomFireBarrier.placements.name.normal=Custom Fire Barrier
@@ -779,6 +793,9 @@ entities.FrostHelper/RecolorableWater.attributes.description.triggerOnJump=Wheth
 entities.FrostHelper/Raincloud.placements.name.default=Rain Cloud
 entities.FrostHelper/Raincloud.placements.description.default=A cloud that emits Dynamic Rain.\nUse a Dynamic Water Behavior Controller to configure behavior when the player enters the rain, akin to Frozen Waterfall.
 entities.FrostHelper/Raincloud.attributes.description.color=The color of the cloud and rain.\nUse a Dynamic Water Behavior Controller to configure behavior when the player enters rain of this color, akin to Frozen Waterfall.
+
+entities.FrostHelper/BerryTrackerController.placements.name.default=Berry Tracker Controller
+entities.FrostHelper/BerryTrackerController.placements.description.default=Makes berry count information available via session counters.
 
 # -- Mod Names --
 # mods.modName.*

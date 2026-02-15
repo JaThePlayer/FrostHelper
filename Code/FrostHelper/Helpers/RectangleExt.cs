@@ -4,6 +4,9 @@ using System.Runtime.Intrinsics;
 namespace FrostHelper.Helpers;
 
 public static class RectangleExt {
+    public static Rectangle CreateTruncating(float x, float y, float w, float h)
+        => new((int)x, (int)y, (int)w, (int)h);
+    
     public static Rectangle FromPoints(Vector2 a, Vector2 b)
         => FromTwoPointsCore<Vector2, GetX, GetY>(a, b);
 

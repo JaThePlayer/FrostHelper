@@ -46,6 +46,10 @@ public static class CameraCullHelper {
         return IsRectangleVisible(rectangle.X, rectangle.Y, rectangle.Width, rectangle.Height, lenience, camera);
     }
 
+    public static bool IsRectangleVisible(Rectangle rectangle, Scene scene, float lenience = 4f) {
+        return IsRectangleVisible(rectangle.X, rectangle.Y, rectangle.Width, rectangle.Height, lenience, scene.ToLevel().Camera);
+    }
+    
     internal static bool IsLineVisible(Vector2 a, Vector2 b, float lenience = 4f, Camera? camera = null) {
         var rect = RectangleExt.FromPoints(a, b);
         return IsRectangleVisible(rect.X, rect.Y, rect.Width, rect.Height, lenience, camera);

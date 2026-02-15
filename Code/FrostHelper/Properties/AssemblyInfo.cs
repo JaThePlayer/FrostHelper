@@ -35,5 +35,6 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyFileVersion("1.0.0.0")]
 
 [assembly: IgnoresAccessChecksTo("Celeste")]
+[assembly: IgnoresAccessChecksTo("FNA")]
 
 [assembly: InternalsVisibleTo("FrostHelper.Tests")]

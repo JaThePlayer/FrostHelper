@@ -389,6 +389,13 @@ public static class Extensions {
         AssetReloadHelper => (Level) AssetReloadHelper.ReturnToScene,
         _ => throw new Exception("ToLevel called outside of a level... how did you manage that?")
     };
+    
+    public static Level? MaybeLevel(this Scene scene) => scene switch {
+        Level l => l,
+        LevelLoader loader => loader.Level,
+        AssetReloadHelper => (Level) AssetReloadHelper.ReturnToScene,
+        _ => null
+    };
 
     internal static TEnum FlagEnumFromMultipleBools<TEnum>(this EntityData data, params Span<(TEnum Value, string FieldName)> fields) where TEnum : struct, Enum {
         ulong ret = default;

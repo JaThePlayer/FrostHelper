@@ -1,6 +1,9 @@
+---@module 'jautils'
 local jautils = require("mods").requireFromPlugin("libraries.jautils")
 local utils = require("utils")
 local fallback = "objects/flyFeather/idle00"
+
+---@type EntityHandler<UnknownEntity>
 local feather = {}
 
 feather.name = "FrostHelper/CustomFeather"
@@ -24,6 +27,7 @@ jautils.createPlacementsPreserveOrder(feather, "normal", {
     { "spritePath", "objects/flyFeather/" },
     { "hitbox", "R,20,20,-10,-10", "FrostHelper.collider" },
     { "invertAim", "None", aimInvertions },
+    { "version", 1, jautils.fields.integer{}, nil, { hidden = true } },
     { "shielded", false },
     { "singleUse", false },
     { "refillStamina", true },

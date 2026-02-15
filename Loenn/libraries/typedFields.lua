@@ -58,6 +58,18 @@ function fields.nonNegativeInteger(data)
     }
 end
 
+---Creates an integer field with minimumValue defaulting to 1.
+---@param data NumberFieldData
+---@return FieldInformationEntry
+function fields.positiveInteger(data)
+    return {
+        fieldType = "integer",
+        minimumValue = data.minimumValue or 1,
+        maximumValue = data.maximumValue,
+        options = data.options
+    }
+end
+
 ---@class ColorFieldData
 ---@field allowXNAColors boolean? Whether XNA color names are allowed. JaUtils defaults to true, though Loenn defaults to false.
 ---@field useAlpha boolean? Whether alpha values are accepted. JaUtils defaults to true, though Loenn defaults to false.
@@ -231,6 +243,18 @@ function fields.spinnerDirectory(data)
     return spinnerDirectoryFieldData
 end
 
+--- Calc.ReadCSVIntWithTricks.
+--- Read positive-integer CSV with some added tricks.
+---  Use - to add inclusive range. Ex: 3-6 = 3,4,5,6.
+---  Use * to add multiple values. Ex: 4*3 = 4,4,4.
+---@param data {}
+---@return FieldInformationEntry
+function fields.csvWithTricks(data)
+    return fields.list {
+        elementSeparator = ',',
+        -- TODO: validation
+    }
+end
 
 
 return fields

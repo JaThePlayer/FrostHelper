@@ -149,8 +149,7 @@ internal sealed class ArbitraryLight : VertexLight {
         if (light is not ArbitraryLight arbitraryLight || Engine.Scene is not Level level)
             return false;
 
-        return CameraCullHelper.IsRectangleVisible(arbitraryLight.Bounds.MovedBy(light.Position + light.Entity.Position), 4f, level.Camera)
-               && arbitraryLight.Condition.Check();
+        return arbitraryLight.Visible && CameraCullHelper.IsRectangleVisible(arbitraryLight.Bounds.MovedBy(light.Position + light.Entity.Position), 4f, level.Camera);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -166,7 +165,7 @@ internal sealed class ArbitraryLight : VertexLight {
 
     private readonly ArbitraryBloom? _bloom;
 
-    public readonly ConditionHelper.Condition Condition;
+    private readonly ConditionHelper.Condition _condition;
     
     public ArbitraryLight(EntityData data, Vector2 offset) : this(data.Position + offset,
         data.GetColor("color", "ffffff"), data.Float("alpha", 1f), data.Int("startFade", 16), data.Int("endFade", 32),
@@ -179,7 +178,7 @@ internal sealed class ArbitraryLight : VertexLight {
                           ConditionHelper.Condition condition) : base(Vector2.Zero, color, alpha, startFade, endFade) {
         LoadHooksIfNeeded();
         
-        Condition = condition;
+        _condition = condition;
         
         var fill = new Vector3[nodes.Length * 3 - (connectFirstAndLastNode ? 0 : 3)];
         var fi = 0;
@@ -203,7 +202,14 @@ internal sealed class ArbitraryLight : VertexLight {
             _bloom = new ArbitraryBloom(bloomAlpha, Fill, () => Position + Entity.Position);
         }
     }
-    
+
+    public override void Update() {
+        base.Update();
+        var visible = _condition.Check(Scene.ToLevel().Session);
+
+        _bloom?.Visible = visible;
+        Visible = visible;
+    }
 
     public override void EntityAdded(Scene scene) {
         base.EntityAdded(scene);

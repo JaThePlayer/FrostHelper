@@ -10,8 +10,6 @@ public class FlagIfVisibleTrigger : Entity {
 
     private Level lvl;
 
-
-
     public FlagIfVisibleTrigger(EntityData data, Vector2 offset) : base(data.Position + offset) {
         Flag = data.Attr("flag");
         Collidable = false;
@@ -50,7 +48,8 @@ public class FlagIfVisibleTrigger : Entity {
         bool visible = InView();
         if (!visible)
             foreach (var item in ChildTriggers) {
-                if (visible = item.InView())
+                visible = item.InView();
+                if (visible)
                     break;
             }
 

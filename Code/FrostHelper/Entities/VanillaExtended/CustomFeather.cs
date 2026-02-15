@@ -192,6 +192,17 @@ public class CustomFeather : Entity {
         yield break;
     }
 
+    /// <summary>
+    /// Versions below 1.76.5 used to hardcode 140f as LowSpeed in some edge cases, we need to retain this behavior for backwards compat.
+    /// </summary>
+    private float GetLowSpeedHardcodedIfOld() {
+        if (_version < Versions.FixedHardcodedLowSpeed) {
+            return 140f;
+        }
+
+        return LowSpeed;
+    }
+
     public static int StarFlyUpdate(Entity e) {
         Player player = (e as Player)!;
         Level level = player.SceneAs<Level>();
@@ -232,7 +243,7 @@ public class CustomFeather : Entity {
                     target = MathHelper.Lerp(feather.LowSpeed, feather.MaxSpeed, player.starFlySpeedLerp);
                 } else {
                     player.starFlySpeedLerp = 0f;
-                    target = 140f;
+                    target = feather.GetLowSpeedHardcodedIfOld();
                 }
             }
 
@@ -311,8 +322,8 @@ public class CustomFeather : Entity {
                     player.Speed.Y = 0f;
                 }
 
-                if (Math.Abs(player.Speed.X) > 140f) {
-                    player.Speed.X = 140f * Math.Sign(player.Speed.X);
+                if (Math.Abs(player.Speed.X) > feather.GetLowSpeedHardcodedIfOld()) {
+                    player.Speed.X = feather.GetLowSpeedHardcodedIfOld() * Math.Sign(player.Speed.X);
                 }
 
                 Input.Rumble(RumbleStrength.Medium, RumbleLength.Medium);
@@ -350,6 +361,16 @@ public class CustomFeather : Entity {
     private readonly bool _refillStamina;
     private readonly bool _refillDashes;
     private readonly AimInvertions _invertAim;
+
+    private readonly Versions _version;
+
+    private enum Versions {
+        Original = 0,
+        /// <summary>
+        /// 1.76.5, fixed cases of 140f (LowSpeed) still being hardcoded in some places.
+        /// </summary>
+        FixedHardcodedLowSpeed = 1,
+    }
     
     private enum AimInvertions {
         None,
@@ -361,6 +382,7 @@ public class CustomFeather : Entity {
     public CustomFeather(EntityData data, Vector2 offset) : base(data.Position + offset) {
         LoadIfNeeded();
 
+        _version = (Versions)data.Int("version", 0);
         shielded = data.Bool("shielded", false);
         singleUse = data.Bool("singleUse", false);
         RespawnTime = data.Float("respawnTime", 3f);
