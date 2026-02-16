@@ -203,8 +203,18 @@ internal sealed class ArbitraryLight : VertexLight {
         }
     }
 
+    public override void EntityAwake() {
+        base.EntityAwake();
+        UpdateVisibility();
+    }
+
     public override void Update() {
         base.Update();
+        UpdateVisibility();
+    }
+
+    private void UpdateVisibility()
+    {
         var visible = _condition.Check(Scene.ToLevel().Session);
 
         _bloom?.Visible = visible;
