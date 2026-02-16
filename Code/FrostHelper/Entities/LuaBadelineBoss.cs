@@ -661,6 +661,7 @@ public class CustomBossBeam : Entity {
         followTimer = args.GetOrDefault("followTime", 0.9f);
         chargeTimer = followTimer + args.GetOrDefault("lockTime", 0.5f);
         activeTimer = args.GetOrDefault("activeTime", 0.12f); // todo: fix
+        followTargetAngleOffset = args.GetOrDefault("followTargetAngleOffset", 0f).ToRad();
 
         beamSprite.Play("charge", false, false);
         sideFadeAlpha = 0f;
@@ -680,9 +681,11 @@ public class CustomBossBeam : Entity {
             chargeTimer -= followTimer;
             followTimer = 0;
         } else {
-            angle = Calc.Angle(boss.BeamOrigin, target.Center);
-            Vector2 vector = Calc.ClosestPointOnLine(boss.BeamOrigin, boss.BeamOrigin + Calc.AngleToVector(angle, BeamLength), target.Center);
-            vector += (target.Center - boss.BeamOrigin).Perpendicular().SafeNormalize(AngleStartOffset) * num;
+            Vector2 targetPosition = GetRotatedBeamTargetPosition(target.Center, followTargetAngleOffset);
+            
+            angle = Calc.Angle(boss.BeamOrigin, targetPosition);
+            Vector2 vector = Calc.ClosestPointOnLine(boss.BeamOrigin, boss.BeamOrigin + Calc.AngleToVector(angle, BeamLength), targetPosition);
+            vector += (targetPosition - boss.BeamOrigin).Perpendicular().SafeNormalize(AngleStartOffset) * num;
             angle = Calc.Angle(boss.BeamOrigin, vector);
         }
 
@@ -705,10 +708,11 @@ public class CustomBossBeam : Entity {
             if (player != null && !player.Dead) {
                 followTimer -= Engine.DeltaTime;
                 chargeTimer -= Engine.DeltaTime;
-                if (followTimer > 0f && player.Center != boss.BeamOrigin) {
-                    Vector2 vector = Calc.ClosestPointOnLine(boss.BeamOrigin, boss.BeamOrigin + Calc.AngleToVector(angle, BeamLength), player.Center);
-                    Vector2 center = player.Center;
-                    vector = Calc.Approach(vector, center, RotationSpeed * Engine.DeltaTime);
+                Vector2 targetPosition = GetRotatedBeamTargetPosition(player.Center, followTargetAngleOffset);
+                
+                if (followTimer > 0f && targetPosition != boss.BeamOrigin) {
+                    Vector2 vector = Calc.ClosestPointOnLine(boss.BeamOrigin, boss.BeamOrigin + Calc.AngleToVector(angle, BeamLength), targetPosition);
+                    vector = Calc.Approach(vector, targetPosition, RotationSpeed * Engine.DeltaTime);
                     angle = Calc.Angle(boss.BeamOrigin, vector);
                 } else if (beamSprite.CurrentAnimationID == "charge") {
                     beamSprite.Play("lock", false, false);
@@ -732,6 +736,8 @@ public class CustomBossBeam : Entity {
             }
         }
     }
+
+    private Vector2 GetRotatedBeamTargetPosition(Vector2 target, float radiansOffset) => (target - boss.BeamOrigin).Rotate(radiansOffset) + boss.BeamOrigin;
 
     private void DissipateParticles() {
         Level level = SceneAs<Level>();
@@ -877,6 +883,8 @@ public class CustomBossBeam : Entity {
     private float activeTimer;
 
     private float angle;
+    
+    private float followTargetAngleOffset;
 
     private float beamAlpha;
 
