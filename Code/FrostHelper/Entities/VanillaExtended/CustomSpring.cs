@@ -44,9 +44,13 @@ public class CustomSpring : Spring {
         return orig(self, spring);
     }
     
-    // Patch sfx
+    // Patch sfx, and call `OnSuccessfulHit` at the beginning to handle one-use modded uses of springs (like aushelper)
     private static void SpringOnBounceAnimate(ILContext il) {
         var cursor = new ILCursor(il);
+
+        cursor.Emit(OpCodes.Ldarg_0);
+        cursor.EmitDelegate(CallOnSuccessfulHitFromBounceAnimate);
+        
         while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdstr("event:/game/general/spring"))) {
             cursor.Emit(OpCodes.Ldarg_0);
             cursor.EmitDelegate(GetBounceSfx);
@@ -58,6 +62,14 @@ public class CustomSpring : Spring {
             return orig;
 
         return customSpring.BounceSfx;
+    }
+
+    private static void CallOnSuccessfulHitFromBounceAnimate(Spring spring) {
+        if (spring is not CustomSpring customSpring)
+            return;
+
+        if (customSpring._version >= 5)
+            customSpring.OnSuccessfulHit();
     }
 
     public readonly string BounceSfx;
@@ -84,6 +96,7 @@ public class CustomSpring : Spring {
     // 2 - new gravity helper physics
     // 3 - communal helper dream tunnel support.
     // 4 - upside down spring holdable auto-support
+    // 5 - break one-use springs if BounceAnimate is called, fixes the option for aushelper usages.
     private readonly int _version;
 
     private readonly bool _multiplyPlayerY;
@@ -379,8 +392,10 @@ public class CustomSpring : Spring {
         return false;
     }
 
+    // (Also called at the beginning of BounceAnimate via hook)
     private void OnSuccessfulHit() {
-        if (_oneUse) {
+        if (_oneUse && Collidable) {
+            Collidable = false;
             Add(new Coroutine(BreakRoutine()));
         }
     }
@@ -409,7 +424,6 @@ public class CustomSpring : Spring {
         }
         Visible = false;
         RemoveSelf();
-        yield break;
     }
 
     private bool CallHitSpring(Holdable h) {
