@@ -430,7 +430,7 @@ internal sealed class CustomLavaRect : Component {
 
                 // We can't have : allows ref struct yet, so we need to use pointers... oh no
                 // This is safe because we know the data is stack-allocated, and has no GC-refs, so it will never be moved under us.
-                // (and we need stackalloc to Span<float> instead of float*, because otherwise the ternary for waves2 doesn't work.
+                // (and we need stackalloc to Span<float> instead of float*, because otherwise the ternary for waves2 doesn't work.)
                 var precalced = new PrecalculatedWaveProvider((float*)Unsafe.AsPointer(ref waves[0]));
                 var precalced2 = new PrecalculatedWaveProvider((float*)Unsafe.AsPointer(ref waves2[0]));
                 
