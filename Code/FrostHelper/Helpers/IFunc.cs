@@ -21,3 +21,10 @@ struct ConstTrueFilter<T> : IFunc<T, bool>, IStaticFunc<T, bool> {
         return true;
     }
 }
+
+struct IdentityFunc<T> : IFunc<T, T> {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public T Invoke(T arg) {
+        return arg;
+    }
+}

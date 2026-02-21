@@ -9,25 +9,10 @@ local lightning = {
 
 jautils.createPlacementsPreserveOrder(lightning, "default", {
     { "windingOrder", "Auto", jautils.windingOrders },
-    { "edgeBolts", "fcf579,1;8cf7e2,1", jautils.fields.list {
-        elementSeparator = ";",
-        elementDefault = "fcf579,1",
-        elementOptions = jautils.fields.complex {
-            separator = ",",
-            innerFields = {
-                {
-                    name = "FrostHelper.fields.lightning.boltColor",
-                    default = "fcf579",
-                    info = jautils.fields.color { }
-                },
-                {
-                    name = "FrostHelper.fields.lightning.boltThickness",
-                    default = 1,
-                    info = jautils.fields.nonNegativeNumber { }
-                },
-            }
-        },
-    } },
+    { "edgeBolts", "fcf579,1;8cf7e2,1", jautils.fields.lightningConfig {
+        defaultBoltColor = "fcf579",
+        defaultBoltThickness = 1,
+    }},
     { "depth", -1000100, "depth"},
     { "fillColor", "18110919", "color" },
     { "group", "" },

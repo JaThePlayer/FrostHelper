@@ -526,10 +526,13 @@ entities.FrostHelper/EntityRainbowifyController.attributes.description.types=Lis
 entities.FrostHelper/HeldRefill.placements.name.normal=Held Refill
 entities.FrostHelper/HeldRefill.attributes.description.speed=The speed multiplier applied when using this refill.
 entities.FrostHelper/HeldRefill.attributes.description.directory=Directory to take sprites from. It should have the same sprite filenames as a vanilla refill.
-entities.FrostHelper/HeldRefill.attributes.description.lineColor=The color to use for rendering the path of this refill.
+entities.FrostHelper/HeldRefill.attributes.name.lineColor=Movement Particle Color
+entities.FrostHelper/HeldRefill.attributes.description.lineColor=The color to use for rendering the particles while moving using this refill.\nFor old rendering, this also sets the color of the line indicator.
 entities.FrostHelper/HeldRefill.attributes.description.hitbox=Controls the hitbox for this entity.\nRefer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Custom-Colliders
 FrostHelper.fields.heldRefill.legacyOptions.fixGravityHelper=Fix Gravity Helper
 FrostHelper.fields.heldRefill.legacyOptions.fixGravityHelper.tooltip=Fixes interaction with inverted gravity.
+FrostHelper.fields.heldRefill.legacyOptions.newVisuals=New Visuals
+FrostHelper.fields.heldRefill.legacyOptions.newVisuals.tooltip=Enables new visuals based on Arbitrary Shape Lightning.
 
 entities.FrostHelper/Icicle.placements.name.normal=Icicle
 entities.FrostHelper/Icicle.attributes.description.directory=The directory containing an idle00.png file to use for the icicle. Additional animation frames can be added by creating idle01.png, idle02.png and so on. Must end with a /

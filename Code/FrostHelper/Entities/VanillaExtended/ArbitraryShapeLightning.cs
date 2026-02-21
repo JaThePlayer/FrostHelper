@@ -173,9 +173,8 @@ public class ArbitraryShapeLightning : Entity {
             player.Die(Vector2.UnitX);
     }
 
-    private CustomLightningRenderer GetOrAddRenderer(Scene scene) => _renderer ??= ControllerHelper<CustomLightningRenderer>.AddToSceneIfNeeded(scene,
-        r => r.Cfg == _config,
-        () => new CustomLightningRenderer(_config));
+    private CustomLightningRenderer GetOrAddRenderer(Scene scene) =>
+        _renderer ??= CustomLightningRenderer.GetOrCreate(scene, _config);
 
     public override void Added(Scene scene) {
         base.Added(scene);

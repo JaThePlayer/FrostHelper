@@ -70,6 +70,18 @@ function fields.positiveInteger(data)
     }
 end
 
+---Creates a number field with minimumValue defaulting to 0.00001.
+---@param data NumberFieldData
+---@return FieldInformationEntry
+function fields.positiveNumber(data)
+    return {
+        fieldType = "number",
+        minimumValue = data.minimumValue or 0.00001,
+        maximumValue = data.maximumValue,
+        options = data.options
+    }
+end
+
 ---@class ColorFieldData
 ---@field allowXNAColors boolean? Whether XNA color names are allowed. JaUtils defaults to true, though Loenn defaults to false.
 ---@field useAlpha boolean? Whether alpha values are accepted. JaUtils defaults to true, though Loenn defaults to false.
@@ -256,5 +268,69 @@ function fields.csvWithTricks(data)
     }
 end
 
+---A Vector2 encoded as a 'x,y' string.
+---@param data {}
+---@return FieldInformationEntry
+function fields.vector2(data)
+    return fields.complex {
+        separator = ",",
+        innerFields = {
+            {
+                name = "FrostHelper.fields.vector2.x",
+                info = fields.number { }
+            },
+            {
+                name = "FrostHelper.fields.vector2.y",
+                info = fields.number { }
+            },
+        }
+    }
+end
+
+---@class BoltConfigFieldData
+---@field defaultBoltColor string?
+---@field defaultBoltThickness number?
+
+---Field encoding a CustomLightningRenderer.Config.BoltConfig object.
+---@param data BoltConfigFieldData
+---@return FieldInformationEntry
+function fields.boltConfig(data)
+    return fields.complex {
+        separator = ",",
+        innerFields = {
+            {
+                name = "FrostHelper.fields.lightning.boltColor",
+                default = data.defaultBoltColor or "fcf579",
+                info = fields.color { }
+            },
+            {
+                name = "FrostHelper.fields.lightning.boltThickness",
+                default = data.defaultBoltThickness or 1,
+                info = fields.nonNegativeNumber { }
+            },
+        }
+    }
+end
+
+---Field encoding a CustomLightningRenderer.Config object.
+---@param data BoltConfigFieldData
+---@return FieldInformationEntry
+function fields.lightningConfig(data)
+    return fields.list {
+        elementSeparator = ";",
+        elementDefault = (data.defaultBoltColor or "fcf579") ..  "," .. tostring(data.defaultBoltThickness or 1),
+        elementOptions = fields.boltConfig(data),
+    }
+end
+
+---Field storing a path to a sound effect.
+---Currently just a simple text field.
+---@param data {}
+---@return FieldInformationEntry
+function fields.sfxPath(data)
+    return {
+        fieldType = "string"
+    }
+end
 
 return fields

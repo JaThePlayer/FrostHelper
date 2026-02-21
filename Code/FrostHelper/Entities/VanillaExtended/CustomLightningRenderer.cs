@@ -105,6 +105,11 @@ public class CustomLightningRenderer : Entity {
         BloomVerts = new VertexPositionColor[1024];
     }
     
+    internal static CustomLightningRenderer GetOrCreate(Scene scene, Config config) => 
+        ControllerHelper<CustomLightningRenderer>.AddToSceneIfNeeded(scene,
+        r => r.Cfg == config,
+        () => new CustomLightningRenderer(config));
+    
     public void Apply(FrostHelperSession.ArbitraryLightningGroupChange change) {
         if (change.Depth is { } depth)
             Depth = depth;
@@ -189,6 +194,11 @@ public class CustomLightningRenderer : Entity {
         Camera camera = (Scene as Level)!.Camera;
         Rectangle rectangle = new Rectangle((int) camera.Left - 4, (int) camera.Top - 4, (int) (camera.Right - camera.Left) + 8, (int) (camera.Bottom - camera.Top) + 8);
         for (int i = 0; i < edges.Count; i++) {
+            if (edges[i].ForcedInvisible) {
+                edges[i].Visible = false;
+                continue;
+            }
+            
             if (immediate) {
                 edges[i].Visible = edges[i].InView(ref rectangle);
             } else if (!edges[i].Visible && Scene.OnInterval(0.05f, i * 0.01f) && edges[i].InView(ref rectangle)) {
@@ -315,12 +325,12 @@ public class CustomLightningRenderer : Entity {
                 if (edge.Visible) {
                     var i = 0;
                     foreach (ref var bolt in Cfg.Bolts.AsSpan()) {
-                        DrawSimpleLightning(ref num, ref edgeVerts, edgeSeed + (uint)i, edge.Parent.Position, edge.A, edge.B, electricityColorsLerped[i], bolt.Thickness + Fade * 3f);
+                        DrawSimpleLightning(ref num, ref edgeVerts, edgeSeed + (uint)i + edge.SeedOffset, edge.Parent.Position, edge.A, edge.B, electricityColorsLerped[i], bolt.Thickness + Fade * 3f);
                         i++;
                     }
                     
                     if (PseudoRand(ref num2) % 30u == 0u) {
-                        DrawBezierLightning(ref num, ref edgeVerts, edgeSeed, edge.Parent.Position, edge.A, edge.B, 24f, 10, electricityColorsLerped[^1]);
+                        DrawBezierLightning(ref num, ref edgeVerts, edgeSeed + edge.SeedOffset, edge.Parent.Position, edge.A, edge.B, 24f, 10, electricityColorsLerped[^1]);
                     }
                 }
             }
@@ -332,8 +342,8 @@ public class CustomLightningRenderer : Entity {
         }
     }
 
-    public static void DrawSimpleLightning(ref int index, ref VertexPositionColor[] verts, uint seed, Vector2 pos, Vector2 a, Vector2 b, Color color, float thickness = 1f) {
-        seed += (uint) (a.GetHashCode() + b.GetHashCode());
+    internal static void DrawSimpleLightning(ref int index, ref VertexPositionColor[] verts, uint seed, Vector2 pos, Vector2 a, Vector2 b, Color color, float thickness = 1f) {
+        //seed += (uint) (a.GetHashCode() + b.GetHashCode()); - we instead add the original position of the given Edge we're rendering in the caller.
         a += pos;
         b += pos;
         float len = (b - a).Length();
@@ -382,7 +392,7 @@ public class CustomLightningRenderer : Entity {
     }
 
     public static void DrawBezierLightning(ref int index, ref VertexPositionColor[] verts, uint seed, Vector2 pos, Vector2 a, Vector2 b, float anchor, int steps, Color color) {
-        seed += (uint) (a.GetHashCode() + b.GetHashCode());
+        //seed += (uint) (a.GetHashCode() + b.GetHashCode());  - we instead add the original position of the given Edge we're rendering in the caller.
         a += pos;
         b += pos;
         Vector2 vector = (b - a).SafeNormalize().TurnRight();
@@ -465,6 +475,8 @@ public class CustomLightningRenderer : Entity {
             B = b;
             Min = new Vector2(Math.Min(a.X, b.X), Math.Min(a.Y, b.Y));
             Max = new Vector2(Math.Max(a.X, b.X), Math.Max(a.Y, b.Y));
+
+            SeedOffset = (uint)(a.GetHashCode() + b.GetHashCode());
         }
 
         public void Move(Vector2 move) {
@@ -477,6 +489,8 @@ public class CustomLightningRenderer : Entity {
         public bool InView(ref Rectangle view) {
             return view.Left < Parent.X + Max.X && view.Right > Parent.X + Min.X && view.Top < Parent.Y + Max.Y && view.Bottom > Parent.Y + Min.Y;
         }
+        
+        public uint SeedOffset { get; }
 
         public Entity Parent;
 
@@ -489,6 +503,14 @@ public class CustomLightningRenderer : Entity {
         public Vector2 Min;
 
         public Vector2 Max;
+
+        public bool ForcedInvisible {
+            get;
+            set {
+                field = value;
+                Visible = !value;
+            }
+        }
     }
 
     public class Bolt {

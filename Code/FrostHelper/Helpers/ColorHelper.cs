@@ -126,6 +126,10 @@ public static class ColorHelper {
 
         return _crystalSpinner.GetHue(position);
     }
+
+    public static Color MultiplyWithoutAlpha(Color src, float a) {
+        return new Color(src.R / 255f * a, src.G / 255f * a, src.B / 255f * a, src.A / 255f);
+    }
 }
 
 internal readonly struct RgbaOrXnaColor(Color color) : IDetailedParsable<RgbaOrXnaColor>, IEquatable<RgbaOrXnaColor> {

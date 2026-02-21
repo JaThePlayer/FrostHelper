@@ -13,16 +13,26 @@ heldRefill.nodeLineRenderType = "line"
 jautils.createPlacementsPreserveOrder(heldRefill, "normal", {
     { "speed", 6 },
     { "directory", "objects/refill" },
-    { "lineColor", "ffff00", "color" },
     { "hitbox", "R,24,24,-12,-12", "FrostHelper.collider" },
-    { "legacyOptions", 1, jautils.fields.flagEnum {
+    { "bolts", "ffff00,1", jautils.fields.lightningConfig {
+        defaultBoltColor = "ffff00",
+        defaultBoltThickness = 1,
+    }},
+    { "lineColor", "ffff00", jautils.fields.color {}, nil },
+    { "legacyOptions", 3, jautils.fields.flagEnum {
         innerFields = {
             {
                 name = "FrostHelper.fields.heldRefill.legacyOptions.fixGravityHelper",
                 value = 1,
+            },
+            {
+                name = "FrostHelper.fields.heldRefill.legacyOptions.newVisuals",
+                value = 2,
             }
         }
-    }}
+    }},
+    { "respawnTime", -1 },
+    { "respawnSfx", "event:/game/general/diamond_return", jautils.fields.sfxPath {} }
 })
 
 function heldRefill.nodeSprite() end

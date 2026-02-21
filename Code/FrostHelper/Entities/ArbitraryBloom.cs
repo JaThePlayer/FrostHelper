@@ -30,11 +30,18 @@ internal sealed class ArbitraryBloomEntity : Entity {
 }
 
 internal sealed class ArbitraryBloom {
-    public readonly Vector3[] Fill;
+    public Vector3[] Fill {
+        get;
+        internal set {
+            field = value;
+            Bounds = RectangleExt.FromPointsFromXY(value);
+        }
+    }
+
     public readonly float Alpha;
     internal readonly Func<Vector2> PosGetter;
 
-    public readonly Rectangle Bounds;
+    public Rectangle Bounds { get; private set; }
 
     public bool Visible;
 
@@ -45,7 +52,6 @@ internal sealed class ArbitraryBloom {
         Alpha = alpha;
         Fill = fill;
         PosGetter = positionGetter;
-        Bounds = RectangleExt.FromPointsFromXY(fill);
         Visible = true;
     }
 }
