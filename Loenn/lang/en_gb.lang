@@ -534,6 +534,11 @@ entities.FrostHelper/HeldRefill.attributes.description.directory=Directory to ta
 entities.FrostHelper/HeldRefill.attributes.name.lineColor=Movement Particle Color
 entities.FrostHelper/HeldRefill.attributes.description.lineColor=The color to use for rendering the particles while moving using this refill.\nFor old rendering, this also sets the color of the line indicator.
 entities.FrostHelper/HeldRefill.attributes.description.hitbox=Controls the hitbox for this entity.\nRefer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Custom-Colliders
+entities.FrostHelper/HeldRefill.attributes.description.respawnTime=How long (in seconds) it takes the refill to respawn.\nLeave at -1 to make it not respawn.
+entities.FrostHelper/HeldRefill.attributes.description.respawnSfx=The sound effect to play when the refill respawns.
+entities.FrostHelper/HeldRefill.attributes.description.legacyOptions=Controls legacy settings for this entity, for backwards compatibility.
+entities.FrostHelper/HeldRefill.attributes.description.bolts=Configuration for lightning bolts used for the new visuals.
+
 FrostHelper.fields.heldRefill.legacyOptions.fixGravityHelper=Fix Gravity Helper
 FrostHelper.fields.heldRefill.legacyOptions.fixGravityHelper.tooltip=Fixes interaction with inverted gravity.
 FrostHelper.fields.heldRefill.legacyOptions.newVisuals=New Visuals
