@@ -29,6 +29,11 @@ FrostHelper.fields.effectParams.key.tooltip=The name of the shader parameter, as
 FrostHelper.fields.effectParams.value=Value
 FrostHelper.fields.effectParams.value.tooltip=The value to set this parameter to.\nSession expressions are supported, refer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Session-Expressions
 
+FrostHelper.fields.vector2.x=X
+FrostHelper.fields.vector2.x.tooltip=The X component of this vector.
+FrostHelper.fields.vector2.y=Y
+FrostHelper.fields.vector2.y.tooltip=The Y component of this vector.
+
 # -- Entities --
 # entities.entityName.placements.*
 # entities.entityName.description.*
@@ -641,6 +646,22 @@ entities.FrostHelper/ArbitraryLight.attributes.description.startFade=The distanc
 entities.FrostHelper/ArbitraryLight.attributes.description.endFade=The distance after which the light's color is fully transparent.\nThe distance of nodes is equal to the Radius property.\nThe higher the values of StartFade, Radius and EndFade, the higher quality the gradient is.\nMake sure that StartFade < Radius < EndFade for correct results!
 entities.FrostHelper/ArbitraryLight.attributes.description.radius=The distance each node is considered to be from the central point (red square).\nIn combination with StartFade and EndFade, this decides how the color of the light source fades away.\nMake sure that StartFade < Radius < EndFade for correct results!
 entities.FrostHelper/ArbitraryLight.attributes.description.bloomAlpha=If > 0, creates an Arbitrary Bloom with this alpha value which covers the area of this light source.
+entities.FrostHelper/ArbitraryLight.attributes.description.flag=Flag needed for this light to be enabled.\nLeave blank to make it always enabled.\nSession Expressions are supported.
+
+entities.FrostHelper/CastedArbitraryLight.placements.name.default=Raycasted Light
+entities.FrostHelper/CastedArbitraryLight.placements.description.default=A triangular light source, emanating from one central point, dynamically raycasted to collide with solids.\nNodes specify the angle the light, the red rectangle is the source location.
+entities.FrostHelper/CastedArbitraryLight.attributes.description.color=Color of the light source.
+entities.FrostHelper/CastedArbitraryLight.attributes.description.alpha=Alpha value of the light source.
+entities.FrostHelper/CastedArbitraryLight.attributes.description.startFade=The distance after which the light's color starts to fade away.\nThe distance of nodes is equal to the Radius property.\nThe higher the values of StartFade, Radius and EndFade, the higher quality the gradient is.\nMake sure that StartFade < Radius < EndFade for correct results!
+entities.FrostHelper/CastedArbitraryLight.attributes.description.endFade=The distance after which the light's color is fully transparent.\nThe distance of nodes is equal to the Radius property.\nThe higher the values of StartFade, Radius and EndFade, the higher quality the gradient is.\nMake sure that StartFade < Radius < EndFade for correct results!
+entities.FrostHelper/CastedArbitraryLight.attributes.description.radius=The distance each node is considered to be from the central point (red square).\nIn combination with StartFade and EndFade, this decides how the color of the light source fades away.\nMake sure that StartFade < Radius < EndFade for correct results!
+entities.FrostHelper/CastedArbitraryLight.attributes.description.bloomAlpha=If > 0, creates an Arbitrary Bloom with this alpha value which covers the area of this light source.
+entities.FrostHelper/CastedArbitraryLight.attributes.name.offsetPerBeam=Offset Between Beams
+entities.FrostHelper/CastedArbitraryLight.attributes.description.offsetPerBeam=The angular offset between two subsequent raycasted light beams.\nLower values increase quality and accuracy of the raycasting, but decrease performance.\n(Especially if `Dynamic` is enabled.)
+entities.FrostHelper/CastedArbitraryLight.attributes.description.dynamic=If enabled, the light will be continuosly raycasted to react to moving solids.\nOtherwise, raycasting happens once on room load.\nWARNING: Very laggy, use sparingly and only if needed.\nIf high precision is not needed, increasing `Offset Between Beams` is recommended.
+entities.FrostHelper/CastedArbitraryLight.attributes.description.flag=Flag needed for this light to be enabled.\nLeave blank to make it always enabled.\nSession Expressions are supported.
+entities.FrostHelper/CastedArbitraryLight.attributes.description.dynamicFlag=If `Dynamic` is enabled, flag that needs to be set for dynamic raycasting to happen.\nLeave blank to make it always raycast.\nUseful to disable raycasting when you know its unnecessary, for better performance.\n(Raycasting is implicitly disabled when `Flag` is not met.)\nSession Expressions are supported.
+
 
 entities.FrostHelper/LightOccluderEntity.placements.name.default=Light Occluder
 

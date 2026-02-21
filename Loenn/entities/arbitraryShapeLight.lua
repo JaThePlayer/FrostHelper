@@ -1,3 +1,4 @@
+---@module 'jautils'
 local jautils = require("mods").requireFromPlugin("libraries.jautils")
 local utils = require("utils")
 local arbitraryShapeEntity = require("mods").requireFromPlugin("libraries.arbitraryShapeEntity")
@@ -6,6 +7,13 @@ local drawableLineStruct = require("structs.drawable_line")
 local arbitraryLight = {
     name = "FrostHelper/ArbitraryLight",
     nodeLimits = { 2, 999 },
+    depth = -math.huge + 6,
+    nodeVisibility = "never",
+}
+
+local castedLight = {
+    name = "FrostHelper/CastedArbitraryLight",
+    nodeLimits = { 2, 2 },
     depth = -math.huge + 6,
     nodeVisibility = "never",
 }
@@ -19,6 +27,20 @@ jautils.createPlacementsPreserveOrder(arbitraryLight, "default", {
     { "bloomAlpha", 0 },
     { "flag", "", "FrostHelper.condition" },
     { "connectFirstAndLastNode", false },
+})
+
+jautils.createPlacementsPreserveOrder(castedLight, "default", {
+    { "color", "ffffff", "color" },
+    { "alpha", 1.0 },
+    { "startFade", 16, "integer" },
+    { "endFade", 64, "integer" },
+    { "radius", 24, "integer" },
+    { "bloomAlpha", 0 },
+    { "flag", "", "FrostHelper.condition" },
+    -- For casted lights only
+    { "offsetPerBeam", 1, jautils.fields.positiveNumber {} },
+    { "dynamicFlag", "", "FrostHelper.condition" },
+    { "dynamic", false }
 })
 
 local function point(position, color)
@@ -84,4 +106,11 @@ end
 arbitraryLight.nodeSprite = arbitraryShapeEntity.nodeSprite
 arbitraryLight.selection = arbitraryShapeEntity.selection
 
-return arbitraryLight
+castedLight.sprite = arbitraryLight.sprite
+castedLight.nodeSprite = arbitraryShapeEntity.nodeSprite
+castedLight.selection = arbitraryShapeEntity.selection
+
+return {
+    arbitraryLight,
+    castedLight
+}

@@ -89,6 +89,34 @@ internal static class CollideExt {
     }
     
     /// <summary>
+    /// Assumes that `hits` only stores collidable `T` elements with colliders (due to using CollideIntoBroadPhase earlier)
+    /// </summary>
+    public static T? CollideFirst<T>(Vector2 from, Vector2 to, List<T> hits) where T : Entity
+    {
+        foreach (var e in CollectionsMarshal.AsSpan(hits)) {
+            if (e.CollideLine(from, to)) {
+                return e;
+            }
+        }
+        
+        return null;
+    }
+    
+    /// <summary>
+    /// Assumes that `hits` only stores collidable `T` elements with colliders (due to using CollideIntoBroadPhase earlier)
+    /// </summary>
+    public static T? CollideFirst<T>(Vector2 at, List<T> hits) where T : Entity
+    {
+        foreach (var e in CollectionsMarshal.AsSpan(hits)) {
+            if (e.CollidePoint(at)) {
+                return e;
+            }
+        }
+        
+        return null;
+    }
+    
+    /// <summary>
     /// CollideFirst, but all input elements in hits are assumed to be Collideable and have a not-null Collider.
     /// </summary>
     public static T? CollideFirstAssumeCollideable<T>(Rectangle rect, List<T> hits) where T : Entity {

@@ -368,7 +368,7 @@ internal sealed class DynamicRainGenerator : Component {
         return null;
     }
 
-    private void CollideInto(Scene scene, Rectangle rect, List<Entity> hits, Type type, ref Rectangle colliderBounds) {
+    internal static void CollideInto(Scene scene, Rectangle rect, List<Entity> hits, Type type, ref Rectangle colliderBounds) {
         if (!scene.Tracker.Entities.TryGetValue(type, out var entities))
             return;
 

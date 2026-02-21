@@ -78,9 +78,15 @@ internal sealed class ArbitraryLight : VertexLight {
         radius = arbLight.Radius;
         var lightPos = arbLight.Position + arbLight.Entity.Position;
         
+        if (self.indexCount + arbLight.Fill.Length * 2 >= self.indices.Length) {
+            Array.Resize(ref self.indices, self.indices.Length * 2);
+        }
+
+        if (self.vertexCount + arbLight.Fill.Length * 2 >= self.resultVerts.Length) {
+            Array.Resize(ref self.resultVerts, self.resultVerts.Length * 2);
+        }
+        
         foreach (var vRelative in arbLight.Fill) {
-            if (self.indexCount >= self.indices.Length)
-                return;
             self.indices[self.indexCount++] = self.vertexCount;
 
             if (self.vertexCount >= self.resultVerts.Length)
@@ -157,7 +163,7 @@ internal sealed class ArbitraryLight : VertexLight {
     
     #endregion
     
-    public readonly Vector3[] Fill;
+    public Vector3[] Fill { get; private set; }
 
     public Rectangle Bounds;
 
@@ -165,7 +171,9 @@ internal sealed class ArbitraryLight : VertexLight {
 
     private readonly ArbitraryBloom? _bloom;
 
-    private readonly ConditionHelper.Condition _condition;
+    internal ConditionHelper.Condition Condition { get; private init; }
+
+    private readonly bool _connectFirstAndLastNode;
     
     public ArbitraryLight(EntityData data, Vector2 offset) : this(data.Position + offset,
         data.GetColor("color", "ffffff"), data.Float("alpha", 1f), data.Int("startFade", 16), data.Int("endFade", 32),
@@ -178,29 +186,36 @@ internal sealed class ArbitraryLight : VertexLight {
                           ConditionHelper.Condition condition) : base(Vector2.Zero, color, alpha, startFade, endFade) {
         LoadHooksIfNeeded();
         
-        _condition = condition;
-        
-        var fill = new Vector3[nodes.Length * 3 - (connectFirstAndLastNode ? 0 : 3)];
-        var fi = 0;
-        for (int i = 0; i < nodes.Length - 1; i++) {
-            fi++; // skip 1 vertex as it's placed on 0,0,0 which is default(Vector3)
-            fill[fi++] = new(nodes[i] - position, 0f);
-            fill[fi++] = new(nodes[i + 1] - position, 0f);
-        }
-        
-        if (connectFirstAndLastNode) {
-            fi++; // skip 1 vertex as it's placed on 0,0,0 which is default(Vector3)
-            fill[fi++] = new(nodes[0] - position, 0f);
-            fill[fi++] = new(nodes[^1] - position, 0f);
-        }
+        Condition = condition;
+        _connectFirstAndLastNode = connectFirstAndLastNode;
 
-        Fill = fill;
-        Bounds = RectangleExt.FromPointsFromXY(fill);
+        UpdateNodes(position, nodes, default(IdentityFunc<Vector2>));
         Radius = radius;
 
         if (bloomAlpha > 0f) {
-            _bloom = new ArbitraryBloom(bloomAlpha, Fill, () => Position + Entity.Position);
+            _bloom = new ArbitraryBloom(bloomAlpha, Fill!, () => Position + Entity.Position);
         }
+    }
+
+    internal void UpdateNodes<T, TGetter>(Vector2 origin, T[] newNodes, TGetter posGetter) where TGetter : IFunc<T, Vector2> {
+        var fillLength = newNodes.Length * 3 - (_connectFirstAndLastNode ? 0 : 3);
+        var fill = (Fill is not null && Fill.Length == fillLength) ? Fill : new Vector3[fillLength];
+        var fi = 0;
+        for (int i = 0; i < newNodes.Length - 1; i++) {
+            fi++; // skip 1 vertex as it's placed on 0,0,0 which is default(Vector3)
+            fill[fi++] = new(posGetter.Invoke(newNodes[i]) - origin, 0f);
+            fill[fi++] = new(posGetter.Invoke(newNodes[i + 1]) - origin, 0f);
+        }
+        
+        if (_connectFirstAndLastNode) {
+            fi++; // skip 1 vertex as it's placed on 0,0,0 which is default(Vector3)
+            fill[fi++] = new(posGetter.Invoke(newNodes[0]) - origin, 0f);
+            fill[fi++] = new(posGetter.Invoke(newNodes[^1]) - origin, 0f);
+        }
+        
+        Fill = fill;
+        Bounds = RectangleExt.FromPointsFromXY(fill);
+        _bloom?.Fill = Fill;
     }
 
     public override void EntityAwake() {
@@ -215,7 +230,7 @@ internal sealed class ArbitraryLight : VertexLight {
 
     private void UpdateVisibility()
     {
-        var visible = _condition.Check(Scene.ToLevel().Session);
+        var visible = Condition.Check(Scene.ToLevel().Session);
 
         _bloom?.Visible = visible;
         Visible = visible;
