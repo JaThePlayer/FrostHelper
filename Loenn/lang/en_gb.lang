@@ -1278,6 +1278,7 @@ triggers.FrostHelper/ChangeSpinnersTrigger.attributes.description.newDashThrough
 triggers.FrostHelper/ChangeSpinnersTrigger.attributes.description.newOnPlayer=If not `LeaveUnchanged`, changes the spinner's On Player.
 triggers.FrostHelper/ChangeSpinnersTrigger.attributes.description.newOnHoldable=If not `LeaveUnchanged`, changes the spinner's On Holdable.
 triggers.FrostHelper/ChangeSpinnersTrigger.attributes.description.nextTriggerDelay=If this trigger has a node pointing at another Change Spinners trigger,\nthat trigger will get get activated after this delay,\nand it will attempt to change the spinner that got changed by this trigger.\nFor example, this trigger could start playing an animation,\nthen point to another Change Spinners trigger to make that spinner collideable after a delay,\nimitating Trigger Spikes.
+triggers.FrostHelper/ChangeSpinnersTrigger.attributes.description.visible=If not `LeaveUnchanged`, changes the spinner's visibility.
 
 triggers.FrostHelper/ShatterSpinnersTrigger.placements.name.default=Shatter Custom Spinners
 triggers.FrostHelper/ShatterSpinnersTrigger.placements.description.default=Shatters Frost Helper Spinners in the room, based on a Session Expression filter.\nCan optionally be activated by a Change Spinners trigger to create a chain of edits.

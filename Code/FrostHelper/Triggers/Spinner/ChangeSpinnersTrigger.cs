@@ -8,6 +8,7 @@ internal sealed class ChangeSpinnersTrigger : SpinnerTrigger {
     private readonly AnimationBehavior _animationBehavior;
     private readonly CustomSpinner.CollisionModes _newDashThrough, _newOnHoldable, _newOnPlayer;
     private readonly int? _newDepth;
+    private readonly Tristate _visible;
     
     private enum Tristate {
         LeaveUnchanged,
@@ -30,6 +31,7 @@ internal sealed class ChangeSpinnersTrigger : SpinnerTrigger {
         
         _newCollidable = data.Enum("newCollidable", Tristate.LeaveUnchanged);
         _newRainbow = data.Enum("newRainbow", Tristate.LeaveUnchanged);
+        _visible = data.Enum("visible", Tristate.LeaveUnchanged);
         _newTint = data.GetColorNullable("newTint");
         _newBorderTint = data.GetColorNullable("newBorderColor");
         _animationBehavior = data.Enum("animationBehavior", AnimationBehavior.LeaveUnchanged);
@@ -79,6 +81,10 @@ internal sealed class ChangeSpinnersTrigger : SpinnerTrigger {
 
         if (_newDepth is { } newDepth) {
             spinner.SetDepth(newDepth);
+        }
+
+        if (_visible is not Tristate.LeaveUnchanged) {
+            spinner.SetForcedInvisible(_visible is not Tristate.True);
         }
     }
 

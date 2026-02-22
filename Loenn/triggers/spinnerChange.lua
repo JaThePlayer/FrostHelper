@@ -49,6 +49,7 @@ jautils.createPlacementsPreserveOrder(spinnerChange, "default", {
     { "newOnPlayer", "LeaveUnchanged", collisionModes },
     { "newOnHoldable", "LeaveUnchanged", collisionModesForHoldables },
     { "newDepth", "", "depthOrEmpty" },
+    { "visible", "LeaveUnchanged", tristate },
 
     { "nextTriggerDelay", 0.0 },
     { "oncePerSpinner", false }

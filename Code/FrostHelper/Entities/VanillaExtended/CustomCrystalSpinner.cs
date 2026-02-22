@@ -89,17 +89,16 @@ public class CustomSpinner : Entity {
         public Span<Fill> FillsSpan => CollectionsMarshal.AsSpan(Fills);
     }
 
-    private CustomSpinnerSpriteSource _spriteSource;
     private NumVector2 _scaledCullingDist;
-    
+
     internal CustomSpinnerSpriteSource SpriteSource {
-        get => _spriteSource;
+        get;
         set {
-            _spriteSource = value;
+            field = value;
             _scaledCullingDist = value.CullingDistance * ImageScale;
         }
     }
-    
+
     // accessed by TAS-Helper via reflection
     internal CustomSpinnerController controller;
     
@@ -164,6 +163,8 @@ public class CustomSpinner : Entity {
     internal bool ShouldBeCollidable = true;
 
     internal bool ColliderDisabledExternally = false;
+
+    private bool _forcedInvisible;
 
     private string hitboxStr;
 
@@ -366,6 +367,21 @@ public class CustomSpinner : Entity {
             p.Visible = visible;
     }
 
+    internal void SetForcedInvisible(bool forcedInvisible) {
+        if (_forcedInvisible == forcedInvisible)
+            return;
+        
+        _forcedInvisible = forcedInvisible;
+
+        if (!_forcedInvisible) {
+            SetVisibleAndCreateSpritesIfInView();
+        }
+        else {
+            SetVisible(false);
+            UnregisterFromRenderers();
+        }
+    }
+
     internal void SetDepth(int newDepth) {
         if (newDepth == _lastDepth)
             return;
@@ -465,18 +481,22 @@ public class CustomSpinner : Entity {
         }
     }
 
-    public override void Update() {
-        if (!Visible) {
-            ShouldBeCollidable = Collidable = false;
-            if (InView()) {
-                RegisterToRenderers();
-                SetVisible(true);
-                if (!expanded) {
-                    CreateSprites();
-                }
-                if (Rainbow)
-                    UpdateHue();
+    private void SetVisibleAndCreateSpritesIfInView() {
+        if (InView()) {
+            RegisterToRenderers();
+            SetVisible(true);
+            if (!expanded) {
+                CreateSprites();
             }
+            if (Rainbow)
+                UpdateHue();
+        }
+    }
+    
+    public override void Update() {
+        if (!Visible && !_forcedInvisible) {
+            ShouldBeCollidable = Collidable = false;
+            SetVisibleAndCreateSpritesIfInView();
         } else {
             // Fix Crystalline Helper Depth triggers used on spinners, needed for older maps
             if (_lastDepth != Depth)
@@ -489,12 +509,14 @@ public class CustomSpinner : Entity {
             var scene = Scene;
             var offset = this.offset;
 
-            if (Rainbow && (controller.NoCycles || scene.OnInterval(0.08f, offset)))
-                UpdateHue();
+            if (!_forcedInvisible) {
+                if (Rainbow && (controller.NoCycles || scene.OnInterval(0.08f, offset)))
+                    UpdateHue();
 
-            if (scene.OnInterval(0.25f, offset) && !InView()) {
-                SetVisible(false);
-                UnregisterFromRenderers();
+                if (scene.OnInterval(0.25f, offset) && !InView()) {
+                    SetVisible(false);
+                    UnregisterFromRenderers();
+                }
             }
 
             if (HasCollider && (controller.NoCycles || scene.OnInterval(0.05f, offset))) {
