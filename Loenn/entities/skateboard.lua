@@ -6,18 +6,10 @@ local fallbackSprite = "objects/FrostHelper/skateboard"
 ---@class Skateboard : Entity
 ---@field direction "Left"|"Right"?
 
----@type EntityHandler
+---@type EntityHandler<Skateboard>
 local skateboard = {
     name = "FrostHelper/Skateboard",
     nodeVisibility = "selected",
-    fieldInformation = {
-        x = {
-            options = {
-                yo = 4,
-                x = 2,
-            }
-        }
-    }
 }
 
 local directionsEnum = {

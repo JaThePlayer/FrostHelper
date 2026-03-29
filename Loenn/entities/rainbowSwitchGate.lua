@@ -5,6 +5,8 @@ local utils = require("utils")
 local drawableSpriteStruct = require("structs.drawable_sprite")
 ---@module 'jautils'
 local jautils = require("mods").requireFromPlugin("libraries.jautils")
+---@module 'rainbowHelper'
+local rainbowHelper = require("mods").requireFromPlugin("libraries.rainbowHelper")
 
 local switchGate = {}
 
@@ -65,7 +67,7 @@ function switchGate.sprite(room, entity)
     local ninePatch = drawableNinePatch.fromTexture(frame, ninePatchOptions, x, y, width, height)
     local middleSprite = drawableSprite.fromTexture(middleTexture, entity)
     local sprites = ninePatch:getDrawableSprite()
-    --jautils.rainbowifyAll(room, sprites)
+    --rainbowHelper.rainbowifyAll(room, sprites)
 
     middleSprite:addPosition(math.floor(width / 2), math.floor(height / 2))
     table.insert(sprites, middleSprite)

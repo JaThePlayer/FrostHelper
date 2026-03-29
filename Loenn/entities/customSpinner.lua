@@ -2,15 +2,22 @@ local utils = require("utils")
 local mods = require("mods")
 ---@module 'jautils'
 local jautils = mods.requireFromPlugin("libraries.jautils")
+---@module 'tracker'
+local tracker = mods.requireFromPlugin("libraries.tracker")
+---@module 'rainbowHelper'
+local rainbowHelper = mods.requireFromPlugin("libraries.rainbowHelper")
+
 local frostSettings = mods.requireFromPlugin("libraries.settings")
 local bloomSprite = mods.requireFromPlugin("libraries.bloomSprite")
 local drawableSpriteStruct = require("structs.drawable_sprite")
 
 local fallback = mods.internalModContent .. "/missing_image"
 
+---@type EntityHandler<UnknownEntity>
 local spinner = {
     name = "FrostHelper/IceSpinner"
 }
+---@type EntityHandler<UnknownEntity>
 local triggerSpinner = {
     name = "FrostHelper/TriggerSpinner"
 }
@@ -100,42 +107,42 @@ local pathCache = {}
 
 local function getSpriteCache(entity)
     local d = entity.directory or ""
-    local subdir = nil
-    local cacheKey = nil
+    local spritePathSuffix = entity.spritePathSuffix or ""
+    local dirCache = pathCache[d]
+    if not dirCache then
+        pathCache[d] = {}
+        dirCache = pathCache[d]
+    end
 
-    local origDir = d
+    local cache = pathCache[spritePathSuffix]
+    if cache then
+        return cache
+    end
 
     local unanimated = string.match(d, "^(.-)!$")
     d = unanimated or d
 
     local subDirIdx = string.find(d, ">")
+    local subdir = spritePathSuffix
     if subDirIdx then
-        cacheKey = origDir
         subdir = string.sub(d, subDirIdx + 1)
         d = string.sub(d, 1, subDirIdx - 1)
-    else
-        subdir = entity.spritePathSuffix or ""
-        cacheKey = origDir .. ">" .. subdir
     end
 
-    local cache = pathCache[cacheKey]
-    if not pathCache[cacheKey] then
-        if unanimated then
-            d = d .. "/00"
-        end
-
-        cache = {
-            jautils.getAtlasSubtextures(d .. "/fg" .. subdir, fallback),
-            jautils.getAtlasSubtextures(d .. "/bg" .. subdir, fallback),
-            nil, -- width
-            nil, -- associatedMods
-        }
-
-        cache[3] = drawableSpriteStruct.fromTexture(cache[1][1]).meta.realWidth
-
-        pathCache[cacheKey] = cache
+    if unanimated then
+        d = d .. "/00"
     end
 
+    cache = {
+        jautils.getAtlasSubtextures(d .. "/fg" .. subdir, fallback),
+        jautils.getAtlasSubtextures(d .. "/bg" .. subdir, fallback),
+        nil, -- width
+        nil, -- associatedMods
+    }
+
+    cache[3] = drawableSpriteStruct.fromTexture(cache[1][1]).meta.realWidth
+
+    pathCache[spritePathSuffix] = cache
     return cache
 end
 
@@ -151,10 +158,10 @@ local function createConnectorsForSpinner(room, entity, baseBGSprite, cache)
 
     local s = cache[3]
 
-    for _, e2 in ipairs(room.entities) do
+    for _, e2 in ipairs(tracker.getAll(room, name)) do
         if (e2._id or -1) <= id then goto continue end
 
-        if e2._name == name and e2.attachGroup == attachGroup and e2.attachToSolid == attachToSolid then
+        if e2.attachGroup == attachGroup and e2.attachToSolid == attachToSolid then
             local e2x, e2y = e2.x, e2.y
             local scaleSum = (imageScale+(e2.imageScale or 1))
             if jautils.distanceSquared(x, y, e2x, e2y) < s*getSpriteCache(e2)[3]*scaleSum*scaleSum/4 then
@@ -221,7 +228,7 @@ function spinner.sprite(room, entity)
     table.insert(sprites, fgSprite)
 
     if entity.rainbow then
-        jautils.rainbowifyAll(room, sprites)
+        rainbowHelper.rainbowifyAll(room, sprites)
     end
 
     local drawBorder = frostSettings.spinnerBorder() and (entity.drawOutline ~= false)
@@ -245,6 +252,9 @@ function spinner.selection(room, entity)
     return utils.rectangle(entity.x - 8 * scale, entity.y - 8 * scale, 16 * scale, 16 * scale)
 end
 triggerSpinner.selection = spinner.selection
+
+spinner.placements[1].ext_group = "FrostHelper/IceSpinner"
+triggerSpinner.placements[1].ext_group = "FrostHelper/IceSpinner"
 
 return {
     spinner,

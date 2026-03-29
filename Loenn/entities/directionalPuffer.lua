@@ -2,9 +2,6 @@ local utils = require("utils")
 ---@module "jautils"
 local jautils = require("mods").requireFromPlugin("libraries.jautils")
 
----@class Entity
----@field recovery string?
-
 local explodeIndicatorStartAngle, explodeIndicatorEndAngle = -jautils.degreeToRadians(6), jautils.degreeToRadians(186)
 
 local explodeDirectionsEnum = {

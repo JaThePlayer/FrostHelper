@@ -1,4 +1,5 @@
 ﻿using FrostHelper.Helpers;
+using System.Diagnostics.CodeAnalysis;
 
 namespace FrostHelper.Backdrops;
 
@@ -13,14 +14,15 @@ internal sealed class GradientStyleground : Backdrop {
     
     public GradientStyleground(BinaryPacker.Element data) {
         var gradientString = data.Attr("gradient");
-        if (!Gradient.TryParse(gradientString, null, out Gradient)) {
-            NotificationHelper.Notify($"Invalid gradient: {gradientString}");
-            Gradient = new() { Entries = [ new() {
+        if (!Gradient.TryParse(gradientString, null, out var gradient, out var message)) {
+            NotificationHelper.Notify($"Invalid gradient: {gradientString}: {message}");
+            gradient = new() { Entries = [ new() {
                 ColorFrom = Color.Black,
                 ColorTo = Color.Black,
                 Percent = 100,
             }]};
         }
+        Gradient = gradient;
 
         Direction = Enum.Parse<Gradient.Directions>(data.Attr("direction", nameof(Gradient.Directions.Vertical)));
         LoopX = data.AttrBool("loopX");
@@ -45,7 +47,7 @@ internal sealed class GradientStyleground : Backdrop {
         
         if (shouldRerender) {
             renderTarget ??= RenderTargetHelper.RentFullScreenBuffer();
-            Gradient.GetVertexes(ref vertexPositionColors, Direction, Position, LoopX, LoopY, out var vertexCount);
+            Gradient.GetVertexes(ref vertexPositionColors, Direction, Position, LoopX, LoopY, out var vertexCount, 320, 180);
             var gd = Engine.Graphics.GraphicsDevice;
             gd.SetRenderTarget(renderTarget);
             gd.Clear(Color.Transparent);
@@ -77,17 +79,17 @@ internal sealed class GradientStyleground : Backdrop {
     }
 }
 
-internal class Gradient : ISpanParsable<Gradient>
+internal class Gradient : IDetailedParsable<Gradient>
 {
     public List<Entry> Entries { get; init; } = [];
     private float? entryPercentageSum = null;
-    
-    const float yUnit = 180f / 100f;
-    const float xUnit = 320f / 100f;
 
-    public void GetVertexes(ref VertexPositionColor[]? into, Directions dir, Vector2 basePos, bool loopX, bool loopY, out int vertexCount) {
+    public void GetVertexes(ref VertexPositionColor[]? into, Directions dir, Vector2 basePos, bool loopX, bool loopY, out int vertexCount,
+        int width, int height) {
         entryPercentageSum ??= Entries.Sum(e => e.Percent);
-
+        var xUnit = width / 100f;
+        var yUnit = height / 100f;
+        
         // Perf: Modulo the position of looping directions by the size of the gradient
         if (loopY && dir == Directions.Vertical) {
             basePos.Y %= entryPercentageSum.Value * yUnit * 2;
@@ -98,33 +100,36 @@ internal class Gradient : ISpanParsable<Gradient>
         vertexCount = 0;
         into ??= new VertexPositionColor[Entries.Count * 6];
         
-        March(ref into, dir, basePos, loopX, loopY, ref vertexCount, moveInverted: false);
+        March(ref into, dir, basePos, loopX, loopY, ref vertexCount, width, height, moveInverted: false);
 
         if (dir == Directions.Vertical && loopY && basePos.Y > 0f) {
             // we've started moved down a bit, we need to march upwards
-            March(ref into, dir, basePos, loopX, loopY, ref vertexCount, moveInverted: true);
+            March(ref into, dir, basePos, loopX, loopY, ref vertexCount, width, height, moveInverted: true);
         }
         else if (dir == Directions.Horizontal && loopY && basePos.X > 0f) {
             // we've started moved right a bit, we need to march left
-            March(ref into, dir, basePos, loopX, loopY, ref vertexCount, moveInverted: true);
+            March(ref into, dir, basePos, loopX, loopY, ref vertexCount, width, height, moveInverted: true);
         }
     }
 
     private void March(ref VertexPositionColor[] ret, Directions dir, Vector2 basePos, bool loopX, bool loopY,
-        ref int vertexCount, bool moveInverted) {
+        ref int vertexCount, int width, int height, bool moveInverted) {
         var span = ret.AsSpan(vertexCount);
         var i = 0;
         var entries = Entries;
         var inc = 1;
         var start = 0f;
+        var xUnit = width / 100f;
+        var yUnit = height / 100f;
+        
         while (true) {
             var entry = entries[i];
 
             var end = start + entry.Percent * (moveInverted ? -1 : 1);
             
             var (x1, x2, y1, y2) = dir switch {
-                Directions.Vertical => (0f, 320f, start * yUnit, end * yUnit),
-                Directions.Horizontal => (start * xUnit, end * xUnit, 0f, 180f),
+                Directions.Vertical => (0f, width, start * yUnit, end * yUnit),
+                Directions.Horizontal => (start * xUnit, end * xUnit, 0f, height),
                 _ => (0f, 0f, 0f, 0f)
             };
 
@@ -175,20 +180,20 @@ internal class Gradient : ISpanParsable<Gradient>
             }
             
             // Return early if we have already covered the entire screen
-            if (dir == Directions.Vertical && (moveInverted ? y2 < 0f : y2 >= 180f)) {
+            if (dir == Directions.Vertical && (moveInverted ? y2 < 0f : y2 >= height)) {
                 break;
             }
 
-            if (dir == Directions.Horizontal && (moveInverted ? x2 < 0f : x2 >= 320f)) {
+            if (dir == Directions.Horizontal && (moveInverted ? x2 < 0f : x2 >= width)) {
                 break;
             }
 
             // We ran out of entries
             if (i + inc >= entries.Count || i + inc < 0) {
                 // change direction if we're looping in the same direction as the gradient
-                if (loopY && dir == Directions.Vertical && (moveInverted ? y2 >= 0f : y2 < 180f)) {
+                if (loopY && dir == Directions.Vertical && (moveInverted ? y2 >= 0f : y2 < height)) {
                     inc *= -1;
-                } else if (loopX && dir == Directions.Horizontal && (moveInverted ? x2 >= 0f : x2 < 320f)) {
+                } else if (loopX && dir == Directions.Horizontal && (moveInverted ? x2 >= 0f : x2 < width)) {
                     inc *= -1;
                 } else
                     break;
@@ -199,37 +204,28 @@ internal class Gradient : ISpanParsable<Gradient>
             start = end;
         }
     }
-    
-    public static Gradient Parse(string s, IFormatProvider? provider) 
-        => Parse(s.AsSpan(), provider);
 
-    public static bool TryParse(string? s, IFormatProvider? provider, out Gradient result) =>
-        TryParse(s.AsSpan(), provider, out result);
-
-    public static Gradient Parse(ReadOnlySpan<char> s, IFormatProvider? provider)
-    {
-        if (!TryParse(s, provider, out var parsed))
-            throw new Exception("Invalid gradient");
-
-        return parsed;
-    }
-
-    public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, out Gradient result)
-    {
+    public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, [MaybeNullWhen(false)] out Gradient result, [NotNullWhen(false)] out string? errorMessage) {
         result = new();
 
         var p = new SpanParser(s);
         while (p.SliceUntil(';').TryUnpack(out var entryParser))
         {
             entryParser.TrimStart();
-            if (!entryParser.ReadUntil<RgbaOrXnaColor>(',').TryUnpack(out var colorFrom))
+            if (!entryParser.ReadUntil<RgbaOrXnaColor>(',').TryUnpack(out var colorFrom)) {
+                errorMessage = "Invalid color format for 'from' color in gradient.";
                 return false;
+            }
             entryParser.TrimStart();
-            if (!entryParser.ReadUntil<RgbaOrXnaColor>(',').TryUnpack(out var colorTo))
+            if (!entryParser.ReadUntil<RgbaOrXnaColor>(',').TryUnpack(out var colorTo)) {
+                errorMessage = "Invalid color format for 'to' color in gradient.";
                 return false;
+            }
             entryParser.TrimStart();
-            if (!entryParser.TryRead<float>(out var percent))
+            if (!entryParser.TryRead<float>(out var percent)) {
+                errorMessage = "Invalid number format for 'percent' in gradient.";
                 return false;
+            }
 
             result.Entries.Add(new Entry {
                 ColorFrom = colorFrom.Color,
@@ -238,6 +234,7 @@ internal class Gradient : ISpanParsable<Gradient>
             });
         }
 
+        errorMessage = null;
         return true;
     }
 

@@ -79,6 +79,54 @@ internal ref struct SpanParser(ReadOnlySpan<char> input)
 
         return ret;
     }
+
+    public bool ReadManySeparated<T1, T2>(char separator, [NotNullWhen(true)] out T1? res1, [NotNullWhen(true)] out T2? res2)
+        where T1 : ISpanParsable<T1> where T2 : ISpanParsable<T2> {
+        res2 = default;
+        
+        if (!ReadUntil<T1>(separator).TryUnpack(out res1))
+            return false;
+        if (!ReadUntil<T2>(separator).TryUnpack(out res2))
+            return false;
+
+        return true;
+    }
+    
+    public bool ReadManySeparated<T1, T2, T3>(char separator, [NotNullWhen(true)] out T1? res1,
+        [NotNullWhen(true)] out T2? res2, [NotNullWhen(true)] out T3? res3)
+        where T1 : ISpanParsable<T1> where T2 : ISpanParsable<T2> where T3 : ISpanParsable<T3> {
+        res2 = default;
+        res3 = default;
+        
+        if (!ReadUntil<T1>(separator).TryUnpack(out res1))
+            return false;
+        if (!ReadUntil<T2>(separator).TryUnpack(out res2))
+            return false;
+        if (!ReadUntil<T3>(separator).TryUnpack(out res3))
+            return false;
+        
+        return true;
+    }
+    
+    public bool ReadManySeparated<T1, T2, T3, T4>(char separator, [NotNullWhen(true)] out T1? res1,
+        [NotNullWhen(true)] out T2? res2, [NotNullWhen(true)] out T3? res3,
+        [NotNullWhen(true)] out T4? res4)
+        where T1 : ISpanParsable<T1> where T2 : ISpanParsable<T2> where T3 : ISpanParsable<T3> where T4 : ISpanParsable<T4> {
+        res2 = default;
+        res3 = default;
+        res4 = default;
+        
+        if (!ReadUntil<T1>(separator).TryUnpack(out res1))
+            return false;
+        if (!ReadUntil<T2>(separator).TryUnpack(out res2))
+            return false;
+        if (!ReadUntil<T3>(separator).TryUnpack(out res3))
+            return false;
+        if (!ReadUntil<T4>(separator).TryUnpack(out res4))
+            return false;
+        
+        return true;
+    }
     
     public bool TryReadUntil<T>(char until, [NotNullWhen(true)] out T? res, 
         [NotNullWhen(false)] out string? errorMsg, IFormatProvider? format = null) 

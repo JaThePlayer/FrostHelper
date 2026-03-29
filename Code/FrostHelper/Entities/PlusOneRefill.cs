@@ -3,59 +3,43 @@
 namespace FrostHelper;
 
 [CustomEntity("FrostHelper/PlusOneRefill")]
-public class PlusOneRefill : Entity {
-    string spritepath;
-    int dashCount;
-    float respawnTime;
-    Color particleColor;
-    bool recoverStamina;
-    public PlusOneRefill(Vector2 position, bool oneUse, string spritePath, int dashCount, float respawnTime, Color particleColor, bool recStam) : base(position) {
-        this.oneUse = oneUse;
-        spritepath = spritePath;
-        this.dashCount = dashCount;
-        this.respawnTime = respawnTime;
-        this.particleColor = particleColor;
-        recoverStamina = recStam;
-        Initialize(true);
-    }
+internal sealed class PlusOneRefill : Entity {
+    private readonly int _dashCount;
+    private readonly float _respawnTime;
+    private readonly Color _particleColor;
+    private readonly bool _recoverStamina;
 
-    public PlusOneRefill(EntityData data, Vector2 offset) 
-        : this(data.Position + offset, data.Bool("oneUse", false), 
-            data.Attr("directory", "objects/FrostHelper/plusOneRefill"), 
-            data.Int("dashCount", 1), data.Float("respawnTime", 2.5f), 
-            ColorHelper.GetColor(data.Attr("particleColor", "ffffff")), data.Bool("recoverStamina", false)) {
+    public PlusOneRefill(EntityData data, Vector2 offset) : base(data.Position + offset) {
+        _oneUse = data.Bool("oneUse", false);
+        _dashCount = data.Int("dashCount", 1);
+        _respawnTime = data.Float("respawnTime", 2.5f);
         Collider = data.Collider("hitbox") ?? new Hitbox(16f, 16f, -8f, -8f);
-    }
-
-    // TODO: wtf is this???
-    public void Initialize(bool fromcctor) {
-        if (!fromcctor) {
-            SceneAs<Level>().ParticlesFG.Emit(Refill.P_Regen, 5, Center, Vector2.One * 4f, particleColor);
-            SceneAs<Level>().ParticlesFG.Emit(Refill.P_Regen, 5, Center, Vector2.One * 4f, particleColor);
-        }
-        Collider ??= new Hitbox(16f, 16f, -8f, -8f);
+        _particleColor = data.GetColor("particleColor", "ffffff");
+        _recoverStamina = data.Bool("recoverStamina", false);
+        var directory = data.Attr("directory", "objects/FrostHelper/plusOneRefill");
+        
         Add(new PlayerCollider(OnPlayer));
-        Add(outline = new Image(GFX.Game[spritepath + "/outline"]));
-        outline.CenterOrigin();
-        outline.Visible = false;
-        Add(sprite = new Sprite(GFX.Game, spritepath + "/idle"));
-        sprite.AddLoop("idle", "", 0.1f);
-        sprite.Play("idle", false, false);
-        sprite.CenterOrigin();
-        Add(flash = new Sprite(GFX.Game, spritepath + "/flash"));
-        flash.Add("flash", "", 0.05f);
-        flash.OnFinish = _ => {
-            flash.Visible = false;
+        Add(_outline = new Image(GFX.Game[directory + "/outline"]));
+        _outline.CenterOrigin();
+        _outline.Visible = false;
+        Add(_sprite = new Sprite(GFX.Game, directory + "/idle"));
+        _sprite.AddLoop("idle", "", 0.1f);
+        _sprite.Play("idle", false, false);
+        _sprite.CenterOrigin();
+        Add(_flash = new Sprite(GFX.Game, directory + "/flash"));
+        _flash.Add("flash", "", 0.05f);
+        _flash.OnFinish = _ => {
+            _flash.Visible = false;
         };
-        flash.CenterOrigin();
-        Add(wiggler = Wiggler.Create(1f, 4f, delegate (float v) {
-            sprite.Scale = flash.Scale = Vector2.One * (1f + v * 0.2f);
-        }, false, false));
+        _flash.CenterOrigin();
+        Add(_wiggler = Wiggler.Create(1f, 4f, v => {
+            _sprite.Scale = _flash.Scale = Vector2.One * (1f + v * 0.2f);
+        }));
         Add(new MirrorReflection());
-        Add(bloom = new BloomPoint(0.8f, 16f));
-        Add(light = new VertexLight(Color.White, 1f, 16, 40));
-        Add(sine = new SineWave(0.6f));
-        sine.Randomize();
+        Add(_bloom = data.GetBloomPoint("bloom", 0.8f, 16f));
+        Add(_light = data.GetVertexLight("light", Color.White, 1f, 16, 40));
+        Add(_sine = new SineWave(0.6f));
+        _sine.Randomize();
         UpdateY();
 
         Depth = Depths.DreamBlocks - 1;
@@ -63,100 +47,100 @@ public class PlusOneRefill : Entity {
 
     public override void Added(Scene scene) {
         base.Added(scene);
-        level = SceneAs<Level>();
+        _level = SceneAs<Level>();
     }
 
     public override void Update() {
         base.Update();
-        if (respawnTimer > 0f) {
-            respawnTimer -= Engine.DeltaTime;
-            if (respawnTimer <= 0f) {
+        if (_respawnTimer > 0f) {
+            _respawnTimer -= Engine.DeltaTime;
+            if (_respawnTimer <= 0f) {
                 Respawn();
             }
         } else if (Scene.OnInterval(0.1f)) {
-            level.ParticlesFG.Emit(Refill.P_Glow, 1, Position, Vector2.One * 5f, particleColor);
+            _level.ParticlesFG.Emit(Refill.P_Glow, 1, Position, Vector2.One * 5f, _particleColor);
         }
         UpdateY();
-        light.Alpha = Calc.Approach(light.Alpha, sprite.Visible ? 1f : 0f, 4f * Engine.DeltaTime);
-        bloom.Alpha = light.Alpha * 0.8f;
-        if (Scene.OnInterval(2f) && sprite.Visible) {
-            flash.Play("flash", true, false);
-            flash.Visible = true;
+        _light.Alpha = Calc.Approach(_light.Alpha, _sprite.Visible ? 1f : 0f, 4f * Engine.DeltaTime);
+        _bloom.Alpha = _light.Alpha * 0.8f;
+        if (Scene.OnInterval(2f) && _sprite.Visible) {
+            _flash.Play("flash", true, false);
+            _flash.Visible = true;
         }
     }
 
     private void Respawn() {
         if (!Collidable) {
             Collidable = true;
-            sprite.Visible = true;
-            outline.Visible = false;
+            _sprite.Visible = true;
+            _outline.Visible = false;
             Depth = Depths.DreamBlocks - 1;
-            wiggler.Start();
+            _wiggler.Start();
             Audio.Play("event:/game/general/diamond_return", Position);
-            level.ParticlesFG.Emit(Refill.P_Regen, 16, Position, Vector2.One * 2f, particleColor);
+            _level.ParticlesFG.Emit(Refill.P_Regen, 16, Position, Vector2.One * 2f, _particleColor);
         }
     }
 
     private void UpdateY() {
-        flash.Y = sprite.Y = bloom.Y = sine.Value * 2f;
+        _flash.Y = _sprite.Y = _bloom.Y = _sine.Value * 2f;
     }
 
     public override void Render() {
-        if (sprite != null && sprite.Visible) {
-            sprite.DrawOutline(1);
+        if (_sprite != null && _sprite.Visible) {
+            _sprite.DrawOutline(1);
         }
         base.Render();
     }
 
     private void OnPlayer(Player player) {
-        if (player.Dashes < player.MaxDashes || (recoverStamina && player.Stamina < 20f)) {
-            player.Dashes = Math.Min(player.Dashes + dashCount, player.MaxDashes);
-            if (recoverStamina) {
+        if (player.Dashes < player.MaxDashes || (_recoverStamina && player.Stamina < 20f)) {
+            player.Dashes = Math.Min(player.Dashes + _dashCount, player.MaxDashes);
+            if (_recoverStamina) {
                 player.RefillStamina();
             }
             Audio.Play("event:/game/general/diamond_touch", Position);
             Input.Rumble(RumbleStrength.Medium, RumbleLength.Medium);
             Collidable = false;
             Add(new Coroutine(RefillRoutine(player), true));
-            respawnTimer = respawnTime;
+            _respawnTimer = _respawnTime;
         }
     }
 
     private IEnumerator RefillRoutine(Player player) {
         Celeste.Celeste.Freeze(0.05f);
         yield return null;
-        level.Shake(0.3f);
-        sprite.Visible = flash.Visible = false;
-        if (!oneUse) {
-            outline.Visible = true;
+        _level.Shake(0.3f);
+        _sprite.Visible = _flash.Visible = false;
+        if (!_oneUse) {
+            _outline.Visible = true;
         }
         Depth = 8999;
         yield return 0.05f;
         float angle = player.Speed.Angle();
-        level.ParticlesFG.Emit(Refill.P_Shatter, 5, Position, Vector2.One * 4f, particleColor, angle - 1.57079637f);
-        level.ParticlesFG.Emit(Refill.P_Shatter, 5, Position, Vector2.One * 4f, particleColor, angle + 1.57079637f);
+        _level.ParticlesFG.Emit(Refill.P_Shatter, 5, Position, Vector2.One * 4f, _particleColor, angle - 1.57079637f);
+        _level.ParticlesFG.Emit(Refill.P_Shatter, 5, Position, Vector2.One * 4f, _particleColor, angle + 1.57079637f);
         SlashFx.Burst(Position, angle);
-        if (oneUse) {
+        if (_oneUse) {
             RemoveSelf();
         }
     }
-    private Sprite sprite;
+    private readonly Sprite _sprite;
 
-    private Sprite flash;
+    private readonly Sprite _flash;
 
-    private Image outline;
+    private readonly Image _outline;
 
-    private Wiggler wiggler;
+    private readonly Wiggler _wiggler;
 
-    private BloomPoint bloom;
+    private readonly BloomPoint _bloom;
 
-    private VertexLight light;
+    private readonly VertexLight _light;
 
-    private Level level;
+    private Level _level;
 
-    private SineWave sine;
+    private readonly SineWave _sine;
 
-    private bool oneUse;
+    private readonly bool _oneUse;
 
-    private float respawnTimer;
+    private float _respawnTimer;
 }

@@ -42,7 +42,7 @@ function frostSettings.spinnerBloom()
 end
 
 function frostSettings.rainbowsUseControllers()
-    return false -- way too laggy
+    return true
 end
 
 function frostSettings.fancyDreamBlocks()

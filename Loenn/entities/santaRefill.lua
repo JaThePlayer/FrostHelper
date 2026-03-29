@@ -3,12 +3,13 @@ local jautils = require("mods").requireFromPlugin("libraries.jautils")
 local drawableSpriteStruct = require("structs.drawable_sprite")
 local utils = require("utils")
 
-local plusOneRefill = {}
-plusOneRefill.name = "FrostHelper/PlusOneRefill"
-plusOneRefill.depth = -100
+---@type EntityHandler<UnknownEntity>
+local santaRefill = {}
+santaRefill.name = "FrostHelper/SantaRefill"
+santaRefill.depth = -100
 
-jautils.createPlacementsPreserveOrder(plusOneRefill, "normal", {
-    { "directory", "objects/FrostHelper/plusOneRefill", jautils.fields.texturePath {
+jautils.createPlacementsPreserveOrder(santaRefill, "normal", {
+    { "directory", "objects/FrostHelper/santaRefill", jautils.fields.texturePath {
         baseFolder = "objects",
         pattern = "^(objects/.*)/outline$",
         filter = function(dir) return
@@ -21,11 +22,9 @@ jautils.createPlacementsPreserveOrder(plusOneRefill, "normal", {
         displayConverter = function(dir)
             return utils.humanizeVariableName(string.match(dir, "^.*/(.*)$") or dir)
         end,
-        vanillaSprites = { "objects/FrostHelper/plusOneRefill/outline" },
-        langDir = "plusOneRefill",
+        vanillaSprites = { "objects/FrostHelper/santaRefill/outline" },
+        langDir = "santaRefill",
     }},
-    { "particleColor", "ffffff", "color" },
-    { "dashCount", 1, "integer" },
     { "respawnTime", 2.5 },
     { "hitbox", "R,16,16,-8,-8", "FrostHelper.collider" },
     { "light", "ffffff;1;16;40", jautils.fields.vertexLight {
@@ -38,12 +37,11 @@ jautils.createPlacementsPreserveOrder(plusOneRefill, "normal", {
         defaultAlpha = 0.8,
         defaultRadius = 16,
     }},
-    { "recoverStamina", true },
     { "oneUse", false },
 })
 
-function plusOneRefill.sprite(room, entity)
-    return jautils.getCustomSprite(entity, "directory", "/idle00", "objects/FrostHelper/heldRefill/idle00")
+function santaRefill.sprite(room, entity)
+    return jautils.getCustomSprite(entity, "directory", "/idle00", "objects/FrostHelper/santaRefill/idle00")
 end
 
-return plusOneRefill
+return santaRefill

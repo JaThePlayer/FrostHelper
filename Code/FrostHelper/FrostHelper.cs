@@ -1,6 +1,7 @@
 ﻿using FrostHelper.Entities.Boosters;
 using FrostHelper.EXPERIMENTAL;
 using FrostHelper.ModIntegration;
+using Microsoft.Xna.Framework.Input;
 using MonoMod.ModInterop;
 using System.Text;
 using YamlDotNet.Serialization;
@@ -87,6 +88,10 @@ public class FrostHelperSettings : EverestModuleSettings {
             _DebugMapCulling = value;
         }
     }
+
+    [DefaultButtonBinding(Buttons.LeftTrigger, Keys.A)]
+    public ButtonBinding SantaBoostKey { get; set; }
+
     /*
     [YamlIgnore]
     private bool _noSceneChangeGC = false;

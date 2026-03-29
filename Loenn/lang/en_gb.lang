@@ -34,6 +34,20 @@ FrostHelper.fields.vector2.x.tooltip=The X component of this vector.
 FrostHelper.fields.vector2.y=Y
 FrostHelper.fields.vector2.y.tooltip=The Y component of this vector.
 
+FrostHelper.fields.vertexLight.color=Color
+FrostHelper.fields.vertexLight.color.tooltip=The color of this light.
+FrostHelper.fields.vertexLight.alpha=Alpha
+FrostHelper.fields.vertexLight.alpha.tooltip=The alpha of this light, specifies its brightness.
+FrostHelper.fields.vertexLight.startFade=Start Fade
+FrostHelper.fields.vertexLight.startFade.tooltip=How far away from the center of this light it begins to fade.
+FrostHelper.fields.vertexLight.endFade=End Fade
+FrostHelper.fields.vertexLight.endFade.tooltip=How far away from the center of this light it fades out completely.
+
+FrostHelper.fields.bloomPoint.alpha=Alpha
+FrostHelper.fields.bloomPoint.alpha.tooltip=The alpha of this bloom point, specifies its brightness.
+FrostHelper.fields.bloomPoint.radius=Radius
+FrostHelper.fields.bloomPoint.radius.tooltip=The radius of this bloom point.
+
 # -- Entities --
 # entities.entityName.placements.*
 # entities.entityName.description.*
@@ -449,6 +463,14 @@ entities.FrostHelper/PlusOneRefill.attributes.description.particleColor=The colo
 entities.FrostHelper/PlusOneRefill.attributes.description.recoverStamina=Whether this refill should also recover stamina
 entities.FrostHelper/PlusOneRefill.attributes.description.hitbox=Controls the hitbox for this entity.\nRefer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Custom-Colliders
 
+# Santa Refill
+entities.FrostHelper/SantaRefill.placements.name.normal=Santa Refill
+entities.FrostHelper/SantaRefill.placements.description.normal=Refills the player's Santa Boost, which can be used to get a vertical boost at any time.\nFrom the map "A Christmas Night".
+entities.FrostHelper/SantaRefill.attributes.description.directory=Path to the directory where the sprites for this refill are.
+entities.FrostHelper/SantaRefill.attributes.description.respawnTime=Time it takes the refill to respawn after being used.
+entities.FrostHelper/SantaRefill.attributes.description.oneUse=Whether the refill should respawn after being used.
+entities.FrostHelper/SantaRefill.attributes.description.hitbox=Controls the hitbox for this entity.\nRefer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Custom-Colliders
+
 # Custom Kevin
 entities.FrostHelper/SlowCrushBlock.placements.name.both=Custom Kevin (Both)
 entities.FrostHelper/SlowCrushBlock.placements.name.horizontal=Custom Kevin (Horizontal)
@@ -825,6 +847,12 @@ entities.FrostHelper/Raincloud.attributes.description.color=The color of the clo
 
 entities.FrostHelper/BerryTrackerController.placements.name.default=Berry Tracker Controller
 entities.FrostHelper/BerryTrackerController.placements.description.default=Makes berry count information available via session counters.
+
+entities.FrostHelper/Materials/SolidColor.placements.name.default=Material Source (Solid Color)
+
+entities.FrostHelper/Materials/Gradient.placements.name.default=Material Source (Gradient)
+
+entities.FrostHelper/Materials/Blend.placements.name.default=Material Source (Blend)
 
 # -- Mod Names --
 # mods.modName.*

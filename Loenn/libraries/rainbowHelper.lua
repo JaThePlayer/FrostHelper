@@ -1,8 +1,10 @@
 local utils = require("utils")
 local frostSettings = require("mods").requireFromPlugin("libraries.settings")
 local compat = require("mods").requireFromPlugin("libraries.compat")
-
-local cachedControllers = { }
+---@module 'tracker'
+local tracker = require("mods").requireFromPlugin("libraries.tracker")
+---@module 'jautils'
+local jautils = require("mods").requireFromPlugin("libraries.jautils")
 
 local rainbowHelper = {}
 
@@ -85,30 +87,31 @@ local function getModHue(colors, gradientSize, room, position, loopColors, cente
     return lerpColor(colors[colorIndex + 1], colors[colorIndex + 2], progressInIndex)
 end
 
-local function colorsFromList(colorString)
-    local split = colorString:split(',')()
-    local t = {}
-
-    for _, value in ipairs(split) do
-        table.insert(t, utils.getColor(value))
-    end
-
-    return t
-end
-
+---@param room Room
+---@param x number
+---@param y number
+---@param controller UnknownEntity
+---@return NormalizedColorTable
 local function getColorFromController(room, x, y, controller)
     return getModHue(
-        colorsFromList(controller.colors),
+        jautils.getColors(controller.colors),
         controller.gradientSize,
         room, {x = x, y = y}, controller.loopColors, {x=controller.centerX, y=controller.centerY}, controller.gradientSpeed
     )
 end
 
+---Gets the rainbow hue at the given location in the room.
+---@param room Room
+---@param x number
+---@param y number
+---@param width number?
+---@param height number?
+---@return NormalizedColorTable
 function rainbowHelper.getRainbowHue(room, x, y, width, height)
     if compat.inLonn and frostSettings.rainbowsUseControllers() then
         width, height = width or 16, height or 16
         local selfRect = utils.rectangle(x - width / 2, y - height / 2, width, height)
-        local entities = cachedControllers[room.name] or room.entities
+        local entities = tracker.getAll(room, tracker.rainbowControllerTag)
 
         for _, entity in ipairs(entities) do
             local name = entity._name
@@ -129,33 +132,13 @@ function rainbowHelper.getRainbowHue(room, x, y, width, height)
     return vanillaRainbow(room, x, y)
 end
 
-if compat.inLonn then
-    local celesteRender = require("celeste_render")
-    -- HOOK - cache the controllers whenever the room cache gets invalidated, that way we don't iterate through all entities several times per redraw
-    -- this can be removed if a tracker gets added to lonn
-    local _orig_invalidateRoomCache = celesteRender.getEntityBatch
-
-    local function filterPredicate(entity)
-        local name = entity._name
-
-        return name == "MaxHelpingHand/RainbowSpinnerColorController"
-            or name == "MaxHelpingHand/FlagRainbowSpinnerColorController"
-            or name == "MaxHelpingHand/RainbowSpinnerColorAreaController"
-            or name == "MaxHelpingHand/FlagRainbowSpinnerColorAreaController"
-    end
-
-    function celesteRender.getEntityBatch(room, entities, viewport, registeredEntities, forceRedraw)
-        if room and frostSettings.rainbowsUseControllers() then
-            --local room = utils.typeof(roomName) == "room" and roomName or loadedState.getRoomByName(roomName)
-
-            cachedControllers[room.name] = utils.filter(filterPredicate, room.entities)
-        end
-
-
-        return _orig_invalidateRoomCache(room, entities, viewport, registeredEntities, forceRedraw)
+---Applies a rainbow color to all given sprites
+---@param room Room
+---@param sprites DrawableSprite[]
+function rainbowHelper.rainbowifyAll(room, sprites)
+    for _,sprite in ipairs(sprites) do
+        sprite:setColor(rainbowHelper.getRainbowHue(room, sprite.x, sprite.y))
     end
 end
-
-
 
 return rainbowHelper

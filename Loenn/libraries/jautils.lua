@@ -14,7 +14,6 @@ local drawableLineStruct = require("structs.drawable_line")
 local utils = require("utils")
 local xnaColors = require("consts.xna_colors")
 local mods = require("mods")
-local rainbowHelper = mods.requireFromPlugin("libraries.rainbowHelper")
 local compat = mods.requireFromPlugin("libraries.compat")
 local mapScanHelper = mods.requireFromPlugin("libraries.mapScanHelper")
 local easings = mods.requireFromPlugin("libraries.easings")
@@ -792,6 +791,21 @@ function jautils.addPlacement(handler, placementName, ...)
     table.insert(handler.placements, newPlacement)
 end
 
+---Sets the group for all placements
+---@generic T
+---@param handler EntityHandler<T>
+function jautils.setPlacementGroup(handler, group)
+    if not handler.placements then
+        return
+    end
+
+    handler.placements.ext_group = group
+
+    for i, placement in ipairs(handler.placements) do
+        placement.ext_group = group
+    end
+end
+
 jautils.effectParametersFieldData = jautils.fields.list {
     elementSeparator = ";",
     elementDefault = "key=1",
@@ -1217,16 +1231,24 @@ function jautils.getCircleSprite(x, y, r, color)
     return jautils.getEllipseSprite(x, y, r, r, color)
 end
 
+local getColorsCache = {}
+
 ---Calls jautils.getColor on all elements of the comma-seperated list and returns a table of results.
 ---@param list string
----@return color[] colors
+---@return NormalizedColorTable[] colors
 function jautils.getColors(list)
+    local cached = getColorsCache[list]
+    if cached then
+        return cached
+    end
+
     local colors = {}
     local split = string.split(list, ",")()
     for _, value in ipairs(split) do
         table.insert(colors, jautils.getColor(value))
     end
 
+    getColorsCache[list] = colors
     return colors
 end
 
@@ -1419,24 +1441,6 @@ end
 --[[
     COLORS
 ]]
-
----Applies a rainbow color to all given sprites
----@param room Room
----@param sprites DrawableSprite[]
-function jautils.rainbowifyAll(room, sprites)
-    for _,sprite in ipairs(sprites) do
-        sprite:setColor(jautils.getRainbowHue(room, sprite.x, sprite.y))
-    end
-end
-
----Gets the rainbow hue at the given location in the room.
----@param room Room
----@param x number
----@param y number
----@return NormalizedColorTable
-function jautils.getRainbowHue(room, x, y)
-    return rainbowHelper.getRainbowHue(room, x, y)
-end
 
 ---TODO: pretty sure lonn supports rgba at this point, making this useless
 ---@param color string

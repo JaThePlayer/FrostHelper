@@ -186,6 +186,35 @@ public static class Extensions {
         return state;
     }
 
+    public static BloomPoint GetBloomPoint(this EntityData data, string key, float defaultAlpha, float defaultRadius) {
+        var attr = data.Attr(key);
+        if (string.IsNullOrWhiteSpace(attr)) {
+            return new BloomPoint(defaultAlpha, defaultRadius);
+        }
+
+        var parser = new SpanParser(attr);
+        if (!parser.ReadManySeparated(';', out float alpha, out float radius)) {
+            return new BloomPoint(defaultAlpha, defaultRadius);
+        }
+        
+        return new BloomPoint(alpha, radius);
+    }
+    
+    public static VertexLight GetVertexLight(this EntityData data, string key,
+        Color defaultColor, float defaultAlpha, int defaultStartFade, int defaultEndFade) {
+        var attr = data.Attr(key);
+        if (string.IsNullOrWhiteSpace(attr)) {
+            return new VertexLight(defaultColor, defaultAlpha, defaultStartFade, defaultEndFade);
+        }
+
+        var parser = new SpanParser(attr);
+        if (!parser.ReadManySeparated(';', out RgbaOrXnaColor color, out float alpha, out int startFade, out int endFade)) {
+            return new VertexLight(defaultColor, defaultAlpha, defaultStartFade, defaultEndFade);
+        }
+        
+        return new VertexLight(color.Color, alpha, startFade, endFade);
+    }
+
 
     public static bool ContainsReference(this Type[] self, Type type) {
         foreach (var item in self) {

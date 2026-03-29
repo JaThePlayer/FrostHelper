@@ -333,4 +333,149 @@ function fields.sfxPath(data)
     }
 end
 
+local celesteDepths = --require("consts.object_depths")
+{
+    ["BG Terrain (10000)"] = 10000,
+    ["BG Mirrors (9500)"] = 9500,
+    ["BG Decals (9000)"] = 9000,
+    ["BG Particles (8000)"] = 8000,
+    ["Solids Below (5000)"] = 5000,
+    ["Below (2000)"] = 2000,
+    ["NPCs (1000)"] = 1000,
+    ["Theo Crystal (100)"] = 100,
+    ["Player (0)"] = 0,
+    ["Dust (-50)"] = -50,
+    ["Pickups (-100)"] = -100,
+    ["Seeker (-200)"] = -200,
+    ["Particles (-8000)"] = -8000,
+    ["Above (-8500)"] = -8500,
+    ["Solids (-9000)"] = -9000,
+    ["FG Terrain (-10000)"] = -10000,
+    ["FG Decals (-10500)"] = -10500,
+    ["Dream Blocks (-11000)"] = -11000,
+    ["Crystal Spinners (-11500)"] = -11500,
+    ["Player Dream Dashing (-12000)"] = -12000,
+    ["Enemy (-12500)"] = -12500,
+    ["Fake Walls (-13000)"] = -13000,
+    ["FG Particles (-50000)"] = -50000,
+    ["Top (-1000000)"] = -1000000,
+    ["Formation Sequences (-2000000)"] = -2000000,
+}
+
+---Field storing a depth
+---@param data {}
+---@return FieldInformationEntry
+function fields.depth(data)
+    return {
+        options = celesteDepths,
+        editable = true,
+        fieldType = "integer",
+        --searchable = true,
+    }
+end
+
+---Field storing a Material name.
+---@param data {}
+---@return FieldInformationEntry
+function fields.materialName(data)
+    return {
+        fieldType = "string"
+    }
+end
+
+---Field storing a Gradient.
+---@param data {}
+---@return FieldInformationEntry
+function fields.gradient(data)
+    return fields.list {
+        elementSeparator = ";",
+        elementDefault = "ffffff,000000,100",
+        elementOptions = fields.complex {
+            separator = ",",
+            innerFields = {
+                {
+                    name = "FrostHelper.fields.gradient.from",
+                    info = fields.color {}
+                },
+                {
+                    name = "FrostHelper.fields.gradient.to",
+                    info = fields.color {}
+                },
+                {
+                    name = "FrostHelper.fields.gradient.percent",
+                    default = 0,
+                    info = fields.number {
+                        minimumValue = 0.00001,
+                    }
+                },
+            }
+        },
+    }
+end
+
+---Field storing a Gradient.Direction.
+---@param data {}
+---@return FieldInformationEntry
+function fields.gradientDirection(data)
+    return {
+        fieldType = "string",
+        editable = false,
+        options = {
+            "Vertical", "Horizontal"
+        }
+    }
+end
+
+---Field storing a BloomPoint
+---@param data { defaultAlpha: number?, defaultRadius: number? }
+---@return FieldInformationEntry
+function fields.bloomPoint(data)
+    return fields.complex {
+        separator = ";",
+        innerFields = {
+            {
+                name = "FrostHelper.fields.bloomPoint.alpha",
+                default = data.defaultAlpha or 1,
+                info = fields.number {}
+            },
+            {
+                name = "FrostHelper.fields.bloomPoint.radius",
+                default = data.defaultRadius or 16,
+                info = fields.number {}
+            },
+        }
+    }
+end
+
+---Field storing a VertexLight
+---@param data { defaultAlpha: number?, defaultStartFade: integer?, defaultEndFade: integer?, defaultColor: string? }
+---@return FieldInformationEntry
+function fields.vertexLight(data)
+    return fields.complex {
+        separator = ";",
+        innerFields = {
+            {
+                name = "FrostHelper.fields.vertexLight.color",
+                default = data.defaultColor or "ffffff",
+                info = fields.color {}
+            },
+            {
+                name = "FrostHelper.fields.vertexLight.alpha",
+                default = data.defaultAlpha or 1,
+                info = fields.number {}
+            },
+            {
+                name = "FrostHelper.fields.vertexLight.startFade",
+                default = data.defaultStartFade or 16,
+                info = fields.integer {}
+            },
+            {
+                name = "FrostHelper.fields.vertexLight.endFade",
+                default = data.defaultEndFade or 16,
+                info = fields.integer {}
+            },
+        }
+    }
+end
+
 return fields
