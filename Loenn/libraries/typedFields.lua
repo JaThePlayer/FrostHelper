@@ -383,6 +383,15 @@ function fields.materialName(data)
     }
 end
 
+---Field storing a Shader name.
+---@param data {}
+---@return FieldInformationEntry
+function fields.shaderName(data)
+    return {
+        fieldType = "string"
+    }
+end
+
 ---Field storing a Gradient.
 ---@param data {}
 ---@return FieldInformationEntry
@@ -467,12 +476,12 @@ function fields.vertexLight(data)
             {
                 name = "FrostHelper.fields.vertexLight.startFade",
                 default = data.defaultStartFade or 16,
-                info = fields.integer {}
+                info = fields.nonNegativeInteger {}
             },
             {
                 name = "FrostHelper.fields.vertexLight.endFade",
                 default = data.defaultEndFade or 16,
-                info = fields.integer {}
+                info = fields.nonNegativeInteger {}
             },
         }
     }

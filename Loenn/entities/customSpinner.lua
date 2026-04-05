@@ -114,7 +114,7 @@ local function getSpriteCache(entity)
         dirCache = pathCache[d]
     end
 
-    local cache = pathCache[spritePathSuffix]
+    local cache = dirCache[spritePathSuffix]
     if cache then
         return cache
     end
@@ -142,7 +142,7 @@ local function getSpriteCache(entity)
 
     cache[3] = drawableSpriteStruct.fromTexture(cache[1][1]).meta.realWidth
 
-    pathCache[spritePathSuffix] = cache
+    dirCache[spritePathSuffix] = cache
     return cache
 end
 

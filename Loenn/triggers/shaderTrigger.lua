@@ -7,7 +7,10 @@ local shaderTrigger = {
 }
 
 jautils.createPlacementsPreserveOrder(shaderTrigger, "default", {
-    { "effects", "", "list" },
+    { "effects", "", jautils.fields.list {
+        elementSeparator = ",",
+        elementOptions = jautils.fields.shaderName { },
+    }},
     { "flag", "", "FrostHelper.condition" },
     { "alwaysOn", true },
     { "parameters", "", jautils.effectParametersFieldData }

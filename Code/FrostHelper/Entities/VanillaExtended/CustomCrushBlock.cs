@@ -18,11 +18,11 @@ public class CustomCrushBlock : Solid {
         public string MoveLoop { get; } = CreatePrefix(prefix, "move_loop");
         public string Impact { get; } = CreatePrefix(prefix, "impact");
         public string ReturnLoop { get; } = CreatePrefix(prefix, "return_loop");
-        public string Rest { get; } = CreatePrefix(prefix, "rest");//
+        public string Rest { get; } = CreatePrefix(prefix, "rest");
         public string RestWaypoint { get; } = CreatePrefix(prefix, "rest_waypoint");
     }
 
-    private bool IsNoReturn => ReturnSpeed <= 0f || ReturnAccel <= 0f;
+    private bool IsNoReturn => ReturnSpeed == 0f || ReturnAccel == 0f;
 
     public CustomCrushBlock(EntityData data, Vector2 offset) : base(data.Position + offset, data.Width, data.Height, false) {
         CrushAccel = data.Float("crushAcceleration", 250f);
