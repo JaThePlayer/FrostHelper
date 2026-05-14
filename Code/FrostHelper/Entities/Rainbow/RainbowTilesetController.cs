@@ -86,7 +86,7 @@ public class RainbowTilesetController : Entity {
         if (ReferenceEquals(p, controller._lastChecked))
             return ColorHelper.GetHue(position) * self.Alpha;
 
-        if (controller._tilesetTextures.Contains(p.AtlasPath)) {
+        if (p.AtlasPath is { } path && controller._tilesetTextures.Contains(path)) {
             controller._lastChecked = p;
             return ColorHelper.GetHue(position) * self.Alpha;
         }
