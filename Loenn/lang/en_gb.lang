@@ -663,6 +663,8 @@ FrostHelper.fields.lightning.boltThickness.tooltip=The thickness (in pixels) of 
 
 entities.FrostHelper/ArbitraryBloom.placements.name.default=Arbitrary Bloom
 entities.FrostHelper/ArbitraryBloom.attributes.description.windingOrder=The winding order of the polygon.\nIf your shape looks broken in-game, try changing this property until it looks correctly.
+entities.FrostHelper/ArbitraryBloom.attributes.description.alpha=The visibility of this bloom.\nSession expressions are supported.
+entities.FrostHelper/ArbitraryBloom.attributes.description.flag=Flag which needs to be set for this bloom to be visible.\nLeave blank to make it always visible.\nSession expressions are supported.
 
 entities.FrostHelper/ArbitraryLight.placements.name.default=Arbitrary Shape Light
 entities.FrostHelper/ArbitraryLight.placements.description.default=A light source of an arbitrary shape, emanating from one central point.
@@ -672,7 +674,7 @@ entities.FrostHelper/ArbitraryLight.attributes.description.connectFirstAndLastNo
 entities.FrostHelper/ArbitraryLight.attributes.description.startFade=The distance after which the light's color starts to fade away.\nThe distance of nodes is equal to the Radius property.\nThe higher the values of StartFade, Radius and EndFade, the higher quality the gradient is.\nMake sure that StartFade < Radius < EndFade for correct results!
 entities.FrostHelper/ArbitraryLight.attributes.description.endFade=The distance after which the light's color is fully transparent.\nThe distance of nodes is equal to the Radius property.\nThe higher the values of StartFade, Radius and EndFade, the higher quality the gradient is.\nMake sure that StartFade < Radius < EndFade for correct results!
 entities.FrostHelper/ArbitraryLight.attributes.description.radius=The distance each node is considered to be from the central point (red square).\nIn combination with StartFade and EndFade, this decides how the color of the light source fades away.\nMake sure that StartFade < Radius < EndFade for correct results!
-entities.FrostHelper/ArbitraryLight.attributes.description.bloomAlpha=If > 0, creates an Arbitrary Bloom with this alpha value which covers the area of this light source.
+entities.FrostHelper/ArbitraryLight.attributes.description.bloomAlpha=If > 0, creates an Arbitrary Bloom with this alpha value which covers the area of this light source.\nSession expressions are supported.
 entities.FrostHelper/ArbitraryLight.attributes.description.flag=Flag needed for this light to be enabled.\nLeave blank to make it always enabled.\nSession Expressions are supported.
 
 entities.FrostHelper/CastedArbitraryLight.placements.name.default=Raycasted Light
@@ -734,6 +736,7 @@ entities.FrostHelper/BloomBlocker.placements.name.default=Arbitrary Shape Bloom 
 entities.FrostHelper/BloomBlocker.placements.description.default=Blocks bloom (either fully or partially) in a polygonal area defined by nodes.
 entities.FrostHelper/BloomBlocker.attributes.description.alpha=How much this blocker should block bloom.\n1 Blocks bloom fully, 0 does nothing.
 entities.FrostHelper/BloomBlocker.attributes.description.windingOrder=The winding order of the polygon.\nIf your shape looks broken in-game, try changing this property until it looks correctly.
+entities.FrostHelper/BloomBlocker.attributes.description.flag=Flag which needs to be set for bloom to be blocked.\nLeave blank to make it always blocked.\nSession expressions are supported.
 
 entities.FrostHelper/FlagCounterController.placements.name.default=Flag To Counter Controller
 entities.FrostHelper/FlagCounterController.placements.description.default=Counts how many of the provided flags are set, and sets a Session Counter to that value.

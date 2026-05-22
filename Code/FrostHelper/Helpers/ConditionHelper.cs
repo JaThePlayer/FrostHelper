@@ -524,31 +524,45 @@ public static class ConditionHelper {
         protected override IEnumerable<object> GetArgsForDebugPrint() => [x];
     }
 
-    internal sealed class ConstInt(int x) : Condition {
+    internal interface IConstCondition;
+
+    internal interface IConstCondition<T> : IConstCondition {
+        T Value { get; }
+    }
+
+    internal sealed class ConstInt(int x) : Condition, IConstCondition<int>, IConstCondition<float> {
         private readonly object _boxed = x;
         
         public override object Get(Session session, object? userdata) => _boxed;
         
         public override bool OnlyChecksFlags() => true;
+        
+        public int Value => x;
         
         protected internal override Type ReturnType => typeof(int);
 
         protected override IEnumerable<object> GetArgsForDebugPrint() => [ _boxed ];
+        
+        float IConstCondition<float>.Value => Value;
     }
     
-    internal sealed class ConstFloat(float x) : Condition {
+    internal sealed class ConstFloat(float x) : Condition, IConstCondition<int>, IConstCondition<float> {
         private readonly object _boxed = x;
-        
+
         public override object Get(Session session, object? userdata) => _boxed;
         
         public override bool OnlyChecksFlags() => true;
+
+        public float Value => x;
         
         protected internal override Type ReturnType => typeof(float);
 
         protected override IEnumerable<object> GetArgsForDebugPrint() => [x];
+
+        int IConstCondition<int>.Value => (int)x;
     }
     
-    internal sealed class ConstString(string x) : Condition {
+    internal sealed class ConstString(string x) : Condition, IConstCondition<string> {
         public string Value => x;
         
         public override object Get(Session session, object? userdata) => x;
@@ -805,6 +819,9 @@ public static class ConditionHelper {
     public static Condition GetCondition(this EntityData data, ExpressionContext ctx, string name, string def = "")
         => GetConditionCore(data.Values, ctx, name, def);
     
+    internal static SessionExpression<T> GetExpression<T>(this EntityData data, string name, string def = "")
+        => new(GetConditionCore(data.Values, ExpressionContext.Default, name, def));
+    
     public static Condition GetCondition(this BinaryPacker.Element data, string name, string def = "")
         => GetConditionCore(data.Attributes, ExpressionContext.Default, name, def);
     
@@ -832,5 +849,52 @@ public static class ConditionHelper {
         
         condition ??= EmptyCondition;
         return condition;
+    }
+}
+
+/// <summary>
+/// A wrapper over a <see cref="ConditionHelper.Condition"/>, allowing for easily obtaining a specific return type.
+/// </summary>
+/// <typeparam name="T">The type returned from the expression</typeparam>
+internal sealed class SessionExpression<T> {
+    private readonly ConditionHelper.Condition? _condition;
+
+    public SessionExpression(T constantValue) {
+        IsConstant = true;
+        ConstantValue = constantValue;
+        IsNotEmpty = true;
+    }
+    
+    public SessionExpression(ConditionHelper.Condition condition) {
+        _condition = condition;
+        if (condition is ConditionHelper.IConstCondition<T> constCond) {
+            IsConstant = true;
+            ConstantValue = constCond.Value;
+        }
+
+        IsNotEmpty = !condition.Empty;
+    }
+    
+    public bool IsNotEmpty { get; }
+
+    public bool IsConstant { get; }
+    
+    /// <summary>
+    /// The constant value of this expression, default if this is not a constant expression.
+    /// </summary>
+    public T? ConstantValue { get; }
+    
+    public T Get(Scene scene) {
+        return _condition is null ? ConstantValue! : _condition.Get<T>(scene.ToLevel().Session);
+    }
+    
+    public T Get(Session session) {
+        return _condition is null ? ConstantValue! : _condition.Get<T>(session);
+    }
+}
+
+internal static class SessionExpressionExt {
+    extension<T>(SessionExpression<T> e) where T : struct, INumber<T> {
+        public bool CanBePositive => e.IsConstant ? e.ConstantValue > T.Zero : e.IsNotEmpty;
     }
 }

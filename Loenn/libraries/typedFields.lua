@@ -186,7 +186,9 @@ end
 ---@param data {}
 ---@return FieldInformationEntry
 function fields.sessionExpression(data)
-    return {}
+    return {
+        fieldType = "string",
+    }
 end
 
 ---@class TexturePathFieldData

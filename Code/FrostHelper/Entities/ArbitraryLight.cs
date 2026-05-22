@@ -177,12 +177,12 @@ internal sealed class ArbitraryLight : VertexLight {
     
     public ArbitraryLight(EntityData data, Vector2 offset) : this(data.Position + offset,
         data.GetColor("color", "ffffff"), data.Float("alpha", 1f), data.Int("startFade", 16), data.Int("endFade", 32),
-        data.NodesOffset(offset), data.Bool("connectFirstAndLastNode", true), data.Float("radius"), data.Float("bloomAlpha", 0f),
+        data.NodesOffset(offset), data.Bool("connectFirstAndLastNode", true), data.Float("radius"), data.GetExpression<float>("bloomAlpha", "0.0"),
         data.GetCondition("flag")) {
     }
 
-    public ArbitraryLight(Vector2 position, Color color, float alpha, int startFade, int endFade,
-                          Vector2[] nodes, bool connectFirstAndLastNode, float radius, float bloomAlpha,
+    internal ArbitraryLight(Vector2 position, Color color, float alpha, int startFade, int endFade,
+                          Vector2[] nodes, bool connectFirstAndLastNode, float radius, SessionExpression<float> bloomAlpha,
                           ConditionHelper.Condition condition) : base(Vector2.Zero, color, alpha, startFade, endFade) {
         LoadHooksIfNeeded();
         
@@ -192,8 +192,11 @@ internal sealed class ArbitraryLight : VertexLight {
         UpdateNodes(position, nodes, default(IdentityFunc<Vector2>));
         Radius = radius;
 
-        if (bloomAlpha > 0f) {
-            _bloom = new ArbitraryBloom(bloomAlpha, Fill!, () => Position + Entity.Position);
+        if (bloomAlpha.CanBePositive) {
+            _bloom = new ArbitraryBloom(Fill!) {
+                Alpha = bloomAlpha,
+                PosGetter = () => Position + Entity.Position,
+            };
         }
     }
 

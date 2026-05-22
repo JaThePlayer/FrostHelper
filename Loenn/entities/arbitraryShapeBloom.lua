@@ -6,25 +6,27 @@ local arbitraryShapeEntity = require("mods").requireFromPlugin("libraries.arbitr
 ---@type EntityHandler<Entity>
 local arbitraryBloom = {
     name = "FrostHelper/ArbitraryBloom",
-    nodeLimits = { 2, 999 },
+    nodeLimits = { 2, math.huge },
     depth = -math.huge + 6
 }
 
 ---@type EntityHandler<Entity>
 local arbitraryBloomBlocker = {
     name = "FrostHelper/BloomBlocker",
-    nodeLimits = { 2, 999 },
+    nodeLimits = { 2, math.huge },
     depth = -math.huge + 4
 }
 
 jautils.createPlacementsPreserveOrder(arbitraryBloom, "default", {
-    { "alpha", 1.0 },
+    { "alpha", "1.0", jautils.fields.sessionExpression { } },
     { "windingOrder", "Auto", jautils.windingOrders },
+    { "flag", "", jautils.fields.sessionExpression { } }
 })
 
 jautils.createPlacementsPreserveOrder(arbitraryBloomBlocker, "default", {
     { "alpha", 1.0 },
     { "windingOrder", "Auto", jautils.windingOrders },
+    { "flag", "", jautils.fields.sessionExpression { } }
 })
 
 arbitraryBloom.sprite = arbitraryShapeEntity.getSpriteFunc("ffffff", "ffffff", "ffffff19")

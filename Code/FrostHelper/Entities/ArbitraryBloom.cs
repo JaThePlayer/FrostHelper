@@ -8,8 +8,11 @@ internal sealed class ArbitraryBloomEntity : Entity {
     public ArbitraryBloom Bloom { get; }
 
     public ArbitraryBloomEntity(EntityData data, Vector2 offset) : base(data.Position + offset) {
-        Bloom = new(data.Float("alpha", 1f), ArbitraryShapeEntityHelper.GetFillFromNodes(data, -data.Position), 
-            () => Position);
+        Bloom = new ArbitraryBloom(ArbitraryShapeEntityHelper.GetFillFromNodes(data, -data.Position)) {
+            Flag = data.GetCondition("flag"),
+            Alpha = data.GetExpression<float>("alpha", "1.0"),
+            PosGetter = () => Position,
+        };
     }
 
     public override void Added(Scene scene) {
@@ -38,18 +41,25 @@ internal sealed class ArbitraryBloom {
         }
     }
 
-    public readonly float Alpha;
-    internal readonly Func<Vector2> PosGetter;
+    public required SessionExpression<float> Alpha { get; init; }
+    public required Func<Vector2> PosGetter { get; init; }
+    
+    public ConditionHelper.Condition? Flag { get; set; }
 
     public Rectangle Bounds { get; private set; }
 
-    public bool Visible;
+    public bool Visible { get; set; }
 
 
     public Vector2 ParentPos => PosGetter();
 
+    public ArbitraryBloom(Vector3[] fill) {
+        Fill = fill;
+        Visible = true;
+    }
+    
     public ArbitraryBloom(float alpha, Vector3[] fill, Func<Vector2> positionGetter) {
-        Alpha = alpha;
+        Alpha = new SessionExpression<float>(alpha);
         Fill = fill;
         PosGetter = positionGetter;
         Visible = true;
@@ -86,10 +96,19 @@ internal sealed class ArbitraryBloomRenderer : Entity {
 
     public void RenderBloom() {
         int index = 0;
-        // todo: cache?
+        var session = Scene.MaybeLevel()?.Session;
+        if (session is null)
+            return;
+
         foreach (var bloom in _blooms) {
-            var alpha = bloom.Alpha;
-            if (bloom is { Visible: true, Alpha: > 0, ParentPos: var bloomPos } && CameraCullHelper.IsRectangleVisible(bloom.Bounds.MovedBy(bloomPos))) {
+            if (!bloom.Visible)
+                continue;
+            
+            var alpha = bloom.Alpha.Get(session);
+            if (alpha > 0f && bloom is { ParentPos: var bloomPos }
+                && CameraCullHelper.IsRectangleVisible(bloom.Bounds.MovedBy(bloomPos))
+                && (bloom.Flag?.Check(session) ?? true)
+            ) {
                 foreach (var vert in bloom.Fill) {
                     NextVertex(ref index, vert.AddXY(bloomPos), alpha);
                 }
