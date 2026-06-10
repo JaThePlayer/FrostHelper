@@ -30,7 +30,10 @@ public class CustomLightningRenderer : Entity {
         }
     }
 
+    public const float DefaultEdgeSeedUpdateInterval = 0.1f;
+    
     public uint edgeSeed;
+    private readonly uint[] _edgeSeeds;
     public uint leapSeed;
     public bool UpdateSeeds;
     public bool DrawEdges;
@@ -48,7 +51,7 @@ public class CustomLightningRenderer : Entity {
     internal record struct Config(string GroupId, bool AffectedByBreakerBoxes, EquatableArray<Config.BoltConfig> Bolts, int Depth, Color FillColor) {
         public static Config Default => new("", false, DefaultBolts, -1000100, ColorHelper.GetColor("18110919"));
 
-        public record struct BoltConfig(Color Color, float Thickness) : ISpanParsable<BoltConfig> {
+        public record struct BoltConfig(Color Color, float Thickness, float UpdateInterval) : ISpanParsable<BoltConfig> {
             public static BoltConfig Parse(string s, IFormatProvider? provider) {
                 return Parse(s.AsSpan(), provider);
             }
@@ -67,19 +70,24 @@ public class CustomLightningRenderer : Entity {
                 var parser = new SpanParser(s);
                 if (!parser.ReadUntil<RgbaOrXnaColor>(',').TryUnpack(out var color))
                     return false;
+
                 float thickness = 1f;
-                if (!parser.IsEmpty && !parser.Read<float>().TryUnpack(out thickness))
+                if (!parser.IsEmpty && !parser.ReadUntil<float>(',').TryUnpack(out thickness))
                     return false;
 
-                result = new BoltConfig(color.Color, thickness);
+                float updateInterval = DefaultEdgeSeedUpdateInterval;
+                if (!parser.IsEmpty && !parser.Read<float>().TryUnpack(out updateInterval))
+                    return false;
+
+                result = new BoltConfig(color.Color, thickness, updateInterval);
                 return true;
             }
         }
     }
     
     internal static readonly EquatableArray<Config.BoltConfig> DefaultBolts = new([
-        new(Calc.HexToColor("fcf579"), 1f),
-        new(Calc.HexToColor("8cf7e2"), 1f)
+        new(Calc.HexToColor("fcf579"), 1f, DefaultEdgeSeedUpdateInterval),
+        new(Calc.HexToColor("8cf7e2"), 1f, DefaultEdgeSeedUpdateInterval)
     ]);
 
     public CustomLightningRenderer() : this(Config.Default) {
@@ -103,6 +111,7 @@ public class CustomLightningRenderer : Entity {
         //this.AmbientSfx.DisposeOnTransition = false;
         edgeVerts = new VertexPositionColor[1024];
         BloomVerts = new VertexPositionColor[1024];
+        _edgeSeeds = new uint[cfg.Bolts.Length];
     }
     
     internal static CustomLightningRenderer GetOrCreate(Scene scene, Config config) => 
@@ -214,11 +223,22 @@ public class CustomLightningRenderer : Entity {
             bolt.Update(Scene);
         }
         if (UpdateSeeds) {
-            if (Scene.OnInterval(0.1f)) {
+            if (Scene.OnInterval(DefaultEdgeSeedUpdateInterval)) {
                 edgeSeed = (uint) Calc.Random.Next();
             }
             if (Scene.OnInterval(0.7f)) {
                 leapSeed = (uint) Calc.Random.Next();
+            }
+
+            for (var i = 0; i < Cfg.Bolts.Length; i++) {
+                var interval = Cfg.Bolts[i].UpdateInterval;
+                if (interval == DefaultEdgeSeedUpdateInterval) {
+                    // Reuse random value for each bolt layer if the interval is same as default,
+                    // so that we end up doing the same amount of RNG calls if the mapper didn't explicitly change these (for backwards compat).
+                    _edgeSeeds[i] = edgeSeed;
+                } else if (Scene.OnInterval(interval)) {
+                    _edgeSeeds[i] = (uint) Calc.Random.Next();
+                }
             }
         }
     }
@@ -325,7 +345,7 @@ public class CustomLightningRenderer : Entity {
                 if (edge.Visible) {
                     var i = 0;
                     foreach (ref var bolt in Cfg.Bolts.AsSpan()) {
-                        DrawSimpleLightning(ref num, ref edgeVerts, edgeSeed + (uint)i + edge.SeedOffset, edge.Parent.Position, edge.A, edge.B, electricityColorsLerped[i], bolt.Thickness + Fade * 3f);
+                        DrawSimpleLightning(ref num, ref edgeVerts, _edgeSeeds[i] + (uint)i + edge.SeedOffset, edge.Parent.Position, edge.A, edge.B, electricityColorsLerped[i], bolt.Thickness + Fade * 3f);
                         i++;
                     }
                     

@@ -31,6 +31,9 @@ public class HeldRefill : Entity {
     private float _respawnTimer;
 
     private readonly string _respawnSfx;
+    private readonly string _useLoopSfx;
+    private readonly string _useSfx;
+    private readonly SoundSource _useSfxSource;
 
     private bool OneUse => _respawnTime < 0f;
     
@@ -49,7 +52,7 @@ public class HeldRefill : Entity {
     }
     
     internal static readonly EquatableArray<CustomLightningRenderer.Config.BoltConfig> DefaultBolts = new([
-        new(Calc.HexToColor("ffff00"), 1f),
+        new(Calc.HexToColor("ffff00"), 1f, CustomLightningRenderer.DefaultEdgeSeedUpdateInterval),
     ]);
 
     public HeldRefill(EntityData data, Vector2 offset) : base(data.Position + offset) {
@@ -338,6 +341,11 @@ public class HeldRefill : Entity {
         player.Speed = Vector2.Zero;
         
         refill._respawnImage?.Visible = true;
+        if (!string.IsNullOrWhiteSpace(refill._useLoopSfx))
+            refill._useSfxSource.Play(refill._useLoopSfx);
+        if (!string.IsNullOrWhiteSpace(refill._useSfx)) {
+            Audio.Play(refill._useSfx);
+        }
     }
     public static int HeldDashUpdate(Entity e) {
         Player player = (e as Player)!;
@@ -400,6 +408,9 @@ public class HeldRefill : Entity {
         refill.TravelPercent = refill.Nodes.Length - 1;
         refill.Position = player.Position;
         refill.Add(new Coroutine(refill.RefillRoutine(player)));
+
+        if (!string.IsNullOrWhiteSpace(refill._useLoopSfx))
+            refill._useSfxSource.Stop();
     }
 
     public static IEnumerator HeldDashRoutine(Entity e) {

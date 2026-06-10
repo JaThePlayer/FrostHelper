@@ -32,7 +32,9 @@ jautils.createPlacementsPreserveOrder(heldRefill, "normal", {
         }
     }},
     { "respawnTime", -1 },
-    { "respawnSfx", "event:/game/general/diamond_return", jautils.fields.sfxPath {} }
+    { "respawnSfx", "event:/game/general/diamond_return", jautils.fields.sfxPath {} },
+    { "useSfx", "event:/game/general/diamond_touch", jautils.fields.sfxPath {} },
+    { "useLoopSfx", "", jautils.fields.sfxPath {} }
 })
 
 function heldRefill.nodeSprite() end

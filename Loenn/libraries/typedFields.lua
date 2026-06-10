@@ -9,6 +9,7 @@ local utils = require("utils")
 ---@field minimumValue number?
 ---@field maximumValue number?
 ---@field options { [string]: number } | ({ [1]: string, [2]: number }[]) | nil Dropdown options for this field.
+---@field editable boolean? Whether the dropdown is editable.
 
 ---Creates a number field.
 ---@param data NumberFieldData
@@ -18,7 +19,8 @@ function fields.number(data)
         fieldType = "number",
         minimumValue = data.minimumValue,
         maximumValue = data.maximumValue,
-        options = data.options
+        options = data.options,
+        editable = data.editable,
     }
 end
 
@@ -30,7 +32,8 @@ function fields.nonNegativeNumber(data)
         fieldType = "number",
         minimumValue = data.minimumValue or 0,
         maximumValue = data.maximumValue,
-        options = data.options
+        options = data.options,
+        editable = data.editable,
     }
 end
 
@@ -42,7 +45,8 @@ function fields.integer(data)
         fieldType = "integer",
         minimumValue = data.minimumValue,
         maximumValue = data.maximumValue,
-        options = data.options
+        options = data.options,
+        editable = data.editable,
     }
 end
 
@@ -54,7 +58,8 @@ function fields.nonNegativeInteger(data)
         fieldType = "integer",
         minimumValue = data.minimumValue or 0,
         maximumValue = data.maximumValue,
-        options = data.options
+        options = data.options,
+        editable = data.editable,
     }
 end
 
@@ -66,7 +71,8 @@ function fields.positiveInteger(data)
         fieldType = "integer",
         minimumValue = data.minimumValue or 1,
         maximumValue = data.maximumValue,
-        options = data.options
+        options = data.options,
+        editable = data.editable,
     }
 end
 
@@ -78,7 +84,8 @@ function fields.positiveNumber(data)
         fieldType = "number",
         minimumValue = data.minimumValue or 0.00001,
         maximumValue = data.maximumValue,
-        options = data.options
+        options = data.options,
+        editable = data.editable,
     }
 end
 
@@ -123,6 +130,42 @@ function fields.list(data)
         elementOptions = data.elementOptions,
         minimumElements = data.minimumElements,
         maximumElements = data.maximumElements,
+    }
+end
+
+---@class ColorListFieldData
+---@field elementSeparator string The separator to use between elements.
+---@field elementDefault string? The default text value for a newly created element.
+---@field elementOptions ColorFieldData?
+---@field minimumElements integer? Determines the minimum number of elements allowed for the list to be valid. Defaults to 0.
+---@field maximumElements integer? Determines the maximum number of elements allowed for the list to be valid. Defaults to positive infinity.
+
+---Creates a color list field.
+---@param data ColorListFieldData
+---@return FieldInformationEntry
+function fields.colorList(data)
+    return {
+        fieldType = "list",
+        elementSeparator = data.elementSeparator,
+        elementDefault = data.elementDefault,
+        elementOptions = fields.color(data.elementOptions or {}),
+        minimumElements = data.minimumElements,
+        maximumElements = data.maximumElements,
+    }
+end
+
+---@class EditableDropdownFieldData
+---@field fieldType string
+---@field options ({ [1]: string, [2]:any }[]) | MapSaveable[]
+
+---Creates an editable dropdown field
+---@param data EditableDropdownFieldData
+---@return FieldInformationEntry
+function fields.editableDropdown(data)
+    return {
+        fieldType = data.fieldType or "string",
+        options = data.options,
+        editable = true,
     }
 end
 
@@ -292,6 +335,7 @@ end
 ---@class BoltConfigFieldData
 ---@field defaultBoltColor string?
 ---@field defaultBoltThickness number?
+---@field defaultUpdateInterval number?
 
 ---Field encoding a CustomLightningRenderer.Config.BoltConfig object.
 ---@param data BoltConfigFieldData
@@ -308,6 +352,11 @@ function fields.boltConfig(data)
             {
                 name = "FrostHelper.fields.lightning.boltThickness",
                 default = data.defaultBoltThickness or 1,
+                info = fields.nonNegativeNumber { }
+            },
+            {
+                name = "FrostHelper.fields.lightning.updateInterval",
+                default = data.defaultUpdateInterval or 0.1,
                 info = fields.nonNegativeNumber { }
             },
         }
@@ -486,6 +535,50 @@ function fields.vertexLight(data)
                 info = fields.nonNegativeInteger {}
             },
         }
+    }
+end
+
+---@class RangeField
+---@field defaultFrom number
+---@field defaultTo number
+---@field separator string?
+
+---Field storing a number range as `min,max` string.
+---@param data RangeField
+---@return FieldInformationEntry
+function fields.range(data)
+    return fields.complex {
+        separator = data.separator or ",",
+        innerFields = {
+            {
+                name = "FrostHelper.fields.range.from",
+                default = data.defaultFrom or 0,
+                info = fields.number { }
+            },
+            {
+                name = "FrostHelper.fields.range.to",
+                default = data.defaultTo or 0,
+                info = fields.number { }
+            },
+        }
+    }
+end
+
+---@class TypeField
+
+---Field storing a list of C# type name, or SID.
+---@param data TypeField
+---@return FieldInformationEntry
+function fields.typeList(data)
+    local jautilsLazy = mods.requireFromPlugin("libraries.jautils")
+    return {
+        fieldType = "list",
+        elementSeparator = ",",
+        elementDefault = "",
+        elementOptions = {
+            options = jautilsLazy.getAllSids(),
+            searchable = true,
+        },
     }
 end
 
