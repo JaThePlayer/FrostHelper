@@ -62,6 +62,9 @@ public class HeldRefill : Entity {
         _lineColor = data.GetColor("lineColor", "ffff00");
         _respawnTime = data.Float("respawnTime", -1f);
         _respawnSfx = data.Attr("respawnSfx", "event:/game/general/diamond_return");
+        _useSfx = data.Attr("useSfx", "");
+        _useLoopSfx = data.Attr("useLoopSfx", "");
+        Add(_useSfxSource = new SoundSource());
         
         if (data.Nodes[0] == data.Position) {
             Nodes = data.NodesOffset(offset);
