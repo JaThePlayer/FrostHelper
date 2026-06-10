@@ -281,13 +281,14 @@ public static class EasierILHook {
         return hook;
     }
 
-    public static ILHook CreatePostRetHook<T>(Type type, string methodName, T toCall) where T : Delegate {
+    public static ILHook CreatePostRetHook(Type type, string methodName, Action<ILCursor> emitter) {
         var hook = new ILHook(
             type.GetMethod(methodName, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static)!,
             ctx => {
                 var cursor = new ILCursor(ctx);
                 while (cursor.TryGotoNext(MoveType.Before, i => i.MatchRet())) {
-                    cursor.EmitCall(toCall);
+                    emitter.Invoke(cursor);
+                    cursor.GotoNext(MoveType.After, i => i.MatchRet());
                 }
             });
 

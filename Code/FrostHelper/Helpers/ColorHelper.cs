@@ -130,6 +130,47 @@ public static class ColorHelper {
     public static Color MultiplyWithoutAlpha(Color src, float a) {
         return new Color(src.R / 255f * a, src.G / 255f * a, src.B / 255f * a, src.A / 255f);
     }
+
+    internal static Color Blend(BlendingMode mode, Color source, Color next) {
+        return mode switch {
+            BlendingMode.IgnoreSource => next,
+            BlendingMode.AlphaBlend => AlphaBlend(source, next),
+            BlendingMode.CopySourceAlpha => new Color(next, source.A),
+            BlendingMode.Additive => new Color(source.R + next.R, source.G + source.G, source.B + next.B, source.A + next.A),
+            _ => throw new ArgumentOutOfRangeException(nameof(mode), mode, null)
+        };
+    }
+
+    private static Color AlphaBlend(Color source, Color next) {
+        var colorA = next.ToVector3();
+        var colorB = source.ToVector3();
+        var alphaA = next.A / 255f;
+        var alphaB = source.A / 255f * (1 - alphaA);
+        
+        var newAlpha = alphaA + alphaB;
+        var newColor = (colorA * alphaA + colorB * alphaB) / newAlpha;
+
+        return new Color(newColor.X, newColor.Y, newColor.Z, newAlpha);
+    }
+
+    internal enum BlendingMode {
+        /// <summary>
+        /// The source color is ignored, the next color is used verbatim.
+        /// </summary>
+        IgnoreSource,
+        /// <summary>
+        /// The next color is used, but the alpha channel is set to the alpha value of the source color.
+        /// </summary>
+        CopySourceAlpha,
+        /// <summary>
+        /// Treats source and next as a straight alpha color (like decal tints), performs an alpha blend.
+        /// </summary>
+        AlphaBlend,
+        /// <summary>
+        /// The next color is added onto the original.
+        /// </summary>
+        Additive,
+    }
 }
 
 internal readonly struct RgbaOrXnaColor(Color color) : IDetailedParsable<RgbaOrXnaColor>, IEquatable<RgbaOrXnaColor> {
