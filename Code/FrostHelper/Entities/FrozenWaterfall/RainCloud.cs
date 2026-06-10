@@ -10,40 +10,31 @@ internal sealed class RainCloud : Cloud {
     private readonly DynamicRainGenerator _generator;
     
     public RainCloud(EntityData data, Vector2 offset) : base(data, offset) {
+        Depth = data.Int("depth", -9000);
         Small = data.Bool("small");
         Color = data.GetColor("color", "LightSkyBlue");
-        
-        var opacity = data.Float("opacity", 1f);
-
-        var speedRange = data.GetVec2("speedRange", new(200f, 600f));
-        var scaleRange = data.GetVec2("scaleRange", new(4f, 16f));
-        var rotationRange = data.GetVec2("rotationRange", new(0f));
-        rotationRange = new(rotationRange.X.ToRad(), rotationRange.Y.ToRad());
-        
-        var preSimulationTime = data.Float("presimulationTime", 1f);
-        if (preSimulationTime < 0f)
-            preSimulationTime = 0f;
-        var density = data.Float("density", 0.75f);
+        var rainCfg = data.Parse("rain", RainConfig.Default);
 
         var group = new DynamicRainGroup {
             //FlagIfPlayerInside = flagIfPlayerInside,
             OnPlayer = DynamicWaterBehaviorController.OnPlayerTouchedRain,
-            EntityFilter = FrostModule.GetTypes(data.Attr("collideWith", "Celeste.Player,Celeste.Solid")),
+            EntityFilter = FrostModule.GetTypes(rainCfg.CollideWith),
+            WindMultiplier = rainCfg.WindMultiplier,
         };
         Add(group);
         
-        _generator = new DynamicRainGenerator(Small.Value ? 16 : 26, density) {
+        _generator = new DynamicRainGenerator(Small.Value ? 16 : 26, rainCfg.Density) {
             Active = true,
-            Colors = [ Color ],
-            SpeedRange = speedRange,
-            ScaleRange = scaleRange,
-            RotationRange = rotationRange,
-            EnableCondition = ConditionHelper.TrueCondition,
-            IsRainbow = false,
+            Colors = rainCfg.Colors,
+            SpeedRange = rainCfg.SpeedRange,
+            ScaleRange = rainCfg.ScaleRange,
+            RotationRange = rainCfg.RotationRange,
+            EnableCondition = ConditionHelper.CreateOrDefault(rainCfg.EnableFlag, "1"),
+            IsRainbow = rainCfg.Rainbow,
             Group = group,
             Offset = new Vector2(0f, 10f),
-            PreSimulationTime = preSimulationTime,
-            Alpha = opacity,
+            PreSimulationTime = rainCfg.PresimulationTime,
+            Alpha = rainCfg.Opacity,
         };
         
         Add(_generator);
@@ -55,9 +46,9 @@ internal sealed class RainCloud : Cloud {
     }
 
     public override void Update() {
-        _generator.EnableCondition = Collidable ? ConditionHelper.TrueCondition : ConditionHelper.FalseCondition;
+        _generator.Enabled = Collidable;
         base.Update();
-        _generator.EnableCondition = Collidable ? ConditionHelper.TrueCondition : ConditionHelper.FalseCondition;
+        _generator.Enabled = Collidable;
 
         if (GetPlayerRider() is { } player) {
             DynamicWaterBehaviorController.OnPlayerTouchedRain(player, Color);
