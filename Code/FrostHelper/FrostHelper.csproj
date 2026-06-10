@@ -12,7 +12,6 @@
     <OutputPath>bin\</OutputPath>
     <Nullable>enable</Nullable>
     <Optimize>True</Optimize>
-    <DebugType>embedded</DebugType>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <DefineConstants>$(DefineConstants)TRACE;SPEEDCHALLENGES</DefineConstants>
 
@@ -52,6 +51,7 @@
 
   <Target Name="CopyFiles" AfterTargets="Build">
     <Copy SourceFiles="$(OutputPath)\$(AssemblyName).dll" DestinationFolder="bin" />
+    <Copy SourceFiles="$(OutputPath)\$(AssemblyName).pdb" DestinationFolder="bin" />
     <Copy SourceFiles="$(OutputPath)\$(AssemblyName).xml" DestinationFolder="bin" />
   </Target>
 </Project>
