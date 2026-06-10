@@ -33,9 +33,10 @@ tracker.trackAs("MaxHelpingHand/FlagRainbowSpinnerColorAreaController", tracker.
 ---@field __fh_tracker {[string]: Entity[]}
 
 ---@param room Room
+---@return Entity[]
 local function initTracker(room)
-    room.__fh_tracker = {}
-    local t = room.__fh_tracker
+    local t = {}
+    room.__fh_tracker = t
 
     for index, e in ipairs(room.entities) do
         local name = e._name
@@ -49,13 +50,17 @@ local function initTracker(room)
             end
         end
     end
+
+    return t
 end
 
 ---@param room Room
 local function initTrackerIfNeeded(room)
     if not room.__fh_tracker then
-        initTracker(room)
+        return initTracker(room)
     end
+
+    return room.__fh_tracker
 end
 
 ---@param map Map
@@ -71,9 +76,7 @@ end
 ---@param sid string
 ---@return Entity[]
 function tracker.getAll(room, sid)
-    initTrackerIfNeeded(room)
-
-    local t = room.__fh_tracker
+    local t = initTrackerIfNeeded(room)
     if t then
         return t[sid] or {}
     end
