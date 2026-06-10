@@ -1,4 +1,5 @@
 ﻿using FrostHelper.Helpers;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 
 namespace FrostHelper.Components;
@@ -23,6 +24,93 @@ namespace FrostHelper.Components;
  *     * this collider is treated as stationary and can be merged into the stationary Grid.  
  */
 
+/// <summary>
+/// Rain configuration specified in a map editor.
+/// </summary>
+internal sealed class RainConfig : IDetailedParsable<RainConfig> {
+    public static RainConfig Default => field ??=
+        Parse("LightSkyBlue;1;0.75;200,600;4,16;-0.05,0.05;;Celeste.Player,Celeste.Solid;1;0;false;false", null);
+    
+    public Color[] Colors { get; init; }
+    
+    public float Opacity { get; init; }
+    public float Density { get; init; }
+    public Vector2 SpeedRange { get; init; }
+    public Vector2 ScaleRange { get; init; }
+    public Vector2 RotationRange { get; init; }
+    public float PresimulationTime { get; init; }
+    public float WindMultiplier { get; init; }
+    public bool Rainbow { get; init; }
+    public string EnableFlag { get; init; }
+    public string CollideWith { get; init; }
+    
+    public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, [MaybeNullWhen(false)] out RainConfig result, 
+        [NotNullWhen(false)] out string? message) {
+        result = null;
+        message = "Failed to parse RainConfig";
+        var parser = new SpanParser(s);
+
+        if (!parser.TryParseListUntil<RgbaOrXnaColor>(',', ';', out var colors))
+            return false;
+
+        if (!parser.ReadUntil<float>(';').TryUnpack(out var opacity))
+            return false;
+        
+        if (!parser.ReadUntil<float>(';').TryUnpack(out var density))
+            return false;
+        
+        if (!parser.ReadUntil<float>(',').TryUnpack(out var speedMin))
+            return false;
+        if (!parser.ReadUntil<float>(';').TryUnpack(out var speedMax))
+            return false;
+        
+        if (!parser.ReadUntil<float>(',').TryUnpack(out var scaleMin))
+            return false;
+        if (!parser.ReadUntil<float>(';').TryUnpack(out var scaleMax))
+            return false;
+        
+        if (!parser.ReadUntil<float>(',').TryUnpack(out var rotationMin))
+            return false;
+        if (!parser.ReadUntil<float>(';').TryUnpack(out var rotationMax))
+            return false;
+
+        var enableFlag = parser.ReadStrUntil(';');
+        var collideWith = parser.ReadStrUntil(';');
+        
+        if (!parser.ReadUntil<float>(';').TryUnpack(out var presimulationTime))
+            return false;
+        
+        if (!parser.ReadUntil<float>(';').TryUnpack(out var windMultiplier))
+            return false;
+        
+        if (!parser.ReadUntil<bool>(';').TryUnpack(out var rainbow))
+            return false;
+
+        result = new RainConfig {
+            Colors = colors.Select(x => x.Color).ToArray(),
+            Opacity = opacity,
+            Density = density,
+            CollideWith = collideWith.ToString(),
+            EnableFlag = enableFlag.ToString(),
+            PresimulationTime = presimulationTime,
+            Rainbow = rainbow,
+            RotationRange = new Vector2(rotationMin, rotationMax),
+            SpeedRange = new Vector2(speedMin, speedMax),
+            ScaleRange = new Vector2(scaleMin, scaleMax),
+            WindMultiplier = windMultiplier,
+        };
+        
+        return true;
+    }
+    
+    public static RainConfig Parse(ReadOnlySpan<char> s, IFormatProvider? provider) {
+        if (TryParse(s, provider, out var result, out _))
+            return result;
+        
+        throw new FormatException($"Unable to parse \"{s}\" to type {nameof(RainConfig)}");
+    }
+}
+
 internal sealed class DynamicRainGroup() : Component(true, false) {
     public float PlayerInsideTimer;
 
@@ -35,6 +123,8 @@ internal sealed class DynamicRainGroup() : Component(true, false) {
     private static Type[]? _defaultEntityFilter;
     public Type[] EntityFilter { get; set; } = 
         _defaultEntityFilter ??= FrostModule.GetTypes("Celeste.Player,Celeste.Solid,Celeste.Water");
+
+    public float WindMultiplier { get; init; }
 
     public override void Update() {
         base.Update();
@@ -108,6 +198,11 @@ internal sealed class DynamicRainGenerator : Component {
     internal Vector2 RotationRange { get; set; } = new(-0.05f, 0.05f);
 
     internal Vector2 ScaleRange { get; set; } = new(4f, 16f);
+
+    /// <summary>
+    /// Checked alongside <see cref="EnableCondition"/>, to be set by code not mapper.
+    /// </summary>
+    internal bool Enabled { get; set; } = true;
     
     internal ConditionHelper.Condition EnableCondition { get; set; } = ConditionHelper.EmptyCondition;
     
@@ -145,8 +240,9 @@ internal sealed class DynamicRainGenerator : Component {
         
         _levelBounds = level.Bounds;
         _lastPosition = RenderPos;
-        // calculate how far away rain could possibly get
-
+        // calculate how far away rain could possibly get.
+        // This assumes no wind, as we don't know upfront how strong the wind will be.
+        // If there is wind, bounds will be updated dynamically per-rain-drop.
         Rectangle bounds = new Rectangle((int)RenderPos.X - _length / 2, (int)RenderPos.Y, _length, 8);
         for (float p = 0; p <= 1f; p += 1f / 60f) {
             var angle = 1.57079637f + Calc.ClampedMap(p, 0f, 1f, RotationRange.X, RotationRange.Y);
@@ -178,8 +274,8 @@ internal sealed class DynamicRainGenerator : Component {
             var v1 = vector + angleVec.Perpendicular() * (-_length / 2f);
             var v2 = vector + angleVec.Perpendicular() * (_length / 2f);
             
-            bounds = RectangleExt.Merge(bounds, new((int)v1.X, (int)v1.Y, 1, 1));
-            bounds = RectangleExt.Merge(bounds, new((int)v2.X, (int)v2.Y, 1, 1));
+            bounds = RectangleExt.Merge(bounds, new Rectangle((int)v1.X, (int)v1.Y, 1, 1));
+            bounds = RectangleExt.Merge(bounds, new Rectangle((int)v2.X, (int)v2.Y, 1, 1));
         }
         bounds.Inflate(4, 4);
         _bounds = bounds;
@@ -220,12 +316,10 @@ internal sealed class DynamicRainGenerator : Component {
         return RenderPos.ToNumerics();
     }
 
-    /*
     public override void DebugRender(Camera camera) {
         base.DebugRender(camera);
         Draw.Rect(GetBounds(), Color.Red * 0.16f);
     }
-    */
 
     public override void Render() {
         Rectangle bounds = GetBounds();
@@ -262,7 +356,7 @@ internal sealed class DynamicRainGenerator : Component {
             return;
         var cam = level.Camera;
 
-        var enabled = EnableCondition.Check();
+        var enabled = Enabled && EnableCondition.Check();
         if (enabled && !_wasEnabled) {
             ReinitializeRain();
         }
@@ -271,6 +365,7 @@ internal sealed class DynamicRainGenerator : Component {
 
         var selfBounds = GetBounds();
         var bottom = level.Bounds.Bottom;
+        var wind = level.Wind.ToNumerics() * Group.WindMultiplier;
 
         // Find all candidate entities that any of our rain droplets *could* collide with.
         foreach (var type in Group.EntityFilter) {
@@ -297,7 +392,7 @@ internal sealed class DynamicRainGenerator : Component {
             if (rain.Color == default)
                 continue;
 
-            rain.Position += rain.Speed * deltaTime;
+            rain.Position += (rain.Speed + wind) * deltaTime;
             var shouldInit = false;
             if (rain.Position.Y > bottom) {
                 shouldInit = true;
@@ -329,6 +424,10 @@ internal sealed class DynamicRainGenerator : Component {
                     rain.Init(GetNewRainPos(), this);
                 else
                     rain.Color = default;
+            } else if (wind != default) {
+                // Wind might've moved the rain outside our precalculated bounds, update them dynamically.
+                // This is costly, so only pay the cost if there is actually wind.
+                _bounds = RectangleExt.Merge(_bounds, rain.Position);
             }
         }
 

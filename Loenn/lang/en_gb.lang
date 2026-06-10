@@ -558,6 +558,8 @@ entities.FrostHelper/HeldRefill.attributes.description.lineColor=The color to us
 entities.FrostHelper/HeldRefill.attributes.description.hitbox=Controls the hitbox for this entity.\nRefer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Custom-Colliders
 entities.FrostHelper/HeldRefill.attributes.description.respawnTime=How long (in seconds) it takes the refill to respawn.\nLeave at -1 to make it not respawn.
 entities.FrostHelper/HeldRefill.attributes.description.respawnSfx=The sound effect to play when the refill respawns.
+entities.FrostHelper/HeldRefill.attributes.description.useSfx=Sfx to play upon the refill being used. (The player started holding dash.)
+entities.FrostHelper/HeldRefill.attributes.description.useLoopSfx=Looping sfx to play while the refill is being used. (Until the player stops holding dash.)
 entities.FrostHelper/HeldRefill.attributes.description.legacyOptions=Controls legacy settings for this entity, for backwards compatibility.
 entities.FrostHelper/HeldRefill.attributes.description.bolts=Configuration for lightning bolts used for the new visuals.
 
@@ -659,7 +661,8 @@ FrostHelper.fields.lightning.boltColor=Color
 FrostHelper.fields.lightning.boltColor.tooltip=The color of this bolt.
 FrostHelper.fields.lightning.boltThickness=Thickness
 FrostHelper.fields.lightning.boltThickness.tooltip=The thickness (in pixels) of this bolt.
-
+FrostHelper.fields.lightning.updateInterval=Update Interval
+FrostHelper.fields.lightning.updateInterval.tooltip=The frequency (in seconds) of this bolt's visuals being updated.
 
 entities.FrostHelper/ArbitraryBloom.placements.name.default=Arbitrary Bloom
 entities.FrostHelper/ArbitraryBloom.attributes.description.windingOrder=The winding order of the polygon.\nIf your shape looks broken in-game, try changing this property until it looks correctly.
@@ -806,6 +809,39 @@ entities.FrostHelper/DynamicRainGenerator.attributes.description.generatorLength
 entities.FrostHelper/DynamicRainGenerator.attributes.description.editorPreviewLength=Changes the length of the in-editor preview lines showing the angle rangle of the rain droplets.\nHas no in-game effect.
 entities.FrostHelper/DynamicRainGenerator.attributes.description.presimulationTime=How long (in seconds) the rain should be pre-simulated before the first render frame.\nHelps avoid issues with rain not existing on room load / transition.
 entities.FrostHelper/DynamicRainGenerator.attributes.description.opacity=The opacity of the rain colors, between 0 and 1.
+entities.FrostHelper/DynamicRainGenerator.attributes.description.windMultiplier=The value to multiply the room's wind by when moving rain droplets.\nLeave at 0 to make rain not react to wind.
+
+FrostHelper.fields.rainGenerator.colors=Colors
+FrostHelper.fields.rainGenerator.colors.tooltip=List of colors used for the rain. A random color from this list will be chosen for each rain droplet.
+FrostHelper.fields.rainGenerator.density=Density
+FrostHelper.fields.rainGenerator.density.tooltip=Determines how many rain droplets there will be.
+FrostHelper.fields.rainGenerator.speedRange=Speed Range
+FrostHelper.fields.rainGenerator.speedRange.tooltip=A range of speed values for rain droplets, from the lowest to the highest.
+FrostHelper.fields.rainGenerator.scaleRange=Scale Range
+FrostHelper.fields.rainGenerator.scaleRange.tooltip=A range of scale values for rain droplets, from the lowest to the highest.
+FrostHelper.fields.rainGenerator.rotationRange=Rotation Range
+FrostHelper.fields.rainGenerator.rotationRange.tooltip=A range of rotation values for rain droplets (in degrees), from the lowest to the highest.
+FrostHelper.fields.rainGenerator.depth=Depth
+FrostHelper.fields.rainGenerator.depth.tooltip=The depth at which rain and its particles will be rendered.
+FrostHelper.fields.rainGenerator.enableFlag=Enable Flag
+FrostHelper.fields.rainGenerator.enableFlag.tooltip=Flag which needs to be set to enable this generator to create new rain particles. Existing particles will continue existing until they collide. Session Expressions are supported.
+FrostHelper.fields.rainGenerator.collideWith=CollideWith
+FrostHelper.fields.rainGenerator.collideWith.tooltip=List of entity SIDs or C# type names that rain droplets will collide with. They need to be Tracked.
+FrostHelper.fields.rainGenerator.rainbow=Rainbow
+FrostHelper.fields.rainGenerator.rainbow.tooltip=Whether rain droplets should use rainbow colors instead. Their color is chosen at creation time, then stays the same for their lifespan.
+FrostHelper.fields.rainGenerator.attachToSolid=Attach To Solid
+FrostHelper.fields.rainGenerator.attachToSolid.tooltip=Whether the generator should attach to solids.\nExisting droplets will stay in place, while new ones will be generated at the new location.
+FrostHelper.fields.rainGenerator.generatorLength=Generator Length
+FrostHelper.fields.rainGenerator.generatorLength.tooltip=Generators with high Width or Height get automatically split into smaller ones, for performance reasons.\nThis setting determines the length of the smaller generators.\nFor generators with high rotation values, this setting might visibly impact where rain droplets get created at,\nwhich might matter if the generator is on-screen.\nToo small or too large values might degrade performance,\nthough the value that's best for performance depends on the exact layout of the room and is hard to measure.\nLeave at -1 to let Frost Helper automatically pick a value.
+FrostHelper.fields.rainGenerator.editorPreviewLength=Editor Preview Length
+FrostHelper.fields.rainGenerator.editorPreviewLength.tooltip=Changes the length of the in-editor preview lines showing the angle rangle of the rain droplets.\nHas no in-game effect.
+FrostHelper.fields.rainGenerator.presimulationTime=Presimulation Time
+FrostHelper.fields.rainGenerator.presimulationTime.tooltip=How long (in seconds) the rain should be pre-simulated before the first render frame.\nHelps avoid issues with rain not existing on room load / transition.
+FrostHelper.fields.rainGenerator.opacity=Opacity
+FrostHelper.fields.rainGenerator.opacity.tooltip=The opacity of the rain colors, between 0 and 1.
+FrostHelper.fields.rainGenerator.windMultiplier=Wind Multiplier
+FrostHelper.fields.rainGenerator.windMultiplier.tooltip=The value to multiply the room's wind by when moving rain droplets.\nLeave at 0 to make rain not react to wind.
+
 
 entities.FrostHelper/RainCollider.placements.name.default=Dynamic Rain Collider
 entities.FrostHelper/RainCollider.placements.description.default=Invisible collider that blocks Dynamic Rain.
@@ -847,6 +883,7 @@ entities.FrostHelper/RecolorableWater.attributes.description.triggerOnJump=Wheth
 entities.FrostHelper/Raincloud.placements.name.default=Rain Cloud
 entities.FrostHelper/Raincloud.placements.description.default=A cloud that emits Dynamic Rain.\nUse a Dynamic Water Behavior Controller to configure behavior when the player enters the rain, akin to Frozen Waterfall.
 entities.FrostHelper/Raincloud.attributes.description.color=The color of the cloud and rain.\nUse a Dynamic Water Behavior Controller to configure behavior when the player enters rain of this color, akin to Frozen Waterfall.
+entities.FrostHelper/Raincloud.attributes.description.windMultiplier=The value to multiply the room's wind by when moving rain droplets.\nLeave at 0 to make rain not react to wind.
 
 entities.FrostHelper/BerryTrackerController.placements.name.default=Berry Tracker Controller
 entities.FrostHelper/BerryTrackerController.placements.description.default=Makes berry count information available via session counters.

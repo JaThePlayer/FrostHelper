@@ -37,6 +37,7 @@ internal sealed class DynamicRainGeneratorEntity : Entity
             FlagIfPlayerInside = flagIfPlayerInside,
             OnPlayer = DynamicWaterBehaviorController.OnPlayerTouchedRain,
             EntityFilter = FrostModule.GetTypes(data.Attr("collideWith", "Celeste.Player,Celeste.Solid")),
+            WindMultiplier = data.Float("windMultiplier"),
         };
         Add(group);
         

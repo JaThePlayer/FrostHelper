@@ -32,6 +32,13 @@ jautils.createPlacementsPreserveOrder(rain, "default", {
     { "collideWith", "Celeste.Player,Celeste.Solid", "typesList" },
     { "presimulationTime", 1 },
     { "editorPreviewLength", 32 },
+    { "windMultiplier", 0, jautils.fields.number {
+        options = {
+            { "None (0)", 0 },
+            { "Default (0.1)", 0.1 },
+        },
+        editable = true,
+    }},
     { "rainbow", false },
     { "attachToSolid", false }
 })

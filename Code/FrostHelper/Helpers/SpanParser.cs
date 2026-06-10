@@ -306,6 +306,12 @@ internal ref struct SpanParser(ReadOnlySpan<char> input)
         }
         return arr;
     }
+
+    public bool TryParseListUntil<T>(char separator, char until, out List<T> res) where T : ISpanParsable<T> {
+        var inner = ReadStrUntil(until);
+        
+        return new SpanParser(inner).TryParseList(separator, out res);
+    }
     
     public bool TryParseList<T>(char separator, out List<T> res) where T : ISpanParsable<T> {
         res = [];

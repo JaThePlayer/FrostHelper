@@ -154,14 +154,14 @@ end
 
 ---Returns all known entity SIDs.
 ---@return string[]
-local getAllSids = function ()
+jautils.getAllSids = function ()
     return {}
 end
 
 -- Snowberry hard-crashes on boot if libraries crash, and the current public build doesn't implement `entities`.
 local entities = jautils.tryRequire("entities")
 if entities and entities.registeredEntities then
-    getAllSids = function ()
+    jautils.getAllSids = function ()
         local ret = {}
         local amt = 0
         for k,v in pairs(entities.registeredEntities) do
@@ -215,7 +215,7 @@ function jautils.typesListFieldInfo() return {
     elementSeparator = ",",
     elementDefault = "",
     elementOptions = {
-        options = getAllSids(),
+        options = jautils.getAllSids(),
         searchable = true,
     },
 } end

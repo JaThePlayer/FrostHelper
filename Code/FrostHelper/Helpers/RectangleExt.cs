@@ -10,6 +10,9 @@ public static class RectangleExt {
     public static Rectangle CreateTruncating(Vector2 pos, int w, int h)
         => new((int)pos.X, (int)pos.Y, w, h);
     
+    public static Rectangle CreateTruncating(NumVector2 pos, int w, int h)
+        => new((int)pos.X, (int)pos.Y, w, h);
+    
     public static Rectangle FromPoints(Vector2 a, Vector2 b)
         => FromTwoPointsCore<Vector2, GetX, GetY>(a, b);
 
@@ -38,6 +41,28 @@ public static class RectangleExt {
         int height = largestY - smallestY;
 
         return new Rectangle(smallestX, smallestY, width, height);
+    }
+    
+    /// <summary>
+    /// Expands the given rectangle to also contain the given point.
+    /// </summary>
+    public static Rectangle Merge(Rectangle a, NumVector2 b) {
+        var ret = a;
+        if (b.X > a.Right) {
+            ret.Width = (int)b.X - a.X;
+        } else if (b.X < a.Left) {
+            ret.X = (int)b.X;
+            ret.Width += a.X - (int)b.X;
+        }
+        
+        if (b.Y > a.Bottom) {
+            ret.Height = (int)b.Y - a.Y;
+        } else if (b.Y < a.Top) {
+            ret.Y = (int)b.Y;
+            ret.Height += a.Y - (int)b.Y;
+        }
+
+        return ret;
     }
 
     public static Rectangle Merge(IEnumerable<Rectangle> rectangles) {
