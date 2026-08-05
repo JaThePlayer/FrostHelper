@@ -229,8 +229,19 @@ end
 ---@param data {}
 ---@return FieldInformationEntry
 function fields.sessionExpression(data)
+    ---@type FieldInformationEntry
     return {
         fieldType = "string",
+        -- Fix numbers stored inside these fields if a field got converted in an update from a number to session expression.
+        displayTransformer = function (s)
+            return tostring(s)
+        end,
+        valueTransformer = function (s)
+            return tostring(s)
+        end,
+        validator = function (s)
+            return true
+        end,
     }
 end
 

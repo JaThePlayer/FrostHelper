@@ -114,7 +114,7 @@ end
 function jautils.union(...)
     local union = {}
 
-    for _, value in ipairs({...}) do
+    for _, value in pairs({...}) do
         if not value then
 ---@diagnostic disable-next-line: undefined-field
         elseif value._type then -- specific to lonn

@@ -840,6 +840,19 @@ public static class ConditionHelper {
                        // dict[name] = condition; // cache the parsed condition
                     }
                     break;
+                // If an update converts a previously-number field into a session expression string field,
+                // old .bins will still have numbers stored here and as such we should convert them.
+                case int i:
+                    return new ConstInt(i);
+                case float f:
+                    return new ConstFloat(f);
+                case bool b:
+                    return new ConstInt(b ? 1 : 0);
+                default:
+                    if (TryCreate(cond.ToString() ?? "", ctx, out condition)) {
+                        // dict[name] = condition; // cache the parsed condition
+                    }
+                    break;
             }
         }
 
