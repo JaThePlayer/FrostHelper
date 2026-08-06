@@ -904,6 +904,10 @@ internal sealed class SessionExpression<T> {
     public T Get(Session session) {
         return _condition is null ? ConstantValue! : _condition.Get<T>(session);
     }
+    
+    public T Get(Session session, object userdata) {
+        return _condition is null ? ConstantValue! : _condition.Get<T>(session, userdata);
+    }
 }
 
 internal static class SessionExpressionExt {
