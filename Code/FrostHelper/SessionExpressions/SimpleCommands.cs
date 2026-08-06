@@ -29,6 +29,7 @@ internal static class SimpleCommands {
         ["pi"] = new PiAccessor(),
         ["e"] = new EAccessor(),
         ["dtime"] = new DeltaTimeAccessor(),
+        ["time"] = new TimeAccessor(),
         ["roomName"] = new RoomNameAccessor(),
     };
 
@@ -83,6 +84,12 @@ internal static class SimpleCommands {
     
     private sealed class DeltaTimeAccessor : Condition {
         public override object Get(Session session, object? userdata) => Engine.DeltaTime;
+
+        protected internal override Type ReturnType => typeof(float);
+    }
+    
+    private sealed class TimeAccessor : Condition {
+        public override object Get(Session session, object? userdata) => Engine.Scene.TimeActive;
 
         protected internal override Type ReturnType => typeof(float);
     }

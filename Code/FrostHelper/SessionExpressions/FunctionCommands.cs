@@ -34,6 +34,7 @@ internal static class FunctionCommands {
         ["log2"] = PureMathCondition.TryCreateFloat<Log2Func>,
         ["log10"] = PureMathCondition.TryCreateFloat<Log10Func>,
         ["lerp"] = PureMathCondition.TryCreatThreeArgFloat<LerpFunc>,
+        ["yoyo"] = PureMathCondition.TryCreateFloat<YoYoFunc>,
     };
 
     public static void Register(string modName, string cmdName, Func<Session, object?, IReadOnlyList<object>, object> func) {
@@ -188,6 +189,10 @@ internal static class FunctionCommands {
     
     private struct LerpFunc : IPureThreeArgMathFunc<float> {
         public static object Get(float x, float y, float z) => float.Lerp(x, y, z);
+    }
+    
+    private struct YoYoFunc : IPureMathFunc<float> {
+        public static object Get(float x) => Calc.YoYo(x);
     }
 
     private sealed class PureMathCondition<TNum, TOp>(Condition x) : FunctionCondition(x)
