@@ -40,13 +40,6 @@ public static class TestUtils {
         return level;
     }
 
-    public static Player CreatePlayer() {
-        var player = (Player) RuntimeHelpers.GetUninitializedObject(typeof(Player));
-        player.startHairCalled = true;
-
-        return player;
-    }
-
     internal sealed class HybridExpression(ConditionHelper.Condition basedOn) : ConditionHelper.Condition {
         private readonly CompiledSessionExpression<object> _compiled = new CompiledSessionExpression<object>(basedOn);
         

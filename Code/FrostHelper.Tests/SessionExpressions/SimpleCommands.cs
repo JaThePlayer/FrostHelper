@@ -8,7 +8,7 @@ public class SimpleCommands {
     public void PlayerCommands() {
         var level = TestUtils.CreateLevel();
         var session = level.Session;
-        var player = TestUtils.CreatePlayer();
+        var player = new Player(default, PlayerSpriteMode.Madeline);
         
         lock (TestUtils.EngineSceneLock) {
             Engine.Instance.scene = level;
@@ -29,6 +29,19 @@ public class SimpleCommands {
             Assert.Equal(new Vector2(4f, 2f), TestUtils.CreateExpr("$speed").Get<Vector2>(session));
             Assert.Equal(4f, TestUtils.CreateExpr("$speed.x").Get<float>(session));
             Assert.Equal(2f, TestUtils.CreateExpr("$speed.y").Get<float>(session));
+
+
+            var playerPosExpr = TestUtils.CreateExpr("$player.pos");
+            Assert.Equal(new Vector2(0f, 0f), playerPosExpr.Get<Vector2>(session));
+            player.Position = new Vector2(12f, 1f);
+            Assert.Equal(new Vector2(12f, 1f), playerPosExpr.Get<Vector2>(session));
+
+            // Expressions should store the player even after death, so that expressions running on the player don't suddenly stop working.
+            level.Remove(player);
+            level.Entities.UpdateLists();
+            Assert.Null(level.Tracker.GetEntity<Player>());
+            Assert.Equal(player, TestUtils.CreateExpr("$player").Get<Player>(session));
+            Assert.Equal(new Vector2(12f, 1f), playerPosExpr.Get<Vector2>(session));
         }
     }
     

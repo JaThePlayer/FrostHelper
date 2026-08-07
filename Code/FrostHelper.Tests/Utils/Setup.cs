@@ -1,6 +1,7 @@
 ﻿using Celeste.Mod.Core;
 using FrostHelper.Helpers;
 using System.Runtime.CompilerServices;
+using System.Xml;
 
 namespace FrostHelper.Tests.Utils;
 
@@ -70,6 +71,40 @@ public sealed class CelesteSetupFixture : IDisposable
         };
 
         Engine.Instance = (Celeste.Celeste)RuntimeHelpers.GetUninitializedObject(typeof(Celeste.Celeste));
+
+        SaveData.Instance = new SaveData {
+            LevelSets = [],
+            Areas =  [
+                new AreaStats {
+                    Modes = [
+                        new AreaModeStats()
+                    ]
+                }
+            ]
+        };
+        
+        Tags.Initialize();
+
+        var atlas = new Atlas();
+        GFX.Game = atlas;
+        atlas["characters/player/idle00"] = new MTexture();
+        var xmlDoc = new XmlDocument();
+        xmlDoc.LoadXml("""
+        <Sprites>
+            <player path="characters/player/" start="idle">
+                <Origin x="16" y="32" />
+                <Anim id="idle" path="idle" frames="0" />
+            </player>
+            <player_sweat path="characters/player/" start="idle">
+                <Origin x="16" y="32" />
+                <Anim id="idle" path="idle" frames="0" />
+            </player_sweat>
+        </Sprites>
+        """);
+        
+        GFX.SpriteBank = new SpriteBank(atlas, xmlDoc);
+        
+        Engine.Pooler = new Pooler();
     }
 
     public void Dispose()
