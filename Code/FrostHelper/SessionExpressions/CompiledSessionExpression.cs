@@ -1,3 +1,4 @@
+using Celeste.Mod.Core;
 using FrostHelper.Helpers;
 using System.Reflection.Emit;
 using System.Threading;
@@ -45,6 +46,21 @@ internal sealed class ConditionCompilationCtx {
 
     public void EmitRevertCurrentCondition(LocalBuilder? oldConditionTempLocal) {
         Il.EmitRevertCurrentCondition(oldConditionTempLocal, this);
+    }
+
+    private static readonly MethodInfo MethodEngineSceneGet = typeof(Engine).GetProperty("Scene")!.GetMethod!;
+    public void EmitLoadScene() {
+        Il.Emit(OpCodes.Call, MethodEngineSceneGet);
+    }
+    
+    private static readonly FieldInfo FieldSettingsInstance = typeof(Settings).GetField(nameof(Settings.Instance))!;
+    public void EmitLoadSettings() {
+        Il.Emit(OpCodes.Ldsfld, FieldSettingsInstance);
+    }
+    
+    private static readonly PropertyInfo PropertyCoreModuleSettingsInstance = typeof(CoreModule).GetProperty(nameof(CoreModule.Settings))!;
+    public void EmitLoadCoreModuleSettings() {
+        Il.Emit(OpCodes.Call, PropertyCoreModuleSettingsInstance.GetMethod!);
     }
 }
 

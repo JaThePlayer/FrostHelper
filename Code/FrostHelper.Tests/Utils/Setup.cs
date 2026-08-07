@@ -1,4 +1,5 @@
-﻿using FrostHelper.Helpers;
+﻿using Celeste.Mod.Core;
+using FrostHelper.Helpers;
 using System.Runtime.CompilerServices;
 
 namespace FrostHelper.Tests.Utils;
@@ -24,6 +25,12 @@ public sealed class FrostHelperSetupFixture : IDisposable
         NotificationHelper.NotificationSink = new DefaultTestNotificationSink();
         
         MockMap.Initialize();
+
+        Settings.Instance = new Settings();
+
+        CoreModule.Instance = new() {
+            _Settings = new CoreModuleSettings()
+        };
     }
 
     public void Dispose()

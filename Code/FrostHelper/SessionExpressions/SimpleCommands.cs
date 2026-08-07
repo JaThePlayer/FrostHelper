@@ -1,6 +1,7 @@
 ﻿using Celeste.Mod.Core;
 using FrostHelper.Helpers;
 using static FrostHelper.Helpers.ConditionHelper;
+using OpCodes = System.Reflection.Emit.OpCodes;
 
 namespace FrostHelper.SessionExpressions;
 
@@ -9,17 +10,17 @@ internal static class SimpleCommands {
     /// Simple commands accessible via $cmdname
     /// </summary>
     internal static readonly Dictionary<string, Condition> Registry = new() {
-        ["deathsHere"] = new DeathsAccessor(inCurrentLevel: true),
-        ["deaths"] = new DeathsAccessor(inCurrentLevel: false),
-        ["hasGolden"] = new HasGoldenAccessor(),
-        ["restartedFromGolden"] = new RestartedFromGoldenAccessor(),
+        ["deathsHere"] = new SessionFieldAccessor(nameof(Session.DeathsInCurrentLevel)),
+        ["deaths"] = new SessionFieldAccessor(nameof(Session.Deaths)),
+        ["hasGolden"] = new SessionFieldAccessor(nameof(Session.GrabbedGolden)),
+        ["restartedFromGolden"] = new SessionFieldAccessor(nameof(Session.RestartedFromGolden)),
         ["coreMode"] = new CoreModeAccessor(),
-        ["photosensitive"] = new PhotosensitiveAccessor(),
-        ["allowLightning"] = new AllowLightningAccessor(),
-        ["allowScreenFlash"] = new AllowScreenFlashAccessor(),
-        ["allowGlitch"] = new AllowGlitchAccessor(),
-        ["allowDistort"] = new AllowDistortAccessor(),
-        ["allowTextHighlight"] = new AllowTextHighlightAccessor(),
+        ["photosensitive"] = new SettingsFieldAccessor(nameof(Settings.DisableFlashes)),
+        ["allowLightning"] = new CoreModuleSettingsPropertyAccessor(nameof(CoreModuleSettings.AllowLightning)),
+        ["allowScreenFlash"] = new CoreModuleSettingsPropertyAccessor(nameof(CoreModuleSettings.AllowScreenFlash)),
+        ["allowGlitch"] = new CoreModuleSettingsPropertyAccessor(nameof(CoreModuleSettings.AllowGlitch)),
+        ["allowDistort"] = new CoreModuleSettingsPropertyAccessor(nameof(CoreModuleSettings.AllowDistort)),
+        ["allowTextHighlight"] = new CoreModuleSettingsPropertyAccessor(nameof(CoreModuleSettings.AllowTextHighlight)),
         ["dashes"] = new DashAccessor(),
         ["maxDashes"] = new MaxDashAccessor(),
         ["stamina"] = new StaminaAccessor(),
@@ -29,7 +30,7 @@ internal static class SimpleCommands {
         ["e"] = new ConstFloat(float.E),
         ["dtime"] = new DeltaTimeAccessor(),
         ["time"] = new TimeAccessor(),
-        ["roomName"] = new RoomNameAccessor(),
+        ["roomName"] = new SessionFieldAccessor(nameof(Session.Level)),
     };
 
     // Exposed via API
@@ -56,23 +57,19 @@ internal static class SimpleCommands {
 
         protected override IEnumerable<object> GetArgsForDebugPrint() => [func];
     }
-
-    private sealed class DeathsAccessor(bool inCurrentLevel) : Condition {
-        public override object Get(Session session, object? userdata) => inCurrentLevel ? session.DeathsInCurrentLevel : session.Deaths;
-
-        protected internal override Type ReturnType => typeof(int);
-    }
-
-    private sealed class HasGoldenAccessor : Condition {
-        public override object Get(Session session, object? userdata) => BoolToBoxedInt(session.GrabbedGolden);
-
-        protected internal override Type ReturnType => typeof(int);
-    }
     
     private sealed class DeltaTimeAccessor : Condition {
         public override object Get(Session session, object? userdata) => Engine.DeltaTime;
 
         protected internal override Type ReturnType => typeof(float);
+        
+        internal override void Emit(ConditionCompilationCtx ctx, Type targetType) {
+            var il = ctx.Il;
+            il.Emit(OpCodes.Call, typeof(Engine).GetProperty("DeltaTime")!.GetMethod!);
+            il.EmitConvertToInSessionExpression(typeof(float), targetType);
+        }
+
+        internal override bool UsesCurrentConditionLocalInEmit => false;
     }
     
     private sealed class TimeAccessor : Condition {
@@ -82,86 +79,75 @@ internal static class SimpleCommands {
 
         internal override void Emit(ConditionCompilationCtx ctx, Type targetType) {
             var il = ctx.Il;
-            il.Emit(System.Reflection.Emit.OpCodes.Call, typeof(Engine).GetProperty("Scene")!.GetMethod!);
-            il.Emit(System.Reflection.Emit.OpCodes.Ldfld, typeof(Scene).GetField("TimeActive")!);
+            ctx.EmitLoadScene();
+            il.Emit(OpCodes.Ldfld, typeof(Scene).GetField("TimeActive")!);
             il.EmitConvertToInSessionExpression(typeof(float), targetType);
         }
 
         internal override bool UsesCurrentConditionLocalInEmit => false;
     }
+
+    private sealed class SessionFieldAccessor(string fieldName) : Condition {
+        public readonly FieldInfo Field = typeof(Session).GetField(fieldName, BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public)!;
+        
+        public override object Get(Session session, object? userdata) {
+            var ret = Field.GetValue(session)!;
+            return ret is bool b ? BoolToBoxedInt(b) : ret;
+        }
+
+        internal override void Emit(ConditionCompilationCtx ctx, Type targetType) {
+            ctx.EmitLoadSession();
+            ctx.Il.Emit(OpCodes.Ldfld, Field);
+            ctx.EmitConvertTo(ReturnType, targetType);
+        }
+
+        internal override bool UsesCurrentConditionLocalInEmit => false;
+
+        protected internal override Type ReturnType => Field.FieldType;
+    }
+
+    private sealed class SettingsFieldAccessor(string fieldName) : Condition {
+        public readonly FieldInfo Field = typeof(Settings).GetField(fieldName, BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public)!;
+        
+        public override object Get(Session session, object? userdata) {
+            var ret = Field.GetValue(Settings.Instance)!;
+            return ret is bool b ? BoolToBoxedInt(b) : ret;
+        }
+
+        internal override void Emit(ConditionCompilationCtx ctx, Type targetType) {
+            ctx.EmitLoadSettings();
+            ctx.Il.Emit(OpCodes.Ldfld, Field);
+            ctx.EmitConvertTo(ReturnType, targetType);
+        }
+
+        internal override bool UsesCurrentConditionLocalInEmit => false;
+
+        protected internal override Type ReturnType => Field.FieldType;
+    }
     
-    private sealed class RoomNameAccessor : Condition {
-        public override object Get(Session session, object? userdata) => session.Level;
+    private sealed class CoreModuleSettingsPropertyAccessor(string fieldName) : Condition {
+        public readonly PropertyInfo Property = typeof(CoreModuleSettings).GetProperty(fieldName, BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public)!;
+        
+        public override object Get(Session session, object? userdata) {
+            var ret = Property.GetValue(CoreModule.Settings)!;
+            return ret is bool b ? BoolToBoxedInt(b) : ret;
+        }
 
-        protected internal override Type ReturnType => typeof(string);
+        internal override void Emit(ConditionCompilationCtx ctx, Type targetType) {
+            ctx.EmitLoadCoreModuleSettings();
+            ctx.Il.Emit(OpCodes.Call, Property.GetMethod!);
+            ctx.EmitConvertTo(ReturnType, targetType);
+        }
+
+        internal override bool UsesCurrentConditionLocalInEmit => false;
+
+        protected internal override Type ReturnType => Property.PropertyType;
     }
-
-    private sealed class RestartedFromGoldenAccessor : Condition {
-        public override object Get(Session session, object? userdata) => BoolToBoxedInt(session.RestartedFromGolden);
-
-        public override bool OnlyChecksFlags() => false;
-
-        protected internal override Type ReturnType => typeof(int);
-    }
-
+    
     private sealed class CoreModeAccessor : Condition {
         public override object Get(Session session, object? userdata) {
             return (int) session.CoreMode;
         }
-
-        public override bool OnlyChecksFlags() => false;
-
-        protected internal override Type ReturnType => typeof(int);
-    }
-
-    private sealed class PhotosensitiveAccessor : Condition {
-        public override object Get(Session session, object? userdata) =>
-            BoolToBoxedInt(Settings.Instance.DisableFlashes);
-
-        public override bool OnlyChecksFlags() => false;
-
-        protected internal override Type ReturnType => typeof(int);
-    }
-    
-    private sealed class AllowLightningAccessor : Condition {
-        public override object Get(Session session, object? userdata)
-            => BoolToBoxedInt(CoreModule.Settings.AllowLightning);
-
-        public override bool OnlyChecksFlags() => false;
-
-        protected internal override Type ReturnType => typeof(int);
-    }
-    
-    private sealed class AllowDistortAccessor : Condition {
-        public override object Get(Session session, object? userdata)
-            => BoolToBoxedInt(CoreModule.Settings.AllowDistort);
-
-        public override bool OnlyChecksFlags() => false;
-
-        protected internal override Type ReturnType => typeof(int);
-    }
-    
-    private sealed class AllowGlitchAccessor : Condition {
-        public override object Get(Session session, object? userdata) =>
-            BoolToBoxedInt(CoreModule.Settings.AllowGlitch);
-
-        public override bool OnlyChecksFlags() => false;
-
-        protected internal override Type ReturnType => typeof(int);
-    }
-    
-    private sealed class AllowScreenFlashAccessor : Condition {
-        public override object Get(Session session, object? userdata)
-            => BoolToBoxedInt(CoreModule.Settings.AllowScreenFlash);
-
-        public override bool OnlyChecksFlags() => false;
-
-        protected internal override Type ReturnType => typeof(int);
-    }
-    
-    private sealed class AllowTextHighlightAccessor : Condition {
-        public override object Get(Session session, object? userdata) =>
-            BoolToBoxedInt(CoreModule.Settings.AllowTextHighlight);
 
         public override bool OnlyChecksFlags() => false;
 
@@ -189,7 +175,7 @@ internal static class SimpleCommands {
     }
 
     private abstract class PlayerGetterCondition<T> : Condition where T : notnull {
-        private object _lastValue;
+        private object? _lastValue;
 
         protected abstract T GetFromPlayer(Player player);
 

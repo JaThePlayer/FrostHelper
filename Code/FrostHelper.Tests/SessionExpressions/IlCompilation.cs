@@ -444,9 +444,42 @@ public class IlCompilation {
         IL_0016: ret
         """);
     }
+
+    [Fact]
+    public void SimpleCommands() {
+        AssertIl<int>("$deaths", """
+        IL_0000: ldarg 
+        IL_0004: ldfld System.Int32 Celeste.Session::Deaths
+        IL_0009: ret
+        """);
+        
+        AssertIl<int>("$deathsHere", """
+        IL_0000: ldarg 
+        IL_0004: ldfld System.Int32 Celeste.Session::DeathsInCurrentLevel
+        IL_0009: ret
+        """);
+        
+        AssertIl<string>("$roomName", """
+        IL_0000: ldarg 
+        IL_0004: ldfld System.String Celeste.Session::Level
+        IL_0009: ret
+        """);
+        
+        AssertIl<bool>("$photosensitive", """
+        IL_0000: ldsfld Celeste.Settings Celeste.Settings::Instance
+        IL_0005: ldfld System.Boolean Celeste.Settings::DisableFlashes
+        IL_000a: ret
+        """);
+        
+        AssertIl<bool>("$allowGlitch", """
+        IL_0000: call Celeste.Mod.Core.CoreModuleSettings Celeste.Mod.Core.CoreModule::get_Settings()
+        IL_0005: call System.Boolean Celeste.Mod.Core.CoreModuleSettings::get_AllowGlitch()
+        IL_000a: ret
+        """);
+    }
     
     private void Test(Session s) {
-        var test = s.GetCounter("x") <= s.GetCounter("y");
+        var test = s.GetSlider("x") != 0f;
         
         Consume(test);
     }

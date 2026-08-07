@@ -6,6 +6,7 @@ namespace FrostHelper.Tests;
 
 public static class TestUtils {
     public static readonly object EngineSceneLock = new(); 
+    public static readonly object SettingsInstanceLock = new(); 
     
     public static IEnumerable<(bool, bool)> BoolPermutations => [(false, false), (false, true), (true, false), (true, true)];
     
