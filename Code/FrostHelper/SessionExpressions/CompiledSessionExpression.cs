@@ -6,9 +6,10 @@ using OpCodes = System.Reflection.Emit.OpCodes;
 namespace FrostHelper.SessionExpressions;
 
 internal sealed class ConditionCompilationCtx {
-    public int SessionArgId => 0;
-    public int UserdataArgId => 1;
-    public required LocalBuilder CurrentCondition { get; set; }
+    private const int SessionArgId = 0;
+    private const int UserdataArgId = 1;
+    
+    public required LocalBuilder CurrentCondition { get; init; }
     
     public required ILGenerator Il { get; init; }
 
@@ -16,9 +17,17 @@ internal sealed class ConditionCompilationCtx {
         Il.Emit(OpCodes.Ldarg, SessionArgId);
     }
     
+    public void EmitLoadCurrentCondition() {
+        Il.Emit(OpCodes.Ldloc, CurrentCondition);
+    }
+    
     public void EmitLoadCurrentCondition<T>() {
         Il.Emit(OpCodes.Ldloc, CurrentCondition);
         Il.Emit(OpCodes.Castclass, typeof(T));
+    }
+    
+    public void EmitLoadUserdata() {
+        Il.Emit(OpCodes.Ldarg, UserdataArgId);
     }
     
     public void EmitLoadUserdata<T>() {
@@ -28,6 +37,14 @@ internal sealed class ConditionCompilationCtx {
 
     public void EmitConvertTo(Type fromType, Type toType) {
         Il.EmitConvertToInSessionExpression(fromType, toType);
+    }
+
+    public void EmitSwapOutCurrentCondition(ref LocalBuilder? oldConditionTempLocal, ConditionHelper.Condition conditionToSwapTo, FieldInfo fieldStoringConditionToSwapTo ) {
+        Il.EmitSwapOutCurrentCondition(ref oldConditionTempLocal, this, conditionToSwapTo, fieldStoringConditionToSwapTo);
+    }
+
+    public void EmitRevertCurrentCondition(LocalBuilder? oldConditionTempLocal) {
+        Il.EmitRevertCurrentCondition(oldConditionTempLocal, this);
     }
 }
 

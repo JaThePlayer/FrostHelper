@@ -1216,20 +1216,44 @@ public static class ConditionHelper {
         
         protected internal bool ReturnTypeIsNumber => ReturnType == typeof(int) || ReturnType == typeof(float);
 
-        private static readonly MethodInfo _method_Get_Object = typeof(Condition).GetMethod(nameof(Get), genericParameterCount: 0, [ typeof(Session), typeof(object) ])!;
-        private static readonly MethodInfo _method_Get_T = typeof(Condition).GetMethod(nameof(Get), genericParameterCount: 1, BindingFlags.NonPublic | BindingFlags.Instance, null, [ typeof(Session), typeof(object) ], null)!;
+        private static readonly MethodInfo MethodGetT = typeof(Condition).GetMethod(nameof(Get), genericParameterCount: 1, BindingFlags.NonPublic | BindingFlags.Instance, null, [ typeof(Session), typeof(object) ], null)!;
         
+        /// <summary>
+        /// Emits IL code to execute this condition.
+        /// The emitted code should assume its operating on an empty stack,
+        /// and should leave exactly 1 value of type <paramref name="targetType"/> on top of the stack.
+        ///
+        /// Converting a value to <paramref name="targetType"/> is best done via calling <see cref="ConditionCompilationCtx.EmitConvertTo"/>.
+        ///
+        /// If this condition has any inner conditions nested within it, the best way to evaluate them is via:
+        /// <code>
+        ///     LocalBuilder? temp = null;
+        ///     ctx.EmitSwapOutCurrentCondition(ref temp, nextCondition, ...);
+        ///     nextCondition.Emit(ctx, type);
+        ///     // ... potentially call EmitSwapOutCurrentCondition for other conditions ...
+        ///     ctx.EmitRevertCurrentCondition(temp);
+        ///     // ... do something with the value returned from nextCondition ...
+        /// </code>
+        ///
+        /// Make sure to also override <see cref="UsesCurrentConditionLocalInEmit"/> if overriding this method.
+        /// </summary>
+        /// <param name="ctx">Context about the current compilation.</param>
+        /// <param name="targetType">The type of value that should be left on the stack.</param>
         internal virtual void Emit(ConditionCompilationCtx ctx, Type targetType) {
             if (!UsesCurrentConditionLocalInEmit) {
                 throw new Exception($"UsesCurrentConditionLocalInEmit is false, but CurrentCondition is being used by {GetType()}!");
             }
-            ctx.Il.Emit(OpCodes.Ldloc, ctx.CurrentCondition);
-            ctx.Il.Emit(OpCodes.Ldarg, ctx.SessionArgId);
-            ctx.Il.Emit(OpCodes.Ldarg, ctx.UserdataArgId);
-            
-            ctx.Il.Emit(OpCodes.Callvirt, _method_Get_T.MakeGenericMethod(targetType));
+            ctx.EmitLoadCurrentCondition();
+            ctx.EmitLoadSession();
+            ctx.EmitLoadUserdata();
+            ctx.Il.Emit(OpCodes.Callvirt, MethodGetT.MakeGenericMethod(targetType));
         }
 
+        /// <summary>
+        /// Whether the code emitted via <see cref="Emit"/> makes use of the CurrentCondition local variable.
+        /// If true, additional boilerplate IL code needs to be emitted before evaluating this condition, so it's best to return false if possible.
+        /// If this condition has any inner conditions nested within it, this method needs to return true if any of the child conditions return true. 
+        /// </summary>
         internal virtual bool UsesCurrentConditionLocalInEmit => true;
 
         internal int GetInt(Session session, object? userdata = null) {
