@@ -244,6 +244,25 @@ public class IlCompilation {
         IL_005d: add
         IL_005e: ret
         """);
+        
+        AssertIl<int>("#\"count$(1)\"", """
+        IL_0000: ldarg 
+        IL_0004: ldloca V_1
+        IL_0008: ldc.i4.0
+        IL_0009: ldc.i4 2
+        IL_000e: call FrostHelper.Helpers.Interpolator FrostHelper.Helpers.Interpolator::get_Shared()
+        IL_0013: call System.Void FrostHelper.Helpers.Interpolator/Handler::.ctor(System.Int32,System.Int32,FrostHelper.Helpers.Interpolator)
+        IL_0018: ldloca V_1
+        IL_001c: ldstr "count"
+        IL_0021: call System.Void FrostHelper.Helpers.Interpolator/Handler::AppendLiteral(System.String)
+        IL_0026: ldloca V_1
+        IL_002a: ldc.i4 1
+        IL_002f: call System.Void FrostHelper.Helpers.Interpolator/Handler::AppendFormatted<System.Int32>(T2)
+        IL_0034: ldloca V_1
+        IL_0038: call System.String FrostHelper.Helpers.Interpolator/Handler::ResultToString()
+        IL_003d: callvirt System.Int32 Celeste.Session::GetCounter(System.String)
+        IL_0042: ret
+        """);
     }
 
     [Fact]

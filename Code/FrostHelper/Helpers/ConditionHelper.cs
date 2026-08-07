@@ -1163,7 +1163,7 @@ public static class ConditionHelper {
         }
         
         public override object Get(Session session, object? userdata) {
-            return GetInt(session);
+            return GetCached(session);
         }
 
         internal override void Emit(ConditionCompilationCtx ctx, Type targetType) {
@@ -1179,21 +1179,45 @@ public static class ConditionHelper {
     }
     
     private sealed class IndirectCounterAccessor(Condition nameCond) : Condition {
+        private readonly Condition _nameCondition = nameCond;
+        private static readonly FieldInfo FieldNameCondition = typeof(IndirectCounterAccessor).GetField(nameof(_nameCondition), BindingFlags.Instance | BindingFlags.NonPublic)!;
+        private static readonly MethodInfo MethodSessionGetCounter = typeof(Session).GetMethod(nameof(Session.GetCounter), BindingFlags.Instance | BindingFlags.Public)!;
+
         public override object Get(Session session, object? userdata) {
-            var name = nameCond.GetString(session, userdata);
+            var name = _nameCondition.GetString(session, userdata);
             
             return session.GetCounter(name);
         }
 
+        internal override void Emit(ConditionCompilationCtx ctx, Type targetType) {
+            LocalBuilder? temp = null;
+            ctx.EmitLoadSession();
+            
+            ctx.EmitSwapOutCurrentCondition(ref temp, _nameCondition, FieldNameCondition);
+            _nameCondition.Emit(ctx, typeof(string));
+            ctx.EmitRevertCurrentCondition(temp);
+            
+            ctx.Il.Emit(OpCodes.Callvirt, MethodSessionGetCounter);
+            ctx.EmitConvertTo(typeof(int), targetType);
+        }
+
+        internal override bool UsesCurrentConditionLocalInEmit => _nameCondition.UsesCurrentConditionLocalInEmit;
+
         protected internal override Type ReturnType => typeof(int);
 
-        protected override IEnumerable<object> GetArgsForDebugPrint() => [nameCond];
+        protected override IEnumerable<object> GetArgsForDebugPrint() => [_nameCondition];
     }
     
     private sealed class Empty : Condition {
         public override object Get(Session session, object? userdata) {
             return One;
         }
+
+        internal override void Emit(ConditionCompilationCtx ctx, Type targetType) {
+            ctx.Il.EmitLoadConstAs(One, targetType);
+        }
+
+        internal override bool UsesCurrentConditionLocalInEmit => false;
 
         public override bool OnlyChecksFlags() => true;
     }
