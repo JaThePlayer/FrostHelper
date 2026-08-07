@@ -13,23 +13,25 @@ public class FlagListenerTests {
         }, mustChange: true, triggerOnRoomBegin: true);
 
         var level = TestUtils.CreateLevel();
-        Engine.Instance.scene = level;
+        lock (TestUtils.EngineSceneLock) {
+            Engine.Instance.scene = level;
         
-        level.Add([ listener ]);
+            level.Add([ listener ]);
         
-        // triggerOnRoomBegin
-        level.Entities.UpdateLists();
-        Assert.Equal(1, calls);
-        Assert.True(justSeenValue.HasValue);
-        Assert.False(justSeenValue);
+            // triggerOnRoomBegin
+            level.Entities.UpdateLists();
+            Assert.Equal(1, calls);
+            Assert.True(justSeenValue.HasValue);
+            Assert.False(justSeenValue);
         
-        // mustChange
-        level.Session.SetFlag(flagName, false);
-        Assert.Equal(1, calls);
+            // mustChange
+            level.Session.SetFlag(flagName, false);
+            Assert.Equal(1, calls);
         
-        level.Session.SetFlag(flagName);
-        Assert.Equal(2, calls);
-        Assert.True(justSeenValue);
+            level.Session.SetFlag(flagName);
+            Assert.Equal(2, calls);
+            Assert.True(justSeenValue);
+        }
     }
     
     [Fact]
@@ -43,22 +45,24 @@ public class FlagListenerTests {
         }, mustChange: false, triggerOnRoomBegin: false);
 
         var level = TestUtils.CreateLevel();
-        Engine.Instance.scene = level;
+        lock (TestUtils.EngineSceneLock) {
+            Engine.Instance.scene = level;
         
-        level.Add([ listener ]);
+            level.Add([ listener ]);
         
-        // !triggerOnRoomBegin
-        level.Entities.UpdateLists();
-        Assert.Equal(0, calls);
-        Assert.False(justSeenValue.HasValue);
+            // !triggerOnRoomBegin
+            level.Entities.UpdateLists();
+            Assert.Equal(0, calls);
+            Assert.False(justSeenValue.HasValue);
         
-        // !mustChange
-        level.Session.SetFlag(flagName, false);
-        Assert.Equal(1, calls);
-        Assert.False(justSeenValue);
+            // !mustChange
+            level.Session.SetFlag(flagName, false);
+            Assert.Equal(1, calls);
+            Assert.False(justSeenValue);
         
-        level.Session.SetFlag(flagName);
-        Assert.Equal(2, calls);
-        Assert.True(justSeenValue);
+            level.Session.SetFlag(flagName);
+            Assert.Equal(2, calls);
+            Assert.True(justSeenValue);
+        }
     }
 }

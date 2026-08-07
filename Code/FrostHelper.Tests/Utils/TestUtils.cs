@@ -1,9 +1,12 @@
 ﻿using FrostHelper.Helpers;
 using FrostHelper.SessionExpressions;
+using System.Runtime.CompilerServices;
 
 namespace FrostHelper.Tests;
 
 public static class TestUtils {
+    public static readonly object EngineSceneLock = new(); 
+    
     public static IEnumerable<(bool, bool)> BoolPermutations => [(false, false), (false, true), (true, false), (true, true)];
     
     public static ConditionHelper.Condition CreateExpr(string txt, ExpressionContext? context = null, bool createHybrid = true) {
@@ -24,6 +27,7 @@ public static class TestUtils {
     public static Session CreateTestSession() {
         return new Session {
             Area = MockMap.AreaKey,
+            Level = MockMap.MockRoomName,
         };
     }
 
@@ -33,6 +37,13 @@ public static class TestUtils {
         level.HudRenderer = new HudRenderer();
         
         return level;
+    }
+
+    public static Player CreatePlayer() {
+        var player = (Player) RuntimeHelpers.GetUninitializedObject(typeof(Player));
+        player.startHairCalled = true;
+
+        return player;
     }
 
     internal sealed class HybridExpression(ConditionHelper.Condition basedOn) : ConditionHelper.Condition {

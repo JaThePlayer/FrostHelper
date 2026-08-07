@@ -449,7 +449,7 @@ public static class ConditionHelper {
                 return (T)Get(session, userdata);
 
             object ret = Get(session, userdata);
-            if (ret.GetType().IsAssignableTo(typeof(T))) {
+            if (ret.GetType() == typeof(T) || ret.GetType().IsAssignableTo(typeof(T))) {
                 return (T) ret;
             }
 

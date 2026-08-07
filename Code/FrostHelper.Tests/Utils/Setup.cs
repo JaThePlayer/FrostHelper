@@ -22,6 +22,8 @@ public sealed class FrostHelperSetupFixture : IDisposable
         Everest._Modules.Add(frostHelperModule);
         
         NotificationHelper.NotificationSink = new DefaultTestNotificationSink();
+        
+        MockMap.Initialize();
     }
 
     public void Dispose()
