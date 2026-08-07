@@ -93,6 +93,14 @@ internal static class IlGeneratorExt {
                     return;
                 }
             }
+
+            if (toType == typeof(bool)) {
+                if (fromType == typeof(int)) {
+                    il.Emit(OpCodes.Ldc_I4_0);
+                    il.Emit(OpCodes.Cgt_Un);
+                    return;
+                }
+            }
             
             throw new Exception($"Cannot convert {fromType} to {toType}");
         }

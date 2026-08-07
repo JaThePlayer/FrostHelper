@@ -34,6 +34,12 @@ public class Coercion {
         Assert.Equal(-3, TestUtils.CreateExpr("-3.99").Get<int>(session));
         // As consequence, since an int literal that's too big becomes a float, it gets truncated when cast to int...
         Assert.Equal(2147483647, TestUtils.CreateExpr("21474836471").Get<int>(session));
+        
+        // Bitwise operators coerce to ints always.
+        Assert.Equal(3, TestUtils.CreateExpr("1 | 2").Get<int>(session));
+        Assert.Equal(3, TestUtils.CreateExpr("1 | 2.0").Get<int>(session));
+        Assert.Equal(3, TestUtils.CreateExpr("1.0 | 2").Get<int>(session));
+        Assert.Equal(3, TestUtils.CreateExpr("1.0 | 2.0").Get<int>(session));
     }
     
     [Fact]

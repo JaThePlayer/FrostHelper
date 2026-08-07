@@ -177,8 +177,8 @@ public static class ConditionHelper {
                 condition = binExpr.Operator switch {
                     BinOpExpression.Operators.And => new OperatorAnd(leftExpr, rightExpr),
                     BinOpExpression.Operators.Or => new OperatorOr(leftExpr, rightExpr),
-                    BinOpExpression.Operators.BitwiseAnd => new OperatorBitwiseAnd(leftExpr, rightExpr),
-                    BinOpExpression.Operators.BitwiseOr => new OperatorBitwiseOr(leftExpr, rightExpr),
+                    BinOpExpression.Operators.BitwiseAnd => new BitwiseOperator<OperatorBitwiseAnd>(leftExpr, rightExpr),
+                    BinOpExpression.Operators.BitwiseOr => new BitwiseOperator<OperatorBitwiseOr>(leftExpr, rightExpr),
                     BinOpExpression.Operators.Add => new MathOperator<OperatorAdd>(leftExpr, rightExpr),
                     BinOpExpression.Operators.Sub => new MathOperator<OperatorSub>(leftExpr, rightExpr),
                     BinOpExpression.Operators.Mul => new MathOperator<OperatorMul>(leftExpr, rightExpr),
@@ -302,8 +302,8 @@ public static class ConditionHelper {
     internal sealed class OperatorAnd(Condition a, Condition b) : Condition {
         private readonly Condition _a = a, _b = b;
         private static readonly FieldInfo
-            FieldA = typeof(Condition).GetField(nameof(_a), BindingFlags.Instance | BindingFlags.NonPublic)!,
-            FieldB = typeof(Condition).GetField(nameof(_b), BindingFlags.Instance | BindingFlags.NonPublic)!;
+            FieldA = typeof(OperatorAnd).GetField(nameof(_a), BindingFlags.Instance | BindingFlags.NonPublic)!,
+            FieldB = typeof(OperatorAnd).GetField(nameof(_b), BindingFlags.Instance | BindingFlags.NonPublic)!;
         
         public override object Get(Session session, object? userdata) {
             return CoerceToBool(_a.Get(session, userdata)) && CoerceToBool(_b.Get(session, userdata)) ? 1 : 0;
@@ -346,8 +346,8 @@ public static class ConditionHelper {
     internal sealed class OperatorOr(Condition a, Condition b) : Condition {
         private readonly Condition _a = a, _b = b;
         private static readonly FieldInfo
-            FieldA = typeof(Condition).GetField(nameof(_a), BindingFlags.Instance | BindingFlags.NonPublic)!,
-            FieldB = typeof(Condition).GetField(nameof(_b), BindingFlags.Instance | BindingFlags.NonPublic)!;
+            FieldA = typeof(OperatorOr).GetField(nameof(_a), BindingFlags.Instance | BindingFlags.NonPublic)!,
+            FieldB = typeof(OperatorOr).GetField(nameof(_b), BindingFlags.Instance | BindingFlags.NonPublic)!;
         
         public override object Get(Session session, object? userdata) {
             return CoerceToBool(_a.Get(session, userdata)) || CoerceToBool(_b.Get(session, userdata)) ? One : Zero;
@@ -387,29 +387,59 @@ public static class ConditionHelper {
         protected override IEnumerable<object> GetArgsForDebugPrint() => [_a, _b];
     }
     
-    internal sealed class OperatorBitwiseOr(Condition a, Condition b) : BitwiseOperator(a, b) {
-        protected override object Perform<T>(T a, T b) {
+    internal struct OperatorBitwiseOr : IBitwiseOperator {
+        public static T Perform<T>(T a, T b) where T : IBinaryNumber<T> {
             return a | b;
         }
+        
+        public static OpCode? OpCode => OpCodes.Or;
     }
     
-    internal sealed class OperatorBitwiseAnd(Condition a, Condition b) : BitwiseOperator(a, b) {
-        protected override object Perform<T>(T a, T b) {
+    internal struct OperatorBitwiseAnd : IBitwiseOperator {
+        public static T Perform<T>(T a, T b) where T : IBinaryNumber<T> {
             return a & b;
         }
+
+        public static OpCode? OpCode => OpCodes.And;
+    }
+    
+    internal interface IBitwiseOperator {
+        public static abstract T Perform<T>(T a, T b) where T : IBinaryNumber<T>;
+        
+        public static abstract OpCode? OpCode { get; }
     }
 
-    internal abstract class BitwiseOperator(Condition condA, Condition condB) : BinaryOperator(condA, condB) {
+    internal sealed class BitwiseOperator<TOp>(Condition condA, Condition condB) : BinaryOperator(condA, condB) where TOp : IBitwiseOperator {
+        private static readonly MethodInfo MethodPerformInt
+            = typeof(TOp).GetMethod(nameof(IBitwiseOperator.Perform), BindingFlags.Static | BindingFlags.Public)!.MakeGenericMethod(typeof(int));
+        
         protected override object Operate(object a, object b) {
             return (a, b) switch {
-                (int aInt, int bInt) => Perform(aInt, bInt),
-                (float aF, float bF) => Perform((int) aF, (int) bF),
+                (int aInt, int bInt) => TOp.Perform(aInt, bInt),
+                (float aF, float bF) => TOp.Perform((int) aF, (int) bF),
                 _ => LogIncomparableTypes(a, b)
             };
         }
-        
-        protected abstract object Perform<T>(T a, T b) where T : IBinaryNumber<T>;
-        
+
+        internal override void Emit(ConditionCompilationCtx ctx, Type targetType) {
+            if (ConditionA.ReturnTypeIsNumber && ConditionB.ReturnTypeIsNumber) {
+                EmitGetValuesFromChildConditions(ctx, typeof(int));
+                if (TOp.OpCode is { } opCode) {
+                    ctx.Il.Emit(opCode);
+                } else {
+                    ctx.Il.Emit(OpCodes.Call, MethodPerformInt);
+                }
+                ctx.EmitConvertTo(typeof(int), targetType);
+            } else {
+                base.Emit(ctx, targetType);
+            }
+        }
+
+        internal override bool UsesCurrentConditionLocalInEmit 
+            => InnerConditionsUseCurrentConditionLocalInEmit
+               || !ConditionA.ReturnTypeIsNumber
+               || !ConditionB.ReturnTypeIsNumber;
+
         private object LogIncomparableTypes(object a, object b) {
             NotificationHelper.Notify($"Can't perform bitwise operations on objects of types: {a.GetType()} and {b.GetType()}. Result will always be 0!");
             return 0;
@@ -1110,6 +1140,8 @@ public static class ConditionHelper {
         protected virtual IEnumerable<object> GetArgsForDebugPrint() => [];
 
         protected internal virtual Type? ReturnType => null;
+        
+        protected internal bool ReturnTypeIsNumber => ReturnType == typeof(int) || ReturnType == typeof(float);
 
         private static readonly MethodInfo _method_Get_Object = typeof(Condition).GetMethod(nameof(Get), genericParameterCount: 0, [ typeof(Session), typeof(object) ])!;
         private static readonly MethodInfo _method_Get_T = typeof(Condition).GetMethod(nameof(Get), genericParameterCount: 1, BindingFlags.NonPublic | BindingFlags.Instance, null, [ typeof(Session), typeof(object) ], null)!;
