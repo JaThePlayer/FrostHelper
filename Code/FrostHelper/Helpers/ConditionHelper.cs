@@ -218,9 +218,8 @@ public static class ConditionHelper {
     }
 
     internal sealed class StringInterpolationOperator(List<Condition> args) : Condition {
-        private readonly StringBuilder _stringBuilder = new();
-
         private Condition GetArg(int index) => args[index];
+        
         private static readonly MethodInfo MethodGetArg = typeof(StringInterpolationOperator).GetMethod(nameof(GetArg), BindingFlags.Instance | BindingFlags.NonPublic)!;
         
         private static readonly MethodInfo MethodInterpolatorHandlerAppendLiteralString
@@ -237,21 +236,6 @@ public static class ConditionHelper {
 
         
         public override object Get(Session session, object? userdata) {
-            /*
-            var builder = _stringBuilder;
-            
-            foreach (var arg in args) {
-                var obj = arg.Get(session, userdata);
-                if (obj is string str)
-                    builder.Append(str);
-                else
-                    builder.Append(CultureInfo.InvariantCulture, $"{obj}");
-            }
-            
-            var ret = builder.ToString();
-            builder.Clear();
-            return ret;
-            */
             Interpolator.Handler handler = new Interpolator.Handler(0, args.Count, Interpolator.Shared);
             foreach (var arg in args) {
                 var obj = arg.Get(session, userdata);
@@ -265,17 +249,6 @@ public static class ConditionHelper {
         }
 
         internal override void Emit(ConditionCompilationCtx ctx, Type targetType) {
-            //base.Emit(ctx, targetType);
-            /*
-       IL_0000: ldloca.s     'handler'
-      IL_0002: ldc.i4.0
-      IL_0003: ldarg.0      // this
-      IL_0004: ldfld        class [System.Collections]System.Collections.Generic.List`1<class FrostHelper.Helpers.ConditionHelper/Condition> FrostHelper.Helpers.ConditionHelper/StringInterpolationOperator::'<args>P'
-      IL_0009: callvirt     instance int32 class [System.Collections]System.Collections.Generic.List`1<class FrostHelper.Helpers.ConditionHelper/Condition>::get_Count()
-      IL_000e: call         class FrostHelper.Helpers.Interpolator FrostHelper.Helpers.Interpolator::get_Shared()
-      IL_0013: call         instance void FrostHelper.Helpers.Interpolator/Handler::.ctor(int32, int32, class FrostHelper.Helpers.Interpolator)
-
-             */
             var il = ctx.Il;
             var handlerLocal = il.DeclareLocal(typeof(Interpolator.Handler));
             LocalBuilder? tempLocal = null;
@@ -327,27 +300,91 @@ public static class ConditionHelper {
     }
 
     internal sealed class OperatorAnd(Condition a, Condition b) : Condition {
-        public override object Get(Session session, object? userdata) {
-            return CoerceToBool(a.Get(session, userdata)) && CoerceToBool(b.Get(session, userdata)) ? 1 : 0;
-        }
+        private readonly Condition _a = a, _b = b;
+        private static readonly FieldInfo
+            FieldA = typeof(Condition).GetField(nameof(_a), BindingFlags.Instance | BindingFlags.NonPublic)!,
+            FieldB = typeof(Condition).GetField(nameof(_b), BindingFlags.Instance | BindingFlags.NonPublic)!;
         
-        public override bool OnlyChecksFlags() => a.OnlyChecksFlags() && b.OnlyChecksFlags();
+        public override object Get(Session session, object? userdata) {
+            return CoerceToBool(_a.Get(session, userdata)) && CoerceToBool(_b.Get(session, userdata)) ? 1 : 0;
+        }
+
+        internal override void Emit(ConditionCompilationCtx ctx, Type targetType) {
+            LocalBuilder? temp = null;
+            var il = ctx.Il;
+            var falseLabel = il.DefineLabel();
+            var endLabel = il.DefineLabel();
+            
+            il.EmitSwapOutCurrentCondition(ref temp, ctx, _a, FieldA);
+            _a.Emit(ctx, typeof(bool));
+            il.Emit(OpCodes.Brfalse, falseLabel);
+            
+            il.EmitSwapOutCurrentCondition(ref temp, ctx, _b, FieldB);
+            _b.Emit(ctx, typeof(bool));
+            il.Emit(OpCodes.Br, endLabel);
+            
+            il.MarkLabel(falseLabel);
+            il.Emit(OpCodes.Ldc_I4_0);
+            
+            il.MarkLabel(endLabel);
+            
+            il.EmitRevertCurrentCondition(temp, ctx);
+            
+            ctx.EmitConvertTo(typeof(bool), targetType);
+        }
+
+        internal override bool UsesCurrentConditionLocalInEmit =>
+            _a.UsesCurrentConditionLocalInEmit || _b.UsesCurrentConditionLocalInEmit;
+
+        public override bool OnlyChecksFlags() => _a.OnlyChecksFlags() && _b.OnlyChecksFlags();
 
         protected internal override Type ReturnType => typeof(int);
 
-        protected override IEnumerable<object> GetArgsForDebugPrint() => [a, b];
+        protected override IEnumerable<object> GetArgsForDebugPrint() => [_a, _b];
     }
     
     internal sealed class OperatorOr(Condition a, Condition b) : Condition {
+        private readonly Condition _a = a, _b = b;
+        private static readonly FieldInfo
+            FieldA = typeof(Condition).GetField(nameof(_a), BindingFlags.Instance | BindingFlags.NonPublic)!,
+            FieldB = typeof(Condition).GetField(nameof(_b), BindingFlags.Instance | BindingFlags.NonPublic)!;
+        
         public override object Get(Session session, object? userdata) {
-            return CoerceToBool(a.Get(session, userdata)) || CoerceToBool(b.Get(session, userdata)) ? 1 : 0;
+            return CoerceToBool(_a.Get(session, userdata)) || CoerceToBool(_b.Get(session, userdata)) ? One : Zero;
+        }
+
+        internal override void Emit(ConditionCompilationCtx ctx, Type targetType) {
+            LocalBuilder? temp = null;
+            var il = ctx.Il;
+            var endLabel = il.DefineLabel();
+            var trueLabel = il.DefineLabel();
+            
+            il.EmitSwapOutCurrentCondition(ref temp, ctx, _a, FieldA);
+            _a.Emit(ctx, typeof(bool));
+            il.Emit(OpCodes.Brtrue, trueLabel);
+            
+            il.EmitSwapOutCurrentCondition(ref temp, ctx, _b, FieldB);
+            _b.Emit(ctx, typeof(bool));
+            il.Emit(OpCodes.Br, endLabel);
+            
+            il.MarkLabel(trueLabel);
+            il.Emit(OpCodes.Ldc_I4_1);
+            
+            il.MarkLabel(endLabel);
+            
+            il.EmitRevertCurrentCondition(temp, ctx);
+            
+            ctx.EmitConvertTo(typeof(bool), targetType);
         }
         
-        public override bool OnlyChecksFlags() => a.OnlyChecksFlags() && b.OnlyChecksFlags();
+        internal override bool UsesCurrentConditionLocalInEmit =>
+            _a.UsesCurrentConditionLocalInEmit || _b.UsesCurrentConditionLocalInEmit;
+
+        public override bool OnlyChecksFlags() => _a.OnlyChecksFlags() && _b.OnlyChecksFlags();
         
         protected internal override Type ReturnType => typeof(int);
 
-        protected override IEnumerable<object> GetArgsForDebugPrint() => [a, b];
+        protected override IEnumerable<object> GetArgsForDebugPrint() => [_a, _b];
     }
     
     internal sealed class OperatorBitwiseOr(Condition a, Condition b) : BitwiseOperator(a, b) {

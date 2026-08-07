@@ -339,5 +339,43 @@ public class IlCompilation {
         }
         Assert.Equal(0.400012225f, uncompiled.GetFloat(session, userdata));
     }
-    
+
+    [Fact]
+    public void LogicalOperators() {
+        AssertIl<bool>("flagA && flagB", """
+        IL_0000: ldarg 
+        IL_0004: ldstr "flagA"
+        IL_0009: callvirt System.Boolean Celeste.Session::GetFlag(System.String)
+        IL_000e: brfalse IL_0026
+        IL_0013: ldarg 
+        IL_0017: ldstr "flagB"
+        IL_001c: callvirt System.Boolean Celeste.Session::GetFlag(System.String)
+        IL_0021: br IL_0027
+        IL_0026: ldc.i4.0
+        IL_0027: ret
+        """);
+        
+        AssertIl<bool>("flagA || flagB", """
+        IL_0000: ldarg 
+        IL_0004: ldstr "flagA"
+        IL_0009: callvirt System.Boolean Celeste.Session::GetFlag(System.String)
+        IL_000e: brtrue IL_0026
+        IL_0013: ldarg 
+        IL_0017: ldstr "flagB"
+        IL_001c: callvirt System.Boolean Celeste.Session::GetFlag(System.String)
+        IL_0021: br IL_0027
+        IL_0026: ldc.i4.1
+        IL_0027: ret
+        """);
+    }
+
+    private void Test(Session s) {
+        var test = s.GetFlag("flagA") || s.GetFlag("flagB");
+        
+        Consume(test);
+    }
+
+    private void Consume(bool b) {
+        
+    }
 }
