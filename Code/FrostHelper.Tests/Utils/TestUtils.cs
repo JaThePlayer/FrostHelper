@@ -41,7 +41,7 @@ public static class TestUtils {
     }
 
     internal sealed class HybridExpression(ConditionHelper.Condition basedOn) : ConditionHelper.Condition {
-        private readonly CompiledCondition<object> _compiled = new CompiledCondition<object>(basedOn);
+        private readonly CompiledCondition<object> _compiled = CompiledCondition<object>.GetFor(basedOn);
         
         public ConditionHelper.Condition SourceCondition => basedOn;
         

@@ -1,6 +1,8 @@
 using Celeste.Mod.Core;
 using FrostHelper.Helpers;
+using FrostHelper.ModIntegration;
 using System.Reflection.Emit;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using OpCodes = System.Reflection.Emit.OpCodes;
 
@@ -64,8 +66,19 @@ internal sealed class ConditionCompilationCtx {
     }
 }
 
-public class CompiledCondition<T>(ConditionHelper.Condition basedOn) {
+internal sealed class CompiledCondition<T> : ISavestatePersisted, IDisposable {
+    private static readonly ConditionalWeakTable<ConditionHelper.Condition, CompiledCondition<T>> Cache = new();
     private static int _compiledAmt;
+
+    public static CompiledCondition<T> GetFor(ConditionHelper.Condition condition) {
+        return Cache.GetValue(condition, static c => new CompiledCondition<T>(c));
+    }
+    
+    private CompiledCondition(ConditionHelper.Condition basedOn) {
+        _basedOn = basedOn;
+    }
+
+    private readonly ConditionHelper.Condition _basedOn;
 
     private Func<Session, object?, ConditionHelper.Condition, T>? _compiled;
 
@@ -80,8 +93,8 @@ public class CompiledCondition<T>(ConditionHelper.Condition basedOn) {
         }
 
         return _compiled is null
-            ? basedOn.Get<T>(session, userdata)
-            : _compiled(session, userdata, basedOn);
+            ? _basedOn.Get<T>(session, userdata)
+            : _compiled(session, userdata, _basedOn);
     }
 
     internal Func<Session, object?, ConditionHelper.Condition, T>? Jit() {
@@ -97,15 +110,15 @@ public class CompiledCondition<T>(ConditionHelper.Condition basedOn) {
             Il = il,
         };
 
-        if (basedOn.UsesCurrentConditionLocalInEmit) {
+        if (_basedOn.UsesCurrentConditionLocalInEmit) {
             il.Emit(OpCodes.Ldarg_2);
             il.Emit(OpCodes.Stloc, ctx.CurrentCondition);
         }
 
         try {
-            basedOn.Emit(ctx, typeof(T));
+            _basedOn.Emit(ctx, typeof(T));
         } catch (Exception ex) {
-            Logger.Error("FrostHelper.CompiledCondition", $"Failed to compile session expression '{basedOn.SourceText}', falling back to interpreter: {ex}");
+            Logger.Error("FrostHelper.CompiledCondition", $"Failed to compile session expression '{_basedOn.SourceText}', falling back to interpreter: {ex}");
             return null;
         }
         
@@ -115,5 +128,17 @@ public class CompiledCondition<T>(ConditionHelper.Condition basedOn) {
         CompiledMethod = method;
         
         return _compiled;
+    }
+
+    ~CompiledCondition() {
+        Dispose();
+    }
+    
+    public void Dispose() {
+        _compiled = null;
+        _attemptedToCompile = false;
+        CompiledMethod?.Dispose();
+        CompiledMethod = null;
+        GC.SuppressFinalize(this);
     }
 }

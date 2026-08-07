@@ -591,7 +591,7 @@ public static class ConditionHelper {
 /// </summary>
 /// <typeparam name="T">The type returned from the expression</typeparam>
 internal sealed class SessionExpression<T> {
-    private readonly ConditionHelper.Condition? _condition;
+    private readonly CompiledCondition<T>? _condition;
 
     public SessionExpression(T constantValue) {
         IsConstant = true;
@@ -600,10 +600,11 @@ internal sealed class SessionExpression<T> {
     }
     
     public SessionExpression(ConditionHelper.Condition condition) {
-        _condition = condition;
         if (condition is IConstCondition<T> constCond) {
             IsConstant = true;
             ConstantValue = constCond.Value;
+        } else {
+            _condition = CompiledCondition<T>.GetFor(condition);
         }
 
         IsNotEmpty = !condition.Empty;
@@ -619,15 +620,15 @@ internal sealed class SessionExpression<T> {
     public T? ConstantValue { get; }
     
     public T Get(Scene scene) {
-        return _condition is null ? ConstantValue! : _condition.Get<T>(scene.ToLevel().Session);
+        return _condition is null ? ConstantValue! : _condition.Get(scene.ToLevel().Session, null);
     }
     
     public T Get(Session session) {
-        return _condition is null ? ConstantValue! : _condition.Get<T>(session);
+        return _condition is null ? ConstantValue! : _condition.Get(session, null);
     }
     
     public T Get(Session session, object userdata) {
-        return _condition is null ? ConstantValue! : _condition.Get<T>(session, userdata);
+        return _condition is null ? ConstantValue! : _condition.Get(session, userdata);
     }
 }
 

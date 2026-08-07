@@ -30,7 +30,7 @@ public class IlCompilation {
 
     CompiledCondition<T> AssertIl<T>(string expression, string expected, ExpressionContext? context = null) {
         var flagExpr = TestUtils.CreateExpr(expression, context);
-        var compiled = new CompiledCondition<T>(flagExpr);
+        var compiled = CompiledCondition<T>.GetFor(flagExpr);
         compiled.Jit();
         Assert.NotNull(compiled.CompiledMethod);
         AssertIl(compiled.CompiledMethod, expected);
