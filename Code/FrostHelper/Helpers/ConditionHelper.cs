@@ -185,12 +185,12 @@ public static class ConditionHelper {
                     BinOpExpression.Operators.Div => new MathOperator<OperatorDiv>(leftExpr, rightExpr),
                     BinOpExpression.Operators.DivFloat => new OperatorDivFloat(leftExpr, rightExpr),
                     BinOpExpression.Operators.Modulo => new MathOperator<IOperatorModulo>(leftExpr, rightExpr),
-                    BinOpExpression.Operators.Lt => new OperatorLt(leftExpr, rightExpr),
-                    BinOpExpression.Operators.Gt => new OperatorGt(leftExpr, rightExpr),
-                    BinOpExpression.Operators.Eq => new OperatorEq(leftExpr, rightExpr),
-                    BinOpExpression.Operators.Ne => new OperatorNe(leftExpr, rightExpr),
-                    BinOpExpression.Operators.Ge => new OperatorGte(leftExpr, rightExpr),
-                    BinOpExpression.Operators.Le => new OperatorLte(leftExpr, rightExpr),
+                    BinOpExpression.Operators.Lt => new ComparisonOperator<OperatorLt>(leftExpr, rightExpr),
+                    BinOpExpression.Operators.Gt => new ComparisonOperator<OperatorGt>(leftExpr, rightExpr),
+                    BinOpExpression.Operators.Eq => new ComparisonOperator<OperatorEq>(leftExpr, rightExpr),
+                    BinOpExpression.Operators.Ne => new ComparisonOperator<OperatorNe>(leftExpr, rightExpr),
+                    BinOpExpression.Operators.Ge => new ComparisonOperator<OperatorGte>(leftExpr, rightExpr),
+                    BinOpExpression.Operators.Le => new ComparisonOperator<OperatorLte>(leftExpr, rightExpr),
                     _ => null
                 };
 
@@ -657,58 +657,148 @@ public static class ConditionHelper {
             return true;
         }
     }
+
+    internal interface IComparisonOperator {
+        public static abstract bool Compare<T>(T a, T b) where T : IComparisonOperators<T, T, bool>;
+        
+        public static abstract bool Compare(string a, string b);
+        
+        public static abstract List<OpCode>? OpCodeSequence { get; }
+    }
     
-    internal sealed class OperatorEq(Condition a, Condition b) : ComparisonOperator(a, b) {
-        protected override bool Compare<T>(T a, T b) {
+    internal struct OperatorEq : IComparisonOperator {
+        public static bool Compare<T>(T a, T b) where T : IComparisonOperators<T, T, bool> {
             return a == b;
         }
+
+        public static bool Compare(string a, string b) {
+            return a == b;
+        }
+
+        public static List<OpCode> OpCodeSequence { get; } = [ OpCodes.Ceq ];
     }
     
-    internal sealed class OperatorNe(Condition a, Condition b) : ComparisonOperator(a, b) {
-        protected override bool Compare<T>(T a, T b) {
+    internal struct OperatorNe : IComparisonOperator {
+        public static bool Compare<T>(T a, T b) where T : IComparisonOperators<T, T, bool> {
             return a != b;
         }
+
+        public static bool Compare(string a, string b) {
+            return a != b;
+        }
+        
+        public static List<OpCode> OpCodeSequence { get; } = [ OpCodes.Ceq, OpCodes.Ldc_I4_0, OpCodes.Ceq ];
     }
     
-    internal sealed class OperatorGt(Condition a, Condition b) : ComparisonOperator(a, b) {
-        protected override bool Compare<T>(T a, T b) {
+    internal struct OperatorGt : IComparisonOperator {
+        public static bool Compare<T>(T a, T b) where T : IComparisonOperators<T, T, bool> {
             return a > b;
         }
+
+        public static bool Compare(string a, string b) {
+            return a.CompareTo(b, StringComparison.InvariantCulture) > 0;
+        }
+        
+        public static List<OpCode> OpCodeSequence { get; } = [ OpCodes.Cgt ];
     }
     
-    internal sealed class OperatorLt(Condition a, Condition b) : ComparisonOperator(a, b) {
-        protected override bool Compare<T>(T a, T b) {
+    internal struct OperatorLt : IComparisonOperator {
+        public static bool Compare<T>(T a, T b) where T : IComparisonOperators<T, T, bool> {
             return a < b;
         }
+        
+        public static bool Compare(string a, string b) {
+            return a.CompareTo(b, StringComparison.InvariantCulture) < 0;
+        }
+        
+        public static List<OpCode> OpCodeSequence { get; } = [ OpCodes.Clt ];
     }
     
-    internal sealed class OperatorGte(Condition a, Condition b) : ComparisonOperator(a, b) {
-        protected override bool Compare<T>(T a, T b) {
+    internal struct OperatorGte : IComparisonOperator {
+        public static bool Compare<T>(T a, T b) where T : IComparisonOperators<T, T, bool> {
             return a >= b;
         }
+        
+        public static bool Compare(string a, string b) {
+            return a.CompareTo(b, StringComparison.InvariantCulture) >= 0;
+        }
+        
+        public static List<OpCode> OpCodeSequence { get; } = [ OpCodes.Clt, OpCodes.Ldc_I4_0, OpCodes.Ceq ];
     }
     
-    internal sealed class OperatorLte(Condition a, Condition b) : ComparisonOperator(a, b) {
-        protected override bool Compare<T>(T a, T b) {
+    internal struct OperatorLte : IComparisonOperator {
+        public static bool Compare<T>(T a, T b) where T : IComparisonOperators<T, T, bool> {
             return a <= b;
         }
+        
+        public static bool Compare(string a, string b) {
+            return a.CompareTo(b, StringComparison.InvariantCulture) <= 0;
+        }
+        
+        public static List<OpCode> OpCodeSequence { get; } =  [ OpCodes.Cgt, OpCodes.Ldc_I4_0, OpCodes.Ceq ];
     }
 
-    internal abstract class ComparisonOperator(Condition condA, Condition condB) : BinaryOperator(condA, condB) {
-        protected abstract bool Compare<T>(T a, T b) where T : IComparisonOperators<T, T, bool>;
+    internal sealed class ComparisonOperator<TOp>(Condition condA, Condition condB) : BinaryOperator(condA, condB) where TOp : IComparisonOperator {
+        private static readonly MethodInfo Method_TOp_Compare_T_T = typeof(TOp)
+            .GetMethod(nameof(TOp.Compare), 1, BindingFlags.Static | BindingFlags.Public, null, [ Type.MakeGenericMethodParameter(0), Type.MakeGenericMethodParameter(0) ], null)!;
 
-        protected override object Operate(object a, object b) {
+        private static readonly MethodInfo Method_TOp_Compare_String_String = typeof(TOp)
+            .GetMethod(nameof(TOp.Compare), 0, BindingFlags.Static | BindingFlags.Public, null, [ typeof(string), typeof(string) ], null)!;
+
+        private static readonly MethodInfo Method_Dispatch = typeof(ComparisonOperator<TOp>)
+            .GetMethod(nameof(Dispatch), 0, BindingFlags.Static | BindingFlags.NonPublic, null, [ typeof(object), typeof(object) ], null)!;
+
+        
+        private static bool Dispatch(object a, object b) {
             return (a, b) switch {
-                (int ai, int bi) => Compare(ai, bi),
-                (float ai, float bi) => Compare(ai, bi),
-                (string ai, string bi) => ai == bi,
+                (int ai, int bi) => TOp.Compare(ai, bi),
+                (float ai, float bi) => TOp.Compare(ai, bi),
+                (string ai, string bi) => TOp.Compare(ai, bi),
                 _ => LogIncomparableTypes(a, b)
             };
         }
         
-        private object LogIncomparableTypes(object a, object b) {
+        protected override object Operate(object a, object b) {
+            return Dispatch(a, b) ? One : Zero;
+        }
+
+        internal override void Emit(ConditionCompilationCtx ctx, Type targetType) {
+            var aType = ConditionA.ReturnType;
+            var bType = ConditionB.ReturnType;
+            
+            if (ConditionA.ReturnTypeIsNumber && ConditionB.ReturnTypeIsNumber) {
+                var coercedType = aType == bType ? aType! : typeof(float);
+                
+                EmitGetValuesFromChildConditions(ctx, coercedType);
+                if (TOp.OpCodeSequence is { } opCodes) {
+                    foreach (var opCode in opCodes) {
+                        ctx.Il.Emit(opCode);
+                    }
+                } else {
+                    ctx.Il.Emit(OpCodes.Call, Method_TOp_Compare_T_T.MakeGenericMethod(coercedType));
+                }
+                ctx.EmitConvertTo(typeof(bool), targetType);
+                return;
+            }
+
+            if (aType == typeof(string) && bType == typeof(string)) {
+                EmitGetValuesFromChildConditions(ctx, typeof(string));
+                ctx.Il.Emit(OpCodes.Call, Method_TOp_Compare_String_String);
+                ctx.EmitConvertTo(typeof(bool), targetType);
+                return;
+            }
+            
+
+            EmitGetValuesFromChildConditions(ctx, typeof(object));
+            ctx.Il.Emit(OpCodes.Call, Method_Dispatch);
+            ctx.EmitConvertTo(typeof(bool), targetType);
+        }
+
+        internal override bool UsesCurrentConditionLocalInEmit => InnerConditionsUseCurrentConditionLocalInEmit;
+
+        private static bool LogIncomparableTypes(object a, object b) {
             NotificationHelper.Notify($"Can't compare objects of types: {a.GetType()} and {b.GetType()}. Result will always be 0!");
-            return 0;
+            return false;
         }
 
         protected internal override Type ReturnType => typeof(int);
@@ -1018,23 +1108,6 @@ public static class ConditionHelper {
             var flag = Flag ?? _nameCondition.GetString(session, userdata);
             return session.GetFlag(flag) != inverted ? One : Zero;
         }
-    }
-
-    private sealed class PropertyAccessor(PropertyInfo prop, object? target) : Condition {
-        // todo: MethodInvoker in .net8+
-        private FastReflectionHelper.FastInvoker? _invoker;
-        
-        public override object Get(Session session, object? userdata) {
-            _invoker ??= prop.GetGetMethod()!.GetFastInvoker();
-            
-            return _invoker(target) ?? Zero;
-        }
-
-        public override bool OnlyChecksFlags() => false;
-
-        protected internal override Type ReturnType => prop.PropertyType;
-
-        protected override IEnumerable<object> GetArgsForDebugPrint() => [prop.Name];
     }
     
     private sealed class SliderAccessor(string name) : Condition {

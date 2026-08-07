@@ -402,8 +402,26 @@ public class IlCompilation {
         """);
     }
 
+    [Fact]
+    public void ComparisonOperators() {
+        AssertIl<bool>("flagA > flagB", """
+        IL_0000: ldarg 
+        IL_0004: ldstr "flagA"
+        IL_0009: callvirt System.Boolean Celeste.Session::GetFlag(System.String)
+        IL_000e: ldc.i4.1
+        IL_000f: ceq
+        IL_0011: ldarg 
+        IL_0015: ldstr "flagB"
+        IL_001a: callvirt System.Boolean Celeste.Session::GetFlag(System.String)
+        IL_001f: ldc.i4.1
+        IL_0020: ceq
+        IL_0022: cgt
+        IL_0024: ret
+        """);
+    }
+    
     private void Test(Session s) {
-        var test = s.GetCounter("x") != 0;
+        var test = s.GetCounter("x") <= s.GetCounter("y");
         
         Consume(test);
     }
