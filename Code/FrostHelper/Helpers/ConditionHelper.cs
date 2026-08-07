@@ -39,7 +39,9 @@ public static class ConditionHelper {
         }
 
         if (AbstractExpression.TryParseCached(str, out var expr)) {
-            return TryCreate(expr, ctx, out condition);
+            var ret = TryCreate(expr, ctx, out condition);
+            condition?.SourceText = str;
+            return ret;
         }
 
         condition = null;
@@ -357,6 +359,8 @@ public static class ConditionHelper {
     }
 
     public abstract class Condition : ISavestatePersisted {
+        internal string? SourceText { get; set; }
+        
         internal static readonly object One = 1;
         internal static readonly object Zero = 0;
 

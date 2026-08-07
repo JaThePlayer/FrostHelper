@@ -28,9 +28,9 @@ public class IlCompilation {
         Assert.Equal(expected.ReplaceLineEndings(), result);
     }
 
-    CompiledSessionExpression<T> AssertIl<T>(string expression, string expected, ExpressionContext? context = null) {
+    CompiledCondition<T> AssertIl<T>(string expression, string expected, ExpressionContext? context = null) {
         var flagExpr = TestUtils.CreateExpr(expression, context);
-        var compiled = new CompiledSessionExpression<T>(flagExpr);
+        var compiled = new CompiledCondition<T>(flagExpr);
         compiled.Jit();
         Assert.NotNull(compiled.CompiledMethod);
         AssertIl(compiled.CompiledMethod, expected);

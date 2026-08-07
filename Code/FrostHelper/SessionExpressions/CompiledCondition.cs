@@ -64,22 +64,29 @@ internal sealed class ConditionCompilationCtx {
     }
 }
 
-public class CompiledSessionExpression<T>(ConditionHelper.Condition basedOn) {
+public class CompiledCondition<T>(ConditionHelper.Condition basedOn) {
     private static int _compiledAmt;
 
     private Func<Session, object?, ConditionHelper.Condition, T>? _compiled;
 
+    private bool _attemptedToCompile;
+    
     internal DynamicMethodDefinition? CompiledMethod { get; private set; }
     
     public T Get(Session session, object? userdata) {
-        _compiled ??= Jit();
-        
-        return _compiled(session, userdata, basedOn);
+        if (!_attemptedToCompile) {
+            _attemptedToCompile = true;
+            _compiled = Jit();
+        }
+
+        return _compiled is null
+            ? basedOn.Get<T>(session, userdata)
+            : _compiled(session, userdata, basedOn);
     }
 
-    internal Func<Session, object?, ConditionHelper.Condition, T> Jit() {
+    internal Func<Session, object?, ConditionHelper.Condition, T>? Jit() {
         DynamicMethodDefinition method = new DynamicMethodDefinition(
-            $"FrostHelper.<CompiledSessionExpression.{Interlocked.Increment(ref _compiledAmt)}>",
+            $"FrostHelper.<CompiledCondition.{typeof(T)}.{Interlocked.Increment(ref _compiledAmt)}>",
             typeof(T),
             [ typeof(Session), typeof(object), typeof(ConditionHelper.Condition) ]);
         
@@ -94,8 +101,14 @@ public class CompiledSessionExpression<T>(ConditionHelper.Condition basedOn) {
             il.Emit(OpCodes.Ldarg_2);
             il.Emit(OpCodes.Stloc, ctx.CurrentCondition);
         }
+
+        try {
+            basedOn.Emit(ctx, typeof(T));
+        } catch (Exception ex) {
+            Logger.Error("FrostHelper.CompiledCondition", $"Failed to compile session expression '{basedOn.SourceText}', falling back to interpreter: {ex}");
+            return null;
+        }
         
-        basedOn.Emit(ctx, typeof(T));
         il.Emit(OpCodes.Ret);
 
         _compiled = method.Generate().CreateDelegate<Func<Session, object?, ConditionHelper.Condition, T>>();

@@ -41,13 +41,17 @@ public static class TestUtils {
     }
 
     internal sealed class HybridExpression(ConditionHelper.Condition basedOn) : ConditionHelper.Condition {
-        private readonly CompiledSessionExpression<object> _compiled = new CompiledSessionExpression<object>(basedOn);
+        private readonly CompiledCondition<object> _compiled = new CompiledCondition<object>(basedOn);
         
         public ConditionHelper.Condition SourceCondition => basedOn;
         
         public override object Get(Session session, object? userdata) {
             var ret = basedOn.Get(session, userdata);
             var compiledRet = _compiled.Get(session, userdata);
+
+            if (_compiled.CompiledMethod is null) {
+                Assert.Fail("Expression failed to compile.");
+            }
 
             if (!ret.Equals(compiledRet)) {
                 Assert.Fail($"Expression didn't return the same value between compiled and interpreted execution!: '{ret}' (interpreted) vs '{compiledRet}' (compiled)");
