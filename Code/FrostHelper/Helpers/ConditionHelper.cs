@@ -263,15 +263,29 @@ public static class ConditionHelper {
     }
 
     internal sealed class OperatorInvert(Condition x) : Condition {
-        public override object Get(Session session, object? userdata) {
-            return CoerceToBool(x.Get(session, userdata)) ? 0 : 1;
-        }
+        private readonly Condition _innerCondition = x;
+        private static readonly FieldInfo FieldInnerCondition = typeof(OperatorInvert).GetField(nameof(_innerCondition), BindingFlags.Instance | BindingFlags.NonPublic)!;
         
-        public override bool OnlyChecksFlags() => x.OnlyChecksFlags();
+        public override object Get(Session session, object? userdata) {
+            return CoerceToBool(_innerCondition.Get(session, userdata)) ? Zero : One;
+        }
+
+        internal override void Emit(ConditionCompilationCtx ctx, Type targetType) {
+            LocalBuilder? temp = null;
+            ctx.Il.EmitSwapOutCurrentCondition(ref temp, ctx, _innerCondition, FieldInnerCondition);
+            _innerCondition.Emit(ctx, typeof(bool));
+            ctx.Il.EmitRevertCurrentCondition(temp, ctx);
+            
+            ctx.Il.Emit(OpCodes.Ldnull);
+            ctx.Il.Emit(OpCodes.Ceq);
+            ctx.EmitConvertTo(typeof(bool), targetType);
+        }
+
+        public override bool OnlyChecksFlags() => _innerCondition.OnlyChecksFlags();
         
         protected internal override Type ReturnType => typeof(int);
 
-        protected override IEnumerable<object> GetArgsForDebugPrint() => [x];
+        protected override IEnumerable<object> GetArgsForDebugPrint() => [_innerCondition];
     }
 
     internal sealed class FlagAccessor(Condition nameCond, bool inverted) : Condition, IInvertible {

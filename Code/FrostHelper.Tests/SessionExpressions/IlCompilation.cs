@@ -428,6 +428,22 @@ public class IlCompilation {
         IL_0024: ret
         """);
     }
+
+    [Fact]
+    public void Invert() {
+        AssertIl<bool>("!(1 + 2)", """
+        IL_0000: ldarg.2
+        IL_0001: stloc V_0
+        IL_0005: ldc.i4 1
+        IL_000a: ldc.i4 2
+        IL_000f: add
+        IL_0010: ldc.i4.0
+        IL_0011: cgt.un
+        IL_0013: ldnull
+        IL_0014: ceq
+        IL_0016: ret
+        """);
+    }
     
     private void Test(Session s) {
         var test = s.GetCounter("x") <= s.GetCounter("y");

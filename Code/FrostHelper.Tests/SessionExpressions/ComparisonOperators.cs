@@ -36,4 +36,13 @@ public class ComparisonOperators {
         Assert.True(TestUtils.CreateExpr("\"a\" != \"b\"").Check(session));
         Assert.False(TestUtils.CreateExpr("\"a\" != \"a\"").Check(session));
     }
+
+    [Fact]
+    public void Invert() {
+        var session = new Session();
+        
+        Assert.False(TestUtils.CreateExpr("!(hi + 0.0)").Check(session));
+        session.SetFlag("hi");
+        Assert.True(TestUtils.CreateExpr("!(hi + 0.0)").Check(session));
+    }
 }
