@@ -25,10 +25,8 @@ internal static class SimpleCommands {
         ["stamina"] = new StaminaAccessor(),
         ["player"] = new PlayerAccessor(),
         ["speed"] = new PlayerSpeedAccessor(),
-        ["speed.x"] = new PlayerSpeedXAccessor(),
-        ["speed.y"] = new PlayerSpeedYAccessor(),
-        ["pi"] = new PiAccessor(),
-        ["e"] = new EAccessor(),
+        ["pi"] = new ConstFloat(float.Pi),
+        ["e"] = new ConstFloat(float.E),
         ["dtime"] = new DeltaTimeAccessor(),
         ["time"] = new TimeAccessor(),
         ["roomName"] = new RoomNameAccessor(),
@@ -69,18 +67,6 @@ internal static class SimpleCommands {
         public override object Get(Session session, object? userdata) => BoolToBoxedInt(session.GrabbedGolden);
 
         protected internal override Type ReturnType => typeof(int);
-    }
-    
-    private sealed class PiAccessor : Condition {
-        public override object Get(Session session, object? userdata) => float.Pi;
-
-        protected internal override Type ReturnType => typeof(float);
-    }
-    
-    private sealed class EAccessor : Condition {
-        public override object Get(Session session, object? userdata) => float.E;
-
-        protected internal override Type ReturnType => typeof(float);
     }
     
     private sealed class DeltaTimeAccessor : Condition {
@@ -196,14 +182,6 @@ internal static class SimpleCommands {
     
     private sealed class PlayerSpeedAccessor : PlayerGetterCondition<Vector2> {
         protected override Vector2 GetFromPlayer(Player player) => player.Speed;
-    }
-    
-    private sealed class PlayerSpeedXAccessor : PlayerGetterCondition<float> {
-        protected override float GetFromPlayer(Player player) => player.Speed.X;
-    }
-
-    private sealed class PlayerSpeedYAccessor : PlayerGetterCondition<float> {
-        protected override float GetFromPlayer(Player player) => player.Speed.Y;
     }
 
     private sealed class StaminaAccessor : PlayerGetterCondition<float> {
