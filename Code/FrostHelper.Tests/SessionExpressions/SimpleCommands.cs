@@ -92,4 +92,15 @@ public class SimpleCommands {
             Assert.True(TestUtils.CreateExpr("$allowScreenFlash").Get<bool>(session));
         }
     }
+
+    [Fact]
+    public void Strawberries() {
+        var session = TestUtils.CreateTestSession();
+        
+        Assert.Empty(TestUtils.CreateExpr("$strawberries").Get<HashSet<EntityID>>(session));
+        Assert.Equal(0, TestUtils.CreateExpr("$strawberries.count").Get<int>(session));
+
+        session.Strawberries.Add(new EntityID("test", 1));
+        Assert.Equal(1, TestUtils.CreateExpr("$strawberries.count").Get<int>(session));
+    }
 }

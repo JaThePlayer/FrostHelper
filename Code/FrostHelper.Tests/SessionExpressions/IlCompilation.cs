@@ -477,6 +477,16 @@ public class IlCompilation {
         IL_000a: ret
         """);
     }
+
+    [Fact]
+    public void EnumerableOperations() {
+        AssertIl<int>("$strawberries.count", """
+        IL_0000: ldarg 
+        IL_0004: ldfld System.Collections.Generic.HashSet`1<Celeste.EntityID> Celeste.Session::Strawberries
+        IL_0009: call System.Int32 System.Collections.Generic.HashSet`1<Celeste.EntityID>::get_Count()
+        IL_000e: ret
+        """);
+    }
     
     private void Test(Session s) {
         var test = s.GetSlider("x") != 0f;

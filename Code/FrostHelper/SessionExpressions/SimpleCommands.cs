@@ -31,6 +31,7 @@ internal static class SimpleCommands {
         ["dtime"] = new DeltaTimeAccessor(),
         ["time"] = new TimeAccessor(),
         ["roomName"] = new SessionFieldAccessor(nameof(Session.Level)),
+        ["strawberries"] = new SessionFieldAccessor(nameof(Session.Strawberries)),
     };
 
     // Exposed via API
