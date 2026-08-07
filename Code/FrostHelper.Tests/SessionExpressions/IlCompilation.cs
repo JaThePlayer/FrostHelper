@@ -73,7 +73,7 @@ public class IlCompilation {
         IL_000e: callvirt System.Boolean Celeste.Session::GetFlag(System.String)
         IL_0013: ldc.i4.1
         IL_0014: ceq
-        IL_0016: call T FrostHelper.Helpers.ConditionHelper/OperatorDiv::Perform<System.Int32>(T,T)
+        IL_0016: call T FrostHelper.SessionExpressions.OperatorDiv::Perform<System.Int32>(T,T)
         IL_001b: conv.r4
         IL_001c: ret
         """);
@@ -86,7 +86,7 @@ public class IlCompilation {
         IL_0013: ldc.i4.1
         IL_0014: ceq
         IL_0016: conv.r4
-        IL_0017: call T FrostHelper.Helpers.ConditionHelper/OperatorDiv::Perform<System.Single>(T,T)
+        IL_0017: call T FrostHelper.SessionExpressions.OperatorDiv::Perform<System.Single>(T,T)
         IL_001c: ret
         """);
         
@@ -195,6 +195,15 @@ public class IlCompilation {
         IL_0046: callvirt System.Boolean Celeste.Session::GetFlag(System.String)
         IL_004b: ret
         """);
+        
+        AssertIl<bool>("!hi", """
+        IL_0000: ldarg 
+        IL_0004: ldstr "hi"
+        IL_0009: callvirt System.Boolean Celeste.Session::GetFlag(System.String)
+        IL_000e: ldnull
+        IL_000f: ceq
+        IL_0011: ret
+        """);
     }
 
     [Fact]
@@ -209,17 +218,17 @@ public class IlCompilation {
         IL_0016: ldfld FrostHelper.Helpers.ConditionHelper/Condition FrostHelper.Helpers.ConditionHelper/BinaryOperator::ConditionA
         IL_001b: stloc V_0
         IL_001f: ldloc V_0
-        IL_0023: castclass FrostHelper.Helpers.ConditionHelper/CounterAccessor
+        IL_0023: castclass FrostHelper.SessionExpressions.CounterAccessorCondition
         IL_0028: ldarg 
-        IL_002c: callvirt System.Int32 FrostHelper.Helpers.ConditionHelper/CounterAccessor::GetCached(Celeste.Session)
+        IL_002c: callvirt System.Int32 FrostHelper.SessionExpressions.CounterAccessorCondition::GetCached(Celeste.Session)
         IL_0031: ldloc V_1
         IL_0035: castclass FrostHelper.Helpers.ConditionHelper/BinaryOperator
         IL_003a: ldfld FrostHelper.Helpers.ConditionHelper/Condition FrostHelper.Helpers.ConditionHelper/BinaryOperator::ConditionB
         IL_003f: stloc V_0
         IL_0043: ldloc V_0
-        IL_0047: castclass FrostHelper.Helpers.ConditionHelper/CounterAccessor
+        IL_0047: castclass FrostHelper.SessionExpressions.CounterAccessorCondition
         IL_004c: ldarg 
-        IL_0050: callvirt System.Int32 FrostHelper.Helpers.ConditionHelper/CounterAccessor::GetCached(Celeste.Session)
+        IL_0050: callvirt System.Int32 FrostHelper.SessionExpressions.CounterAccessorCondition::GetCached(Celeste.Session)
         IL_0055: ldloc V_1
         IL_0059: stloc V_0
         IL_005d: add
@@ -268,7 +277,7 @@ public class IlCompilation {
         IL_0005: ldc.r4 3
         IL_000a: newobj System.Void Microsoft.Xna.Framework.Vector2::.ctor(System.Single,System.Single)
         IL_000f: ldc.r4 2
-        IL_0014: call Microsoft.Xna.Framework.Vector2 FrostHelper.Helpers.ConditionHelper/OperatorDiv::Perform(Microsoft.Xna.Framework.Vector2,System.Single)
+        IL_0014: call Microsoft.Xna.Framework.Vector2 FrostHelper.SessionExpressions.OperatorDiv::Perform(Microsoft.Xna.Framework.Vector2,System.Single)
         IL_0019: ret
         """);
         
@@ -277,7 +286,7 @@ public class IlCompilation {
         IL_0005: ldc.r4 2
         IL_000a: ldc.r4 3
         IL_000f: newobj System.Void Microsoft.Xna.Framework.Vector2::.ctor(System.Single,System.Single)
-        IL_0014: call Microsoft.Xna.Framework.Vector2 FrostHelper.Helpers.ConditionHelper/OperatorDiv::Perform(System.Single,Microsoft.Xna.Framework.Vector2)
+        IL_0014: call Microsoft.Xna.Framework.Vector2 FrostHelper.SessionExpressions.OperatorDiv::Perform(System.Single,Microsoft.Xna.Framework.Vector2)
         IL_0019: ret
         """);
         
@@ -288,7 +297,7 @@ public class IlCompilation {
         IL_000f: ldc.r4 2
         IL_0014: ldc.r4 3
         IL_0019: newobj System.Void Microsoft.Xna.Framework.Vector2::.ctor(System.Single,System.Single)
-        IL_001e: call Microsoft.Xna.Framework.Vector2 FrostHelper.Helpers.ConditionHelper/OperatorDiv::Perform(Microsoft.Xna.Framework.Vector2,Microsoft.Xna.Framework.Vector2)
+        IL_001e: call Microsoft.Xna.Framework.Vector2 FrostHelper.SessionExpressions.OperatorDiv::Perform(Microsoft.Xna.Framework.Vector2,Microsoft.Xna.Framework.Vector2)
         IL_0023: ret
         """);
     }

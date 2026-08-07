@@ -1,5 +1,6 @@
 ﻿using Celeste;
 using FrostHelper.Components;
+using FrostHelper.SessionExpressions;
 using Monocle;
 using static FrostHelper.Helpers.ConditionHelper;
 
