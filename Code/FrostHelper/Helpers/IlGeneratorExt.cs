@@ -100,6 +100,14 @@ internal static class IlGeneratorExt {
                     il.Emit(OpCodes.Cgt_Un);
                     return;
                 }
+                
+                if (fromType == typeof(float)) {
+                    il.Emit(OpCodes.Ldc_R4, 0f);
+                    il.Emit(OpCodes.Ceq);
+                    il.Emit(OpCodes.Ldc_I4_0);
+                    il.Emit(OpCodes.Ceq);
+                    return;
+                }
             }
             
             throw new Exception($"Cannot convert {fromType} to {toType}");

@@ -41,8 +41,8 @@ public class ComparisonOperators {
     public void Invert() {
         var session = new Session();
         
-        Assert.False(TestUtils.CreateExpr("!(hi + 0.0)").Check(session));
-        session.SetFlag("hi");
         Assert.True(TestUtils.CreateExpr("!(hi + 0.0)").Check(session));
+        session.SetFlag("hi");
+        Assert.False(TestUtils.CreateExpr("!(hi + 0.0)").Check(session));
     }
 }
