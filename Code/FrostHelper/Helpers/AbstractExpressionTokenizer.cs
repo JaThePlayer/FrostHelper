@@ -65,6 +65,8 @@ internal class ExpressionToken {
 
             if (parser.TryTrimPrefix("=="))
                 tokens.Add(new ExpressionToken(Kinds.Eq));
+            if (parser.TryTrimPrefix("=>"))
+                tokens.Add(new ExpressionToken(Kinds.LambdaArrow));
             if (parser.TryTrimPrefix("!="))
                 tokens.Add(new ExpressionToken(Kinds.Ne));
             if (parser.TryTrimPrefix(">="))
@@ -272,6 +274,8 @@ internal class ExpressionToken {
 
         Bracket,
         FieldAccess,
+        
+        LambdaArrow,
     }
 
     public enum TokenizerState {

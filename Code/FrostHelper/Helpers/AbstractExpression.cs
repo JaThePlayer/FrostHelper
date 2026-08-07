@@ -64,6 +64,12 @@ internal sealed class LiteralExpression<T>(T value) : AbstractExpression {
     public T Value => value;
 }
 
+internal sealed class LambdaExpression(IList<string> argumentNames, AbstractExpression code) : AbstractExpression {
+    public IList<string> ArgumentNames => argumentNames;
+
+    public AbstractExpression Code => code;
+}
+
 internal partial class AbstractExpression {
     protected AbstractExpression()
     {
@@ -212,6 +218,47 @@ internal partial class AbstractExpression {
         
         AbstractExpression? left = null;
         AbstractExpression? right = null;
+        
+        // Search for lambdas
+        if (tokens is [
+                { Kind: ExpressionToken.Kinds.Command, Operand: CommandTokenOperand lambdaArgs }, 
+                { Kind: ExpressionToken.Kinds.LambdaArrow },
+                .. var lambdaCode
+            ]) {
+            IList<string> argumentNames;
+            if (lambdaArgs.Arguments is null or []) {
+                argumentNames = [ lambdaArgs.Name ];
+            } else if (lambdaArgs.Arguments is [ [] ]) {
+                // $() => ...
+                argumentNames = [ ];
+            } else {
+                argumentNames = [ ];
+                foreach (var argumentTokens in lambdaArgs.Arguments) {
+                    if (argumentTokens is not [ var onlyToken ]) {
+                        NotificationHelper.Notify("Lambda argument names must be a single token.");
+                        return false;
+                    }
+
+                    if (onlyToken.Kind != ExpressionToken.Kinds.Flag) {
+                        NotificationHelper.Notify("Lambda argument names inside a $() must be a simple name, eg. $(a, b) => code");
+                        return false;
+                    }
+                
+                    argumentNames.Add(onlyToken.Operand?.ToString() ?? "");
+                }
+            }
+            
+            if (lambdaCode is []) {
+                NotificationHelper.Notify("Lambda must have code after =>.");
+                return false;
+            }
+            
+            if (!Parse(lambdaCode, out right))
+                return false;
+
+            expression = new LambdaExpression(argumentNames, right);
+            return true;
+        }
 
         // Search for && and ||
         if (FindAny(tokens, out var preBin, out var postBin, out var kind,
@@ -273,6 +320,7 @@ internal partial class AbstractExpression {
             return true;
         }
 
+        NotificationHelper.Notify("Failed to parse Session Expression: invalid syntax");
         return false;
 
         bool HandleBinOp(ReadOnlySpan<ExpressionToken> preBin, ReadOnlySpan<ExpressionToken> postBin, 
