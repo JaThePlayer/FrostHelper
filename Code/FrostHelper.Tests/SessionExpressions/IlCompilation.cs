@@ -176,43 +176,24 @@ public class IlCompilation {
         """);
                 
         AssertIl<bool>(@"f""hi$(@f)""", """
-        IL_0000: ldarg.2
-        IL_0001: stloc V_0
-        IL_0005: ldarg 
-        IL_0009: ldloc V_0
-        IL_000d: stloc V_1
-        IL_0011: ldloc V_1
-        IL_0015: castclass FrostHelper.Helpers.ConditionHelper/FlagAccessor
-        IL_001a: ldfld FrostHelper.Helpers.ConditionHelper/Condition FrostHelper.Helpers.ConditionHelper/FlagAccessor::_nameCondition
-        IL_001f: stloc V_0
-        IL_0023: ldloca V_2
-        IL_0027: ldc.i4.0
-        IL_0028: ldc.i4 2
-        IL_002d: call FrostHelper.Helpers.Interpolator FrostHelper.Helpers.Interpolator::get_Shared()
-        IL_0032: call System.Void FrostHelper.Helpers.Interpolator/Handler::.ctor(System.Int32,System.Int32,FrostHelper.Helpers.Interpolator)
-        IL_0037: ldloca V_2
-        IL_003b: ldstr "hi"
-        IL_0040: call System.Void FrostHelper.Helpers.Interpolator/Handler::AppendLiteral(System.String)
-        IL_0045: ldloc V_0
-        IL_0049: stloc V_3
-        IL_004d: ldloc V_3
-        IL_0051: ldc.i4 1
-        IL_0056: call FrostHelper.Helpers.ConditionHelper/Condition FrostHelper.Helpers.ConditionHelper/StringInterpolationOperator::GetArg(System.Int32)
-        IL_005b: stloc V_0
-        IL_005f: ldloca V_2
-        IL_0063: ldloc V_0
-        IL_0067: ldarg 
-        IL_006b: ldarg 
-        IL_006f: callvirt T FrostHelper.Helpers.ConditionHelper/Condition::Get<System.Single>(Celeste.Session,System.Object)
-        IL_0074: call System.Void FrostHelper.Helpers.Interpolator/Handler::AppendFormatted<System.Single>(T2)
-        IL_0079: ldloc V_3
-        IL_007d: stloc V_0
-        IL_0081: ldloca V_2
-        IL_0085: call System.String FrostHelper.Helpers.Interpolator/Handler::ResultToString()
-        IL_008a: ldloc V_1
-        IL_008e: stloc V_0
-        IL_0092: callvirt System.Boolean Celeste.Session::GetFlag(System.String)
-        IL_0097: ret
+        IL_0000: ldarg 
+        IL_0004: ldloca V_1
+        IL_0008: ldc.i4.0
+        IL_0009: ldc.i4 2
+        IL_000e: call FrostHelper.Helpers.Interpolator FrostHelper.Helpers.Interpolator::get_Shared()
+        IL_0013: call System.Void FrostHelper.Helpers.Interpolator/Handler::.ctor(System.Int32,System.Int32,FrostHelper.Helpers.Interpolator)
+        IL_0018: ldloca V_1
+        IL_001c: ldstr "hi"
+        IL_0021: call System.Void FrostHelper.Helpers.Interpolator/Handler::AppendLiteral(System.String)
+        IL_0026: ldloca V_1
+        IL_002a: ldarg 
+        IL_002e: ldstr "f"
+        IL_0033: callvirt System.Single Celeste.Session::GetSlider(System.String)
+        IL_0038: call System.Void FrostHelper.Helpers.Interpolator/Handler::AppendFormatted<System.Single>(T2)
+        IL_003d: ldloca V_1
+        IL_0041: call System.String FrostHelper.Helpers.Interpolator/Handler::ResultToString()
+        IL_0046: callvirt System.Boolean Celeste.Session::GetFlag(System.String)
+        IL_004b: ret
         """);
     }
 

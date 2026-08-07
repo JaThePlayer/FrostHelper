@@ -1111,6 +1111,8 @@ public static class ConditionHelper {
     }
     
     private sealed class SliderAccessor(string name) : Condition {
+        private static readonly MethodInfo MethodSessionGetSlider = typeof(Session).GetMethod(nameof(Session.GetSlider), BindingFlags.Instance | BindingFlags.Public)!;
+        
         private WeakReference<Session.Slider>? _slider;
         private WeakReference<Session>? _lastSession;
         
@@ -1129,18 +1131,47 @@ public static class ConditionHelper {
 
             return slider.Value;
         }
+        
+        internal override void Emit(ConditionCompilationCtx ctx, Type targetType) {
+            ctx.EmitLoadSession();
+            ctx.Il.Emit(OpCodes.Ldstr, name);
+            ctx.Il.Emit(OpCodes.Callvirt, MethodSessionGetSlider);
+            ctx.EmitConvertTo(typeof(float), targetType);
+        }
+
+        internal override bool UsesCurrentConditionLocalInEmit => false;
 
         protected internal override Type ReturnType => typeof(float);
     }
     
     private sealed class IndirectSliderAccessor(Condition nameCond) : Condition {
+        private readonly Condition _nameCondition = nameCond;
+        private static readonly FieldInfo FieldNameCondition = typeof(IndirectSliderAccessor).GetField(nameof(_nameCondition), BindingFlags.Instance | BindingFlags.NonPublic)!;
+        private static readonly MethodInfo MethodSessionGetSlider = typeof(Session).GetMethod(nameof(Session.GetSlider), BindingFlags.Instance | BindingFlags.Public)!;
+
         public override object Get(Session session, object? userdata) {
-            var name = nameCond.GetString(session, userdata);
+            var name = _nameCondition.GetString(session, userdata);
             
             return session.GetSlider(name);
         }
-        
+
+        internal override void Emit(ConditionCompilationCtx ctx, Type targetType) {
+            LocalBuilder? temp = null;
+            ctx.EmitLoadSession();
+            
+            ctx.EmitSwapOutCurrentCondition(ref temp, _nameCondition, FieldNameCondition);
+            _nameCondition.Emit(ctx, typeof(string));
+            ctx.EmitRevertCurrentCondition(temp);
+            
+            ctx.Il.Emit(OpCodes.Callvirt, MethodSessionGetSlider);
+            ctx.EmitConvertTo(typeof(float), targetType);
+        }
+
+        internal override bool UsesCurrentConditionLocalInEmit => _nameCondition.UsesCurrentConditionLocalInEmit;
+
         protected internal override Type ReturnType => typeof(float);
+
+        protected override IEnumerable<object> GetArgsForDebugPrint() => [_nameCondition];
     }
     
     private sealed class CounterAccessor(string name) : Condition {
