@@ -1,5 +1,6 @@
 using FrostHelper.ModIntegration;
 using FrostHelper.SessionExpressions;
+using OpCodes = System.Reflection.Emit.OpCodes;
 
 namespace FrostHelper.Helpers;
 
@@ -125,7 +126,7 @@ internal sealed class RainbowChannelExpression : ISavestatePersisted {
 
     public static RainbowChannelExpression Instance { get; } = new RainbowChannelExpression();
 
-    public RainbowChannelExpression Update(Scene scene, Vector2 pos) {
+    public RainbowChannelExpression Update(Vector2 pos) {
         X = pos.X;
         Y = pos.Y;
         return this;
@@ -136,6 +137,16 @@ internal sealed class RainbowChannelExpression : ISavestatePersisted {
             return ((RainbowChannelExpression) userdata).X;
         }
 
+        internal override void Emit(ConditionCompilationCtx ctx, Type targetType) {
+            var il = ctx.Il;
+            
+            ctx.EmitLoadUserdata<RainbowChannelExpression>();
+            il.Emit(OpCodes.Callvirt, typeof(RainbowChannelExpression).GetProperty(nameof(X))!.GetMethod!);
+            il.EmitConvertToInSessionExpression(typeof(float), targetType);
+        }
+
+        internal override bool UsesCurrentConditionLocalInEmit => false;
+
         protected internal override Type ReturnType => typeof(float);
     }
     
@@ -143,6 +154,16 @@ internal sealed class RainbowChannelExpression : ISavestatePersisted {
         public override object Get(Session session, object? userdata) {
             return ((RainbowChannelExpression) userdata).Y;
         }
+        
+        internal override void Emit(ConditionCompilationCtx ctx, Type targetType) {
+            var il = ctx.Il;
+            
+            ctx.EmitLoadUserdata<RainbowChannelExpression>();
+            il.Emit(OpCodes.Callvirt, typeof(RainbowChannelExpression).GetProperty(nameof(Y))!.GetMethod!);
+            il.EmitConvertToInSessionExpression(typeof(float), targetType);
+        }
+
+        internal override bool UsesCurrentConditionLocalInEmit => false;
 
         protected internal override Type ReturnType => typeof(float);
     }
@@ -153,6 +174,16 @@ internal sealed class RainbowChannelExpression : ISavestatePersisted {
         }
 
         protected internal override Type ReturnType => typeof(Vector2);
+        
+        internal override void Emit(ConditionCompilationCtx ctx, Type targetType) {
+            var il = ctx.Il;
+            
+            ctx.EmitLoadUserdata<RainbowChannelExpression>();
+            il.Emit(OpCodes.Callvirt, typeof(RainbowChannelExpression).GetProperty(nameof(Pos))!.GetMethod!);
+            il.EmitConvertToInSessionExpression(typeof(Vector2), targetType);
+        }
+
+        internal override bool UsesCurrentConditionLocalInEmit => false;
     }
 }
 

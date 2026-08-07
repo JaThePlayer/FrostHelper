@@ -4,9 +4,13 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Numerics;
+using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 using System.Text;
 using Vector2 = Microsoft.Xna.Framework.Vector2;
+
+using OpCode = System.Reflection.Emit.OpCode;
+using OpCodes = System.Reflection.Emit.OpCodes;
 
 namespace FrostHelper.Helpers;
 
@@ -175,12 +179,12 @@ public static class ConditionHelper {
                     BinOpExpression.Operators.Or => new OperatorOr(leftExpr, rightExpr),
                     BinOpExpression.Operators.BitwiseAnd => new OperatorBitwiseAnd(leftExpr, rightExpr),
                     BinOpExpression.Operators.BitwiseOr => new OperatorBitwiseOr(leftExpr, rightExpr),
-                    BinOpExpression.Operators.Add => new OperatorAdd(leftExpr, rightExpr),
-                    BinOpExpression.Operators.Sub => new OperatorSub(leftExpr, rightExpr),
-                    BinOpExpression.Operators.Mul => new OperatorMul(leftExpr, rightExpr),
-                    BinOpExpression.Operators.Div => new OperatorDiv(leftExpr, rightExpr),
+                    BinOpExpression.Operators.Add => new MathOperator<OperatorAdd>(leftExpr, rightExpr),
+                    BinOpExpression.Operators.Sub => new MathOperator<OperatorSub>(leftExpr, rightExpr),
+                    BinOpExpression.Operators.Mul => new MathOperator<OperatorMul>(leftExpr, rightExpr),
+                    BinOpExpression.Operators.Div => new MathOperator<OperatorDiv>(leftExpr, rightExpr),
                     BinOpExpression.Operators.DivFloat => new OperatorDivFloat(leftExpr, rightExpr),
-                    BinOpExpression.Operators.Modulo => new OperatorModulo(leftExpr, rightExpr),
+                    BinOpExpression.Operators.Modulo => new MathOperator<IOperatorModulo>(leftExpr, rightExpr),
                     BinOpExpression.Operators.Lt => new OperatorLt(leftExpr, rightExpr),
                     BinOpExpression.Operators.Gt => new OperatorGt(leftExpr, rightExpr),
                     BinOpExpression.Operators.Eq => new OperatorEq(leftExpr, rightExpr),
@@ -215,8 +219,25 @@ public static class ConditionHelper {
 
     internal sealed class StringInterpolationOperator(List<Condition> args) : Condition {
         private readonly StringBuilder _stringBuilder = new();
+
+        private Condition GetArg(int index) => args[index];
+        private static readonly MethodInfo MethodGetArg = typeof(StringInterpolationOperator).GetMethod(nameof(GetArg), BindingFlags.Instance | BindingFlags.NonPublic)!;
+        
+        private static readonly MethodInfo MethodInterpolatorHandlerAppendLiteralString
+            = typeof(Interpolator.Handler).GetMethod(nameof(Interpolator.Handler.AppendLiteral), BindingFlags.Instance | BindingFlags.Public, [typeof(string)])!;
+        
+        private static readonly MethodInfo MethodInterpolatorHandlerAppendFormattedObject
+            = typeof(Interpolator.Handler).GetMethod(nameof(Interpolator.Handler.AppendFormatted), BindingFlags.Instance | BindingFlags.Public, [typeof(object)])!;
+        
+        private static readonly MethodInfo MethodInterpolatorHandlerAppendFormattedT_ISpanFormattable
+            = typeof(Interpolator.Handler).GetMethod(nameof(Interpolator.Handler.AppendFormatted), 1, BindingFlags.Instance | BindingFlags.Public, null, [Type.MakeGenericMethodParameter(0)], null)!;
+
+        private static readonly MethodInfo MethodInterpolatorHandlerResultToString
+            = typeof(Interpolator.Handler).GetMethod(nameof(Interpolator.Handler.ResultToString), BindingFlags.Instance | BindingFlags.Public)!;
+
         
         public override object Get(Session session, object? userdata) {
+            /*
             var builder = _stringBuilder;
             
             foreach (var arg in args) {
@@ -230,7 +251,75 @@ public static class ConditionHelper {
             var ret = builder.ToString();
             builder.Clear();
             return ret;
+            */
+            Interpolator.Handler handler = new Interpolator.Handler(0, args.Count, Interpolator.Shared);
+            foreach (var arg in args) {
+                var obj = arg.Get(session, userdata);
+                if (obj is string str)
+                    handler.AppendLiteral(str);
+                else
+                    handler.AppendFormatted(obj);
+            }
+            
+            return handler.ResultToString();
         }
+
+        internal override void Emit(ConditionCompilationCtx ctx, Type targetType) {
+            //base.Emit(ctx, targetType);
+            /*
+       IL_0000: ldloca.s     'handler'
+      IL_0002: ldc.i4.0
+      IL_0003: ldarg.0      // this
+      IL_0004: ldfld        class [System.Collections]System.Collections.Generic.List`1<class FrostHelper.Helpers.ConditionHelper/Condition> FrostHelper.Helpers.ConditionHelper/StringInterpolationOperator::'<args>P'
+      IL_0009: callvirt     instance int32 class [System.Collections]System.Collections.Generic.List`1<class FrostHelper.Helpers.ConditionHelper/Condition>::get_Count()
+      IL_000e: call         class FrostHelper.Helpers.Interpolator FrostHelper.Helpers.Interpolator::get_Shared()
+      IL_0013: call         instance void FrostHelper.Helpers.Interpolator/Handler::.ctor(int32, int32, class FrostHelper.Helpers.Interpolator)
+
+             */
+            var il = ctx.Il;
+            var handlerLocal = il.DeclareLocal(typeof(Interpolator.Handler));
+            LocalBuilder? tempLocal = null;
+            il.Emit(OpCodes.Ldloca, handlerLocal);
+            il.Emit(OpCodes.Ldc_I4_0); // literal length
+            il.Emit(OpCodes.Ldc_I4, args.Count); // formatted length
+            il.Emit(OpCodes.Call, typeof(Interpolator).GetProperty(nameof(Interpolator.Shared))!.GetMethod!);
+            il.Emit(OpCodes.Call, typeof(Interpolator.Handler).GetConstructor([typeof(int), typeof(int), typeof(Interpolator)])!);
+
+            var argI = 0;
+            foreach (var arg in args) {
+                il.EmitSwapOutCurrentCondition(ref tempLocal, ctx, arg, () => {
+                    il.Emit(OpCodes.Ldc_I4, argI);
+                    il.Emit(OpCodes.Call, MethodGetArg);
+                });
+                
+                il.Emit(OpCodes.Ldloca, handlerLocal);
+                
+                var argType = arg.ReturnType ?? typeof(object);
+                arg.Emit(ctx, argType);
+                if (argType == typeof(string)) {
+                    il.Emit(OpCodes.Call, MethodInterpolatorHandlerAppendLiteralString);
+                }
+                else if (argType.IsAssignableTo(typeof(ISpanFormattable))) {
+                    il.Emit(OpCodes.Call, MethodInterpolatorHandlerAppendFormattedT_ISpanFormattable.MakeGenericMethod(argType));
+                }
+                else {
+                    if (argType.IsValueType)
+                        il.Emit(OpCodes.Box, argType);
+                    il.Emit(OpCodes.Call, MethodInterpolatorHandlerAppendFormattedObject);
+                }
+
+                argI++;
+            }
+            
+            il.EmitRevertCurrentCondition(tempLocal, ctx);
+            
+            il.Emit(OpCodes.Ldloca, handlerLocal);
+            il.Emit(OpCodes.Call, MethodInterpolatorHandlerResultToString);
+            il.EmitConvertToInSessionExpression(typeof(string), targetType);
+        }
+
+        internal override bool UsesCurrentConditionLocalInEmit { get; }
+            = args.Any(a => a.UsesCurrentConditionLocalInEmit);
 
         protected internal override Type ReturnType => typeof(string);
 
@@ -289,102 +378,216 @@ public static class ConditionHelper {
             return 0;
         }
     }
-    
-    internal sealed class OperatorAdd(Condition a, Condition b) : MathOperator(a, b) {
-        protected override object Perform<T>(T a, T b) {
+
+    internal struct OperatorAdd : IMathOperator {
+        public static T Perform<T>(T a, T b) where T : INumber<T> {
             return a + b;
         }
 
-        protected override object Perform(Vector2 a, float b) {
+        public static Vector2 Perform(float a, Vector2 b) {
+            return new Vector2(a + b.X, a + b.Y);
+        }
+
+        public static Vector2 Perform(Vector2 a, float b) {
             return new Vector2(a.X + b, a.Y + b);
         }
 
-        protected override object Perform(Vector2 a, Vector2 b) {
+        public static Vector2 Perform(Vector2 a, Vector2 b) {
             return a + b;
+        }
+
+        public static OpCode? PerformOpCode => OpCodes.Add;
+        
+        public static bool CanUseOpCodeFor(Condition a, Condition b) {
+            return true;
         }
     }
     
-    internal sealed class OperatorSub(Condition a, Condition b) : MathOperator(a, b) {
-        protected override object Perform<T>(T a, T b) {
+    internal struct OperatorSub : IMathOperator {
+        public static T Perform<T>(T a, T b) where T : INumber<T> {
             return a - b;
         }
         
-        protected override object Perform(Vector2 a, float b) {
+        public static Vector2 Perform(float a, Vector2 b) {
+            return new Vector2(a - b.X, a - b.Y);
+        }
+        
+        public static Vector2 Perform(Vector2 a, float b) {
             return new Vector2(a.X - b, a.Y - b);
         }
 
-        protected override object Perform(Vector2 a, Vector2 b) {
+        public static Vector2 Perform(Vector2 a, Vector2 b) {
             return a - b;
+        }
+
+        public static OpCode? PerformOpCode => OpCodes.Sub;
+        
+        public static bool CanUseOpCodeFor(Condition a, Condition b) {
+            return true;
         }
     }
     
-    internal sealed class OperatorMul(Condition a, Condition b) : MathOperator(a, b) {
-        protected override object Perform<T>(T a, T b) {
+    internal struct OperatorMul : IMathOperator {
+        public static T Perform<T>(T a, T b) where T : INumber<T> {
             return a * b;
         }
         
-        protected override object Perform(Vector2 a, float b) {
+        public static Vector2 Perform(float a, Vector2 b) {
+            return new Vector2(a * b.X, a * b.Y);
+        }
+        
+        public static Vector2 Perform(Vector2 a, float b) {
+            return new Vector2(a.X * b, a.Y * b);
+        }
+
+        public static Vector2 Perform(Vector2 a, Vector2 b) {
             return a * b;
         }
 
-        protected override object Perform(Vector2 a, Vector2 b) {
-            return a * b;
+        public static OpCode? PerformOpCode => OpCodes.Mul;
+        
+        public static bool CanUseOpCodeFor(Condition a, Condition b) {
+            return true;
         }
     }
     
-    internal sealed class OperatorDiv(Condition a, Condition b) : MathOperator(a, b) {
-        protected override object Perform<T>(T a, T b) {
+    internal struct OperatorDiv : IMathOperator {
+        public static T Perform<T>(T a, T b) where T : INumber<T> {
             if (T.IsZero(b)) {
                 return T.Zero;
             }
             return a / b;
         }
         
-        protected override object Perform(Vector2 a, float b) {
-            return a / b;
-        }
-
-        protected override object Perform(Vector2 a, Vector2 b) {
-            return a / b;
-        }
-    }
-    
-    internal sealed class OperatorDivFloat(Condition a, Condition b) : MathOperator(a, b) {
-        protected override object Perform<T>(T a, T b) {
-            if (T.IsZero(b)) {
-                return 0f;
-            }
-            
-            return float.CreateTruncating(a) / float.CreateTruncating(b);
+        public static Vector2 Perform(float a, Vector2 b) {
+            return new Vector2(a / b.X, a / b.Y);
         }
         
-        protected override object Perform(Vector2 a, float b) {
+        public static Vector2 Perform(Vector2 a, float b) {
             return a / b;
         }
 
-        protected override object Perform(Vector2 a, Vector2 b) {
+        public static Vector2 Perform(Vector2 a, Vector2 b) {
             return a / b;
         }
 
-        protected internal override Type? ReturnType {
-            get {
-                var def = base.ReturnType;
-                return def == typeof(int) ? typeof(float) : def;
-            }
+        public static OpCode? PerformOpCode => OpCodes.Div;
+        
+        public static bool CanUseOpCodeFor(Condition a, Condition b) {
+            return b is IConstCondition<float> { Value: not 0 };
         }
     }
     
-    internal sealed class OperatorModulo(Condition a, Condition b) : MathOperator(a, b) {
-        protected override object Perform<T>(T a, T b) {
+    internal sealed class OperatorDivFloat(Condition a, Condition b) : BinaryOperator(a, b) {
+        public static T Perform<T>(T a, T b) where T : INumber<T> {
+            if (T.IsZero(b)) {
+                return T.Zero;
+            }
+            return a / b;
+        }
+        
+        public static Vector2 Perform(Vector2 a, float b) {
+            return a / b;
+        }
+
+        public static Vector2 Perform(Vector2 a, Vector2 b) {
+            return a / b;
+        }
+        
+        protected internal override Type? ReturnType { get; } = 
+            a.ReturnType is { } tA && b.ReturnType is { } tB ? GetReturnType(tA, tB) : null;
+
+        private static Type? GetReturnType(Type a, Type b) {
+            if (a == b)
+                return a;
+
+            if (a == typeof(int) && b == typeof(float))
+                return typeof(float);
+            if (a == typeof(float) && b == typeof(int))
+                return typeof(float);
+            if (a == typeof(Vector2) && (b == typeof(int) || b == typeof(float)))
+                return typeof(Vector2);
+            if (b == typeof(Vector2) && (a == typeof(int) || a == typeof(float)))
+                return typeof(Vector2);
+            return null;
+        }
+
+        private static readonly MethodInfo MethodPerform = typeof(OperatorDivFloat).GetMethod(nameof(Perform), BindingFlags.NonPublic | BindingFlags.Static)!;
+        private static readonly MethodInfo MethodDivPerform_T = typeof(OperatorDiv)
+            .GetMethod(nameof(OperatorDiv.Perform), 1, BindingFlags.Static | BindingFlags.Public, null, [ Type.MakeGenericMethodParameter(0), Type.MakeGenericMethodParameter(0) ], null)!;
+
+        
+        private static object Perform(object a, object b) {
+            return (a, b) switch {
+                (int ai, int bi) => OperatorDiv.Perform((float)ai, bi),
+                (float ai, float bi) => OperatorDiv.Perform(ai, bi),
+                (float bi, Vector2 v2) => OperatorDiv.Perform(bi, v2),
+                (int bi, Vector2 v2) => OperatorDiv.Perform(bi, v2),
+                (Vector2 v2, int bi) => OperatorDiv.Perform(v2, bi),
+                (Vector2 v2, float bi) => OperatorDiv.Perform(v2, bi),
+                (Vector2 v2, Vector2 bi) => OperatorDiv.Perform(v2, bi),
+                _ => LogIncomparableTypes(a, b)
+            };
+        }
+
+        protected override object Operate(object a, object b) {
+            return Perform(a, b);
+        }
+        
+        internal override void Emit(ConditionCompilationCtx ctx, Type targetType) {
+            var aType = ConditionA.ReturnType;
+            var bType = ConditionB.ReturnType;
+            var aIsNumber = aType == typeof(int) || aType == typeof(float);
+            var bIsNumber = bType == typeof(int) || bType == typeof(float);
+            if (aIsNumber && bIsNumber) {
+                if (ConditionB is IConstCondition<float> { Value: not 0 }) {
+                    EmitGetValuesFromChildConditions(ctx, typeof(float));
+                    ctx.Il.Emit(OpCodes.Div);
+                    ctx.Il.EmitConvertToInSessionExpression(typeof(float), targetType);
+                    return;
+                }
+                
+                EmitGetValuesFromChildConditions(ctx, typeof(float));
+                ctx.Il.Emit(OpCodes.Call, MethodDivPerform_T.MakeGenericMethod(typeof(float)));
+                ctx.Il.EmitConvertToInSessionExpression(typeof(float), targetType);
+                return;
+            }
+            
+            EmitGetValuesFromChildConditions(ctx, typeof(object));
+            ctx.Il.Emit(OpCodes.Call, MethodPerform);
+            ctx.Il.EmitConvertToInSessionExpression(typeof(object), targetType);
+        }
+
+        internal override bool UsesCurrentConditionLocalInEmit => InnerConditionsUseCurrentConditionLocalInEmit;
+
+        private static object LogIncomparableTypes(object a, object b) {
+            NotificationHelper.Notify(
+                $"Can't perform math on objects of types: {a.GetType()} and {b.GetType()}. Result will always be 0!");
+            return 0;
+        }
+    }
+    
+    internal struct IOperatorModulo : IMathOperator {
+        public static T Perform<T>(T a, T b) where T : INumber<T> {
             return a % b;
         }
         
-        protected override object Perform(Vector2 a, float b) {
+        public static Vector2 Perform(float a, Vector2 b) {
+            return new Vector2(a % b.X, a % b.Y);
+        }
+        
+        public static Vector2 Perform(Vector2 a, float b) {
             return new Vector2(a.X % b, a.Y % b);
         }
 
-        protected override object Perform(Vector2 a, Vector2 b) {
+        public static Vector2 Perform(Vector2 a, Vector2 b) {
             return new Vector2(a.X % b.X, a.Y % b.Y);
+        }
+
+        public static OpCode? PerformOpCode => OpCodes.Rem;
+        
+        public static bool CanUseOpCodeFor(Condition a, Condition b) {
+            return true;
         }
     }
     
@@ -443,28 +646,114 @@ public static class ConditionHelper {
 
         protected internal override Type ReturnType => typeof(int);
     }
-
-    internal abstract class MathOperator(Condition condA, Condition condB) : BinaryOperator(condA, condB) {
-        protected abstract object Perform<T>(T a, T b) where T : INumber<T>;
+    
+    internal interface IMathOperator {
+        static abstract T Perform<T>(T a, T b) where T : INumber<T>;
         
-        protected abstract object Perform(Vector2 a, float b);
+        static abstract Vector2 Perform(float a, Vector2 b);
         
-        protected abstract object Perform(Vector2 a, Vector2 b);
+        static abstract Vector2 Perform(Vector2 a, float b);
+        
+        static abstract Vector2 Perform(Vector2 a, Vector2 b);
+        
+        static abstract OpCode? PerformOpCode { get; }
 
-        protected override object Operate(object a, object b) {
+        static abstract bool CanUseOpCodeFor(Condition a, Condition b);
+    }
+
+    internal sealed class MathOperator<TOp>(Condition condA, Condition condB) : BinaryOperator(condA, condB) where TOp : IMathOperator {
+        private static readonly MethodInfo Method_TOp_Perform_T_T = typeof(TOp)
+            .GetMethod(nameof(TOp.Perform), 1, BindingFlags.Static | BindingFlags.Public, null, [ Type.MakeGenericMethodParameter(0), Type.MakeGenericMethodParameter(0) ], null)!;
+
+        private static readonly MethodInfo Method_TOp_Perform_float_Vector2 = typeof(TOp)
+            .GetMethod(nameof(TOp.Perform), 0, BindingFlags.Static | BindingFlags.Public, null, [ typeof(float), typeof(Vector2) ], null)!;
+
+        private static readonly MethodInfo Method_TOp_Perform_Vector2_float = typeof(TOp)
+            .GetMethod(nameof(TOp.Perform), 0, BindingFlags.Static | BindingFlags.Public, null, [ typeof(Vector2), typeof(float) ], null)!;
+        
+        private static readonly MethodInfo Method_TOp_Perform_Vector2_Vector2 = typeof(TOp)
+            .GetMethod(nameof(TOp.Perform), 0, BindingFlags.Static | BindingFlags.Public, null, [ typeof(Vector2), typeof(Vector2) ], null)!;
+
+        
+        private static readonly MethodInfo Method_Dispatch = typeof(MathOperator<TOp>)
+            .GetMethod(nameof(Dispatch), BindingFlags.Static | BindingFlags.NonPublic, [typeof(object), typeof(object)])!;
+        
+        protected static object Dispatch(object a, object b) {
             return (a, b) switch {
-                (int ai, int bi) => Perform(ai, bi),
-                (float ai, float bi) => Perform(ai, bi),
-                (float bi, Vector2 v2) => Perform(v2, bi),
-                (int bi, Vector2 v2) => Perform(v2, bi),
-                (Vector2 v2, int bi) => Perform(v2, bi),
-                (Vector2 v2, float bi) => Perform(v2, bi),
-                (Vector2 v2, Vector2 bi) => Perform(v2, bi),
+                (int ai, int bi) => TOp.Perform(ai, bi),
+                (float ai, float bi) => TOp.Perform(ai, bi),
+                (float bi, Vector2 v2) => TOp.Perform(bi, v2),
+                (int bi, Vector2 v2) => TOp.Perform(bi, v2),
+                (Vector2 v2, int bi) => TOp.Perform(v2, bi),
+                (Vector2 v2, float bi) => TOp.Perform(v2, bi),
+                (Vector2 v2, Vector2 bi) => TOp.Perform(v2, bi),
                 _ => LogIncomparableTypes(a, b)
             };
         }
+        
+        protected override object Operate(object a, object b) {
+            return Dispatch(a, b);
+        }
 
-        private object LogIncomparableTypes(object a, object b) {
+        private bool CanUseOpcode(Type valueType) {
+            return (valueType == typeof(int) || valueType == typeof(float))
+                   && TOp.PerformOpCode is not null
+                   && TOp.CanUseOpCodeFor(ConditionA, ConditionB);
+        }
+        
+        protected void EmitPerform(ConditionCompilationCtx ctx, Type valueType, Type targetType) {
+            if (valueType == typeof(object)) {
+                ctx.Il.Emit(OpCodes.Call, Method_Dispatch);
+                ctx.Il.EmitConvertToInSessionExpression(typeof(object), targetType);
+                return;
+            }
+            
+            if (CanUseOpcode(valueType)) {
+                ctx.Il.Emit(TOp.PerformOpCode!.Value);
+                ctx.Il.EmitConvertToInSessionExpression(valueType, targetType);
+                return;
+            }
+            
+            if (valueType == typeof(int)) {
+                ctx.Il.Emit(OpCodes.Call, Method_TOp_Perform_T_T.MakeGenericMethod(valueType));
+                ctx.Il.EmitConvertToInSessionExpression(valueType, targetType);
+                return;
+            }
+            
+            if (valueType == typeof(float)) {
+                ctx.Il.Emit(OpCodes.Call, Method_TOp_Perform_T_T.MakeGenericMethod(valueType));
+                ctx.Il.EmitConvertToInSessionExpression(valueType, targetType);
+                return;
+            }
+
+            throw new NotImplementedException($"{valueType}");
+        }
+
+        internal override void Emit(ConditionCompilationCtx ctx, Type targetType) {
+            var innerType = ReturnType ?? typeof(object);
+
+            if (innerType == typeof(Vector2)) {
+                var aIsVector = ConditionA.ReturnType == typeof(Vector2);
+                var bIsVector = ConditionB.ReturnType == typeof(Vector2);
+                EmitGetValuesFromChildConditions(ctx, aIsVector ? ConditionA.ReturnType! : typeof(float), bIsVector ? ConditionB.ReturnType : typeof(float));
+                ctx.Il.Emit(OpCodes.Call, (aIsVector, bIsVector) switch {
+                    (true, true) => Method_TOp_Perform_Vector2_Vector2,
+                    (false, true) => Method_TOp_Perform_float_Vector2,
+                    (true, false) => Method_TOp_Perform_Vector2_float,
+                    (false, false) => throw new UnreachableException(),
+                });
+                ctx.Il.EmitConvertToInSessionExpression(typeof(Vector2), targetType);
+                
+                return;
+            }
+            
+            EmitGetValuesFromChildConditions(ctx, innerType);
+            EmitPerform(ctx, innerType, targetType);
+        }
+
+        internal override bool UsesCurrentConditionLocalInEmit => InnerConditionsUseCurrentConditionLocalInEmit;
+
+        private static object LogIncomparableTypes(object a, object b) {
             NotificationHelper.Notify(
                 $"Can't perform math on objects of types: {a.GetType()} and {b.GetType()}. Result will always be 0!");
             return 0;
@@ -483,14 +772,20 @@ public static class ConditionHelper {
                 return typeof(float);
             if (a == typeof(Vector2) && (b == typeof(int) || b == typeof(float)))
                 return typeof(Vector2);
+            if (b == typeof(Vector2) && (a == typeof(int) || a == typeof(float)))
+                return typeof(Vector2);
             return null;
         }
     }
     
     internal abstract class BinaryOperator(Condition condA, Condition condB) : Condition {
+        protected readonly Condition ConditionA = condA;
+        protected readonly Condition ConditionB = condB;
+        
+        
         public override object Get(Session session, object? userdata) {
-            var a = condA.Get(session, userdata);
-            var b = condB.Get(session, userdata);
+            var a = ConditionA.Get(session, userdata);
+            var b = ConditionB.Get(session, userdata);
 
             if (a is bool ab)
                 a = ab ? 1 : 0;
@@ -504,12 +799,28 @@ public static class ConditionHelper {
                 _ => Operate(a, b)
             };
         }
+
+        protected void EmitGetValuesFromChildConditions(ConditionCompilationCtx ctx, Type targetType, Type? targetTypeB = null) {
+            var il = ctx.Il;
+            LocalBuilder? tempOrigCond = null;
+            targetTypeB ??= targetType;
+            
+            il.EmitSwapOutCurrentCondition(ref tempOrigCond, ctx, ConditionA, typeof(BinaryOperator).GetField(nameof(ConditionA), BindingFlags.Instance | BindingFlags.NonPublic)!);
+            ConditionA.Emit(ctx, targetType);
+            il.EmitSwapOutCurrentCondition(ref tempOrigCond, ctx, ConditionB, typeof(BinaryOperator).GetField(nameof(ConditionB), BindingFlags.Instance | BindingFlags.NonPublic)!);
+            ConditionB.Emit(ctx, targetTypeB);
+            
+            il.EmitRevertCurrentCondition(tempOrigCond, ctx);
+        }
         
-        public override bool OnlyChecksFlags() => condA.OnlyChecksFlags() && condB.OnlyChecksFlags();
+        protected bool InnerConditionsUseCurrentConditionLocalInEmit => ConditionA.UsesCurrentConditionLocalInEmit ||
+                                                                        ConditionB.UsesCurrentConditionLocalInEmit;
+
+        public override bool OnlyChecksFlags() => ConditionA.OnlyChecksFlags() && ConditionB.OnlyChecksFlags();
         
         protected abstract object Operate(object a, object b);
 
-        protected override IEnumerable<object> GetArgsForDebugPrint() => [condA, condB];
+        protected override IEnumerable<object> GetArgsForDebugPrint() => [ConditionA, ConditionB];
     }
 
     internal sealed class OperatorInvert(Condition x) : Condition {
@@ -534,7 +845,13 @@ public static class ConditionHelper {
         private readonly object _boxed = x;
         
         public override object Get(Session session, object? userdata) => _boxed;
-        
+
+        internal override void Emit(ConditionCompilationCtx ctx, Type targetType) {
+            ctx.Il.EmitLoadConstAs(_boxed, targetType);
+        }
+
+        internal override bool UsesCurrentConditionLocalInEmit => false;
+
         public override bool OnlyChecksFlags() => true;
         
         public int Value => x;
@@ -550,6 +867,12 @@ public static class ConditionHelper {
         private readonly object _boxed = x;
 
         public override object Get(Session session, object? userdata) => _boxed;
+        
+        internal override void Emit(ConditionCompilationCtx ctx, Type targetType) {
+            ctx.Il.EmitLoadConstAs(_boxed, targetType);
+        }
+        
+        internal override bool UsesCurrentConditionLocalInEmit => false;
         
         public override bool OnlyChecksFlags() => true;
 
@@ -567,6 +890,12 @@ public static class ConditionHelper {
         
         public override object Get(Session session, object? userdata) => x;
         
+        internal override void Emit(ConditionCompilationCtx ctx, Type targetType) {
+            ctx.Il.EmitLoadConstAs(x, targetType);
+        }
+        
+        internal override bool UsesCurrentConditionLocalInEmit => false;
+        
         public override bool OnlyChecksFlags() => true;
         
         protected internal override Type ReturnType => typeof(string);
@@ -575,22 +904,51 @@ public static class ConditionHelper {
     }
 
     internal sealed class FlagAccessor(Condition nameCond, bool inverted) : Condition, IInvertible {
-        public string? Flag => nameCond is ConstString c ? c.Value : null;
+        public string? Flag => _nameCondition is ConstString c ? c.Value : null;
+
+        private readonly Condition _nameCondition = nameCond;
+        private static readonly FieldInfo FieldNameCondition = typeof(FlagAccessor).GetField(nameof(_nameCondition), BindingFlags.Instance | BindingFlags.NonPublic)!;
         
         public bool Inverted => inverted;
         
-        public override bool OnlyChecksFlags() => nameCond.OnlyChecksFlags();
+        public override bool OnlyChecksFlags() => _nameCondition.OnlyChecksFlags();
+        
+        private static readonly MethodInfo MethodSessionGetFlag = typeof(Session).GetMethod(nameof(Session.GetFlag))!;
+        
+        internal override void Emit(ConditionCompilationCtx ctx, Type targetType) {
+            var il = ctx.Il;
+
+            ctx.EmitLoadSession();
+            if (_nameCondition is IConstCondition<string> constStr) {
+                il.Emit(OpCodes.Ldstr, constStr.Value);
+            } else {
+                LocalBuilder? temp = null;
+                ctx.Il.EmitSwapOutCurrentCondition(ref temp, ctx, _nameCondition, FieldNameCondition);
+                
+                _nameCondition.Emit(ctx, typeof(string));
+                ctx.Il.EmitRevertCurrentCondition(temp, ctx);
+            }
+            
+            il.Emit(OpCodes.Callvirt, MethodSessionGetFlag);
+            if (Inverted) {
+                il.Emit(OpCodes.Ldnull);
+                il.Emit(OpCodes.Ceq);
+            }
+            il.EmitConvertToInSessionExpression(typeof(bool), targetType);
+        }
+        
+        internal override bool UsesCurrentConditionLocalInEmit => _nameCondition.UsesCurrentConditionLocalInEmit;
         
         protected internal override Type ReturnType => typeof(int);
 
-        protected override IEnumerable<object> GetArgsForDebugPrint() => [Inverted ? $"!{Flag ?? nameCond.ToString()}" : Flag ?? nameCond.ToString()];
+        protected override IEnumerable<object> GetArgsForDebugPrint() => [Inverted ? $"!{Flag ?? _nameCondition.ToString()}" : Flag ?? _nameCondition.ToString()];
         
         public Condition CreateInverted() {
-            return new FlagAccessor(nameCond, !Inverted);
+            return new FlagAccessor(_nameCondition, !Inverted);
         }
         
         public override object Get(Session session, object? userdata) {
-            var flag = Flag ?? nameCond.GetString(session, userdata);
+            var flag = Flag ?? _nameCondition.GetString(session, userdata);
             return session.GetFlag(flag) != inverted ? One : Zero;
         }
     }
@@ -648,8 +1006,11 @@ public static class ConditionHelper {
     private sealed class CounterAccessor(string name) : Condition {
         private Session.Counter? _valueCounter;
         private WeakReference<Session>? _lastSession;
+
+        private static readonly MethodInfo MethodGetInt
+            = typeof(CounterAccessor).GetMethod(nameof(GetCached), BindingFlags.Instance | BindingFlags.NonPublic)!;
         
-        public override object Get(Session session, object? userdata) {
+        private int GetCached(Session session) {
             if ((_lastSession?.TryGetTarget(out var last) ?? false) && last != session) {
                 _valueCounter = null;
                 _lastSession = null;
@@ -659,6 +1020,17 @@ public static class ConditionHelper {
             _valueCounter ??= session.GetCounterObj(name);
             
             return _valueCounter.Value;
+        }
+        
+        public override object Get(Session session, object? userdata) {
+            return GetInt(session);
+        }
+
+        internal override void Emit(ConditionCompilationCtx ctx, Type targetType) {
+            ctx.EmitLoadCurrentCondition<CounterAccessor>();
+            ctx.EmitLoadSession();
+            ctx.Il.Emit(OpCodes.Callvirt, MethodGetInt);
+            ctx.EmitConvertTo(typeof(int), targetType);
         }
 
         protected internal override Type ReturnType => typeof(int);
@@ -702,6 +1074,22 @@ public static class ConditionHelper {
 
         protected internal virtual Type? ReturnType => null;
 
+        private static readonly MethodInfo _method_Get_Object = typeof(Condition).GetMethod(nameof(Get), genericParameterCount: 0, [ typeof(Session), typeof(object) ])!;
+        private static readonly MethodInfo _method_Get_T = typeof(Condition).GetMethod(nameof(Get), genericParameterCount: 1, BindingFlags.NonPublic | BindingFlags.Instance, null, [ typeof(Session), typeof(object) ], null)!;
+        
+        internal virtual void Emit(ConditionCompilationCtx ctx, Type targetType) {
+            if (!UsesCurrentConditionLocalInEmit) {
+                throw new Exception($"UsesCurrentConditionLocalInEmit is false, but CurrentCondition is being used by {GetType()}!");
+            }
+            ctx.Il.Emit(OpCodes.Ldloc, ctx.CurrentCondition);
+            ctx.Il.Emit(OpCodes.Ldarg, ctx.SessionArgId);
+            ctx.Il.Emit(OpCodes.Ldarg, ctx.UserdataArgId);
+            
+            ctx.Il.Emit(OpCodes.Callvirt, _method_Get_T.MakeGenericMethod(targetType));
+        }
+
+        internal virtual bool UsesCurrentConditionLocalInEmit => true;
+
         internal int GetInt(Session session, object? userdata = null) {
             return GetNumber<int>(session, userdata);
         }
@@ -713,24 +1101,7 @@ public static class ConditionHelper {
         internal T GetNumber<T>(Session session, object? userdata = null) where T : struct, INumber<T> {
             var obj = Get(session, userdata);
 
-            if (obj is T t)
-                return t;
-
-            switch (obj) {
-                case float f:
-                    return T.CreateTruncating(f);
-                case double f:
-                    return T.CreateTruncating(f);
-                case int f:
-                    return T.CreateTruncating(f);
-                case short f:
-                    return T.CreateTruncating(f);
-                case byte f:
-                    return T.CreateTruncating(f);
-            }
-
-            NotificationHelper.Notify($"Can't convert Session Expression value '{obj}' [{obj?.GetType().Name ?? "null"}] to {typeof(T).Name}.\nReturning 0!");
-            return T.Zero;
+            return CoerceToNumber<T>(obj);
         }
 
         internal string GetString(Session session, object? userdata = null) {
@@ -756,6 +1127,11 @@ public static class ConditionHelper {
                 return (T)(object)GetString(session, userdata);
             if (typeof(T) == typeof(object))
                 return (T)Get(session, userdata);
+
+            object ret = Get(session, userdata);
+            if (ret.GetType().IsAssignableTo(typeof(T))) {
+                return (T) ret;
+            }
 
             throw new ArgumentException($"Unsupported T for Session Expression: {typeof(T).FullName}");
         }
@@ -788,6 +1164,27 @@ public static class ConditionHelper {
                 null => false,
                 _ => true,
             };
+        }
+        
+        public static T CoerceToNumber<T>(object obj) where T : INumber<T> {
+            if (obj is T t)
+                return t;
+            
+            switch (obj) {
+                case float f:
+                    return T.CreateTruncating(f);
+                case double f:
+                    return T.CreateTruncating(f);
+                case int f:
+                    return T.CreateTruncating(f);
+                case short f:
+                    return T.CreateTruncating(f);
+                case byte f:
+                    return T.CreateTruncating(f);
+            }
+            
+            NotificationHelper.Notify($"Can't convert Session Expression value '{obj}' [{obj?.GetType().Name ?? "null"}] to {typeof(T).Name}.\nReturning 0!");
+            return T.Zero;
         }
         
         public sealed override string ToString() => ToStringIndented("");

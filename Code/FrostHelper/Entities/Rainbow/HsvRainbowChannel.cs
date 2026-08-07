@@ -22,7 +22,7 @@ internal sealed class HsvRainbowChannelSource : RainbowChannelSource {
     sealed class HsvRainbowChannel(SessionExpression<float> hue, SessionExpression<float> s, SessionExpression<float> v) : RainbowChannel, ISavestatePersisted {
         public override Color GetColor(Scene scene, Vector2 position) {
             var session = scene.ToLevel().Session;
-            var userdata = RainbowChannelExpression.Instance.Update(scene, position);
+            var userdata = RainbowChannelExpression.Instance.Update(position);
 
             return Calc.HsvToColor(hue.Get(session, userdata), s.Get(session, userdata), v.Get(session, userdata));
         }

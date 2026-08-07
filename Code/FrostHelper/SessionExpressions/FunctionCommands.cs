@@ -1,8 +1,12 @@
 ﻿using FrostHelper.Helpers;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
+using System.Reflection.Emit;
 using static FrostHelper.Helpers.ConditionHelper;
 using Vector2 = Microsoft.Xna.Framework.Vector2;
+
+using OpCode = System.Reflection.Emit.OpCode;
+using OpCodes = System.Reflection.Emit.OpCodes;
 
 namespace FrostHelper.SessionExpressions;
 
@@ -112,110 +116,177 @@ internal static class FunctionCommands {
     }
     
     private interface IPureMathFunc<T> where T : struct, INumber<T> {
-        public static abstract object Get(T x);
+        public static abstract T Get(T x);
     }
     
     private interface IPureTwoArgMathFunc<T> where T : struct, INumber<T> {
-        public static abstract object Get(T x, T y);
+        public static abstract T Get(T x, T y);
     }
     
     private interface IPureThreeArgMathFunc<T> where T : struct, INumber<T> {
-        public static abstract object Get(T x, T y, T z);
+        public static abstract T Get(T x, T y, T z);
     }
     
     private struct SinFunc : IPureMathFunc<float> {
-        public static object Get(float x) => float.Sin(x);
+        public static float Get(float x) => float.Sin(x);
     }
     
     private struct CosFunc : IPureMathFunc<float> {
-        public static object Get(float x) => float.Cos(x);
+        public static float Get(float x) => float.Cos(x);
     }
     
     private struct TanFunc : IPureMathFunc<float> {
-        public static object Get(float x) => float.Tan(x);
+        public static float Get(float x) => float.Tan(x);
     }
     
     private struct TruncateFunc : IPureMathFunc<float> {
-        public static object Get(float x) => float.Truncate(x);
+        public static float Get(float x) => float.Truncate(x);
     }
     
     private struct SqrtFunc : IPureMathFunc<float> {
-        public static object Get(float x) => float.Sqrt(x);
+        public static float Get(float x) => float.Sqrt(x);
     }
     
     private struct CbrtFunc : IPureMathFunc<float> {
-        public static object Get(float x) => float.Cbrt(x);
+        public static float Get(float x) => float.Cbrt(x);
     }
     
     private struct ExpFunc : IPureMathFunc<float> {
-        public static object Get(float x) => float.Exp(x);
+        public static float Get(float x) => float.Exp(x);
     }
     
     private struct Exp2Func : IPureMathFunc<float> {
-        public static object Get(float x) => float.Exp2(x);
+        public static float Get(float x) => float.Exp2(x);
     }
     
     private struct LognFunc : IPureMathFunc<float> {
-        public static object Get(float x) => float.Log(x);
+        public static float Get(float x) => float.Log(x);
     }
     
     private struct Log10Func : IPureMathFunc<float> {
-        public static object Get(float x) => float.Log10(x);
+        public static float Get(float x) => float.Log10(x);
     }
     
     private struct Log2Func : IPureMathFunc<float> {
-        public static object Get(float x) => float.Log2(x);
+        public static float Get(float x) => float.Log2(x);
     }
     
     private struct RoundFunc : IPureMathFunc<float> {
-        public static object Get(float x) => float.Round(x);
+        public static float Get(float x) => float.Round(x);
     }
     
     private struct AbsFunc<T> : IPureMathFunc<T> where T : struct, INumber<T> {
-        public static object Get(T x) => T.Abs(x);
+        public static T Get(T x) => T.Abs(x);
     }
 
     private struct PowFunc<T> : IPureTwoArgMathFunc<T> where T : struct, INumber<T>, IPowerFunctions<T> {
-        public static object Get(T x, T y) => T.Pow(x, y);
+        public static T Get(T x, T y) => T.Pow(x, y);
     }
     
     private struct Pow2Func<T> : IPureMathFunc<T> where T : struct, INumber<T> {
-        public static object Get(T x) => x * x;
+        public static T Get(T x) => x * x;
     }
     
     private struct LogFunc<T> : IPureTwoArgMathFunc<T> where T : struct, INumber<T>, ILogarithmicFunctions<T> {
-        public static object Get(T x, T y) => T.Log(x, y);
+        public static T Get(T x, T y) => T.Log(x, y);
     }
     
     private struct LerpFunc : IPureThreeArgMathFunc<float> {
-        public static object Get(float x, float y, float z) => float.Lerp(x, y, z);
+        public static float Get(float x, float y, float z) => float.Lerp(x, y, z);
     }
     
     private struct YoYoFunc : IPureMathFunc<float> {
-        public static object Get(float x) => Calc.YoYo(x);
+        public static float Get(float x) => Calc.YoYo(x);
     }
 
     private sealed class PureMathCondition<TNum, TOp>(Condition x) : FunctionCondition(x)
         where TNum : struct, INumber<TNum>
         where TOp : struct, IPureMathFunc<TNum> {
+
+        private readonly Condition _innerCondition = x;
+
+        private static readonly FieldInfo InnerConditionFieldInfo
+            = typeof(PureMathCondition<TNum, TOp>).GetField(nameof(_innerCondition),
+                BindingFlags.Instance | BindingFlags.NonPublic)!;
         
         public override object Get(Session session, object? userdata) {
-            return TOp.Get(x.GetNumber<TNum>(session, userdata));
+            return TOp.Get(_innerCondition.GetNumber<TNum>(session, userdata));
         }
+
+        internal override void Emit(ConditionCompilationCtx ctx, Type targetType) {
+            var il = ctx.Il;
+            LocalBuilder? tempOrigCond = null;
+            
+            il.EmitSwapOutCurrentCondition(ref tempOrigCond, ctx, _innerCondition, InnerConditionFieldInfo);
+            
+            _innerCondition.Emit(ctx, typeof(TNum));
+            
+            il.EmitRevertCurrentCondition(tempOrigCond, ctx);
+            
+            il.Emit(OpCodes.Call, typeof(TOp).GetMethod(nameof(TOp.Get))!);
+            il.EmitConvertToInSessionExpression(typeof(TNum), targetType);
+        }
+
+        internal override bool UsesCurrentConditionLocalInEmit => _innerCondition.UsesCurrentConditionLocalInEmit;
+
+        protected internal override Type ReturnType => typeof(TNum);
     }
     
     private sealed class PureMathTwoArgCondition<TNum, TOp>(Condition x, Condition y) : FunctionCondition(x)
         where TNum : struct, INumber<TNum>
         where TOp : struct, IPureTwoArgMathFunc<TNum> {
         
+        private readonly Condition _x = x;
+        private readonly Condition _y = y;
+
+        private static readonly FieldInfo XFieldInfo
+            = typeof(PureMathTwoArgCondition<TNum, TOp>).GetField(nameof(_x),
+                BindingFlags.Instance | BindingFlags.NonPublic)!;
+        
+        private static readonly FieldInfo YFieldInfo
+            = typeof(PureMathTwoArgCondition<TNum, TOp>).GetField(nameof(_y),
+                BindingFlags.Instance | BindingFlags.NonPublic)!;
+        
         public override object Get(Session session, object? userdata) {
-            return TOp.Get(x.GetNumber<TNum>(session, userdata), y.GetNumber<TNum>(session, userdata));
+            return TOp.Get(_x.GetNumber<TNum>(session, userdata), _y.GetNumber<TNum>(session, userdata));
         }
+        
+        internal override void Emit(ConditionCompilationCtx ctx, Type targetType) {
+            var il = ctx.Il;
+            LocalBuilder? tempOrigCond = null;
+            
+            il.EmitSwapOutCurrentCondition(ref tempOrigCond, ctx, _x, XFieldInfo);
+            _x.Emit(ctx, typeof(TNum));
+            il.EmitSwapOutCurrentCondition(ref tempOrigCond, ctx, _y, YFieldInfo);
+            _y.Emit(ctx, typeof(TNum));
+            
+            il.EmitRevertCurrentCondition(tempOrigCond, ctx);
+            
+            il.Emit(OpCodes.Call, typeof(TOp).GetMethod(nameof(TOp.Get))!);
+            il.EmitConvertToInSessionExpression(typeof(TNum), targetType);
+        }
+        
+        internal override bool UsesCurrentConditionLocalInEmit => _x.UsesCurrentConditionLocalInEmit || _y.UsesCurrentConditionLocalInEmit;
     }
     
     private sealed class PureMathThreeArgCondition<TNum, TOp>(Condition x, Condition y, Condition z) : FunctionCondition(x)
         where TNum : struct, INumber<TNum>
         where TOp : struct, IPureThreeArgMathFunc<TNum> {
+        private readonly Condition _x = x;
+        private readonly Condition _y = y;
+        private readonly Condition _z = y;
+
+        private static readonly FieldInfo XFieldInfo
+            = typeof(PureMathThreeArgCondition<TNum, TOp>).GetField(nameof(_x),
+                BindingFlags.Instance | BindingFlags.NonPublic)!;
+        
+        private static readonly FieldInfo YFieldInfo
+            = typeof(PureMathThreeArgCondition<TNum, TOp>).GetField(nameof(_y),
+                BindingFlags.Instance | BindingFlags.NonPublic)!;
+        
+        private static readonly FieldInfo ZFieldInfo
+            = typeof(PureMathThreeArgCondition<TNum, TOp>).GetField(nameof(_z),
+                BindingFlags.Instance | BindingFlags.NonPublic)!;
         
         public override object Get(Session session, object? userdata) {
             return TOp.Get(
@@ -223,6 +294,27 @@ internal static class FunctionCommands {
                 y.GetNumber<TNum>(session, userdata), 
                 z.GetNumber<TNum>(session, userdata));
         }
+        
+        internal override void Emit(ConditionCompilationCtx ctx, Type targetType) {
+            var il = ctx.Il;
+            LocalBuilder? tempOrigCond = null;
+            
+            il.EmitSwapOutCurrentCondition(ref tempOrigCond, ctx, _x, XFieldInfo);
+            _x.Emit(ctx, typeof(TNum));
+            il.EmitSwapOutCurrentCondition(ref tempOrigCond, ctx, _y, YFieldInfo);
+            _y.Emit(ctx, typeof(TNum));
+            il.EmitSwapOutCurrentCondition(ref tempOrigCond, ctx, _z, ZFieldInfo);
+            _z.Emit(ctx, typeof(TNum));
+            
+            il.EmitRevertCurrentCondition(tempOrigCond, ctx);
+            
+            il.Emit(OpCodes.Call, typeof(TOp).GetMethod(nameof(TOp.Get))!);
+            il.EmitConvertToInSessionExpression(typeof(TNum), targetType);
+        }
+        
+        internal override bool UsesCurrentConditionLocalInEmit => _x.UsesCurrentConditionLocalInEmit 
+                                                               || _y.UsesCurrentConditionLocalInEmit
+                                                               || _z.UsesCurrentConditionLocalInEmit;
     }
 
     private static class PureMathCondition {
@@ -339,11 +431,40 @@ internal static class FunctionCommands {
     }
     
     private sealed class VecCondition(Condition x, Condition y) : FunctionCondition(x, y) {
+        private readonly Condition _x = x;
+        private readonly Condition _y = y;
+        
+        private static readonly FieldInfo XFieldInfo
+            = typeof(VecCondition).GetField(nameof(_x),
+                BindingFlags.Instance | BindingFlags.NonPublic)!;
+        
+        private static readonly FieldInfo YFieldInfo
+            = typeof(VecCondition).GetField(nameof(_y),
+                BindingFlags.Instance | BindingFlags.NonPublic)!;
+        
         protected internal override Type ReturnType => typeof(Vector2);
 
         public override object Get(Session session, object? userdata) {
-            return new Vector2(x.GetFloat(session, userdata), y.GetFloat(session, userdata));
+            
+            return new Vector2(_x.GetFloat(session, userdata), _y.GetFloat(session, userdata));
         }
+        
+        internal override void Emit(ConditionCompilationCtx ctx, Type targetType) {
+            var il = ctx.Il;
+            LocalBuilder? tempOrigCond = null;
+            
+            il.EmitSwapOutCurrentCondition(ref tempOrigCond, ctx, _x, XFieldInfo);
+            _x.Emit(ctx, typeof(float));
+            il.EmitSwapOutCurrentCondition(ref tempOrigCond, ctx, _y, YFieldInfo);
+            _y.Emit(ctx, typeof(float));
+            
+            il.EmitRevertCurrentCondition(tempOrigCond, ctx);
+            
+            il.Emit(OpCodes.Newobj, typeof(Vector2).GetConstructor([typeof(float), typeof(float)])!);
+            il.EmitConvertToInSessionExpression(typeof(Vector2), targetType);
+        }
+        
+        internal override bool UsesCurrentConditionLocalInEmit => _x.UsesCurrentConditionLocalInEmit || _y.UsesCurrentConditionLocalInEmit;
         
         public static bool TryCreate(IReadOnlyList<Condition> args, [NotNullWhen(true)] out Condition? condition, [NotNullWhen(false)] out string? errorMessage) {
             if (args is not [var x, var y]) {

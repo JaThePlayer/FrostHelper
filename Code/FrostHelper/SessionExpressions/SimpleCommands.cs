@@ -1,4 +1,5 @@
 ﻿using Celeste.Mod.Core;
+using FrostHelper.Helpers;
 using static FrostHelper.Helpers.ConditionHelper;
 
 namespace FrostHelper.SessionExpressions;
@@ -92,6 +93,15 @@ internal static class SimpleCommands {
         public override object Get(Session session, object? userdata) => Engine.Scene.TimeActive;
 
         protected internal override Type ReturnType => typeof(float);
+
+        internal override void Emit(ConditionCompilationCtx ctx, Type targetType) {
+            var il = ctx.Il;
+            il.Emit(System.Reflection.Emit.OpCodes.Call, typeof(Engine).GetProperty("Scene")!.GetMethod!);
+            il.Emit(System.Reflection.Emit.OpCodes.Ldfld, typeof(Scene).GetField("TimeActive")!);
+            il.EmitConvertToInSessionExpression(typeof(float), targetType);
+        }
+
+        internal override bool UsesCurrentConditionLocalInEmit => false;
     }
     
     private sealed class RoomNameAccessor : Condition {

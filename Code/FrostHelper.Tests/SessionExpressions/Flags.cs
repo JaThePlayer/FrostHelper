@@ -58,7 +58,7 @@ public class Flags {
     
     [Fact]
     public void FlagOr() {
-        var e = TestUtils.CreateExpr<OperatorOr>("a || b");
+        var e = TestUtils.CreateExpr("a || b");
         
         var session = new Session();
         Assert.False(e.Check(session));
@@ -124,5 +124,23 @@ public class Flags {
         level.Session.SetFlag("a", false);
         level.Update();
         Assert.Equal(3, amt);
+    }
+    
+    [Fact]
+    public void IndirectFlag() {
+        var e = TestUtils.CreateExpr(@"f""hi$(@x)""");
+        
+        var session = new Session();
+        
+        Assert.False(e.Check(session));
+        
+        session.SetFlag("hi0");
+        Assert.True(e.Check(session));
+        
+        session.SetSlider("x", 1.25f);
+        Assert.False(e.Check(session));
+        // Session Expressions should always interpolate with invariant culture.
+        session.SetFlag("hi1.25");
+        Assert.True(e.Check(session));
     }
 }
