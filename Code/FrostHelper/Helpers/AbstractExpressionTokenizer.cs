@@ -16,6 +16,11 @@ internal class FieldAccessTokenOperand(string name)
     public string Name { get; set; } = name;
 
     public List<ExpressionToken>? ObjectTokens { get; set; }
+    
+    /// <summary>
+    /// For syntax like field.method(arg1, ...), stores the function arguments.
+    /// </summary>
+    public List<List<ExpressionToken>>? Arguments { get; set; }
 }
 
 internal interface IAbstractExpressionErrorLogger {
@@ -121,8 +126,17 @@ internal class ExpressionToken {
                             break;
                     }
                 }
-
-                tokens.Add(new ExpressionToken(Kinds.Command, operand));
+                
+                // Try finding field access
+                switch (TryCreateFieldAccess(ref parser, tokens, [ new ExpressionToken(Kinds.Command, operand) ], logger)) {
+                    case TokenizerState.Normal:
+                        break;
+                    case null:
+                        tokens.Add(new ExpressionToken(Kinds.Command, operand));
+                        break;
+                    default:
+                        return TokenizerState.Error;
+                }
             }
 
             if (parser.TryTrimPrefix("(")) {
@@ -252,8 +266,35 @@ internal class ExpressionToken {
                     logger.Error("Missing field name after '.'");
                     return TokenizerState.Error;
                 }
+
+                var operand = new FieldAccessTokenOperand(cmdName) { ObjectTokens = innerTokens };
+                if (parser.TryTrimPrefix("(")) {
+                    TokenizerState inner;
+                    while ((inner = Tokenize(ref parser, 1, logger, out var innerArgTokens)) is TokenizerState.Comma
+                           or TokenizerState.EndBracket) {
+                        operand.Arguments ??= [];
+                        operand.Arguments.Add(innerArgTokens);
+                        if (inner is TokenizerState.EndBracket)
+                            break;
+                    }
+                    if (inner is TokenizerState.Error)
+                        return TokenizerState.Error;
                     
-                tokens.Add(new ExpressionToken(Kinds.FieldAccess, new FieldAccessTokenOperand(cmdName) { ObjectTokens = innerTokens }));
+                    // Try finding chained field access
+                    switch (TryCreateFieldAccess(ref parser, tokens, [], logger)) {
+                        case TokenizerState.Normal:
+                            var chainedToken = tokens[^1];
+                            var op = (FieldAccessTokenOperand) chainedToken.Operand!;
+                            op.ObjectTokens = [ new ExpressionToken(Kinds.FieldAccess, operand) ];
+                            return TokenizerState.Normal;
+                        case null:
+                            break;
+                        default:
+                            return TokenizerState.Error;
+                    }
+                }
+                    
+                tokens.Add(new ExpressionToken(Kinds.FieldAccess, operand));
                 return TokenizerState.Normal;
             }
 

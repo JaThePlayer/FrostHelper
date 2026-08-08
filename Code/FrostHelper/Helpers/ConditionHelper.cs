@@ -203,10 +203,24 @@ public static class ConditionHelper {
 
                 return true;
             }
-            case FieldAccessExpression { Name: var fieldName, ObjectExpression: var objectExpression }: {
+            case FieldAccessExpression { Name: var fieldName, ObjectExpression: var objectExpression, Arguments: var arguments }: {
                 if (!TryCreate(objectExpression, ctx, out var objExpr)) {
                     condition = null;
                     return false;
+                }
+
+                if (arguments is { }) {
+                    List<Condition> args = [];
+                    foreach (var argExpr in arguments) {
+                        if (!TryCreate(argExpr, ctx, out var arg)) {
+                            condition = null;
+                            return false;
+                        } 
+                        
+                        args.Add(arg);
+                    }
+                    condition = InstanceFunctionCommands.Create(fieldName, objExpr, args, ctx);
+                    return true;
                 }
 
                 condition = FieldAccessCommands.Create(fieldName, objExpr, ctx);

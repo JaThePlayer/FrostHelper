@@ -60,6 +60,45 @@ internal static class FunctionCommands {
     
     public static bool TryCreate(string name, IReadOnlyList<Condition> args, ExpressionContext ctx, [NotNullWhen(true)] out Condition? condition) {
         if (!ctx.FunctionCommands.TryGetValue(name, out var factory) && !Registry.TryGetValue(name, out factory)) {
+            if (name.Contains('.')) {
+                var remaining = name;
+                List<string>? fields = null;
+                condition = null;
+                while (true) {
+                    // Try simple commands from the context
+                    if (ctx.SimpleCommands.TryGetValue(remaining, out var cond)) {
+                        condition = cond;
+                        break;
+                    }
+                    
+                    // Try simple commands
+                    if (SimpleCommands.Registry.TryGetValue(remaining, out cond)) {
+                        condition = cond;
+                        break;
+                    }
+                    
+                    var lastDotIdx = remaining.LastIndexOf('.');
+                    if (lastDotIdx == -1)
+                        break;
+                    fields ??= [];
+                    fields.Add(remaining[(lastDotIdx+1)..]);
+                    remaining = remaining[..lastDotIdx];
+                }
+
+                if (condition is not null) {
+                    while (fields?.Count > 1) {
+                        condition = FieldAccessCommands.Create(fields[^1], condition, ctx);
+                        fields.RemoveAt(fields.Count - 1);
+                    }
+
+                    if (fields?.Count > 0) {
+                        condition = InstanceFunctionCommands.Create(fields[0], condition, args, ctx);
+                        return true;
+                    }
+                    
+                }
+            }
+            
             NotificationHelper.Notify($"Unknown Session Expression function: '{name}'");
             condition = null;
             return false;

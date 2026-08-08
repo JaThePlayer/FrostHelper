@@ -23,10 +23,12 @@ internal sealed class FunctionCommandExpression(string name, IList<AbstractExpre
     public IList<AbstractExpression> Arguments => args;
 }
 
-internal sealed class FieldAccessExpression(string name, AbstractExpression objectExpr) : AbstractExpression {
+internal sealed class FieldAccessExpression(string name, AbstractExpression objectExpr, IReadOnlyList<AbstractExpression>? args) : AbstractExpression {
     public string Name => name;
     
     public AbstractExpression ObjectExpression => objectExpr;
+
+    public IReadOnlyList<AbstractExpression>? Arguments => args;
 }
 
 internal sealed class BinOpExpression(AbstractExpression left, AbstractExpression right, BinOpExpression.Operators op) : AbstractExpression {
@@ -180,7 +182,22 @@ internal partial class AbstractExpression {
                     return false;
                 }
 
-                expression = new FieldAccessExpression(fieldAccessOperand.Name, expression);
+                List<AbstractExpression>? arguments = null;
+                if (fieldAccessOperand.Arguments is [[]]) {
+                    arguments = [];
+                }
+                else if (fieldAccessOperand.Arguments is { }) {
+                    arguments = [];
+                    foreach (var argumentTokens in fieldAccessOperand.Arguments) {
+                        if (!Parse(CollectionsMarshal.AsSpan(argumentTokens), out var argument)) {
+                            return false;
+                        }
+                        
+                        arguments.Add(argument);
+                    }
+                }
+
+                expression = new FieldAccessExpression(fieldAccessOperand.Name, expression, arguments);
                 return true;
             }
             
