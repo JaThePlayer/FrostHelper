@@ -89,7 +89,11 @@ internal sealed class CompiledCondition<T> : ISavestatePersisted, IDisposable {
     public T Get(Session session, object? userdata) {
         if (!_attemptedToCompile) {
             _attemptedToCompile = true;
-            _compiled = Jit();
+            try {
+                _compiled = Jit();
+            } catch (Exception ex) {
+                Logger.Error("FrostHelper.CompiledCondition", $"Failed to compile session expression '{_basedOn.SourceText}', falling back to interpreter: {ex}");
+            }
         }
 
         return _compiled is null
@@ -115,12 +119,7 @@ internal sealed class CompiledCondition<T> : ISavestatePersisted, IDisposable {
             il.Emit(OpCodes.Stloc, ctx.CurrentCondition);
         }
 
-        try {
-            _basedOn.Emit(ctx, typeof(T));
-        } catch (Exception ex) {
-            Logger.Error("FrostHelper.CompiledCondition", $"Failed to compile session expression '{_basedOn.SourceText}', falling back to interpreter: {ex}");
-            return null;
-        }
+        _basedOn.Emit(ctx, typeof(T));
         
         il.Emit(OpCodes.Ret);
 

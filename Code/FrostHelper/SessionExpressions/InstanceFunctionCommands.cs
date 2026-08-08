@@ -1,7 +1,9 @@
 using FrostHelper.Helpers;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using System.Reflection.Emit;
 using System.Text.RegularExpressions;
+using OpCodes = System.Reflection.Emit.OpCodes;
 
 namespace FrostHelper.SessionExpressions;
 
@@ -92,6 +94,14 @@ internal static class InstanceFunctionCommands {
         private readonly ConditionHelper.Condition _field;
         private readonly ConditionHelper.Condition _arg;
 
+        private static readonly FieldInfo FieldField =
+            typeof(OneArgInstanceFunc<TField, TArg, TResult, TOp>).GetField(nameof(_field),
+                BindingFlags.Instance | BindingFlags.NonPublic)!;
+        
+        private static readonly FieldInfo ArgField =
+            typeof(OneArgInstanceFunc<TField, TArg, TResult, TOp>).GetField(nameof(_arg),
+                BindingFlags.Instance | BindingFlags.NonPublic)!;
+
         public static bool TryCreate(ConditionHelper.Condition field, IReadOnlyList<ConditionHelper.Condition> args,
             [NotNullWhen(true)] out ConditionHelper.Condition? result,
             [NotNullWhen(false)] out string? errorMessage) {
@@ -117,6 +127,24 @@ internal static class InstanceFunctionCommands {
 
             return TOp.Invoke(field, arg)!;
         }
+
+        internal override void Emit(ConditionCompilationCtx ctx, Type targetType) {
+            var il = ctx.Il;
+            LocalBuilder? tempOrigCond = null;
+            
+            il.EmitSwapOutCurrentCondition(ref tempOrigCond, ctx, _field, FieldField);
+            _field.Emit(ctx, typeof(TField));
+            il.EmitSwapOutCurrentCondition(ref tempOrigCond, ctx, _arg, ArgField);
+            _arg.Emit(ctx, typeof(TArg));
+            
+            il.EmitRevertCurrentCondition(tempOrigCond, ctx);
+            
+            il.Emit(OpCodes.Call, typeof(TOp).GetMethod(nameof(TOp.Invoke))!);
+            ctx.EmitConvertTo(typeof(TResult), targetType);
+        }
+
+        internal override bool UsesCurrentConditionLocalInEmit =>
+            _field.UsesCurrentConditionLocalInEmit || _arg.UsesCurrentConditionLocalInEmit;
     }
 
     internal sealed class OneArgSessionInstanceFunc<TField, TArg, TResult, TOp> : ConditionHelper.Condition
@@ -124,6 +152,13 @@ internal static class InstanceFunctionCommands {
 
         private readonly ConditionHelper.Condition _field;
         private readonly ConditionHelper.Condition _arg;
+        private static readonly FieldInfo FieldField =
+            typeof(OneArgSessionInstanceFunc<TField, TArg, TResult, TOp>).GetField(nameof(_field),
+                BindingFlags.Instance | BindingFlags.NonPublic)!;
+        
+        private static readonly FieldInfo ArgField =
+            typeof(OneArgSessionInstanceFunc<TField, TArg, TResult, TOp>).GetField(nameof(_arg),
+                BindingFlags.Instance | BindingFlags.NonPublic)!;
 
         public static bool TryCreate(ConditionHelper.Condition field, IReadOnlyList<ConditionHelper.Condition> args,
             [NotNullWhen(true)] out ConditionHelper.Condition? result,
@@ -150,6 +185,27 @@ internal static class InstanceFunctionCommands {
 
             return TOp.Invoke(session, userdata, field, arg)!;
         }
+        
+        internal override void Emit(ConditionCompilationCtx ctx, Type targetType) {
+            var il = ctx.Il;
+            LocalBuilder? tempOrigCond = null;
+            
+            ctx.EmitLoadSession();
+            ctx.EmitLoadUserdata();
+            
+            il.EmitSwapOutCurrentCondition(ref tempOrigCond, ctx, _field, FieldField);
+            _field.Emit(ctx, typeof(TField));
+            il.EmitSwapOutCurrentCondition(ref tempOrigCond, ctx, _arg, ArgField);
+            _arg.Emit(ctx, typeof(TArg));
+            
+            il.EmitRevertCurrentCondition(tempOrigCond, ctx);
+            
+            il.Emit(OpCodes.Call, typeof(TOp).GetMethod(nameof(TOp.Invoke))!);
+            ctx.EmitConvertTo(typeof(TResult), targetType);
+        }
+
+        internal override bool UsesCurrentConditionLocalInEmit =>
+            _field.UsesCurrentConditionLocalInEmit || _arg.UsesCurrentConditionLocalInEmit;
     }
 
     internal struct StringMatch : IOneArgFunc<string, string, int> {

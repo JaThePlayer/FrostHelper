@@ -486,6 +486,29 @@ public class IlCompilation {
         IL_0009: call System.Int32 System.Collections.Generic.HashSet`1<Celeste.EntityID>::get_Count()
         IL_000e: ret
         """);
+        
+        AssertIl<int>("$strawberries.sum($s => $s.roomName == \"test\")", """
+        IL_0000: ldarg.2
+        IL_0001: stloc V_0
+        IL_0005: ldarg 
+        IL_0009: ldarg 
+        IL_000d: ldarg 
+        IL_0011: ldfld System.Collections.Generic.HashSet`1<Celeste.EntityID> Celeste.Session::Strawberries
+        IL_0016: ldloc V_0
+        IL_001a: stloc V_1
+        IL_001e: ldloc V_1
+        IL_0022: castclass FrostHelper.SessionExpressions.InstanceFunctionCommands/OneArgSessionInstanceFunc`4<System.Collections.IEnumerable,FrostHelper.SessionExpressions.LambdaCondition,System.Single,FrostHelper.SessionExpressions.InstanceFunctionCommands/EnumerableSum>
+        IL_0027: ldfld FrostHelper.Helpers.ConditionHelper/Condition FrostHelper.SessionExpressions.InstanceFunctionCommands/OneArgSessionInstanceFunc`4<System.Collections.IEnumerable,FrostHelper.SessionExpressions.LambdaCondition,System.Single,FrostHelper.SessionExpressions.InstanceFunctionCommands/EnumerableSum>::_arg
+        IL_002c: stloc V_0
+        IL_0030: ldloc V_0
+        IL_0034: castclass FrostHelper.SessionExpressions.LambdaDefinitionCondition
+        IL_0039: call FrostHelper.SessionExpressions.LambdaCondition FrostHelper.SessionExpressions.LambdaDefinitionCondition::get_Instance()
+        IL_003e: ldloc V_1
+        IL_0042: stloc V_0
+        IL_0046: call System.Single FrostHelper.SessionExpressions.InstanceFunctionCommands/EnumerableSum::Invoke(Celeste.Session,System.Object,System.Collections.IEnumerable,FrostHelper.SessionExpressions.LambdaCondition)
+        IL_004b: conv.i4
+        IL_004c: ret
+        """);
     }
     
     private void Test(Session s) {

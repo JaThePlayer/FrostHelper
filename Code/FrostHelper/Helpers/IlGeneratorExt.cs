@@ -109,6 +109,9 @@ internal static class IlGeneratorExt {
                     return;
                 }
             }
+
+            if (fromType.IsAssignableTo(toType))
+                return;
             
             throw new Exception($"Cannot convert {fromType} to {toType}");
         }
