@@ -54,6 +54,7 @@ internal sealed class StringInterpolationOperator(List<ConditionHelper.Condition
         var argI = 0;
         foreach (var arg in args) {
             il.EmitSwapOutCurrentCondition(ref tempLocal, ctx, arg, () => {
+                il.Emit(OpCodes.Ldloc, tempLocal!);
                 il.Emit(OpCodes.Ldc_I4, argI);
                 il.Emit(OpCodes.Call, MethodGetArg);
             });

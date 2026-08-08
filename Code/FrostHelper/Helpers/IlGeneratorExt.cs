@@ -141,8 +141,7 @@ internal static class IlGeneratorExt {
                 il.Emit(OpCodes.Ldloc, ctx.CurrentCondition);
                 il.Emit(OpCodes.Stloc, tempOrigCond);
             }
-                
-            il.Emit(OpCodes.Ldloc, tempOrigCond);
+
             emitLoadCondition();
             il.Emit(OpCodes.Stloc, ctx.CurrentCondition);
         }
@@ -152,6 +151,15 @@ internal static class IlGeneratorExt {
                 il.Emit(OpCodes.Ldloc, tempOrigCond);
                 il.Emit(OpCodes.Stloc, ctx.CurrentCondition);
             }
+        }
+
+        public void EmitLdlocOrLdloca(LocalBuilder local) {
+            if (local.LocalType.IsValueType) {
+                il.Emit(OpCodes.Ldloca, local);
+                return;
+            }
+            
+            il.Emit(OpCodes.Ldloc, local);
         }
     }
 }

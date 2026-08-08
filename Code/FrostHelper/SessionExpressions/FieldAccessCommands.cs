@@ -108,20 +108,71 @@ internal abstract class FieldAccessorCommand {
 }
 
 internal sealed class GeneralFieldAccessor(string fieldName, ConditionHelper.Condition target, IExpressionContext ctx) : ConditionHelper.Condition {
+    private FieldAccessorCommand? _permanentlyKnownFieldAccessor;
+    private readonly Dictionary<Type, FieldAccessorCommand?> _cache = [];
+    private readonly ConditionHelper.Condition _target = target;
+    
+    private static readonly FieldInfo TargetField = typeof(GeneralFieldAccessor).GetField("_target", BindingFlags.NonPublic | BindingFlags.Instance)!;
+    
     public override object Get(Session session, object? userdata) {
-        var t = target.Get(session, userdata);
+        var t = _target.Get(session, userdata);
 
-        if (FieldAccessCommands.GetAccessor(t.GetType(), fieldName, ctx) is {} accessor)
-            return accessor.GetValue(t);
-
-        if (_loggedMissingFields.Add((t.GetType(), fieldName))) {
-            NotificationHelper.Notify($"Failed to get field '{fieldName}' on type '{t.GetType().Name}'");
+        if (_cache.TryGetValue(t.GetType(), out var cached)) {
+            return cached?.GetValue(t) ?? Zero;
         }
 
-        return 0;
+        if (FieldAccessCommands.GetAccessor(t.GetType(), fieldName, ctx) is { } accessor) {
+            _cache[t.GetType()] = accessor;
+            return accessor.GetValue(t);
+        }
+        
+        _cache[t.GetType()] = null;
+        NotificationHelper.Notify($"Failed to get field '{fieldName}' on type '{t.GetType().Name}'");
+
+        return Zero;
     }
-    
-    private readonly HashSet<(Type, string)> _loggedMissingFields = [];
+
+    internal override void Emit(ConditionCompilationCtx ctx, Type targetType) {
+        var knownAccessor = GetPermanentlyKnownFieldAccessor();
+        if (knownAccessor is null) {
+            base.Emit(ctx, targetType);
+            return;
+        }
+
+        var il = ctx.Il;
+        LocalBuilder? tempLoc = null;
+        il.EmitSwapOutCurrentCondition(ref tempLoc, ctx, _target, TargetField);
+        
+        _target.Emit(ctx, _target.ReturnType!);
+
+        il.EmitRevertCurrentCondition(tempLoc, ctx);
+        
+        knownAccessor.Emit(ctx, _target.ReturnType, targetType);
+    }
+
+    internal override bool UsesCurrentConditionLocalInEmit
+        => GetPermanentlyKnownFieldAccessor() is null || _target.UsesCurrentConditionLocalInEmit;
+
+    private FieldAccessorCommand? GetPermanentlyKnownFieldAccessor() {
+        if (_permanentlyKnownFieldAccessor is not null)
+            return _permanentlyKnownFieldAccessor;
+        
+        var fieldType = _target.ReturnType;
+        if (fieldType is null)
+            return null;
+
+        if (_cache.TryGetValue(fieldType, out var cachedAccessor)) {
+            return _permanentlyKnownFieldAccessor = cachedAccessor;
+        }
+
+        if (FieldAccessCommands.GetAccessor(fieldType, fieldName, ctx) is { } accessor) {
+            return _permanentlyKnownFieldAccessor = accessor;
+        }
+
+        return null;
+    }
+
+    protected internal override Type? ReturnType => GetPermanentlyKnownFieldAccessor()?.ReturnType;
 }
 
 internal sealed class KnownFieldAccessor(ConditionHelper.Condition target, FieldAccessorCommand accessor) : ConditionHelper.Condition {

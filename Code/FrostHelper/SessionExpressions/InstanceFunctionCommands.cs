@@ -61,10 +61,19 @@ internal static class InstanceFunctionCommands {
 
     internal interface IOneArgFunc<in TField, in TArg, out TResult> {
         public static abstract TResult Invoke(TField field, TArg arg);
+        
+        public static abstract bool Emit(ConditionCompilationCtx ctx, Type targetType);
     }
     
     internal interface IOneArgSessionFunc<in TField, in TArg, out TResult> {
         public static abstract TResult Invoke(Session session, object? userdata, TField field, TArg arg);
+        
+        public static abstract bool EmitCodeUsesSessionAndUserdataOnStack { get; }
+        
+        public static abstract bool Emit(ConditionCompilationCtx ctx, Type targetType, ConditionHelper.Condition fieldCondition, ConditionHelper.Condition argCondition);
+
+        public static abstract void OnCreated(ConditionHelper.Condition fieldCondition,
+            ConditionHelper.Condition argCondition);
     }
 
     internal sealed class DynamicInstanceFunction(string functionName, ConditionHelper.Condition target, IReadOnlyList<ConditionHelper.Condition> arguments, IExpressionContext ctx) : ConditionHelper.Condition {
@@ -139,8 +148,10 @@ internal static class InstanceFunctionCommands {
             
             il.EmitRevertCurrentCondition(tempOrigCond, ctx);
             
-            il.Emit(OpCodes.Call, typeof(TOp).GetMethod(nameof(TOp.Invoke))!);
-            ctx.EmitConvertTo(typeof(TResult), targetType);
+            if (!TOp.Emit(ctx, targetType)) {
+                il.Emit(OpCodes.Call, typeof(TOp).GetMethod(nameof(TOp.Invoke))!);
+                ctx.EmitConvertTo(typeof(TResult), targetType);
+            }
         }
 
         internal override bool UsesCurrentConditionLocalInEmit =>
@@ -177,6 +188,8 @@ internal static class InstanceFunctionCommands {
         public OneArgSessionInstanceFunc(ConditionHelper.Condition field, ConditionHelper.Condition arg) {
             _arg = arg;
             _field = field;
+            
+            TOp.OnCreated(field, arg);
         }
         
         public override object Get(Session session, object? userdata) {
@@ -189,9 +202,11 @@ internal static class InstanceFunctionCommands {
         internal override void Emit(ConditionCompilationCtx ctx, Type targetType) {
             var il = ctx.Il;
             LocalBuilder? tempOrigCond = null;
-            
-            ctx.EmitLoadSession();
-            ctx.EmitLoadUserdata();
+
+            if (TOp.EmitCodeUsesSessionAndUserdataOnStack) {
+                ctx.EmitLoadSession();
+                ctx.EmitLoadUserdata();
+            }
             
             il.EmitSwapOutCurrentCondition(ref tempOrigCond, ctx, _field, FieldField);
             _field.Emit(ctx, typeof(TField));
@@ -199,9 +214,11 @@ internal static class InstanceFunctionCommands {
             _arg.Emit(ctx, typeof(TArg));
             
             il.EmitRevertCurrentCondition(tempOrigCond, ctx);
-            
-            il.Emit(OpCodes.Call, typeof(TOp).GetMethod(nameof(TOp.Invoke))!);
-            ctx.EmitConvertTo(typeof(TResult), targetType);
+
+            if (!TOp.Emit(ctx, targetType, _field, _arg)) {
+                il.Emit(OpCodes.Call, typeof(TOp).GetMethod(nameof(TOp.Invoke))!);
+                ctx.EmitConvertTo(typeof(TResult), targetType);
+            }
         }
 
         internal override bool UsesCurrentConditionLocalInEmit =>
@@ -212,6 +229,8 @@ internal static class InstanceFunctionCommands {
         public static int Invoke(string field, string arg) {
             return Regex.IsMatch(field, arg, RegexOptions.Compiled) ? 1 : 0;
         }
+
+        public static bool Emit(ConditionCompilationCtx ctx, Type targetType) => false;
     }
     
     internal struct Str : IOneArgFunc<object, string, string> {
@@ -222,6 +241,8 @@ internal static class InstanceFunctionCommands {
             
             return field.ToString() ?? "";
         }
+
+        public static bool Emit(ConditionCompilationCtx ctx, Type targetType) => false;
     }
     
     internal struct EnumerableSum : IOneArgSessionFunc<IEnumerable, LambdaCondition, float> {
@@ -233,6 +254,71 @@ internal static class InstanceFunctionCommands {
             }
 
             return sum;
+        }
+
+        public static bool EmitCodeUsesSessionAndUserdataOnStack => false;
+
+        public static bool Emit(ConditionCompilationCtx ctx, Type targetType, ConditionHelper.Condition fieldCondition, ConditionHelper.Condition argCondition) {
+            var il = ctx.Il;
+            LocalBuilder? tempCurrentCond = null;
+            if (argCondition is not LambdaDefinitionCondition lambdaDefinitionCondition) {
+                throw new Exception("eh");
+            }
+            var lambda = lambdaDefinitionCondition.Instance;
+            var lambdaLocal = il.DeclareLocal(typeof(LambdaCondition));
+            il.Emit(OpCodes.Stloc, lambdaLocal);
+            
+            var sumLocal = il.DeclareLocal(typeof(float));
+            il.Emit(OpCodes.Ldc_R4, 0f);
+            il.Emit(OpCodes.Stloc, sumLocal);
+
+            // field(IEnumerable) is now top of stack
+            
+            var enumerableType = fieldCondition.ReturnType ?? typeof(IEnumerable);
+            var getEnumerator = enumerableType.GetMethod(nameof(IEnumerable.GetEnumerator));
+            if (getEnumerator is null)
+                return true;
+            
+            var enumeratorLocal = il.DeclareLocal(getEnumerator.ReturnType);
+            il.Emit(OpCodes.Callvirt, getEnumerator);
+            il.Emit(OpCodes.Stloc, enumeratorLocal);
+            
+            var nextElementLabel = il.DefineLabel();
+            var endLoopLabel = il.DefineLabel();
+            
+            il.MarkLabel(nextElementLabel);
+            
+            il.EmitLdlocOrLdloca(enumeratorLocal);
+            il.Emit(OpCodes.Callvirt, getEnumerator.ReturnType.GetMethod(nameof(IEnumerator.MoveNext))!);
+            il.Emit(OpCodes.Brfalse, endLoopLabel);
+            
+            il.Emit(OpCodes.Ldloc, lambdaLocal);
+            il.Emit(OpCodes.Ldc_I4_0);
+            il.EmitLdlocOrLdloca(enumeratorLocal);
+            var currentProp = getEnumerator.ReturnType.GetProperty(nameof(IEnumerator.Current))!.GetMethod!;
+            lambdaDefinitionCondition.ArgumentTypes[0] = currentProp.ReturnType;
+            il.Emit(OpCodes.Callvirt, currentProp);
+            ctx.EmitConvertTo(currentProp.ReturnType, typeof(object));
+            lambda.EmitSetArgument(ctx);
+            
+            ctx.EmitSwapOutCurrentCondition(ref tempCurrentCond, lambda, () => {
+                il.Emit(OpCodes.Ldloc, lambdaLocal);
+            });
+            lambda.Emit(ctx, typeof(float));
+            
+            il.Emit(OpCodes.Ldloc, sumLocal);
+            il.Emit(OpCodes.Add);
+            il.Emit(OpCodes.Stloc, sumLocal);
+            il.Emit(OpCodes.Br, nextElementLabel);
+            
+            il.MarkLabel(endLoopLabel);
+            
+            il.Emit(OpCodes.Ldloc, sumLocal);
+            ctx.EmitConvertTo(typeof(float), targetType);
+            return true;
+        }
+
+        public static void OnCreated(ConditionHelper.Condition fieldCondition, ConditionHelper.Condition argCondition) {
         }
     }
 }

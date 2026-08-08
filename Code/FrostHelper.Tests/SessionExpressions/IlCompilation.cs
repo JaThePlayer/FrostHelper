@@ -491,23 +491,78 @@ public class IlCompilation {
         IL_0000: ldarg.2
         IL_0001: stloc V_0
         IL_0005: ldarg 
-        IL_0009: ldarg 
-        IL_000d: ldarg 
-        IL_0011: ldfld System.Collections.Generic.HashSet`1<Celeste.EntityID> Celeste.Session::Strawberries
-        IL_0016: ldloc V_0
-        IL_001a: stloc V_1
-        IL_001e: ldloc V_1
-        IL_0022: castclass FrostHelper.SessionExpressions.InstanceFunctionCommands/OneArgSessionInstanceFunc`4<System.Collections.IEnumerable,FrostHelper.SessionExpressions.LambdaCondition,System.Single,FrostHelper.SessionExpressions.InstanceFunctionCommands/EnumerableSum>
-        IL_0027: ldfld FrostHelper.Helpers.ConditionHelper/Condition FrostHelper.SessionExpressions.InstanceFunctionCommands/OneArgSessionInstanceFunc`4<System.Collections.IEnumerable,FrostHelper.SessionExpressions.LambdaCondition,System.Single,FrostHelper.SessionExpressions.InstanceFunctionCommands/EnumerableSum>::_arg
-        IL_002c: stloc V_0
-        IL_0030: ldloc V_0
-        IL_0034: castclass FrostHelper.SessionExpressions.LambdaDefinitionCondition
-        IL_0039: call FrostHelper.SessionExpressions.LambdaCondition FrostHelper.SessionExpressions.LambdaDefinitionCondition::get_Instance()
-        IL_003e: ldloc V_1
-        IL_0042: stloc V_0
-        IL_0046: call System.Single FrostHelper.SessionExpressions.InstanceFunctionCommands/EnumerableSum::Invoke(Celeste.Session,System.Object,System.Collections.IEnumerable,FrostHelper.SessionExpressions.LambdaCondition)
-        IL_004b: conv.i4
-        IL_004c: ret
+        IL_0009: ldfld System.Collections.Generic.HashSet`1<Celeste.EntityID> Celeste.Session::Strawberries
+        IL_000e: ldloc V_0
+        IL_0012: stloc V_1
+        IL_0016: ldloc V_1
+        IL_001a: castclass FrostHelper.SessionExpressions.InstanceFunctionCommands/OneArgSessionInstanceFunc`4<System.Collections.IEnumerable,FrostHelper.SessionExpressions.LambdaCondition,System.Single,FrostHelper.SessionExpressions.InstanceFunctionCommands/EnumerableSum>
+        IL_001f: ldfld FrostHelper.Helpers.ConditionHelper/Condition FrostHelper.SessionExpressions.InstanceFunctionCommands/OneArgSessionInstanceFunc`4<System.Collections.IEnumerable,FrostHelper.SessionExpressions.LambdaCondition,System.Single,FrostHelper.SessionExpressions.InstanceFunctionCommands/EnumerableSum>::_arg
+        IL_0024: stloc V_0
+        IL_0028: ldloc V_0
+        IL_002c: castclass FrostHelper.SessionExpressions.LambdaDefinitionCondition
+        IL_0031: call FrostHelper.SessionExpressions.LambdaCondition FrostHelper.SessionExpressions.LambdaDefinitionCondition::get_Instance()
+        IL_0036: ldloc V_1
+        IL_003a: stloc V_0
+        IL_003e: stloc V_2
+        IL_0042: ldc.r4 0
+        IL_0047: stloc V_3
+        IL_004b: callvirt System.Collections.Generic.HashSet`1/Enumerator<T> System.Collections.Generic.HashSet`1<Celeste.EntityID>::GetEnumerator()
+        IL_0050: stloc V_4
+        IL_0054: ldloca V_4
+        IL_0058: callvirt System.Boolean System.Collections.Generic.HashSet`1/Enumerator<Celeste.EntityID>::MoveNext()
+        IL_005d: brfalse IL_0129
+        IL_0062: ldloc V_2
+        IL_0066: ldc.i4.0
+        IL_0067: ldloca V_4
+        IL_006b: callvirt T System.Collections.Generic.HashSet`1/Enumerator<Celeste.EntityID>::get_Current()
+        IL_0070: box Celeste.EntityID
+        IL_0075: callvirt System.Void FrostHelper.SessionExpressions.LambdaCondition::SetArgument(System.Int32,System.Object)
+        IL_007a: ldloc V_0
+        IL_007e: stloc V_5
+        IL_0082: ldloc V_2
+        IL_0086: stloc V_0
+        IL_008a: ldloc V_0
+        IL_008e: stloc V_6
+        IL_0092: ldloc V_0
+        IL_0096: castclass FrostHelper.SessionExpressions.LambdaCondition
+        IL_009b: ldfld FrostHelper.SessionExpressions.LambdaDefinitionCondition FrostHelper.SessionExpressions.LambdaCondition::_definition
+        IL_00a0: call FrostHelper.Helpers.ConditionHelper/Condition FrostHelper.SessionExpressions.LambdaDefinitionCondition::get_Code()
+        IL_00a5: stloc V_0
+        IL_00a9: ldloc V_0
+        IL_00ad: stloc V_7
+        IL_00b1: ldloc V_7
+        IL_00b5: castclass FrostHelper.Helpers.ConditionHelper/BinaryOperator
+        IL_00ba: ldfld FrostHelper.Helpers.ConditionHelper/Condition FrostHelper.Helpers.ConditionHelper/BinaryOperator::ConditionA
+        IL_00bf: stloc V_0
+        IL_00c3: ldloc V_0
+        IL_00c7: stloc V_8
+        IL_00cb: ldloc V_8
+        IL_00cf: castclass FrostHelper.SessionExpressions.GeneralFieldAccessor
+        IL_00d4: ldfld FrostHelper.Helpers.ConditionHelper/Condition FrostHelper.SessionExpressions.GeneralFieldAccessor::_target
+        IL_00d9: stloc V_0
+        IL_00dd: ldloc V_0
+        IL_00e1: castclass FrostHelper.SessionExpressions.LambdaArgumentCondition
+        IL_00e6: call System.Object FrostHelper.SessionExpressions.LambdaArgumentCondition::GetArgument()
+        IL_00eb: unbox Celeste.EntityID
+        IL_00f0: ldloc V_8
+        IL_00f4: stloc V_0
+        IL_00f8: ldfld System.String Celeste.EntityID::Level
+        IL_00fd: ldstr "test"
+        IL_0102: ldloc V_7
+        IL_0106: stloc V_0
+        IL_010a: call System.Boolean FrostHelper.SessionExpressions.OperatorEq::Compare(System.String,System.String)
+        IL_010f: ldc.i4.1
+        IL_0110: ceq
+        IL_0112: conv.r4
+        IL_0113: ldloc V_6
+        IL_0117: stloc V_0
+        IL_011b: ldloc V_3
+        IL_011f: add
+        IL_0120: stloc V_3
+        IL_0124: br IL_0054
+        IL_0129: ldloc V_3
+        IL_012d: conv.i4
+        IL_012e: ret
         """);
     }
     

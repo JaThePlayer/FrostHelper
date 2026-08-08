@@ -45,6 +45,10 @@ internal sealed class ConditionCompilationCtx {
     public void EmitSwapOutCurrentCondition(ref LocalBuilder? oldConditionTempLocal, ConditionHelper.Condition conditionToSwapTo, FieldInfo fieldStoringConditionToSwapTo ) {
         Il.EmitSwapOutCurrentCondition(ref oldConditionTempLocal, this, conditionToSwapTo, fieldStoringConditionToSwapTo);
     }
+    
+    public void EmitSwapOutCurrentCondition(ref LocalBuilder? oldConditionTempLocal, ConditionHelper.Condition conditionToSwapTo, Action emitLoadConditionToSwapTo) {
+        Il.EmitSwapOutCurrentCondition(ref oldConditionTempLocal, this, conditionToSwapTo, emitLoadConditionToSwapTo);
+    }
 
     public void EmitRevertCurrentCondition(LocalBuilder? oldConditionTempLocal) {
         Il.EmitRevertCurrentCondition(oldConditionTempLocal, this);
