@@ -14,9 +14,11 @@ internal static class InstanceFunctionCommands {
         [(typeof(object), "str")] = OneArgInstanceFunc<object, string, string, Str>.TryCreate,
         
         [(typeof(string), "match")] = OneArgInstanceFunc<string, string, int, StringMatch>.TryCreate,
+        
+        [(typeof(IEnumerable), "sum")] = OneArgSessionInstanceFunc<IEnumerable, LambdaCondition, float, EnumerableSum>.TryCreate,
     };
     
-    internal static ConditionHelper.Condition Create(string functionName, ConditionHelper.Condition target, IReadOnlyList<ConditionHelper.Condition> arguments, ExpressionContext ctx) {
+    internal static ConditionHelper.Condition Create(string functionName, ConditionHelper.Condition target, IReadOnlyList<ConditionHelper.Condition> arguments, IExpressionContext ctx) {
         if (target.ReturnType is { } knownType && GetFactory(knownType, functionName, ctx) is { } factory) {
             if (!factory(target, arguments, out var condition, out var errorMessage)) {
                 NotificationHelper.Notify($"Failed to create Session Expression function: '{functionName}', called on '{knownType}':\n{errorMessage}");
@@ -29,7 +31,7 @@ internal static class InstanceFunctionCommands {
         return new DynamicInstanceFunction(functionName, target, arguments, ctx);
     }
 
-    internal static InstanceFunctionCommandFactory? GetFactory(Type? type, string functionName, ExpressionContext ctx) {
+    internal static InstanceFunctionCommandFactory? GetFactory(Type? type, string functionName, IExpressionContext ctx) {
         var currentType = type;
         while (currentType is not null) {
             if (Functions.TryGetValue((currentType, functionName), out var accessor)) {
@@ -58,8 +60,12 @@ internal static class InstanceFunctionCommands {
     internal interface IOneArgFunc<in TField, in TArg, out TResult> {
         public static abstract TResult Invoke(TField field, TArg arg);
     }
+    
+    internal interface IOneArgSessionFunc<in TField, in TArg, out TResult> {
+        public static abstract TResult Invoke(Session session, object? userdata, TField field, TArg arg);
+    }
 
-    internal sealed class DynamicInstanceFunction(string functionName, ConditionHelper.Condition target, IReadOnlyList<ConditionHelper.Condition> arguments, ExpressionContext ctx) : ConditionHelper.Condition {
+    internal sealed class DynamicInstanceFunction(string functionName, ConditionHelper.Condition target, IReadOnlyList<ConditionHelper.Condition> arguments, IExpressionContext ctx) : ConditionHelper.Condition {
         public override object Get(Session session, object? userdata) {
             var obj = target.Get(session, userdata);
             if (_cache.TryGetValue(obj.GetType(), out var cached))
@@ -113,6 +119,38 @@ internal static class InstanceFunctionCommands {
         }
     }
 
+    internal sealed class OneArgSessionInstanceFunc<TField, TArg, TResult, TOp> : ConditionHelper.Condition
+        where TOp : IOneArgSessionFunc<TField, TArg, TResult> {
+
+        private readonly ConditionHelper.Condition _field;
+        private readonly ConditionHelper.Condition _arg;
+
+        public static bool TryCreate(ConditionHelper.Condition field, IReadOnlyList<ConditionHelper.Condition> args,
+            [NotNullWhen(true)] out ConditionHelper.Condition? result,
+            [NotNullWhen(false)] out string? errorMessage) {
+            result = null;
+            errorMessage = null;
+
+            if (args is not [{ } onlyArg]) {
+                return FunctionCommands.FunctionCondition.ArgumentAmtMismatch(args.Count, 1, out result, out errorMessage);
+            }
+                
+            result = new OneArgSessionInstanceFunc<TField, TArg, TResult, TOp>(field, onlyArg);
+            return true;
+        }
+
+        public OneArgSessionInstanceFunc(ConditionHelper.Condition field, ConditionHelper.Condition arg) {
+            _arg = arg;
+            _field = field;
+        }
+        
+        public override object Get(Session session, object? userdata) {
+            var field = _field.Get<TField>(session, userdata);
+            var arg = _arg.Get<TArg>(session, userdata);
+
+            return TOp.Invoke(session, userdata, field, arg)!;
+        }
+    }
 
     internal struct StringMatch : IOneArgFunc<string, string, int> {
         public static int Invoke(string field, string arg) {
@@ -127,6 +165,18 @@ internal static class InstanceFunctionCommands {
             }
             
             return field.ToString() ?? "";
+        }
+    }
+    
+    internal struct EnumerableSum : IOneArgSessionFunc<IEnumerable, LambdaCondition, float> {
+        public static float Invoke(Session session, object? userdata, IEnumerable field, LambdaCondition callback) {
+            float sum = 0;
+            foreach (var obj in field) {
+                callback.SetArgument(0, obj);
+                sum += callback.GetFloat(session, userdata);
+            }
+
+            return sum;
         }
     }
 }

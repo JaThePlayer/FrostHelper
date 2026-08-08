@@ -48,7 +48,7 @@ public static class ConditionHelper {
         return false;
     }
 
-    private static bool CreateList(IList<AbstractExpression> args, ExpressionContext ctx, out List<Condition> conditions) {
+    private static bool CreateList(IList<AbstractExpression> args, IExpressionContext ctx, out List<Condition> conditions) {
         conditions = new List<Condition>(args.Count);
         foreach (var argExpr in args) {
             if (!TryCreate(argExpr, ctx, out var argCond)) {
@@ -60,7 +60,7 @@ public static class ConditionHelper {
         return true;
     }
     
-    private static bool TryCreate(AbstractExpression expr, ExpressionContext ctx, [NotNullWhen(true)] out Condition? condition) {
+    private static bool TryCreate(AbstractExpression expr, IExpressionContext ctx, [NotNullWhen(true)] out Condition? condition) {
         
         switch (expr)
         {
@@ -72,7 +72,7 @@ public static class ConditionHelper {
                 condition = null;
                 while (true) {
                     // Try simple commands from the context
-                    if (ctx.SimpleCommands.TryGetValue(remaining, out var cond)) {
+                    if (ctx.TryGetSimpleCommand(remaining, out var cond)) {
                         condition = cond;
                         break;
                     }
@@ -224,6 +224,19 @@ public static class ConditionHelper {
                 }
 
                 condition = FieldAccessCommands.Create(fieldName, objExpr, ctx);
+                return true;
+            }
+            case LambdaExpression lambda: {
+                var lambdaCondition = new LambdaDefinitionCondition(lambda.ArgumentNames);
+                var lambdaCtx = new LambdaContext(ctx, lambdaCondition);
+                if (!TryCreate(lambda.Code, lambdaCtx, out var codeCondition)) {
+                    condition = null;
+                    return false;
+                }
+
+                lambdaCondition.Code = codeCondition;
+                
+                condition = lambdaCondition;
                 return true;
             }
         }

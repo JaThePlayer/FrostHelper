@@ -16,10 +16,13 @@ internal static class FieldAccessCommands {
         [(typeof(Entity), "pos")] = new FieldInfoAccessor<Entity, Vector2>(nameof(Entity.Position)),
         [(typeof(Entity), "sid")] = new FieldAccessor<Entity, string, EntitySidAccessor>(),
         
+        [(typeof(EntityID), "roomName")] = new FieldInfoAccessor<EntityID, string>(nameof(EntityID.Level)),
+        [(typeof(EntityID), "id")] = new FieldInfoAccessor<EntityID, int>(nameof(EntityID.ID)),
+        
         [(typeof(IEnumerable), "count")] = new EnumerableCountAccessor(),
     };
 
-    internal static ConditionHelper.Condition Create(string fieldName, ConditionHelper.Condition target, ExpressionContext ctx) {
+    internal static ConditionHelper.Condition Create(string fieldName, ConditionHelper.Condition target, IExpressionContext ctx) {
         if (target.ReturnType is { } knownType && GetAccessor(knownType, fieldName, ctx) is { } accessor) {
             return new KnownFieldAccessor(target, accessor);
         }
@@ -27,7 +30,7 @@ internal static class FieldAccessCommands {
         return new GeneralFieldAccessor(fieldName, target, ctx);
     }
 
-    internal static FieldAccessorCommand? GetAccessor(Type? type, string fieldName, ExpressionContext ctx) {
+    internal static FieldAccessorCommand? GetAccessor(Type? type, string fieldName, IExpressionContext ctx) {
         var currentType = type;
         while (currentType is not null) {
             if (Accessors.TryGetValue((currentType, fieldName), out var accessor)) {
@@ -104,7 +107,7 @@ internal abstract class FieldAccessorCommand {
     public abstract void Emit(ConditionCompilationCtx ctx, Type? knownInputType, Type targetType);
 }
 
-internal sealed class GeneralFieldAccessor(string fieldName, ConditionHelper.Condition target, ExpressionContext ctx) : ConditionHelper.Condition {
+internal sealed class GeneralFieldAccessor(string fieldName, ConditionHelper.Condition target, IExpressionContext ctx) : ConditionHelper.Condition {
     public override object Get(Session session, object? userdata) {
         var t = target.Get(session, userdata);
 

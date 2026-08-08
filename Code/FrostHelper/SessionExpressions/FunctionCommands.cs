@@ -58,15 +58,15 @@ internal static class FunctionCommands {
         };
     }
     
-    public static bool TryCreate(string name, IReadOnlyList<Condition> args, ExpressionContext ctx, [NotNullWhen(true)] out Condition? condition) {
-        if (!ctx.FunctionCommands.TryGetValue(name, out var factory) && !Registry.TryGetValue(name, out factory)) {
+    public static bool TryCreate(string name, IReadOnlyList<Condition> args, IExpressionContext ctx, [NotNullWhen(true)] out Condition? condition) {
+        if (!ctx.TryGetFunctionCommand(name, out var factory) && !Registry.TryGetValue(name, out factory)) {
             if (name.Contains('.')) {
                 var remaining = name;
                 List<string>? fields = null;
                 condition = null;
                 while (true) {
                     // Try simple commands from the context
-                    if (ctx.SimpleCommands.TryGetValue(remaining, out var cond)) {
+                    if (ctx.TryGetSimpleCommand(remaining, out var cond)) {
                         condition = cond;
                         break;
                     }

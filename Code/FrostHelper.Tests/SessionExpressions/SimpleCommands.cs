@@ -102,5 +102,9 @@ public class SimpleCommands {
 
         session.Strawberries.Add(new EntityID("test", 1));
         Assert.Equal(1, TestUtils.CreateExpr("$strawberries.count").Get<int>(session));
+
+        session.Strawberries.Add(new EntityID("test", 2));
+        session.Strawberries.Add(new EntityID("blah", 3));
+        Assert.Equal(2, TestUtils.CreateExpr("$strawberries.sum($s => $s.roomName == \"test\")").Get<int>(session));
     }
 }
