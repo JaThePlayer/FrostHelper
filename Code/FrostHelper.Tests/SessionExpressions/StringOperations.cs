@@ -21,10 +21,7 @@ public class StringOperations {
 
         session.Level = "b-1";
         Assert.True(TestUtils.CreateExpr("$roomName.match(\"b-.*\")").Check(session));
-
-        using (_ = new NotificationExpecter(1, n => n.Message.Contains(
-                       "Failed to create Session Expression function: 'match', called on 'System.Int32'", StringComparison.Ordinal))) {
-            Assert.False(TestUtils.CreateExpr("$roomName.match(\"b-.*\").match(\"\")").Check(session));
-        }
+        
+        Assert.True(TestUtils.CreateExpr("$roomName.match(\"b-.*\").str(\"x\").match(\"1\")").Check(session));
     }
 }

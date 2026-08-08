@@ -1,5 +1,6 @@
 using FrostHelper.Helpers;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Text.RegularExpressions;
 
 namespace FrostHelper.SessionExpressions;
@@ -10,6 +11,8 @@ internal static class InstanceFunctionCommands {
         [NotNullWhen(false)] out string? errorMessage);
     
     internal static readonly Dictionary<(Type, string), InstanceFunctionCommandFactory> Functions = new() {
+        [(typeof(object), "str")] = OneArgInstanceFunc<object, string, string, Str>.TryCreate,
+        
         [(typeof(string), "match")] = OneArgInstanceFunc<string, string, int, StringMatch>.TryCreate,
     };
     
@@ -114,6 +117,16 @@ internal static class InstanceFunctionCommands {
     internal struct StringMatch : IOneArgFunc<string, string, int> {
         public static int Invoke(string field, string arg) {
             return Regex.IsMatch(field, arg, RegexOptions.Compiled) ? 1 : 0;
+        }
+    }
+    
+    internal struct Str : IOneArgFunc<object, string, string> {
+        public static string Invoke(object field, string arg) {
+            if (field is IFormattable formattable) {
+                return formattable.ToString(arg, CultureInfo.InvariantCulture);
+            }
+            
+            return field.ToString() ?? "";
         }
     }
 }
