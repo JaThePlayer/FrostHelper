@@ -37,19 +37,29 @@ end
 addChannelType("FrostHelper/HsvRainbowChannel", {
     { "hue", "0.4 + $yoyo(($pos.len + $time * 50) % 280 / 280) * 0.4" },
     { "s", "0.4", jautils.fields.sessionExpression {} },
-    { "v", "0.9", jautils.fields.sessionExpression {} }
+    { "v", "0.9", jautils.fields.sessionExpression {} },
+    { "alpha", "1", jautils.fields.sessionExpression {} }
 })
 
 ---@type EntityHandler<UnknownEntity>
 local channelAttacher = {
     name = "FrostHelper/RainbowChannelAttacher",
-    texture = "editor/FrostHelper/RainbowChannelAttacher"
 }
 
 jautils.createPlacementsPreserveOrder(channelAttacher, "default", {
     { "channelId", "" },
     { "types", "", jautils.fields.typeList { } },
 })
+
+function channelAttacher.sprite(room, entity)
+    local baseSprite = drawableSpriteStruct.fromTexture("editor/FrostHelper/RainbowChannelAttacher", entity)
+    local textSprite = drawableTextStruct.fromText(entity.channelId or "", entity.x - 12, entity.y - 20, 24, 24, nil, 0.25, jautils.getColor("ffffff"))
+
+    return {
+        baseSprite,
+        textSprite
+    }
+end
 
 table.insert(channels, channelAttacher)
 

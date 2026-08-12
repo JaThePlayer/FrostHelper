@@ -21,6 +21,9 @@ internal static class RainbowChannels {
         IL.Monocle.EntityList.RenderOnly += EntityListRender;
         IL.Monocle.EntityList.RenderOnlyFullMatch += EntityListRender;
         IL.Monocle.EntityList.Update += EntityListUpdate;
+
+        IL.Celeste.Level.Update += EntityListUpdate;
+        IL.Monocle.EntityList.UpdateLists += EntityListUpdateLists; 
         
         On.Celeste.CrystalStaticSpinner.GetHue += CrystalStaticSpinnerOnGetHue;
     }
@@ -37,14 +40,34 @@ internal static class RainbowChannels {
         var cursor = new ILCursor(il);
 
         cursor.TryGotoNext(MoveType.Before, i => i.MatchCallOrCallvirt<Entity>(nameof(Entity.Render)));
-        cursor.EmitCall(BeforeEntityRender);
+        cursor.Emit(Mono.Cecil.Cil.OpCodes.Dup);
+        cursor.Emit(Mono.Cecil.Cil.OpCodes.Call, typeof(Entity).GetProperty(nameof(Entity.Scene))!.GetMethod!);
+        cursor.EmitCall(BeforeEntityUpdate);
     }
     
     private static void EntityListUpdate(ILContext il) {
         var cursor = new ILCursor(il);
 
-        cursor.TryGotoNext(MoveType.Before, i => i.MatchCallOrCallvirt<Entity>(nameof(Entity.Update)));
+        while (cursor.TryGotoNext(MoveType.Before, i => i.MatchCallOrCallvirt<Entity>(nameof(Entity.Update)))) {
+            cursor.Emit(Mono.Cecil.Cil.OpCodes.Dup);
+            cursor.Emit(Mono.Cecil.Cil.OpCodes.Call, typeof(Entity).GetProperty(nameof(Entity.Scene))!.GetMethod!);
+            cursor.EmitCall(BeforeEntityUpdate);
+
+            cursor.GotoNext(MoveType.After, i => i.MatchCallOrCallvirt<Entity>(nameof(Entity.Update)));
+        }
+    }
+    
+    private static void EntityListUpdateLists(ILContext il) {
+        var cursor = new ILCursor(il);
+
+        cursor.TryGotoNext(MoveType.Before, i => i.MatchCallOrCallvirt<Entity>(nameof(Entity.Awake)));
+        // Stack is [Entity, Scene]
+        VariableDefinition sceneLocal = new VariableDefinition(il.Import(typeof(Scene)));
+        il.Body.Variables.Add(sceneLocal);
+        cursor.Emit(Mono.Cecil.Cil.OpCodes.Stloc, sceneLocal);
+        cursor.Emit(Mono.Cecil.Cil.OpCodes.Ldloc, sceneLocal);
         cursor.EmitCall(BeforeEntityUpdate);
+        cursor.Emit(Mono.Cecil.Cil.OpCodes.Ldloc, sceneLocal);
     }
 
     internal static void SetEntityChannel(Entity entity, string channelId) {
@@ -52,24 +75,10 @@ internal static class RainbowChannels {
         entity.SourceData.Values ??= new Dictionary<string, object>();
         entity.SourceData.Values[RainbowChannelEntityDataKey] = channelId;
     }
-
-    private static Entity BeforeEntityRender(Entity entity) {
-        if (entity.SourceData?.Attr(RainbowChannelEntityDataKey) is { } channel ) {
-            if (!string.IsNullOrWhiteSpace(channel) && entity.Scene.Tracker.GetEntity<RainbowChannelController>() is { } controller) {
-                CurrentChannel = controller.GetChannel(channel);
-            } else {
-                CurrentChannel = null;
-            }
-        } else {
-            CurrentChannel = null;
-        }
-        
-        return entity;
-    }
     
-    private static Entity BeforeEntityUpdate(Entity entity) {
+    private static Entity BeforeEntityUpdate(Entity entity, Scene scene) {
         if (entity.SourceData?.Attr(RainbowChannelEntityDataKey) is { } channel ) {
-            if (!string.IsNullOrWhiteSpace(channel) && entity.Scene.Tracker.GetEntity<RainbowChannelController>() is { } controller) {
+            if (!string.IsNullOrWhiteSpace(channel) && ControllerHelper<RainbowChannelController>.FindFirst(scene, _ => true) is { } controller) {
                 CurrentChannel = controller.GetChannel(channel);
             } else {
                 CurrentChannel = null;
@@ -92,6 +101,8 @@ internal static class RainbowChannels {
         IL.Monocle.EntityList.RenderOnly -= EntityListRender;
         IL.Monocle.EntityList.RenderOnlyFullMatch -= EntityListRender;
         IL.Monocle.EntityList.Update -= EntityListUpdate;
+        IL.Celeste.Level.Update -= EntityListUpdate;
+        IL.Monocle.EntityList.UpdateLists -= EntityListUpdateLists;
         
         On.Celeste.CrystalStaticSpinner.GetHue -= CrystalStaticSpinnerOnGetHue;
     }
@@ -106,7 +117,10 @@ internal static class RainbowChannels {
 internal sealed class RainbowChannelController : Entity {
     private Dictionary<string, RainbowChannel> _channels = [];
 
+    public IReadOnlyDictionary<string, RainbowChannel> Channels => _channels;
+
     public RainbowChannelController() {
+        Tag |= Tags.TransitionUpdate | Tags.Persistent;
         RainbowChannels.LoadHooksIfNeeded();
     }
     
@@ -210,8 +224,8 @@ internal abstract class RainbowChannelSource : Entity {
         Visible = false;
     }
 
-    public override void Awake(Scene scene) {
-        base.Awake(scene);
+    public override void Added(Scene scene) {
+        base.Added(scene);
         
         ControllerHelper<RainbowChannelController>.AddToSceneIfNeeded(scene).Register(CreateChannel());
     }
