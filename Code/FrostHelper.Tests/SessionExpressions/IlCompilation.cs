@@ -543,7 +543,7 @@ public class IlCompilation {
         IL_00dd: ldloc V_0
         IL_00e1: castclass FrostHelper.SessionExpressions.LambdaArgumentCondition
         IL_00e6: call System.Object FrostHelper.SessionExpressions.LambdaArgumentCondition::GetArgument()
-        IL_00eb: unbox Celeste.EntityID
+        IL_00eb: unbox.any Celeste.EntityID
         IL_00f0: ldloc V_8
         IL_00f4: stloc V_0
         IL_00f8: ldfld System.String Celeste.EntityID::Level

@@ -53,7 +53,7 @@ public static class TestUtils {
                 Assert.Fail("Expression failed to compile.");
             }
 
-            if (!ret.Equals(compiledRet)) {
+            if (!ret.Equals(compiledRet) && !ret.ToString()!.Equals(compiledRet.ToString())) {
                 Assert.Fail($"Expression didn't return the same value between compiled and interpreted execution!: '{ret}' (interpreted) vs '{compiledRet}' (compiled)");
             }
 

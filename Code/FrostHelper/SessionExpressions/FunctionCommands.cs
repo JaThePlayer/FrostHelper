@@ -39,7 +39,15 @@ internal static class FunctionCommands {
         ["log10"] = PureMathCondition.TryCreateFloat<Log10Func>,
         ["lerp"] = PureMathCondition.TryCreatThreeArgFloat<LerpFunc>,
         ["yoyo"] = PureMathCondition.TryCreateFloat<YoYoFunc>,
+        
+        ["range"] = PureMathCondition.TryCreateTwoArg<int, int, IEnumerable<int>, RangeFunc>,
     };
+
+    internal struct RangeFunc : IPureFunc<int, int, IEnumerable<int>> {
+        public static IEnumerable<int> Get(int min, int count) {
+            return Enumerable.Range(min, count);
+        }
+    }
 
     public static void Register(string modName, string cmdName, Func<Session, object?, IReadOnlyList<object>, object> func) {
         var key = $"{modName}.{cmdName}";
@@ -153,14 +161,16 @@ internal static class FunctionCommands {
             //return func(session, userdata, _args);
         }
     }
+
+    private interface IPureFunc<in TArg1, in TArg2, out TRet> {
+        public static abstract TRet Get(TArg1 arg1, TArg2 arg2);
+    }
     
     private interface IPureMathFunc<T> where T : struct, INumber<T> {
         public static abstract T Get(T x);
     }
-    
-    private interface IPureTwoArgMathFunc<T> where T : struct, INumber<T> {
-        public static abstract T Get(T x, T y);
-    }
+
+    private interface IPureTwoArgMathFunc<T> : IPureFunc<T, T, T> where T : struct, INumber<T>;
     
     private interface IPureThreeArgMathFunc<T> where T : struct, INumber<T> {
         public static abstract T Get(T x, T y, T z);
@@ -271,23 +281,22 @@ internal static class FunctionCommands {
         protected internal override Type ReturnType => typeof(TNum);
     }
     
-    private sealed class PureMathTwoArgCondition<TNum, TOp>(Condition x, Condition y) : FunctionCondition(x)
-        where TNum : struct, INumber<TNum>
-        where TOp : struct, IPureTwoArgMathFunc<TNum> {
+    private sealed class PureMathTwoArgCondition<TArg1, TArg2, TRet, TOp>(Condition x, Condition y) : FunctionCondition(x)
+        where TOp : struct, IPureFunc<TArg1, TArg2, TRet> {
         
         private readonly Condition _x = x;
         private readonly Condition _y = y;
 
         private static readonly FieldInfo XFieldInfo
-            = typeof(PureMathTwoArgCondition<TNum, TOp>).GetField(nameof(_x),
+            = typeof(PureMathTwoArgCondition<TArg1, TArg2, TRet, TOp>).GetField(nameof(_x),
                 BindingFlags.Instance | BindingFlags.NonPublic)!;
         
         private static readonly FieldInfo YFieldInfo
-            = typeof(PureMathTwoArgCondition<TNum, TOp>).GetField(nameof(_y),
+            = typeof(PureMathTwoArgCondition<TArg1, TArg2, TRet, TOp>).GetField(nameof(_y),
                 BindingFlags.Instance | BindingFlags.NonPublic)!;
         
         public override object Get(Session session, object? userdata) {
-            return TOp.Get(_x.GetNumber<TNum>(session, userdata), _y.GetNumber<TNum>(session, userdata));
+            return TOp.Get(_x.Get<TArg1>(session, userdata), _y.Get<TArg2>(session, userdata))!;
         }
         
         internal override void Emit(ConditionCompilationCtx ctx, Type targetType) {
@@ -295,17 +304,19 @@ internal static class FunctionCommands {
             LocalBuilder? tempOrigCond = null;
             
             il.EmitSwapOutCurrentCondition(ref tempOrigCond, ctx, _x, XFieldInfo);
-            _x.Emit(ctx, typeof(TNum));
+            _x.Emit(ctx, typeof(TArg1));
             il.EmitSwapOutCurrentCondition(ref tempOrigCond, ctx, _y, YFieldInfo);
-            _y.Emit(ctx, typeof(TNum));
+            _y.Emit(ctx, typeof(TArg2));
             
             il.EmitRevertCurrentCondition(tempOrigCond, ctx);
             
             il.Emit(OpCodes.Call, typeof(TOp).GetMethod(nameof(TOp.Get))!);
-            il.EmitConvertToInSessionExpression(typeof(TNum), targetType);
+            il.EmitConvertToInSessionExpression(typeof(TRet), targetType);
         }
         
         internal override bool UsesCurrentConditionLocalInEmit => _x.UsesCurrentConditionLocalInEmit || _y.UsesCurrentConditionLocalInEmit;
+
+        protected internal override Type ReturnType => typeof(TRet);
     }
     
     private sealed class PureMathThreeArgCondition<TNum, TOp>(Condition x, Condition y, Condition z) : FunctionCondition(x)
@@ -329,9 +340,9 @@ internal static class FunctionCommands {
         
         public override object Get(Session session, object? userdata) {
             return TOp.Get(
-                x.GetNumber<TNum>(session, userdata), 
-                y.GetNumber<TNum>(session, userdata), 
-                z.GetNumber<TNum>(session, userdata));
+                _x.GetNumber<TNum>(session, userdata), 
+                _y.GetNumber<TNum>(session, userdata), 
+                _z.GetNumber<TNum>(session, userdata));
         }
         
         internal override void Emit(ConditionCompilationCtx ctx, Type targetType) {
@@ -392,7 +403,18 @@ internal static class FunctionCommands {
                 return FunctionCondition.ArgumentAmtMismatch(args.Count, 2, out condition, out errorMessage);
             }
 
-            return FunctionCondition.Ok(new PureMathTwoArgCondition<float, TFloat>(left, right), out condition, out errorMessage);
+            return FunctionCondition.Ok(new PureMathTwoArgCondition<float, float, float, TFloat>(left, right), out condition, out errorMessage);
+        }
+        
+        public static bool TryCreateTwoArg<TArg1, TArg2, TRet, TFunc>(IReadOnlyList<Condition> args, [NotNullWhen(true)] out Condition? condition,
+            [NotNullWhen(false)] out string? errorMessage) 
+            where TFunc : struct, IPureFunc<TArg1, TArg2, TRet>
+        {
+            if (args is not [var left, var right]) {
+                return FunctionCondition.ArgumentAmtMismatch(args.Count, 2, out condition, out errorMessage);
+            }
+
+            return FunctionCondition.Ok(new PureMathTwoArgCondition<TArg1, TArg2, TRet, TFunc>(left, right), out condition, out errorMessage);
         }
         
         public static bool TryCreatThreeArgFloat<TFloat>(IReadOnlyList<Condition> args, [NotNullWhen(true)] out Condition? condition,

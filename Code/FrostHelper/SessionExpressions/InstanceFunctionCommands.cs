@@ -289,7 +289,8 @@ internal static class InstanceFunctionCommands {
             il.MarkLabel(nextElementLabel);
             
             il.EmitLdlocOrLdloca(enumeratorLocal);
-            il.Emit(OpCodes.Callvirt, getEnumerator.ReturnType.GetMethod(nameof(IEnumerator.MoveNext))!);
+            il.Emit(OpCodes.Callvirt, getEnumerator.ReturnType.GetMethod(nameof(IEnumerator.MoveNext))
+                                          ?? typeof(IEnumerator).GetMethod(nameof(IEnumerator.MoveNext))!);
             il.Emit(OpCodes.Brfalse, endLoopLabel);
             
             il.Emit(OpCodes.Ldloc, lambdaLocal);

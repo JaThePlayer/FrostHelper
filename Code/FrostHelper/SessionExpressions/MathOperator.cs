@@ -44,7 +44,9 @@ internal sealed class MathOperator<TOp>(ConditionHelper.Condition condA, Conditi
     protected static object Dispatch(object a, object b) {
         return (a, b) switch {
             (int ai, int bi) => TOp.Perform(ai, bi),
+            (int ai, float bi) => TOp.Perform(ai, bi),
             (float ai, float bi) => TOp.Perform(ai, bi),
+            (float ai, int bi) => TOp.Perform(ai, bi),
             (float bi, Vector2 v2) => TOp.Perform(bi, v2),
             (int bi, Vector2 v2) => TOp.Perform(bi, v2),
             (Vector2 v2, int bi) => TOp.Perform(v2, bi),

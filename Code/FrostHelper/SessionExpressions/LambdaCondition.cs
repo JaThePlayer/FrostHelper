@@ -37,7 +37,7 @@ internal sealed class LambdaArgumentCondition(LambdaDefinitionCondition lambdaDe
         ctx.EmitLoadCurrentCondition<LambdaArgumentCondition>();
         ctx.Il.Emit(OpCodes.Call, MethodGetArgument);
         if (ReturnType.IsValueType) {
-            ctx.Il.Emit(OpCodes.Unbox, ReturnType);
+            ctx.Il.Emit(OpCodes.Unbox_Any, ReturnType);
         }
         ctx.EmitConvertTo(ReturnType, targetType);
     }
