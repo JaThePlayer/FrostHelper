@@ -16,12 +16,12 @@ public class StringOperations {
     public void StringMatch() {
         var session = new Session();
         
-        Assert.True(TestUtils.CreateExpr("\"test\".match(\"t.*t\")").Check(session));
-        Assert.False(TestUtils.CreateExpr("\"test\".match(\"b-.*\")").Check(session));
+        Assert.True(TestUtils.CreateExpr("\"test\".isMatch(\"t.*t\")").Check(session));
+        Assert.False(TestUtils.CreateExpr("\"test\".isMatch(\"b-.*\")").Check(session));
 
         session.Level = "b-1";
-        Assert.True(TestUtils.CreateExpr("$roomName.match(\"b-.*\")").Check(session));
+        Assert.True(TestUtils.CreateExpr("$roomName.isMatch(\"b-.*\")").Check(session));
         
-        Assert.True(TestUtils.CreateExpr("$roomName.match(\"b-.*\").str(\"x\").match(\"1\")").Check(session));
+        Assert.True(TestUtils.CreateExpr("$roomName.isMatch(\"b-.*\").str(\"x\").isMatch(\"1\")").Check(session));
     }
 }

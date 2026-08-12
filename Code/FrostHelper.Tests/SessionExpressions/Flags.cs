@@ -156,7 +156,7 @@ public class Flags {
         Assert.Equal(["test_a", "hi"], TestUtils.CreateExpr("$flags").Get<IEnumerable<string>>(session));
         
         session.SetFlag("test_b");
-        Assert.Equal(2, TestUtils.CreateExpr("$flags.sum($f => $f.match(\"test_.*\"))").Get<int>(session));
+        Assert.Equal(2, TestUtils.CreateExpr("$flags.sum($f => $f.isMatch(\"test_.*\"))").Get<int>(session));
     }
 
     [Fact]

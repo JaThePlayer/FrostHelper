@@ -15,7 +15,7 @@ internal static class InstanceFunctionCommands {
     internal static readonly Dictionary<(Type, string), InstanceFunctionCommandFactory> Functions = new() {
         [(typeof(object), "str")] = OneArgInstanceFunc<object, string, string, Str>.TryCreate,
         
-        [(typeof(string), "match")] = OneArgInstanceFunc<string, string, int, StringMatch>.TryCreate,
+        [(typeof(string), "isMatch")] = OneArgInstanceFunc<string, string, int, StringIsMatch>.TryCreate,
         
         [(typeof(IEnumerable), "sum")] = OneArgSessionInstanceFunc<IEnumerable, LambdaCondition, float, EnumerableSum>.TryCreate,
         [(typeof(IEnumerable), "all")] = OneArgSessionInstanceFunc<IEnumerable, LambdaCondition, int, EnumerableAll>.TryCreate,
@@ -227,7 +227,7 @@ internal static class InstanceFunctionCommands {
             _field.UsesCurrentConditionLocalInEmit || _arg.UsesCurrentConditionLocalInEmit;
     }
 
-    internal struct StringMatch : IOneArgFunc<string, string, int> {
+    internal struct StringIsMatch : IOneArgFunc<string, string, int> {
         public static int Invoke(string field, string arg) {
             return Regex.IsMatch(field, arg, RegexOptions.Compiled) ? 1 : 0;
         }
