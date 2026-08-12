@@ -32,6 +32,7 @@ internal static class SimpleCommands {
         ["time"] = new TimeAccessor(),
         ["roomName"] = new SessionFieldAccessor(nameof(Session.Level)),
         ["strawberries"] = new SessionFieldAccessor(nameof(Session.Strawberries)),
+        ["flags"] = new SessionFieldAccessor(nameof(Session.Flags)),
     };
 
     // Exposed via API

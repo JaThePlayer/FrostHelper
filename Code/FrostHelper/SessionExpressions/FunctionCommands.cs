@@ -2,10 +2,10 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Reflection.Emit;
+using System.Text.RegularExpressions;
 using static FrostHelper.Helpers.ConditionHelper;
 using Vector2 = Microsoft.Xna.Framework.Vector2;
 
-using OpCode = System.Reflection.Emit.OpCode;
 using OpCodes = System.Reflection.Emit.OpCodes;
 
 namespace FrostHelper.SessionExpressions;
@@ -41,6 +41,7 @@ internal static class FunctionCommands {
         ["yoyo"] = PureMathCondition.TryCreateFloat<YoYoFunc>,
         
         ["range"] = PureMathCondition.TryCreateTwoArg<int, int, IEnumerable<int>, RangeFunc>,
+        ["flags"] = PureMathCondition.TryCreateSession<string, IEnumerable<string>, FlagsFunc>,
     };
 
     internal struct RangeFunc : IPureFunc<int, int, IEnumerable<int>> {
@@ -162,13 +163,19 @@ internal static class FunctionCommands {
         }
     }
 
+    private interface IPureFunc<in TArg1, out TRet> {
+        public static abstract TRet Get(TArg1 arg1);
+    }
+    
+    private interface ISessionFunc<in TArg1, out TRet> {
+        public static abstract TRet Get(Session session, TArg1 arg1);
+    }
+    
     private interface IPureFunc<in TArg1, in TArg2, out TRet> {
         public static abstract TRet Get(TArg1 arg1, TArg2 arg2);
     }
-    
-    private interface IPureMathFunc<T> where T : struct, INumber<T> {
-        public static abstract T Get(T x);
-    }
+
+    private interface IPureMathFunc<T> : IPureFunc<T, T> where T : struct, INumber<T>;
 
     private interface IPureTwoArgMathFunc<T> : IPureFunc<T, T, T> where T : struct, INumber<T>;
     
@@ -248,18 +255,23 @@ internal static class FunctionCommands {
         public static float Get(float x) => Calc.YoYo(x);
     }
 
-    private sealed class PureMathCondition<TNum, TOp>(Condition x) : FunctionCondition(x)
-        where TNum : struct, INumber<TNum>
-        where TOp : struct, IPureMathFunc<TNum> {
+    private struct FlagsFunc : ISessionFunc<string, IEnumerable<string>> {
+        public static IEnumerable<string> Get(Session session, string regex) {
+            return session.Flags.Where(f => Regex.IsMatch(f, regex, RegexOptions.Compiled));
+        }
+    }
+
+    private sealed class PureMathCondition<TArg, TRet, TOp>(Condition x) : FunctionCondition(x)
+        where TOp : struct, IPureFunc<TArg, TRet> {
 
         private readonly Condition _innerCondition = x;
 
         private static readonly FieldInfo InnerConditionFieldInfo
-            = typeof(PureMathCondition<TNum, TOp>).GetField(nameof(_innerCondition),
+            = typeof(PureMathCondition<TArg, TRet, TOp>).GetField(nameof(_innerCondition),
                 BindingFlags.Instance | BindingFlags.NonPublic)!;
         
         public override object Get(Session session, object? userdata) {
-            return TOp.Get(_innerCondition.GetNumber<TNum>(session, userdata));
+            return TOp.Get(_innerCondition.Get<TArg>(session, userdata))!;
         }
 
         internal override void Emit(ConditionCompilationCtx ctx, Type targetType) {
@@ -268,17 +280,50 @@ internal static class FunctionCommands {
             
             il.EmitSwapOutCurrentCondition(ref tempOrigCond, ctx, _innerCondition, InnerConditionFieldInfo);
             
-            _innerCondition.Emit(ctx, typeof(TNum));
+            _innerCondition.Emit(ctx, typeof(TArg));
             
             il.EmitRevertCurrentCondition(tempOrigCond, ctx);
             
             il.Emit(OpCodes.Call, typeof(TOp).GetMethod(nameof(TOp.Get))!);
-            il.EmitConvertToInSessionExpression(typeof(TNum), targetType);
+            il.EmitConvertToInSessionExpression(typeof(TRet), targetType);
         }
 
         internal override bool UsesCurrentConditionLocalInEmit => _innerCondition.UsesCurrentConditionLocalInEmit;
 
-        protected internal override Type ReturnType => typeof(TNum);
+        protected internal override Type ReturnType => typeof(TRet);
+    }
+    
+    private sealed class Session1ArgCondition<TArg, TRet, TOp>(Condition x) : FunctionCondition(x)
+        where TOp : struct, ISessionFunc<TArg, TRet> {
+
+        private readonly Condition _innerCondition = x;
+
+        private static readonly FieldInfo InnerConditionFieldInfo
+            = typeof(Session1ArgCondition<TArg, TRet, TOp>).GetField(nameof(_innerCondition),
+                BindingFlags.Instance | BindingFlags.NonPublic)!;
+        
+        public override object Get(Session session, object? userdata) {
+            return TOp.Get(session, _innerCondition.Get<TArg>(session, userdata))!;
+        }
+
+        internal override void Emit(ConditionCompilationCtx ctx, Type targetType) {
+            var il = ctx.Il;
+            LocalBuilder? tempOrigCond = null;
+            
+            ctx.EmitLoadSession();
+            
+            il.EmitSwapOutCurrentCondition(ref tempOrigCond, ctx, _innerCondition, InnerConditionFieldInfo);
+            _innerCondition.Emit(ctx, typeof(TArg));
+            
+            il.EmitRevertCurrentCondition(tempOrigCond, ctx);
+            
+            il.Emit(OpCodes.Call, typeof(TOp).GetMethod(nameof(TOp.Get))!);
+            il.EmitConvertToInSessionExpression(typeof(TRet), targetType);
+        }
+
+        internal override bool UsesCurrentConditionLocalInEmit => _innerCondition.UsesCurrentConditionLocalInEmit;
+
+        protected internal override Type ReturnType => typeof(TRet);
     }
     
     private sealed class PureMathTwoArgCondition<TArg1, TArg2, TRet, TOp>(Condition x, Condition y) : FunctionCondition(x)
@@ -378,10 +423,10 @@ internal static class FunctionCommands {
             }
 
             if (only.ReturnType == typeof(int)) {
-                return FunctionCondition.Ok(new PureMathCondition<int, TInt>(only), out condition, out errorMessage);
+                return FunctionCondition.Ok(new PureMathCondition<int, int, TInt>(only), out condition, out errorMessage);
             }
 
-            return FunctionCondition.Ok(new PureMathCondition<float, TFloat>(only), out condition, out errorMessage);
+            return FunctionCondition.Ok(new PureMathCondition<float, float, TFloat>(only), out condition, out errorMessage);
         }
         
         public static bool TryCreateFloat<TFloat>(IReadOnlyList<Condition> args, [NotNullWhen(true)] out Condition? condition,
@@ -392,7 +437,7 @@ internal static class FunctionCommands {
                 return FunctionCondition.ArgumentAmtMismatch(args.Count, 1, out condition, out errorMessage);
             }
 
-            return FunctionCondition.Ok(new PureMathCondition<float, TFloat>(only), out condition, out errorMessage);
+            return FunctionCondition.Ok(new PureMathCondition<float, float, TFloat>(only), out condition, out errorMessage);
         }
         
         public static bool TryCreateTwoArgFloat<TFloat>(IReadOnlyList<Condition> args, [NotNullWhen(true)] out Condition? condition,
@@ -415,6 +460,28 @@ internal static class FunctionCommands {
             }
 
             return FunctionCondition.Ok(new PureMathTwoArgCondition<TArg1, TArg2, TRet, TFunc>(left, right), out condition, out errorMessage);
+        }
+        
+        public static bool TryCreate<TArg1, TRet, TFunc>(IReadOnlyList<Condition> args, [NotNullWhen(true)] out Condition? condition,
+            [NotNullWhen(false)] out string? errorMessage) 
+            where TFunc : struct, IPureFunc<TArg1, TRet>
+        {
+            if (args is not [var only]) {
+                return FunctionCondition.ArgumentAmtMismatch(args.Count, 1, out condition, out errorMessage);
+            }
+
+            return FunctionCondition.Ok(new PureMathCondition<TArg1, TRet, TFunc>(only), out condition, out errorMessage);
+        }
+        
+        public static bool TryCreateSession<TArg1, TRet, TFunc>(IReadOnlyList<Condition> args, [NotNullWhen(true)] out Condition? condition,
+            [NotNullWhen(false)] out string? errorMessage) 
+            where TFunc : struct, ISessionFunc<TArg1, TRet>
+        {
+            if (args is not [var only]) {
+                return FunctionCondition.ArgumentAmtMismatch(args.Count, 1, out condition, out errorMessage);
+            }
+
+            return FunctionCondition.Ok(new Session1ArgCondition<TArg1, TRet, TFunc>(only), out condition, out errorMessage);
         }
         
         public static bool TryCreatThreeArgFloat<TFloat>(IReadOnlyList<Condition> args, [NotNullWhen(true)] out Condition? condition,

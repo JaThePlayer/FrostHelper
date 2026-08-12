@@ -144,4 +144,28 @@ public class Flags {
         session.SetFlag("hi1.25");
         Assert.True(e.Check(session));
     }
+
+    [Fact]
+    public void FlagsCommand() {
+        var session = TestUtils.CreateTestSession();
+        
+        Assert.Equal([], TestUtils.CreateExpr("$flags").Get<IEnumerable<string>>(session));
+        
+        session.SetFlag("test_a");
+        session.SetFlag("hi");
+        Assert.Equal(["test_a", "hi"], TestUtils.CreateExpr("$flags").Get<IEnumerable<string>>(session));
+        
+        session.SetFlag("test_b");
+        Assert.Equal(2, TestUtils.CreateExpr("$flags.sum($f => $f.match(\"test_.*\"))").Get<int>(session));
+    }
+
+    [Fact]
+    public void FlagsFunction() {
+        var session = TestUtils.CreateTestSession();
+        
+        Assert.Equal([], TestUtils.CreateExpr("$flags(\"test_.*\")").Get<IEnumerable<string>>(session));
+        session.SetFlag("test_a");
+        session.SetFlag("hi");
+        Assert.Equal([ "test_a" ], TestUtils.CreateExpr("$flags(\"test_.*\")").Get<IEnumerable<string>>(session));
+    }
 }
