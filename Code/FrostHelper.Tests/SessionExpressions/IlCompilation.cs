@@ -503,15 +503,15 @@ public class IlCompilation {
         IL_0031: call FrostHelper.SessionExpressions.LambdaCondition FrostHelper.SessionExpressions.LambdaDefinitionCondition::get_Instance()
         IL_0036: ldloc V_1
         IL_003a: stloc V_0
-        IL_003e: stloc V_2
-        IL_0042: ldc.r4 0
+        IL_003e: ldc.r4 0
+        IL_0043: stloc V_2
         IL_0047: stloc V_3
         IL_004b: callvirt System.Collections.Generic.HashSet`1/Enumerator<T> System.Collections.Generic.HashSet`1<Celeste.EntityID>::GetEnumerator()
         IL_0050: stloc V_4
         IL_0054: ldloca V_4
         IL_0058: callvirt System.Boolean System.Collections.Generic.HashSet`1/Enumerator<Celeste.EntityID>::MoveNext()
         IL_005d: brfalse IL_0129
-        IL_0062: ldloc V_2
+        IL_0062: ldloc V_3
         IL_0066: ldc.i4.0
         IL_0067: ldloca V_4
         IL_006b: callvirt T System.Collections.Generic.HashSet`1/Enumerator<Celeste.EntityID>::get_Current()
@@ -519,7 +519,7 @@ public class IlCompilation {
         IL_0075: callvirt System.Void FrostHelper.SessionExpressions.LambdaCondition::SetArgument(System.Int32,System.Object)
         IL_007a: ldloc V_0
         IL_007e: stloc V_5
-        IL_0082: ldloc V_2
+        IL_0082: ldloc V_3
         IL_0086: stloc V_0
         IL_008a: ldloc V_0
         IL_008e: stloc V_6
@@ -556,11 +556,11 @@ public class IlCompilation {
         IL_0112: conv.r4
         IL_0113: ldloc V_6
         IL_0117: stloc V_0
-        IL_011b: ldloc V_3
+        IL_011b: ldloc V_2
         IL_011f: add
-        IL_0120: stloc V_3
+        IL_0120: stloc V_2
         IL_0124: br IL_0054
-        IL_0129: ldloc V_3
+        IL_0129: ldloc V_2
         IL_012d: conv.i4
         IL_012e: ret
         """);

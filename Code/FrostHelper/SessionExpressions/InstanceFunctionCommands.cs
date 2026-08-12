@@ -18,6 +18,8 @@ internal static class InstanceFunctionCommands {
         [(typeof(string), "match")] = OneArgInstanceFunc<string, string, int, StringMatch>.TryCreate,
         
         [(typeof(IEnumerable), "sum")] = OneArgSessionInstanceFunc<IEnumerable, LambdaCondition, float, EnumerableSum>.TryCreate,
+        [(typeof(IEnumerable), "all")] = OneArgSessionInstanceFunc<IEnumerable, LambdaCondition, int, EnumerableAll>.TryCreate,
+        [(typeof(IEnumerable), "any")] = OneArgSessionInstanceFunc<IEnumerable, LambdaCondition, int, EnumerableAny>.TryCreate,
     };
     
     internal static ConditionHelper.Condition Create(string functionName, ConditionHelper.Condition target, IReadOnlyList<ConditionHelper.Condition> arguments, IExpressionContext ctx) {
@@ -244,40 +246,32 @@ internal static class InstanceFunctionCommands {
 
         public static bool Emit(ConditionCompilationCtx ctx, Type targetType) => false;
     }
-    
-    internal struct EnumerableSum : IOneArgSessionFunc<IEnumerable, LambdaCondition, float> {
-        public static float Invoke(Session session, object? userdata, IEnumerable field, LambdaCondition callback) {
-            float sum = 0;
-            foreach (var obj in field) {
-                callback.SetArgument(0, obj);
-                sum += callback.GetFloat(session, userdata);
-            }
 
-            return sum;
-        }
-
-        public static bool EmitCodeUsesSessionAndUserdataOnStack => false;
-
-        public static bool Emit(ConditionCompilationCtx ctx, Type targetType, ConditionHelper.Condition fieldCondition, ConditionHelper.Condition argCondition) {
+    private static class EnumerableEmitUtils {
+        /// <summary>
+        /// Exprects [ field(IEnumerable), arg(LambdaCondition) ] on the stack
+        /// </summary>
+        /// <param name="ctx"></param>
+        /// <param name="fieldCondition"></param>
+        /// <param name="argCondition">Should be a lambda definition</param>
+        /// <param name="emitPostLambdaCallCode">(endLoopLabel)</param>
+        public static void EmitEnumerateThroughFieldAndCallArg<TLambdaReturnType>(ConditionCompilationCtx ctx, ConditionHelper.Condition fieldCondition,
+            ConditionHelper.Condition argCondition, Action<Label> emitPostLambdaCallCode) {
+            
             var il = ctx.Il;
             LocalBuilder? tempCurrentCond = null;
             if (argCondition is not LambdaDefinitionCondition lambdaDefinitionCondition) {
-                throw new Exception("eh");
+                throw new Exception("Expected argument to IEnumerable fold to be a lambda.");
             }
             var lambda = lambdaDefinitionCondition.Instance;
             var lambdaLocal = il.DeclareLocal(typeof(LambdaCondition));
             il.Emit(OpCodes.Stloc, lambdaLocal);
-            
-            var sumLocal = il.DeclareLocal(typeof(float));
-            il.Emit(OpCodes.Ldc_R4, 0f);
-            il.Emit(OpCodes.Stloc, sumLocal);
 
             // field(IEnumerable) is now top of stack
-            
             var enumerableType = fieldCondition.ReturnType ?? typeof(IEnumerable);
             var getEnumerator = enumerableType.GetMethod(nameof(IEnumerable.GetEnumerator));
             if (getEnumerator is null)
-                return true;
+                throw new Exception("Enumerable type doesn't have GetEnumerator???");
             
             var enumeratorLocal = il.DeclareLocal(getEnumerator.ReturnType);
             il.Emit(OpCodes.Callvirt, getEnumerator);
@@ -305,17 +299,113 @@ internal static class InstanceFunctionCommands {
             ctx.EmitSwapOutCurrentCondition(ref tempCurrentCond, lambda, () => {
                 il.Emit(OpCodes.Ldloc, lambdaLocal);
             });
-            lambda.Emit(ctx, typeof(float));
-            
-            il.Emit(OpCodes.Ldloc, sumLocal);
-            il.Emit(OpCodes.Add);
-            il.Emit(OpCodes.Stloc, sumLocal);
+            lambda.Emit(ctx, typeof(TLambdaReturnType));
+
+            emitPostLambdaCallCode(endLoopLabel);
             il.Emit(OpCodes.Br, nextElementLabel);
             
             il.MarkLabel(endLoopLabel);
+        }
+    }
+    
+    internal struct EnumerableSum : IOneArgSessionFunc<IEnumerable, LambdaCondition, float> {
+        public static float Invoke(Session session, object? userdata, IEnumerable field, LambdaCondition callback) {
+            float sum = 0;
+            foreach (var obj in field) {
+                callback.SetArgument(0, obj);
+                sum += callback.GetFloat(session, userdata);
+            }
+
+            return sum;
+        }
+
+        public static bool EmitCodeUsesSessionAndUserdataOnStack => false;
+
+        public static bool Emit(ConditionCompilationCtx ctx, Type targetType, ConditionHelper.Condition fieldCondition, ConditionHelper.Condition argCondition) {
+            var il = ctx.Il;
+            var sumLocal = il.DeclareLocal(typeof(float));
+            il.Emit(OpCodes.Ldc_R4, 0f);
+            il.Emit(OpCodes.Stloc, sumLocal);
+            
+            EnumerableEmitUtils.EmitEnumerateThroughFieldAndCallArg<float>(ctx, fieldCondition, argCondition,
+                emitPostLambdaCallCode: (endLoopLabel) => {
+                    il.Emit(OpCodes.Ldloc, sumLocal);
+                    il.Emit(OpCodes.Add);
+                    il.Emit(OpCodes.Stloc, sumLocal);
+                });
             
             il.Emit(OpCodes.Ldloc, sumLocal);
             ctx.EmitConvertTo(typeof(float), targetType);
+            return true;
+        }
+
+        public static void OnCreated(ConditionHelper.Condition fieldCondition, ConditionHelper.Condition argCondition) {
+        }
+    }
+    
+    internal struct EnumerableAll : IOneArgSessionFunc<IEnumerable, LambdaCondition, int> {
+        public static int Invoke(Session session, object? userdata, IEnumerable field, LambdaCondition callback) {
+            foreach (var obj in field) {
+                callback.SetArgument(0, obj);
+                if (!callback.Check(session, userdata))
+                    return 0;
+            }
+
+            return 1;
+        }
+
+        public static bool EmitCodeUsesSessionAndUserdataOnStack => false;
+
+        public static bool Emit(ConditionCompilationCtx ctx, Type targetType, ConditionHelper.Condition fieldCondition, ConditionHelper.Condition argCondition) {
+            var il = ctx.Il;
+            var retLocal = il.DeclareLocal(typeof(bool));
+            il.Emit(OpCodes.Ldc_I4_1);
+            il.Emit(OpCodes.Stloc, retLocal);
+            
+            EnumerableEmitUtils.EmitEnumerateThroughFieldAndCallArg<float>(ctx, fieldCondition, argCondition,
+                emitPostLambdaCallCode: (endLoopLabel) => {
+                    il.Emit(OpCodes.Dup);
+                    il.Emit(OpCodes.Stloc, retLocal);
+                    il.Emit(OpCodes.Brfalse, endLoopLabel);
+                });
+            
+            il.Emit(OpCodes.Ldloc, retLocal);
+            ctx.EmitConvertTo(typeof(bool), targetType);
+            return true;
+        }
+
+        public static void OnCreated(ConditionHelper.Condition fieldCondition, ConditionHelper.Condition argCondition) {
+        }
+    }
+    
+    internal struct EnumerableAny : IOneArgSessionFunc<IEnumerable, LambdaCondition, int> {
+        public static int Invoke(Session session, object? userdata, IEnumerable field, LambdaCondition callback) {
+            foreach (var obj in field) {
+                callback.SetArgument(0, obj);
+                if (callback.Check(session, userdata))
+                    return 1;
+            }
+
+            return 0;
+        }
+
+        public static bool EmitCodeUsesSessionAndUserdataOnStack => false;
+
+        public static bool Emit(ConditionCompilationCtx ctx, Type targetType, ConditionHelper.Condition fieldCondition, ConditionHelper.Condition argCondition) {
+            var il = ctx.Il;
+            var retLocal = il.DeclareLocal(typeof(bool));
+            il.Emit(OpCodes.Ldc_I4_0);
+            il.Emit(OpCodes.Stloc, retLocal);
+            
+            EnumerableEmitUtils.EmitEnumerateThroughFieldAndCallArg<float>(ctx, fieldCondition, argCondition,
+                emitPostLambdaCallCode: (endLoopLabel) => {
+                    il.Emit(OpCodes.Dup);
+                    il.Emit(OpCodes.Stloc, retLocal);
+                    il.Emit(OpCodes.Brtrue, endLoopLabel);
+                });
+            
+            il.Emit(OpCodes.Ldloc, retLocal);
+            ctx.EmitConvertTo(typeof(bool), targetType);
             return true;
         }
 
