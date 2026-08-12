@@ -1,6 +1,7 @@
 ---@module 'jautils'
 local jautils = require("mods").requireFromPlugin("libraries.jautils")
 local drawableSpriteStruct = require("structs.drawable_sprite")
+local drawableTextStruct = require("structs.drawable_text")
 local utils = require("utils")
 
 local channels = {}
@@ -19,18 +20,37 @@ local function addChannelType(name, placementData)
 
     jautils.createPlacementsPreserveOrder(channel, "default", placementData)
 
-    channel.texture = "editor/FrostHelper/EntityRainbowifyController"
+    function channel.sprite(room, entity)
+        local baseSprite = drawableSpriteStruct.fromTexture("editor/FrostHelper/EntityRainbowifyController", entity)
+        local textSprite = drawableTextStruct.fromText(entity.channelId or "", entity.x - 12, entity.y - 20, 24, 24, nil, 0.25, jautils.getColor("ffffff"))
+
+        return {
+            baseSprite,
+            textSprite
+        }
+    end
 
     table.insert(channels, channel)
     return channel
 end
-
---    return Calc.HsvToColor((float) (0.4 + Calc.YoYo((position.Length() + this.Scene.TimeActive * 50f) % 280 / 280) * 0.4), 0.4f, 0.9f);
 
 addChannelType("FrostHelper/HsvRainbowChannel", {
     { "hue", "0.4 + $yoyo(($pos.len + $time * 50) % 280 / 280) * 0.4" },
     { "s", "0.4", jautils.fields.sessionExpression {} },
     { "v", "0.9", jautils.fields.sessionExpression {} }
 })
+
+---@type EntityHandler<UnknownEntity>
+local channelAttacher = {
+    name = "FrostHelper/RainbowChannelAttacher",
+    texture = "editor/FrostHelper/RainbowChannelAttacher"
+}
+
+jautils.createPlacementsPreserveOrder(channelAttacher, "default", {
+    { "channelId", "" },
+    { "types", "", jautils.fields.typeList { } },
+})
+
+table.insert(channels, channelAttacher)
 
 return channels

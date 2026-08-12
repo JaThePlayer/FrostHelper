@@ -5,6 +5,8 @@ using OpCodes = System.Reflection.Emit.OpCodes;
 namespace FrostHelper.Helpers;
 
 internal static class RainbowChannels {
+    public const string RainbowChannelEntityDataKey = "fh_rc";
+    
     #region Hooks
 
     private static bool _hooksEnabled;
@@ -45,8 +47,14 @@ internal static class RainbowChannels {
         cursor.EmitCall(BeforeEntityUpdate);
     }
 
+    internal static void SetEntityChannel(Entity entity, string channelId) {
+        entity.SourceData ??= new EntityData();
+        entity.SourceData.Values ??= new Dictionary<string, object>();
+        entity.SourceData.Values[RainbowChannelEntityDataKey] = channelId;
+    }
+
     private static Entity BeforeEntityRender(Entity entity) {
-        if (entity.SourceData?.Attr("fh_rc") is { } channel ) {
+        if (entity.SourceData?.Attr(RainbowChannelEntityDataKey) is { } channel ) {
             if (!string.IsNullOrWhiteSpace(channel) && entity.Scene.Tracker.GetEntity<RainbowChannelController>() is { } controller) {
                 CurrentChannel = controller.GetChannel(channel);
             } else {
@@ -60,7 +68,7 @@ internal static class RainbowChannels {
     }
     
     private static Entity BeforeEntityUpdate(Entity entity) {
-        if (entity.SourceData?.Attr("fh_rc") is { } channel ) {
+        if (entity.SourceData?.Attr(RainbowChannelEntityDataKey) is { } channel ) {
             if (!string.IsNullOrWhiteSpace(channel) && entity.Scene.Tracker.GetEntity<RainbowChannelController>() is { } controller) {
                 CurrentChannel = controller.GetChannel(channel);
             } else {
@@ -188,8 +196,6 @@ internal sealed class RainbowChannelExpression : ISavestatePersisted {
 }
 
 internal abstract class RainbowChannel : Entity {
-
-    
     public required string ChannelId { get; init; }
 
     public abstract Color GetColor(Scene scene, Vector2 position);

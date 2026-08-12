@@ -811,6 +811,17 @@ entities.FrostHelper/DynamicRainGenerator.attributes.description.presimulationTi
 entities.FrostHelper/DynamicRainGenerator.attributes.description.opacity=The opacity of the rain colors, between 0 and 1.
 entities.FrostHelper/DynamicRainGenerator.attributes.description.windMultiplier=The value to multiply the room's wind by when moving rain droplets.\nLeave at 0 to make rain not react to wind.
 
+entities.FrostHelper/HsvRainbowChannel.placements.name.default=Rainbow Channel Controller (HSV)
+entities.FrostHelper/HsvRainbowChannel.placements.description.default=Controls how colors for a given Rainbow Channel should be selected.\nUse a Rainbow Channel Attacher to attach entities to Rainbow Channels.
+entities.FrostHelper/HsvRainbowChannel.attributes.description.channelId=The Rainbow Channel to control.\nEntities with this Rainbow Channel set will get their rainbow colors from this controller.
+entities.FrostHelper/HsvRainbowChannel.attributes.description.hue=The Hue component, between 0 and 360.\nSession Expressions are supported, with additional commands:\n- $x, $y, $pos - The position to get the color at. 
+entities.FrostHelper/HsvRainbowChannel.attributes.description.s=The S component, between 0 and 1.\nSession Expressions are supported, with additional commands:\n- $x, $y, $pos - The position to get the color at. 
+entities.FrostHelper/HsvRainbowChannel.attributes.description.v=The V component, between 0 and 1.\nSession Expressions are supported, with additional commands:\n- $x, $y, $pos - The position to get the color at. 
+
+entities.FrostHelper/RainbowChannelAttacher.placements.name.default=Rainbow Channel Attacher
+entities.FrostHelper/RainbowChannelAttacher.placements.description.default=Attaches specified entities to a Rainbow Channel.\nThis allows control over their rainbow colors by using a Rainbow Channel Controller set to the same channel id.
+entities.FrostHelper/RainbowChannelAttacher.attributes.description.channelId=The Rainbow Channel to attach entities to.\nUse a Rainbow Channel Controller to configure how colors should be obtained for this channel.
+
 FrostHelper.fields.rainGenerator.colors=Colors
 FrostHelper.fields.rainGenerator.colors.tooltip=List of colors used for the rain. A random color from this list will be chosen for each rain droplet.
 FrostHelper.fields.rainGenerator.density=Density
@@ -1433,3 +1444,6 @@ ui.menubar.fh_showSpinnerConnectors=Show Spinner Connectors [Frost Helper]
 
 ui.fh.fields.scan=Scan
 ui.fh.fields.scan.tooltip=Scan all mods to fill the below dropdown with sprites, might take a while a finish.
+
+entities.default.attributes.name.fh_rc=Rainbow Channel [Frost Helper]
+entities.default.attributes.description.fh_rc=The rainbow channel the entity is on.\nAlready-rainbow entities will get their color from this channel.\nLeave blank to use default rainbow colors instead.
