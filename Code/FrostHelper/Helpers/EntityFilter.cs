@@ -38,6 +38,8 @@ internal class EntityFilter(HashSet<Type> types, bool isBlacklist, HashSet<int> 
                 ids.Add(id);
             } else if (TypeHelper.EntityNameToTypeSafe(inner.Remaining.ToString()) is {} type) {
                 types.Add(type);
+            } else {
+                NotificationHelper.Notify($"Couldn't parse '{inner.Remaining.ToString()}' as an entity name or C# type.");
             }
         }
         
