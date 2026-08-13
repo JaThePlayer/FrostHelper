@@ -23,7 +23,7 @@ public class WireLamps : Entity {
         Curve = new SimpleCurve(Position, to, Vector2.Zero);
         Depth = (data.Bool("above", false) ? -8500 : 2000) - 1;
         Random random = new Random((int) Math.Min(Position.X, to.X));
-        Color[] colors = data.GetColors("colors", defaultColors);
+        Color[] colors = data.GetColors("colors", DefaultColors);
         Color = data.GetColor("wireColor", "595866");
         sineX = random.NextFloat(4f);
         sineY = random.NextFloat(4f);
@@ -99,14 +99,13 @@ public class WireLamps : Entity {
         }
     }
 
-    static Color[] defaultColors = new Color[]
-    {
+    private static readonly Color[] DefaultColors = [
         Color.Red,
         Color.Yellow,
         Color.Blue,
         Color.Green,
         Color.Orange
-    };
+    ];
 
     public override void Update() {
         _updated = true;
@@ -149,12 +148,16 @@ public class WireLamps : Entity {
     }
 
     private void Raycast(ref Vector2 pos, ref float speed, ref bool ret) {
-        var bounds = (Scene as Level)!.Bounds;
+        if (Scene.MaybeLevel() is not { } level)
+            return;
+        
+        var bounds = level.Bounds;
         while (!HandleNodeMove(ref pos, ref speed, ref ret, bounds)) {}
     }
 
     public override void Render() {
-        var level = SceneAs<Level>();
+        if (Scene.MaybeLevel() is not { } level)
+            return;
 
         var controlOffset = new Vector2(
             (float) Math.Sin(sineX + level.WindSineTimer * 2f),
