@@ -20,6 +20,10 @@ internal static class FieldAccessCommands {
         [(typeof(EntityID), "id")] = new FieldInfoAccessor<EntityID, int>(nameof(EntityID.ID)),
         
         [(typeof(IEnumerable), "count")] = new EnumerableCountAccessor(),
+        
+        [(typeof(Color), "r")] = new PropertyInfoStructAccessor<Color, byte, int>(nameof(Color.R)),
+        [(typeof(Color), "g")] = new PropertyInfoStructAccessor<Color, byte, int>(nameof(Color.G)),
+        [(typeof(Color), "b")] = new PropertyInfoStructAccessor<Color, byte, int>(nameof(Color.B)),
     };
 
     internal static ConditionHelper.Condition Create(string fieldName, ConditionHelper.Condition target, IExpressionContext ctx) {
@@ -236,7 +240,7 @@ internal sealed class FieldInfoAccessor<T, TField>(string fieldName) : FieldAcce
     }
 }
 
-internal sealed class PropertyInfoAccessor<T, TField>(string fieldName) : FieldAccessorCommand {
+internal sealed class PropertyInfoAccessor<T, TField>(string fieldName) : FieldAccessorCommand where T : class {
     private readonly PropertyInfo _propertyInfo = typeof(T).GetProperty(fieldName)!;
     private readonly Func<T, TField> _getter = typeof(T).GetProperty(fieldName)!.GetGetMethod()!.CreateDelegate<Func<T, TField>>();
     
@@ -245,6 +249,25 @@ internal sealed class PropertyInfoAccessor<T, TField>(string fieldName) : FieldA
     }
 
     public override Type ReturnType => _propertyInfo.PropertyType;
+    
+    public override void Emit(ConditionCompilationCtx ctx, Type? knownInputType, Type targetType) {
+        ctx.Il.Emit(OpCodes.Callvirt, _propertyInfo.GetMethod!);
+        ctx.Il.EmitConvertToInSessionExpression(_propertyInfo.PropertyType, targetType);
+    }
+}
+
+internal sealed class PropertyInfoStructAccessor<T, TField, TRetAs>(string fieldName) : FieldAccessorCommand where T : struct {
+    delegate TField RefFunc(ref T value);
+    
+    private readonly PropertyInfo _propertyInfo = typeof(T).GetProperty(fieldName)!;
+    private readonly RefFunc _getter = typeof(T).GetProperty(fieldName)!.GetGetMethod()!.CreateDelegate<RefFunc>();
+    
+    public override object GetValue(object? obj) {
+        T val = (T) obj!;
+        return ConditionHelper.Condition.Coerce<TRetAs>(_getter(ref val)!)!;
+    }
+
+    public override Type ReturnType => typeof(TRetAs);
     
     public override void Emit(ConditionCompilationCtx ctx, Type? knownInputType, Type targetType) {
         ctx.Il.Emit(OpCodes.Callvirt, _propertyInfo.GetMethod!);

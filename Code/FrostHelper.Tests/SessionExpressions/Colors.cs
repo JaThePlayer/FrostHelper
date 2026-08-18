@@ -3,6 +3,15 @@ namespace FrostHelper.Tests.SessionExpressions;
 [Collection("FrostHelper")]
 public class Colors {
     [Fact]
+    public void Accessors() {
+        var session = new Session();
+        
+        Assert.Equal(258, TestUtils.CreateHybridExpr<int>("$rgb(255, 41, 16).r + 3").GetT(session));
+        Assert.Equal(41, TestUtils.CreateHybridExpr<int>("$rgb(255, 41, 16).g").GetT(session));
+        Assert.Equal(16, TestUtils.CreateHybridExpr<int>("$rgb(255, 41, 16).b").GetT(session));
+    }
+    
+    [Fact]
     public void Rgb() {
         var session = new Session();
         

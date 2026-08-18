@@ -456,7 +456,10 @@ public static class ConditionHelper {
         }
 
         internal string GetString(Session session, object? userdata = null) {
-            var obj = Get(session, userdata);
+            return CoerceToString(Get(session, userdata));
+        }
+
+        internal static string CoerceToString(object obj) {
             if (obj is string str)
                 return str;
             
@@ -468,22 +471,25 @@ public static class ConditionHelper {
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal T Get<T>(Session session, object? userdata = null) {
-            if (typeof(T) == typeof(bool))
-                return (T)(object)Check(session, userdata);
-            if (typeof(T) == typeof(int))
-                return (T)(object)GetInt(session, userdata);
-            if (typeof(T) == typeof(float))
-                return (T)(object)GetFloat(session, userdata);
-            if (typeof(T) == typeof(string))
-                return (T)(object)GetString(session, userdata);
-            if (typeof(T) == typeof(object))
-                return (T)Get(session, userdata);
-            if (typeof(T) == typeof(Color))
-                return (T)(object)CoerceToColor(Get(session, userdata));
+            return Coerce<T>(Get(session, userdata));
+        }
 
-            object ret = Get(session, userdata);
-            if (ret.GetType() == typeof(T) || ret.GetType().IsAssignableTo(typeof(T))) {
-                return (T) ret;
+        internal static T Coerce<T>(object obj) {
+            if (typeof(T) == typeof(bool))
+                return (T)(object)CoerceToBool(obj);
+            if (typeof(T) == typeof(int))
+                return (T)(object)CoerceToNumber<int>(obj);
+            if (typeof(T) == typeof(float))
+                return (T)(object)CoerceToNumber<float>(obj);
+            if (typeof(T) == typeof(string))
+                return (T)(object)CoerceToString(obj);
+            if (typeof(T) == typeof(object))
+                return (T)obj;
+            if (typeof(T) == typeof(Color))
+                return (T)(object)CoerceToColor(obj);
+
+            if (obj.GetType() == typeof(T) || obj.GetType().IsAssignableTo(typeof(T))) {
+                return (T) obj;
             }
 
             throw new ArgumentException($"Unsupported T for Session Expression: {typeof(T).FullName}");
