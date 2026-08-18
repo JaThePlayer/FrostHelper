@@ -9,13 +9,16 @@ internal sealed class RainbowChannelAttacher : Entity {
     private readonly string _channel;
     
     public RainbowChannelAttacher(EntityData data, Vector2 offset) : base(data.Position + offset) {
-        Add(new PostAwakeHook(PostAwake));
         _filter = EntityFilter.CreateFrom(data);
         _channel = data.Attr("channelId");
+        
+        Add(new AnyEntityAddedHook(OtherEntityAdded) {
+            CatchUpToPreviouslyAdded = true,
+        });
     }
 
-    private void PostAwake() {
-        foreach (var entity in _filter.Filter(Scene)) {
+    private void OtherEntityAdded(Entity entity, Scene scene) {
+        if (_filter.Matches(entity)) {
             RainbowChannels.SetEntityChannel(entity, _channel);
         }
     }
