@@ -590,7 +590,7 @@ public static class ConditionHelper {
         => new(GetConditionCore(data.Values, ExpressionContext.Default, name, def));
     
     internal static SessionExpression<T> GetExpression<T>(this EntityData data, ExpressionContext ctx, string name, string def = "")
-        => new(GetConditionCore(data.Values, ExpressionContext.Default, name, def));
+        => new(GetConditionCore(data.Values, ctx, name, def));
     
     public static Condition GetCondition(this BinaryPacker.Element data, string name, string def = "")
         => GetConditionCore(data.Attributes, ExpressionContext.Default, name, def);

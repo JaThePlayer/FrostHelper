@@ -129,7 +129,7 @@ public class IlCompilation {
         AssertIl<float>("$lerp(0, 1, 0.5)", """
         IL_0000: ldc.r4 0
         IL_0005: ldc.r4 1
-        IL_000a: ldc.r4 1
+        IL_000a: ldc.r4 0.5
         IL_000f: call System.Single FrostHelper.SessionExpressions.FunctionCommands/LerpFunc::Get(System.Single,System.Single,System.Single)
         IL_0014: ret
         """);

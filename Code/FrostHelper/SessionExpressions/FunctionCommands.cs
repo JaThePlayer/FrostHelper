@@ -42,6 +42,9 @@ internal static class FunctionCommands {
         
         ["range"] = PureMathCondition.TryCreateTwoArg<int, int, IEnumerable<int>, RangeFunc>,
         ["flags"] = PureMathCondition.TryCreateSession<string, IEnumerable<string>, FlagsFunc>,
+        
+        ["rgb"] = PureMathCondition.TryCreate<int, int, int, Color, RgbFunc>,
+        ["hsv"] = PureMathCondition.TryCreate<float, float, float, Color, HsvFunc>,
     };
 
     internal struct RangeFunc : IPureFunc<int, int, IEnumerable<int>> {
@@ -174,14 +177,16 @@ internal static class FunctionCommands {
     private interface IPureFunc<in TArg1, in TArg2, out TRet> {
         public static abstract TRet Get(TArg1 arg1, TArg2 arg2);
     }
+    
+    private interface IPureFunc<in TArg1, in TArg2, in TArg3, out TRet> {
+        public static abstract TRet Get(TArg1 arg1, TArg2 arg2, TArg3 arg3);
+    }
 
     private interface IPureMathFunc<T> : IPureFunc<T, T> where T : struct, INumber<T>;
 
     private interface IPureTwoArgMathFunc<T> : IPureFunc<T, T, T> where T : struct, INumber<T>;
     
-    private interface IPureThreeArgMathFunc<T> where T : struct, INumber<T> {
-        public static abstract T Get(T x, T y, T z);
-    }
+    private interface IPureThreeArgMathFunc<T> : IPureFunc<T, T, T, T> where T : struct, INumber<T>;
     
     private struct SinFunc : IPureMathFunc<float> {
         public static float Get(float x) => float.Sin(x);
@@ -258,6 +263,18 @@ internal static class FunctionCommands {
     private struct FlagsFunc : ISessionFunc<string, IEnumerable<string>> {
         public static IEnumerable<string> Get(Session session, string regex) {
             return session.Flags.Where(f => Regex.IsMatch(f, regex, RegexOptions.Compiled));
+        }
+    }
+    
+    private struct RgbFunc : IPureFunc<int, int, int, Color> {
+        public static Color Get(int r, int g, int b) {
+            return new Color(r, g, b);
+        }
+    }
+    
+    private struct HsvFunc : IPureFunc<float, float, float, Color> {
+        public static Color Get(float h, float s, float v) {
+            return Calc.HsvToColor(h, s, v);
         }
     }
 
@@ -364,30 +381,29 @@ internal static class FunctionCommands {
         protected internal override Type ReturnType => typeof(TRet);
     }
     
-    private sealed class PureMathThreeArgCondition<TNum, TOp>(Condition x, Condition y, Condition z) : FunctionCondition(x)
-        where TNum : struct, INumber<TNum>
-        where TOp : struct, IPureThreeArgMathFunc<TNum> {
+    private sealed class PureMathThreeArgCondition<TArg1, TArg2, TArg3, TRet, TOp>(Condition x, Condition y, Condition z) : FunctionCondition(x)
+        where TOp : struct, IPureFunc<TArg1, TArg2, TArg3, TRet> {
         private readonly Condition _x = x;
         private readonly Condition _y = y;
-        private readonly Condition _z = y;
+        private readonly Condition _z = z;
 
         private static readonly FieldInfo XFieldInfo
-            = typeof(PureMathThreeArgCondition<TNum, TOp>).GetField(nameof(_x),
+            = typeof(PureMathThreeArgCondition<TArg1, TArg2, TArg3, TRet, TOp>).GetField(nameof(_x),
                 BindingFlags.Instance | BindingFlags.NonPublic)!;
         
         private static readonly FieldInfo YFieldInfo
-            = typeof(PureMathThreeArgCondition<TNum, TOp>).GetField(nameof(_y),
+            = typeof(PureMathThreeArgCondition<TArg1, TArg2, TArg3, TRet, TOp>).GetField(nameof(_y),
                 BindingFlags.Instance | BindingFlags.NonPublic)!;
         
         private static readonly FieldInfo ZFieldInfo
-            = typeof(PureMathThreeArgCondition<TNum, TOp>).GetField(nameof(_z),
+            = typeof(PureMathThreeArgCondition<TArg1, TArg2, TArg3, TRet, TOp>).GetField(nameof(_z),
                 BindingFlags.Instance | BindingFlags.NonPublic)!;
         
         public override object Get(Session session, object? userdata) {
             return TOp.Get(
-                _x.GetNumber<TNum>(session, userdata), 
-                _y.GetNumber<TNum>(session, userdata), 
-                _z.GetNumber<TNum>(session, userdata));
+                _x.Get<TArg1>(session, userdata), 
+                _y.Get<TArg2>(session, userdata), 
+                _z.Get<TArg3>(session, userdata))!;
         }
         
         internal override void Emit(ConditionCompilationCtx ctx, Type targetType) {
@@ -395,16 +411,16 @@ internal static class FunctionCommands {
             LocalBuilder? tempOrigCond = null;
             
             il.EmitSwapOutCurrentCondition(ref tempOrigCond, ctx, _x, XFieldInfo);
-            _x.Emit(ctx, typeof(TNum));
+            _x.Emit(ctx, typeof(TArg1));
             il.EmitSwapOutCurrentCondition(ref tempOrigCond, ctx, _y, YFieldInfo);
-            _y.Emit(ctx, typeof(TNum));
+            _y.Emit(ctx, typeof(TArg2));
             il.EmitSwapOutCurrentCondition(ref tempOrigCond, ctx, _z, ZFieldInfo);
-            _z.Emit(ctx, typeof(TNum));
+            _z.Emit(ctx, typeof(TArg3));
             
             il.EmitRevertCurrentCondition(tempOrigCond, ctx);
             
             il.Emit(OpCodes.Call, typeof(TOp).GetMethod(nameof(TOp.Get))!);
-            il.EmitConvertToInSessionExpression(typeof(TNum), targetType);
+            il.EmitConvertToInSessionExpression(typeof(TRet), targetType);
         }
         
         internal override bool UsesCurrentConditionLocalInEmit => _x.UsesCurrentConditionLocalInEmit 
@@ -492,7 +508,18 @@ internal static class FunctionCommands {
                 return FunctionCondition.ArgumentAmtMismatch(args.Count, 3, out condition, out errorMessage);
             }
 
-            return FunctionCondition.Ok(new PureMathThreeArgCondition<float, TFloat>(a, b, c), out condition, out errorMessage);
+            return FunctionCondition.Ok(new PureMathThreeArgCondition<float, float, float, float, TFloat>(a, b, c), out condition, out errorMessage);
+        }
+        
+        public static bool TryCreate<TArg1, TArg2, TArg3, TRet, TOp>(IReadOnlyList<Condition> args, [NotNullWhen(true)] out Condition? condition,
+            [NotNullWhen(false)] out string? errorMessage) 
+            where TOp : struct, IPureFunc<TArg1, TArg2, TArg3, TRet>
+        {
+            if (args is not [var a, var b, var c]) {
+                return FunctionCondition.ArgumentAmtMismatch(args.Count, 3, out condition, out errorMessage);
+            }
+
+            return FunctionCondition.Ok(new PureMathThreeArgCondition<TArg1, TArg2, TArg3, TRet, TOp>(a, b, c), out condition, out errorMessage);
         }
     }
 
