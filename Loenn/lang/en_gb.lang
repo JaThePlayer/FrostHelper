@@ -814,7 +814,7 @@ entities.FrostHelper/DynamicRainGenerator.attributes.description.windMultiplier=
 entities.FrostHelper/HsvRainbowChannel.placements.name.default=Rainbow Channel Controller (HSV)
 entities.FrostHelper/HsvRainbowChannel.placements.description.default=Controls how colors for a given Rainbow Channel should be selected.\nUse a Rainbow Channel Attacher to attach entities to Rainbow Channels.
 entities.FrostHelper/HsvRainbowChannel.attributes.description.channelId=The Rainbow Channel to control.\nEntities with this Rainbow Channel set will get their rainbow colors from this controller.
-entities.FrostHelper/HsvRainbowChannel.attributes.description.hue=The Hue component, between 0 and 360.\nSession Expressions are supported, with additional commands:\n- $x, $y, $pos - The position to get the color at. 
+entities.FrostHelper/HsvRainbowChannel.attributes.description.hue=The Hue component, between 0 and 1.\nIf you wish to use the more traditional 0-360 range, use `/ 360.0` at the end.\nSession Expressions are supported, with additional commands:\n- $x, $y, $pos - The position to get the color at. 
 entities.FrostHelper/HsvRainbowChannel.attributes.description.s=The S component, between 0 and 1.\nSession Expressions are supported, with additional commands:\n- $x, $y, $pos - The position to get the color at. 
 entities.FrostHelper/HsvRainbowChannel.attributes.description.v=The V component, between 0 and 1.\nSession Expressions are supported, with additional commands:\n- $x, $y, $pos - The position to get the color at. 
 

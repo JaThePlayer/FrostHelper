@@ -1,4 +1,5 @@
-﻿using FrostHelper.Helpers;
+﻿using FrostHelper.Components;
+using FrostHelper.Helpers;
 
 namespace FrostHelper;
 
@@ -73,19 +74,22 @@ public class EntityRainbowifyController : Entity {
             _all = true;
         } else {
             _filter = EntityFilter.CreateFrom(types, isBlacklist: false);
+            Add(new AnyEntityAddedHook(OtherEntityAdded) {
+                CatchUpToPreviouslyAdded = true,
+            });
         }
-
+    }
+    
+    private void OtherEntityAdded(Entity entity, Scene scene) {
+        if (_filter!.Matches(entity)) {
+            entity.Add(new Rainbowifier());
+        }
     }
 
     public override void Awake(Scene scene) {
         base.Awake(scene);
         if (_filter is null)
             return;
-
-        foreach (var entity in scene.Entities) {
-            if (_filter.Matches(entity))
-                entity.Add(new Rainbowifier());
-        }
 
         _affectedBackdrops = new List<Backdrop>();
         foreach (var backdrop in (scene as Level)!.Background.Backdrops) {
