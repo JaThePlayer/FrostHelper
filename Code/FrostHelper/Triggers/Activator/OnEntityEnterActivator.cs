@@ -1,4 +1,5 @@
-﻿using FrostHelper.Helpers;
+﻿using FrostHelper.Components;
+using FrostHelper.Helpers;
 
 namespace FrostHelper.Triggers.Activator;
 
@@ -20,6 +21,28 @@ internal sealed class OnEntityEnterActivator : BaseActivator {
         if (_filter.Empty) {
             NotificationHelper.Notify("An On Entity Enter Activator with an empty 'types' list will DO NOTHING!");
         }
+
+        if (!_cacheEntities) {
+            // If we're not caching, we will instead listen to new entities being added to the scene and add them to our cache.
+            _cachedEntities = [];
+            Add(new AnyEntityAddedHook(OtherEntityAdded) {
+                CatchUpToPreviouslyAdded = true
+            });
+        }
+    }
+    
+    private void OtherEntityAdded(Entity entity, Scene scene) {
+        if (!IsValid(entity))
+            return;
+        
+        _cachedEntities ??= [];
+        _cachedEntities.Add(entity);
+        
+        // Since we could be dealing with constantly appearing/disappearing entities,
+        // we need to make sure the cache doesn't infinitely increase in size.
+        entity.Add(new ParentRemovedHook(e => {
+            _cachedEntities.Remove(e);
+        }));
     }
 
     public override void Awake(Scene scene) {
@@ -58,11 +81,6 @@ internal sealed class OnEntityEnterActivator : BaseActivator {
         if (_cachedEntities is { } cache) {
             foreach (var entity in cache) {
                 if (HandleEntity(hitbox, entity, player))
-                    break;
-            }
-        } else {
-            foreach (var entity in Scene.Entities.entities) {
-                if (IsValid(entity) && HandleEntity(hitbox, entity, player))
                     break;
             }
         }
