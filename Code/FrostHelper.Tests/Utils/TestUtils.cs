@@ -15,9 +15,16 @@ public static class TestUtils {
         Assert.NotNull(cond);
         
         if (createHybrid)
-            cond = new HybridExpression(cond);
+            cond = new HybridExpression<object>(cond);
         
         return cond;
+    }
+    
+    public static HybridExpression<T> CreateHybridExpr<T>(string txt, ExpressionContext? context = null) {
+        Assert.True(ConditionHelper.TryCreate(txt, context ?? ExpressionContext.Default, out var cond));
+        Assert.NotNull(cond);
+        
+        return new HybridExpression<T>(cond);
     }
     
     public static T CreateExpr<T>(string txt, ExpressionContext? context = null) where T : ConditionHelper.Condition {
@@ -40,24 +47,28 @@ public static class TestUtils {
         return level;
     }
 
-    internal sealed class HybridExpression(ConditionHelper.Condition basedOn) : ConditionHelper.Condition {
-        private readonly CompiledCondition<object> _compiled = CompiledCondition<object>.GetFor(basedOn);
+    public sealed class HybridExpression<T>(ConditionHelper.Condition basedOn) : ConditionHelper.Condition {
+        private readonly CompiledCondition<T> _compiled = CompiledCondition<T>.GetFor(basedOn);
         
         public ConditionHelper.Condition SourceCondition => basedOn;
         
         public override object Get(Session session, object? userdata) {
-            var ret = basedOn.Get(session, userdata);
+            return GetT(session, userdata)!;
+        }
+        
+        public T GetT(Session session, object? userdata = null) {
+            var ret = basedOn.Get<T>(session, userdata);
             var compiledRet = _compiled.Get(session, userdata);
 
-            if (_compiled.CompiledMethod is null) {
-                Assert.Fail("Expression failed to compile.");
+            if (_compiled.CompilationException is not null) {
+                Assert.Fail($"Expression failed to compile: {_compiled.CompilationException}.");
             }
 
-            if (!ret.Equals(compiledRet) && !ret.ToString()!.Equals(compiledRet.ToString())) {
+            if (!ret!.Equals(compiledRet) && !ret.ToString()!.Equals(compiledRet!.ToString())) {
                 Assert.Fail($"Expression didn't return the same value between compiled and interpreted execution!: '{ret}' (interpreted) vs '{compiledRet}' (compiled)");
             }
 
-            return ret;
+            return compiledRet;
         }
 
         internal override void Emit(ConditionCompilationCtx ctx, Type targetType) {

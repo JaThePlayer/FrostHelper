@@ -90,12 +90,15 @@ internal sealed class CompiledCondition<T> : ISavestatePersisted, IDisposable {
     
     internal DynamicMethodDefinition? CompiledMethod { get; private set; }
     
+    internal Exception? CompilationException { get; private set; }
+    
     public T Get(Session session, object? userdata) {
         if (!_attemptedToCompile) {
             _attemptedToCompile = true;
             try {
                 _compiled = Jit();
             } catch (Exception ex) {
+                CompilationException = ex;
                 Logger.Error("FrostHelper.CompiledCondition", $"Failed to compile session expression '{_basedOn.SourceText}', falling back to interpreter: {ex}");
             }
         }

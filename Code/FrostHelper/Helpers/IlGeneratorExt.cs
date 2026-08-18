@@ -7,9 +7,20 @@ using OpCodes = System.Reflection.Emit.OpCodes;
 namespace FrostHelper.Helpers;
 
 internal static class IlGeneratorExt {
+    private static readonly MethodInfo MethodCalcHexToColorInt = typeof(Calc).GetMethod(nameof(Calc.HexToColor), [ typeof(int) ])!;
+    private static readonly MethodInfo MethodColorHelperGetColor = typeof(ColorHelper).GetMethod(nameof(ColorHelper.GetColor), [ typeof(string) ])!;
+    
     extension(ILGenerator il) {
         public void EmitLoadConstAs(object value, Type targetType) {
-            var changedType = Convert.ChangeType(value, targetType, CultureInfo.InvariantCulture);
+            object? changedType;
+            try {
+                changedType = Convert.ChangeType(value, targetType, CultureInfo.InvariantCulture);
+            } catch (InvalidCastException) {
+                // Not directly castable, we'll instead do the cast at runtime.
+                il.EmitLoadConstAs(value, value.GetType());
+                il.EmitConvertToInSessionExpression(value.GetType(), targetType);
+                return;
+            }
 
             switch (changedType) {
                 case int i:
@@ -106,6 +117,24 @@ internal static class IlGeneratorExt {
                     il.Emit(OpCodes.Ceq);
                     il.Emit(OpCodes.Ldc_I4_0);
                     il.Emit(OpCodes.Ceq);
+                    return;
+                }
+            }
+
+            if (toType == typeof(Color)) {
+                if (fromType == typeof(int)) {
+                    il.Emit(OpCodes.Call, MethodCalcHexToColorInt);
+                    return;
+                }
+                
+                if (fromType == typeof(float)) {
+                    il.Emit(OpCodes.Conv_I4);
+                    il.Emit(OpCodes.Call, MethodCalcHexToColorInt);
+                    return;
+                }
+                
+                if (fromType == typeof(string)) {
+                    il.Emit(OpCodes.Call, MethodColorHelperGetColor);
                     return;
                 }
             }

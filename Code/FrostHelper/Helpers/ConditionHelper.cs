@@ -478,6 +478,8 @@ public static class ConditionHelper {
                 return (T)(object)GetString(session, userdata);
             if (typeof(T) == typeof(object))
                 return (T)Get(session, userdata);
+            if (typeof(T) == typeof(Color))
+                return (T)(object)CoerceToColor(Get(session, userdata));
 
             object ret = Get(session, userdata);
             if (ret.GetType() == typeof(T) || ret.GetType().IsAssignableTo(typeof(T))) {
@@ -537,6 +539,23 @@ public static class ConditionHelper {
             NotificationHelper.Notify($"Can't convert Session Expression value '{obj}' [{obj?.GetType().Name ?? "null"}] to {typeof(T).Name}.\nReturning 0!");
             return T.Zero;
         }
+
+        public static Color CoerceToColor(object obj) {
+            if (obj is Color clr)
+                return clr;
+
+            if (obj is string str)
+                return ColorHelper.GetColor(str);
+
+            if (obj is int i)
+                return Calc.HexToColor(i);
+
+            if (obj is float f)
+                return Calc.HexToColor((int) f);
+
+            NotificationHelper.Notify($"Can't convert Session Expression value '{obj}' [{obj?.GetType().Name ?? "null"}] to Color.\nReturning 00000000!");
+            return default;
+        }
         
         public sealed override string ToString() => ToStringIndented("");
         
@@ -568,6 +587,9 @@ public static class ConditionHelper {
         => GetConditionCore(data.Values, ctx, name, def);
     
     internal static SessionExpression<T> GetExpression<T>(this EntityData data, string name, string def = "")
+        => new(GetConditionCore(data.Values, ExpressionContext.Default, name, def));
+    
+    internal static SessionExpression<T> GetExpression<T>(this EntityData data, ExpressionContext ctx, string name, string def = "")
         => new(GetConditionCore(data.Values, ExpressionContext.Default, name, def));
     
     public static Condition GetCondition(this BinaryPacker.Element data, string name, string def = "")

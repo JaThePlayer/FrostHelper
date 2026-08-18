@@ -61,4 +61,18 @@ public class Coercion {
         Assert.Equal(0.5f, TestUtils.CreateExpr("1 / 2.").Get<float>(session));
         Assert.Equal(0.5f, TestUtils.CreateExpr("1 // 2").Get<float>(session));
     }
+
+    [Fact]
+    public void Color() {
+        var session = new Session();
+        
+        // Strings get treated as color codes
+        Assert.Equal(new Color(0xff, 0x00, 0x10), TestUtils.CreateHybridExpr<Color>("\"ff0010\"").GetT(session));
+        Assert.Equal(new Color(0xff, 0x00, 0x00), TestUtils.CreateHybridExpr<Color>("\"Red\"").GetT(session));
+        
+        // Numbers get treated as hex values.
+        Assert.Equal(new Color(0xff, 0x00, 0x10), TestUtils.CreateHybridExpr<Color>(0xff0010.ToString()).GetT(session));
+        Assert.Equal(new Color(0xff, 0x00, 0x10), TestUtils.CreateHybridExpr<Color>($"{0xff0010}.0").GetT(session));
+        
+    }
 }
