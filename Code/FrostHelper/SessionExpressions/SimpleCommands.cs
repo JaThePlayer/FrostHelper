@@ -24,6 +24,7 @@ internal static class SimpleCommands {
         ["dashes"] = new DashAccessor(),
         ["maxDashes"] = new MaxDashAccessor(),
         ["stamina"] = new StaminaAccessor(),
+        ["followerCount"] = new FollowersAccessor(),
         ["player"] = new PlayerAccessor(),
         ["speed"] = new PlayerSpeedAccessor(),
         ["pi"] = new ConstFloat(float.Pi),
@@ -174,6 +175,10 @@ internal static class SimpleCommands {
 
     private sealed class StaminaAccessor : PlayerGetterCondition<float> {
         protected override float GetFromPlayer(Player player) => player.Stamina;
+    }
+
+    private sealed class FollowersAccessor : PlayerGetterCondition<float> {
+        protected override float GetFromPlayer(Player player) => player.Leader.Followers.Count;
     }
 
     private abstract class PlayerGetterCondition<T> : Condition where T : notnull {
