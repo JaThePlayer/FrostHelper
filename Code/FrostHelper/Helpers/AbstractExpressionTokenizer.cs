@@ -55,6 +55,11 @@ internal class ExpressionToken {
         _ => false,
     };
 
+    [JsonIgnore]
+    public bool ShouldTreatNextSubAsUnaryMinus => Kind is
+        Kinds.Add or Kinds.Sub or Kinds.Mul or Kinds.Div or Kinds.DivFloat or Kinds.Modulo
+        or Kinds.UnaryMinus;
+
     public static TokenizerState Tokenize(ReadOnlySpan<char> input, IAbstractExpressionErrorLogger logger, out List<ExpressionToken> tokens) {
         var parser = new SpanParser(input);
         return Tokenize(ref parser, 0, logger, out tokens);
@@ -85,10 +90,19 @@ internal class ExpressionToken {
             if (parser.TryTrimPrefix("="))
                 tokens.Add(new ExpressionToken(Kinds.SingleEquals));
 
-            if (parser.TryTrimPrefix("+"))
-                tokens.Add(new ExpressionToken(Kinds.Add));
-            if (parser.TryTrimPrefix("-"))
-                tokens.Add(new ExpressionToken(Kinds.Sub));
+            if (parser.TryTrimPrefix("+")) {
+                if (tokens.Count == 0 || tokens[^1].ShouldTreatNextSubAsUnaryMinus) {
+                } else {
+                    tokens.Add(new ExpressionToken(Kinds.Add));
+                }
+            }
+            if (parser.TryTrimPrefix("-")) {
+                if (tokens.Count == 0 || tokens[^1].ShouldTreatNextSubAsUnaryMinus) {
+                    tokens.Add(new ExpressionToken(Kinds.UnaryMinus));
+                } else {
+                    tokens.Add(new ExpressionToken(Kinds.Sub));
+                }
+            }
             if (parser.TryTrimPrefix("*"))
                 tokens.Add(new ExpressionToken(Kinds.Mul));
             if (parser.TryTrimPrefix("//"))
@@ -317,6 +331,7 @@ internal class ExpressionToken {
         FieldAccess,
         
         LambdaArrow,
+        UnaryMinus,
     }
 
     public enum TokenizerState {

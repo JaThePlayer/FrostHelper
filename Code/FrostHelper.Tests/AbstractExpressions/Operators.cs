@@ -7,13 +7,10 @@ public class Operators {
     [Fact]
     public void Unary() {
         Assert.True(AbstractExpression.TryParseCached("+3", out var expr));
-        var binOp = Assert.IsType<BinOpExpression>(expr);
-        Assert.Equal(BinOpExpression.Operators.Add, binOp.Operator);
-        Assert.Equal(0, Assert.IsType<LiteralExpression<int>>(binOp.Left).Value);
-        Assert.Equal(3, Assert.IsType<LiteralExpression<int>>(binOp.Right).Value);
+        Assert.Equal(3, Assert.IsType<LiteralExpression<int>>(expr).Value);
         
         Assert.True(AbstractExpression.TryParseCached("-3", out expr));
-        binOp = Assert.IsType<BinOpExpression>(expr);
+        var binOp = Assert.IsType<BinOpExpression>(expr);
         Assert.Equal(BinOpExpression.Operators.Sub, binOp.Operator);
         Assert.Equal(0, Assert.IsType<LiteralExpression<int>>(binOp.Left).Value);
         Assert.Equal(3, Assert.IsType<LiteralExpression<int>>(binOp.Right).Value);
@@ -146,11 +143,7 @@ public class Operators {
 
     [Fact]
     public void WeirdBehaviorWithMultAndUnaryMinus() {
-        // TODO: Found during writing tests, should not do this!
-        using (_ = new NotificationExpecter(1)) {
-            Assert.False(AbstractExpression.TryParseCached("1*-2", out _));
-        }
-        
+        Assert.True(AbstractExpression.TryParseCached("1*-2", out _));
         Assert.True(AbstractExpression.TryParseCached("1*(-2)", out var expr));
     }
 

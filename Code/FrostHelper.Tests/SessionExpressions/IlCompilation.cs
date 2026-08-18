@@ -318,16 +318,15 @@ public class IlCompilation {
         IL_0022: ldc.r4 50
         IL_0027: mul
         IL_0028: add
-        IL_0029: ldc.i4 280
-        IL_002e: ldc.i4 280
-        IL_0033: div
-        IL_0034: conv.r4
-        IL_0035: rem
-        IL_0036: call System.Single FrostHelper.SessionExpressions.FunctionCommands/YoYoFunc::Get(System.Single)
-        IL_003b: ldc.r4 0.4
-        IL_0040: mul
-        IL_0041: add
-        IL_0042: ret
+        IL_0029: ldc.r4 280
+        IL_002e: rem
+        IL_002f: ldc.r4 280
+        IL_0034: div
+        IL_0035: call System.Single FrostHelper.SessionExpressions.FunctionCommands/YoYoFunc::Get(System.Single)
+        IL_003a: ldc.r4 0.4
+        IL_003f: mul
+        IL_0040: add
+        IL_0041: ret
         """, RainbowChannelExpression.ExpressionContext);
 
         Engine.Instance.scene = TestUtils.CreateLevel();
@@ -346,7 +345,7 @@ public class IlCompilation {
             userdata = RainbowChannelExpression.Instance.Update(new Vector2(p, 0f));
             Assert.Equal(uncompiled.GetFloat(session, userdata), compiled.Get(session, userdata));
         }
-        Assert.Equal(0.400012225f, uncompiled.GetFloat(session, userdata));
+        Assert.Equal(0.545714259f, uncompiled.GetFloat(session, userdata));
     }
 
     [Fact]

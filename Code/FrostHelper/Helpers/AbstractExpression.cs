@@ -299,10 +299,9 @@ internal partial class AbstractExpression {
             return HandleBinOp(preBin, postBin, out expression);
         }
         
-        // unary +-
-        // +-
+        // unary -
         if (FindAny(tokens, out preBin, out postBin, out kind,
-                (int)ExpressionToken.Kinds.Add, (int)ExpressionToken.Kinds.Sub))
+                (int)ExpressionToken.Kinds.UnaryMinus))
         {
             if (preBin.IsEmpty)
             {
@@ -311,18 +310,21 @@ internal partial class AbstractExpression {
                     return false;
                 
                 expression = new BinOpExpression(new LiteralExpression<int>(0), right, kind switch {
-                    ExpressionToken.Kinds.Add => BinOpExpression.Operators.Add,
-                    ExpressionToken.Kinds.Sub => BinOpExpression.Operators.Sub,
+                    ExpressionToken.Kinds.UnaryMinus => BinOpExpression.Operators.Sub,
                 });
                 
                 return true;
             }
-            
+        }
+
+        // +-
+        if (FindAnyRight(tokens, out preBin, out postBin, out kind,
+                (int) ExpressionToken.Kinds.Add, (int) ExpressionToken.Kinds.Sub)) {
             return HandleBinOp(preBin, postBin, out expression);
         }
         
         // * / % //
-        if (FindAny(tokens, out preBin, out postBin, out kind,
+        if (FindAnyRight(tokens, out preBin, out postBin, out kind,
                 (int)ExpressionToken.Kinds.Mul, (int)ExpressionToken.Kinds.Div, (int)ExpressionToken.Kinds.DivFloat, (int)ExpressionToken.Kinds.Modulo))
         {
             return HandleBinOp(preBin, postBin, out expression);
@@ -387,6 +389,27 @@ internal partial class AbstractExpression {
             params ReadOnlySpan<int> kinds)
         {
             for (int i = 0; i < tokens.Length; i++)
+            {
+                var token = tokens[i];
+                if (kinds.Contains((int)token.Kind))
+                {
+                    left = tokens[..i];
+                    right = tokens[(i + 1)..];
+                    kind = token.Kind;
+                    return true;
+                }
+            }
+
+            left = default;
+            right = default;
+            kind = default;
+            return false;
+        }
+        
+        bool FindAnyRight(ReadOnlySpan<ExpressionToken> tokens, out ReadOnlySpan<ExpressionToken> left, out ReadOnlySpan<ExpressionToken> right, out ExpressionToken.Kinds kind, 
+            params ReadOnlySpan<int> kinds)
+        {
+            for (int i = tokens.Length - 1; i >= 0; i--)
             {
                 var token = tokens[i];
                 if (kinds.Contains((int)token.Kind))
