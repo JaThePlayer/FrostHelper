@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 
 namespace FrostHelper.SessionExpressions;
 
-internal sealed class TypeDescriptor {
+public sealed class TypeDescriptor {
     private static readonly ConcurrentDictionary<Type, TypeDescriptor> Descriptors = new() {
         [typeof(int)] = new TypeDescriptor(typeof(int), "int"),
         [typeof(float)] = new TypeDescriptor(typeof(float), "float"),
@@ -16,10 +16,10 @@ internal sealed class TypeDescriptor {
     
     public string CanonName { get; init; }
 
-    public TypeDescriptor(Type type) : this(type, type.Name) {
+    private TypeDescriptor(Type type) : this(type, type.Name) {
     }
     
-    public TypeDescriptor(Type type, string name) {
+    private TypeDescriptor(Type type, string name) {
         CSharpType = type;
         CanonName = name;
     }
@@ -31,13 +31,16 @@ internal sealed class TypeDescriptor {
     }
 }
 
-internal sealed class ArgumentDescriptor {
-    public required string Name { get; init; }
- 
-    public required TypeDescriptor Type { get; init; }
+public sealed class ArgumentDescriptor(string name, TypeDescriptor type) {
+    public string Name { get; init; } = name;
+
+    public TypeDescriptor Type { get; init; } = type;
+
+    public static ArgumentDescriptor VarargFor(TypeDescriptor descriptor)
+        => new ArgumentDescriptor("...", descriptor);
 }
 
-internal sealed class CommandDescriptor {
+public sealed class CommandDescriptor {
     public required string Name { get; init; }
     
     public IReadOnlyList<ApiRenderPart> Description { get; init; }

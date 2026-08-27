@@ -13,8 +13,8 @@ public static partial class API {
     }
 
     /// <summary>
-    /// Registers a notification sink, which calls <see cref="onNotification"/> whenever a notification is created.
-    /// Returning false from <see cref="onNotification"/> will prevent it from being displayed in-game.
+    /// Registers a notification sink, which calls onNotification whenever a notification is created.
+    /// Returning false from onNotification will prevent it from being displayed in-game.
     /// Dispose the returned <see cref="IDisposable"/> to remove the sink.
     /// 
     /// Added in 1.80.0.

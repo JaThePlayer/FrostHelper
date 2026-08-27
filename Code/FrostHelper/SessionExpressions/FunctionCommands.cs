@@ -1,4 +1,5 @@
-﻿using FrostHelper.Helpers;
+﻿using FrostHelper.API;
+using FrostHelper.Helpers;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Reflection.Emit;
@@ -14,43 +15,146 @@ public delegate bool FunctionCommandFactory(
     IReadOnlyList<Condition> args, [NotNullWhen(true)] out Condition? result, 
     [NotNullWhen(false)] out string? errorMessage);
 
+public record FunctionCommand(FunctionCommandFactory Factory, CommandDescriptor Descriptor);
+
 internal static class FunctionCommands {
-    private static readonly Dictionary<string, FunctionCommandFactory> Registry = new() {
-        ["min"] = MinCondition.TryCreate,
-        ["max"] = MaxCondition.TryCreate,
-        ["clamp"] = ClampCondition.TryCreate,
-        ["abs"] = PureMathCondition.TryCreateIntOrFloat<AbsFunc<int>, AbsFunc<float>>,
-        ["sin"] = PureMathCondition.TryCreateFloat<SinFunc>,
-        ["cos"] = PureMathCondition.TryCreateFloat<CosFunc>,
-        ["tan"] = PureMathCondition.TryCreateFloat<TanFunc>,
-        ["dialog"] = DialogCondition.TryCreate,
-        ["truncate"] = PureMathCondition.TryCreateFloat<TruncateFunc>,
-        ["round"] = PureMathCondition.TryCreateFloat<RoundFunc>,
-        ["vec"] = VecCondition.TryCreate,
-        ["pow"] = PureMathCondition.TryCreateTwoArgFloat<PowFunc<float>>,
-        ["pow2"] = PureMathCondition.TryCreateIntOrFloat<Pow2Func<int>, Pow2Func<float>>,
-        ["sqrt"] = PureMathCondition.TryCreateFloat<SqrtFunc>,
-        ["cbrt"] = PureMathCondition.TryCreateFloat<CbrtFunc>,
-        ["exp"] = PureMathCondition.TryCreateFloat<ExpFunc>,
-        ["exp2"] = PureMathCondition.TryCreateFloat<Exp2Func>,
-        ["log"] = PureMathCondition.TryCreateTwoArgFloat<LogFunc<float>>,
-        ["logn"] = PureMathCondition.TryCreateFloat<LognFunc>,
-        ["log2"] = PureMathCondition.TryCreateFloat<Log2Func>,
-        ["log10"] = PureMathCondition.TryCreateFloat<Log10Func>,
-        ["lerp"] = PureMathCondition.TryCreatThreeArgFloat<LerpFunc>,
-        ["yoyo"] = PureMathCondition.TryCreateFloat<YoYoFunc>,
+    static FunctionCommands() {
+        Register("min", [ ArgumentDescriptor.VarargFor(TypeDescriptor.For(typeof(float))) ], TypeDescriptor.For(typeof(float)),
+            [ ApiRenderPart.Default("Returns the smallest value from all provided arguments.") ], MinCondition.TryCreate);
         
-        ["range"] = PureMathCondition.TryCreateTwoArg<int, int, IEnumerable<int>, RangeFunc>,
-        ["flags"] = PureMathCondition.TryCreateSession<string, IEnumerable<string>, FlagsFunc>,
+        Register("max", [ ArgumentDescriptor.VarargFor(TypeDescriptor.For(typeof(float))) ], TypeDescriptor.For(typeof(float)),
+            [ ApiRenderPart.Default("Returns the largest value from all provided arguments.") ], MaxCondition.TryCreate);
+
+        RegisterPure<int, int, int, int, ClampFunc<int>>("clamp", [ ApiRenderPart.Default("Clamps the value of x so that its between min and max.") ]);
+        RegisterPure<float, float, AbsFunc<float>>("abs", [ ApiRenderPart.Default("Returns the absolute value of x.") ]);
         
-        ["rgb"] = PureMathCondition.TryCreate<int, int, int, Color, RgbFunc>,
-        ["hsv"] = PureMathCondition.TryCreate<float, float, float, Color, HsvFunc>,
-    };
+        RegisterPure<float, float, SinFunc>("sin", [ ApiRenderPart.Default("Calculates trigonometrical functions, x is assumed to be in radians. (Tip: $pi)") ]);
+        RegisterPure<float, float, CosFunc>("cos", [ ApiRenderPart.Default("Calculates trigonometrical functions, x is assumed to be in radians. (Tip: $pi)") ]);
+        RegisterPure<float, float, TanFunc>("tan", [ ApiRenderPart.Default("Calculates trigonometrical functions, x is assumed to be in radians. (Tip: $pi)") ]);
+        
+        RegisterPure<float, float, TruncateFunc>("truncate", [ ApiRenderPart.Default("Truncates the value.") ]);
+        RegisterPure<float, float, RoundFunc>("round", [ ApiRenderPart.Default("Rounds the value.") ]);
+        
+        RegisterPure<float, float, float, PowFunc<float>>("pow", [ ApiRenderPart.Default("x raised to the power of y.") ]);
+        RegisterPure<float, float, Pow2Func<float>>("pow2", [ ApiRenderPart.Default("x raised to the power of 2.") ]);
+        
+        RegisterPure<float, float, SqrtFunc>("sqrt", [ ApiRenderPart.Default("x raised to the power of 2.") ]);
+        RegisterPure<float, float, CbrtFunc>("cbrt", [ ApiRenderPart.Default("Square root of x.") ]);
+        RegisterPure<float, float, ExpFunc>("exp", [ ApiRenderPart.Default("Cube root of x.") ]);
+        RegisterPure<float, float, Exp2Func>("exp2", [ ApiRenderPart.Default("$e raised to the power of x") ]);
+        
+        RegisterPure<float, float, float, LogFunc<float>>("log", [ ApiRenderPart.Default("The base-y logarithm of x.") ]);
+        RegisterPure<float, float, LognFunc>("logn", [ ApiRenderPart.Default("The natural logarithm of x.") ]);
+        RegisterPure<float, float, Log2Func>("log2", [ ApiRenderPart.Default("The base-2 logarithm of x.") ]);
+        RegisterPure<float, float, Log10Func>("log10", [ ApiRenderPart.Default("The base-10 logarithm of x.") ]);
+        
+        RegisterPure<float, float, float, float, LerpFunc>("lerp", [ ApiRenderPart.Default("Performs a linear interpolation between two values based on the given weight. Params: x — The first value, which is intended to be the lower bound. y — The second value, which is intended to be the upper bound. amount — A value between 0 and 1, that indicates the weight of the interpolation.") ]);
+        
+        RegisterPure<float, float, YoYoFunc>("yoyo", [ ApiRenderPart.Default("x <= 0.5 ? x * 2 : 1.0 - (value - 0.5) * 2.0).") ]);
+        
+        RegisterPure<int, int, IEnumerable<int>, RangeFunc>("range", [
+            ApiRenderPart.Default("Creates a "),
+            ApiRenderPart.Type(TypeDescriptor.For(typeof(IEnumerable<int>))),
+            ApiRenderPart.Default(" containing numbers between min (inclusive) and max (exclusive).")
+        ]);
+        
+        RegisterSession<string, IEnumerable<string>, FlagsFunc>("flags", [
+            ApiRenderPart.Default("Creates a "),
+            ApiRenderPart.Type(TypeDescriptor.For(typeof(IEnumerable<string>))),
+            ApiRenderPart.Default(" containing all currently set flags matching the given regex.")
+        ]);
+        
+        RegisterPure<int, int, int, Color, RgbFunc>("rgb", [
+            ApiRenderPart.Default("Creates a "),
+            ApiRenderPart.Type(TypeDescriptor.For(typeof(Color))),
+            ApiRenderPart.Default(" using r, g, b values, assumed to be in range 0-255.")
+        ]);
+        
+        RegisterPure<float, float, float, Color, HsvFunc>("hsv", [
+            ApiRenderPart.Default("Creates a "),
+            ApiRenderPart.Type(TypeDescriptor.For(typeof(Color))),
+            ApiRenderPart.Default(" using h, s, v values, assumed to be in range 0-1.")
+        ]);
+        
+        RegisterPure<string, string, DialogFunc>("dialog", [
+            ApiRenderPart.Default("Gets the dialog text in the current language for the given dialogId."),
+        ]);
+        
+        Register("vec", [
+                new ArgumentDescriptor("x", TypeDescriptor.For(typeof(float))),
+                new ArgumentDescriptor("y", TypeDescriptor.For(typeof(float)))
+            ],
+            TypeDescriptor.For(typeof(Vector2)),
+            [
+                ApiRenderPart.Default("Creates a "),
+                ApiRenderPart.Type(TypeDescriptor.For(typeof(Vector2))),
+                ApiRenderPart.Default(" with the given x, y values.")
+            ], VecCondition.TryCreate);
+    }
+    
+    private static readonly Dictionary<string, FunctionCommand> Registry = new();
+
+    private static void Register(string name, IReadOnlyList<ArgumentDescriptor> arguments, TypeDescriptor returnType, IReadOnlyList<ApiRenderPart> description, FunctionCommandFactory factory) {
+        Registry[name] = new FunctionCommand(factory, new CommandDescriptor {
+            Name = name,
+            Description = description,
+            Arguments = arguments,
+            ReturnType = returnType,
+        });
+    }
+
+    private static void RegisterPure<TArg1, TRet, TOp>(string name, IReadOnlyList<ApiRenderPart> description)
+        where TOp : struct, IPureFunc<TArg1, TRet> {
+        Register(name, [
+                new ArgumentDescriptor(TOp.ArgName, TypeDescriptor.For(typeof(TArg1)))
+            ],
+            TypeDescriptor.For(typeof(TRet)),
+            description,
+            PureMathCondition.TryCreate<TArg1, TRet, TOp>);
+    }
+    
+    private static void RegisterSession<TArg1, TRet, TOp>(string name, IReadOnlyList<ApiRenderPart> description)
+        where TOp : struct, ISessionFunc<TArg1, TRet> {
+        Register(name, [
+                new ArgumentDescriptor(TOp.ArgName, TypeDescriptor.For(typeof(TArg1)))
+            ],
+            TypeDescriptor.For(typeof(TRet)),
+            description,
+            PureMathCondition.TryCreateSession<TArg1, TRet, TOp>);
+    }
+    
+    private static void RegisterPure<TArg1, TArg2, TRet, TOp>(string name, IReadOnlyList<ApiRenderPart> description)
+        where TOp : struct, IPureFunc<TArg1, TArg2, TRet> {
+        Register(name, [
+                new ArgumentDescriptor(TOp.Arg1Name, TypeDescriptor.For(typeof(TArg1))),
+                new ArgumentDescriptor(TOp.Arg2Name, TypeDescriptor.For(typeof(TArg2))),
+            ],
+            TypeDescriptor.For(typeof(TRet)),
+            description,
+            PureMathCondition.TryCreate<TArg1, TArg2, TRet, TOp>);
+    }
+    
+    private static void RegisterPure<TArg1, TArg2, TArg3, TRet, TOp>(string name, IReadOnlyList<ApiRenderPart> description)
+        where TOp : struct, IPureFunc<TArg1, TArg2, TArg3, TRet> {
+        Register(name, [ 
+                new ArgumentDescriptor(TOp.Arg1Name, TypeDescriptor.For(typeof(TArg1))),
+                new ArgumentDescriptor(TOp.Arg2Name, TypeDescriptor.For(typeof(TArg2))),
+                new ArgumentDescriptor(TOp.Arg3Name, TypeDescriptor.For(typeof(TArg3)))
+            ],
+            TypeDescriptor.For(typeof(TRet)),
+            description,
+            PureMathCondition.TryCreate<TArg1, TArg2, TArg3, TRet, TOp>);
+    }
+    
 
     internal struct RangeFunc : IPureFunc<int, int, IEnumerable<int>> {
         public static IEnumerable<int> Get(int min, int count) {
             return Enumerable.Range(min, count);
         }
+
+        public static string Arg1Name => "min";
+        
+        public static string Arg2Name => "max";
     }
 
     public static void Register(string modName, string cmdName, Func<Session, object?, IReadOnlyList<object>, object> func) {
@@ -59,7 +163,10 @@ internal static class FunctionCommands {
             Logger.Warn("FrostHelper.ConditionHelper", $"Replacing function command '${key}'");
         }
 
-        Registry[key] = CreateFactoryForCustomCommand(func);
+        Registry[key] = new FunctionCommand(CreateFactoryForCustomCommand(func), new CommandDescriptor {
+            Name = key,
+            DeclaringMod = modName
+        });
     }
 
     internal static FunctionCommandFactory CreateFactoryForCustomCommand(Func<Session, object?, IReadOnlyList<object>, object> func) {
@@ -71,7 +178,7 @@ internal static class FunctionCommands {
     }
     
     public static bool TryCreate(string name, IReadOnlyList<Condition> args, IExpressionContext ctx, [NotNullWhen(true)] out Condition? condition) {
-        if (!ctx.TryGetFunctionCommand(name, out var factory) && !Registry.TryGetValue(name, out factory)) {
+        if (!ctx.TryGetFunctionCommand(name, out var functionCommand) && !Registry.TryGetValue(name, out functionCommand)) {
             if (name.Contains('.')) {
                 var remaining = name;
                 List<string>? fields = null;
@@ -116,11 +223,13 @@ internal static class FunctionCommands {
             return false;
         }
 
-        if (!factory(args, out condition, out var errorMessage)) {
+        if (!functionCommand.Factory(args, out condition, out var errorMessage)) {
             NotificationHelper.Notify($"Failed to create Session Expression function: '{name}':\n{errorMessage}");
             condition = null;
             return false;
         }
+
+        condition.Descriptor = functionCommand.Descriptor;
 
         return true;
     }
@@ -168,18 +277,32 @@ internal static class FunctionCommands {
 
     private interface IPureFunc<in TArg1, out TRet> {
         public static abstract TRet Get(TArg1 arg1);
+
+        public static abstract string ArgName { get; }
     }
     
     private interface ISessionFunc<in TArg1, out TRet> {
         public static abstract TRet Get(Session session, TArg1 arg1);
+        
+        public static abstract string ArgName { get; }
     }
     
     private interface IPureFunc<in TArg1, in TArg2, out TRet> {
         public static abstract TRet Get(TArg1 arg1, TArg2 arg2);
+
+        public static abstract string Arg1Name { get; }
+
+        public static abstract string Arg2Name { get; }
     }
     
     private interface IPureFunc<in TArg1, in TArg2, in TArg3, out TRet> {
         public static abstract TRet Get(TArg1 arg1, TArg2 arg2, TArg3 arg3);
+        
+        public static abstract string Arg1Name { get; }
+
+        public static abstract string Arg2Name { get; }
+        
+        public static abstract string Arg3Name { get; }
     }
 
     private interface IPureMathFunc<T> : IPureFunc<T, T> where T : struct, INumber<T>;
@@ -190,92 +313,156 @@ internal static class FunctionCommands {
     
     private struct SinFunc : IPureMathFunc<float> {
         public static float Get(float x) => float.Sin(x);
+        
+        public static string ArgName => "x";
     }
     
     private struct CosFunc : IPureMathFunc<float> {
         public static float Get(float x) => float.Cos(x);
+        
+        public static string ArgName => "x";
     }
     
     private struct TanFunc : IPureMathFunc<float> {
         public static float Get(float x) => float.Tan(x);
+        
+        public static string ArgName => "x";
     }
     
     private struct TruncateFunc : IPureMathFunc<float> {
         public static float Get(float x) => float.Truncate(x);
+        
+        public static string ArgName => "x";
     }
     
     private struct SqrtFunc : IPureMathFunc<float> {
         public static float Get(float x) => float.Sqrt(x);
+        
+        public static string ArgName => "x";
     }
     
     private struct CbrtFunc : IPureMathFunc<float> {
         public static float Get(float x) => float.Cbrt(x);
+        
+        public static string ArgName => "x";
     }
     
     private struct ExpFunc : IPureMathFunc<float> {
         public static float Get(float x) => float.Exp(x);
+        
+        public static string ArgName => "x";
     }
     
     private struct Exp2Func : IPureMathFunc<float> {
         public static float Get(float x) => float.Exp2(x);
+        
+        public static string ArgName => "x";
     }
     
     private struct LognFunc : IPureMathFunc<float> {
         public static float Get(float x) => float.Log(x);
+        
+        public static string ArgName => "x";
     }
     
     private struct Log10Func : IPureMathFunc<float> {
         public static float Get(float x) => float.Log10(x);
+        
+        public static string ArgName => "x";
     }
     
     private struct Log2Func : IPureMathFunc<float> {
         public static float Get(float x) => float.Log2(x);
+        
+        public static string ArgName => "x";
     }
     
     private struct RoundFunc : IPureMathFunc<float> {
         public static float Get(float x) => float.Round(x);
+        
+        public static string ArgName => "x";
     }
     
     private struct AbsFunc<T> : IPureMathFunc<T> where T : struct, INumber<T> {
         public static T Get(T x) => T.Abs(x);
+        
+        public static string ArgName => "x";
     }
 
     private struct PowFunc<T> : IPureTwoArgMathFunc<T> where T : struct, INumber<T>, IPowerFunctions<T> {
         public static T Get(T x, T y) => T.Pow(x, y);
+
+        public static string Arg1Name => "x";
+
+        public static string Arg2Name => "y";
     }
     
     private struct Pow2Func<T> : IPureMathFunc<T> where T : struct, INumber<T> {
         public static T Get(T x) => x * x;
+        
+        public static string ArgName => "x";
     }
     
     private struct LogFunc<T> : IPureTwoArgMathFunc<T> where T : struct, INumber<T>, ILogarithmicFunctions<T> {
         public static T Get(T x, T y) => T.Log(x, y);
+
+        public static string Arg1Name => "x";
+
+        public static string Arg2Name => "y";
     }
     
     private struct LerpFunc : IPureThreeArgMathFunc<float> {
         public static float Get(float x, float y, float z) => float.Lerp(x, y, z);
+        
+        public static string Arg1Name => "x";
+
+        public static string Arg2Name => "y";
+
+        public static string Arg3Name => "amount";
     }
     
     private struct YoYoFunc : IPureMathFunc<float> {
         public static float Get(float x) => Calc.YoYo(x);
+        
+        public static string ArgName => "x";
     }
 
     private struct FlagsFunc : ISessionFunc<string, IEnumerable<string>> {
         public static IEnumerable<string> Get(Session session, string regex) {
             return session.Flags.Where(f => Regex.IsMatch(f, regex, RegexOptions.Compiled));
         }
+
+        public static string ArgName => "regex";
     }
     
     private struct RgbFunc : IPureFunc<int, int, int, Color> {
         public static Color Get(int r, int g, int b) {
             return new Color(r, g, b);
         }
+
+        public static string Arg1Name => "r";
+        
+        public static string Arg2Name => "g";
+        
+        public static string Arg3Name => "b";
     }
     
     private struct HsvFunc : IPureFunc<float, float, float, Color> {
         public static Color Get(float h, float s, float v) {
             return Calc.HsvToColor(h, s, v);
         }
+        
+        public static string Arg1Name => "h";
+        
+        public static string Arg2Name => "s";
+        
+        public static string Arg3Name => "v";
+    }
+    
+    private struct DialogFunc : IPureFunc<string, string> {
+        public static string Get(string dialogId) => Dialog.Clean(dialogId);
+        
+        public static string ArgName => "dialogId";
     }
 
     private sealed class PureMathCondition<TArg, TRet, TOp>(Condition x) : FunctionCondition(x)
@@ -511,6 +698,17 @@ internal static class FunctionCommands {
             return FunctionCondition.Ok(new PureMathThreeArgCondition<float, float, float, float, TFloat>(a, b, c), out condition, out errorMessage);
         }
         
+        public static bool TryCreate<TArg1, TArg2, TRet, TOp>(IReadOnlyList<Condition> args, [NotNullWhen(true)] out Condition? condition,
+            [NotNullWhen(false)] out string? errorMessage) 
+            where TOp : struct, IPureFunc<TArg1, TArg2, TRet>
+        {
+            if (args is not [var a, var b]) {
+                return FunctionCondition.ArgumentAmtMismatch(args.Count, 3, out condition, out errorMessage);
+            }
+
+            return FunctionCondition.Ok(new PureMathTwoArgCondition<TArg1, TArg2, TRet, TOp>(a, b), out condition, out errorMessage);
+        }
+        
         public static bool TryCreate<TArg1, TArg2, TArg3, TRet, TOp>(IReadOnlyList<Condition> args, [NotNullWhen(true)] out Condition? condition,
             [NotNullWhen(false)] out string? errorMessage) 
             where TOp : struct, IPureFunc<TArg1, TArg2, TArg3, TRet>
@@ -630,30 +828,18 @@ internal static class FunctionCommands {
         }
     }
     
-    private sealed class ClampCondition {
-        public static bool TryCreate(IReadOnlyList<Condition> args, [NotNullWhen(true)] out Condition? condition, [NotNullWhen(false)] out string? errorMessage) {
-            if (args is not [var x, var min, var max]) {
-                return FunctionCondition.TooFewArgs(args.Count, 1, out condition, out errorMessage);
-            }
-
-            if (args.All(x => x.ReturnType == typeof(int))) {
-                return FunctionCondition.Ok(new Impl<int>(x, min, max), out condition, out errorMessage);
-            }
-
-            return FunctionCondition.Ok(new Impl<float>(x, min, max), out condition, out errorMessage);
+    private struct ClampFunc<T> : IPureFunc<T, T, T, T> where T : INumber<T> {
+        public static T Get(T xVal, T minVal, T maxVal) {
+            if (minVal > maxVal)
+                return T.Clamp(xVal, maxVal, minVal);
+            return T.Clamp(xVal, minVal, maxVal);
         }
 
-        private sealed class Impl<T>(Condition x, Condition min, Condition max) : FunctionCondition(x, min, max) 
-        where T : struct, INumber<T> {
-            public override object Get(Session session, object? userdata) {
-                var xVal = x.GetNumber<T>(session, userdata);
-                var minVal = min.GetNumber<T>(session, userdata);
-                var maxVal = max.GetNumber<T>(session, userdata);
-                if (minVal > maxVal)
-                    return T.Clamp(xVal, maxVal, minVal);
-                return T.Clamp(xVal, minVal, maxVal);
-            }
-        }
+        public static string Arg1Name => "x";
+        
+        public static string Arg2Name => "minVal";
+        
+        public static string Arg3Name => "maxVal";
     }
 
     private sealed class DialogCondition(Condition key) : FunctionCondition(key) {

@@ -107,10 +107,9 @@ public class IlCompilation {
         """);
         
         AssertIl<float>("$pow2(2)", """
-        IL_0000: ldc.i4 2
-        IL_0005: call T FrostHelper.SessionExpressions.FunctionCommands/Pow2Func`1<System.Int32>::Get(T)
-        IL_000a: conv.r4
-        IL_000b: ret
+        IL_0000: ldc.r4 2
+        IL_0005: call T FrostHelper.SessionExpressions.FunctionCommands/Pow2Func`1<System.Single>::Get(T)
+        IL_000a: ret
         """);
         
         AssertIl<float>("$pow2(2.)", """

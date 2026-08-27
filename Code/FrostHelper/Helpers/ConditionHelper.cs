@@ -591,7 +591,7 @@ public static class ConditionHelper {
     public static Condition GetCondition(this EntityData data, string name, string def = "")
         => GetConditionCore(data.Values, ExpressionContext.Default, name, def);
     
-    public static Condition GetCondition(this EntityData data, ExpressionContext ctx, string name, string def = "")
+    public static Condition GetCondition(this EntityData data, IExpressionContext ctx, string name, string def = "")
         => GetConditionCore(data.Values, ctx, name, def);
     
     internal static SessionExpression<T> GetExpression<T>(this EntityData data, string name, string def = "")
@@ -603,10 +603,10 @@ public static class ConditionHelper {
     public static Condition GetCondition(this BinaryPacker.Element data, string name, string def = "")
         => GetConditionCore(data.Attributes, ExpressionContext.Default, name, def);
     
-    public static Condition GetCondition(this BinaryPacker.Element data, ExpressionContext ctx, string name, string def = "")
+    public static Condition GetCondition(this BinaryPacker.Element data, IExpressionContext ctx, string name, string def = "")
         => GetConditionCore(data.Attributes, ctx, name, def);
 
-    private static Condition GetConditionCore(Dictionary<string, object>? dict, ExpressionContext ctx, string name, string def = "") {
+    private static Condition GetConditionCore(Dictionary<string, object>? dict, IExpressionContext ctx, string name, string def = "") {
         Condition? condition = null;
         if (dict?.TryGetValue(name, out var cond) ?? false) {
             switch (cond) {

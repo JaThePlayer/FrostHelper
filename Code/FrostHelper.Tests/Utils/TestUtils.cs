@@ -10,7 +10,7 @@ public static class TestUtils {
     
     public static IEnumerable<(bool, bool)> BoolPermutations => [(false, false), (false, true), (true, false), (true, true)];
     
-    public static ConditionHelper.Condition CreateExpr(string txt, ExpressionContext? context = null, bool createHybrid = true) {
+    public static ConditionHelper.Condition CreateExpr(string txt, IExpressionContext? context = null, bool createHybrid = true) {
         Assert.True(ConditionHelper.TryCreate(txt, context ?? ExpressionContext.Default, out var cond));
         Assert.NotNull(cond);
         
@@ -20,14 +20,14 @@ public static class TestUtils {
         return cond;
     }
     
-    public static HybridExpression<T> CreateHybridExpr<T>(string txt, ExpressionContext? context = null) {
+    public static HybridExpression<T> CreateHybridExpr<T>(string txt, IExpressionContext? context = null) {
         Assert.True(ConditionHelper.TryCreate(txt, context ?? ExpressionContext.Default, out var cond));
         Assert.NotNull(cond);
         
         return new HybridExpression<T>(cond);
     }
     
-    public static T CreateExpr<T>(string txt, ExpressionContext? context = null) where T : ConditionHelper.Condition {
+    public static T CreateExpr<T>(string txt, IExpressionContext? context = null) where T : ConditionHelper.Condition {
         var ret = CreateExpr(txt, context, createHybrid: false);
         return Assert.IsType<T>(ret);
     }

@@ -353,7 +353,7 @@ internal sealed class InspectorSession {
     }
 }
 
-internal record struct ApiRenderPart(string Contents, string ColorId, IReadOnlyList<ApiRenderPart>? Tooltip) {
+public record struct ApiRenderPart(string Contents, string ColorId, IReadOnlyList<ApiRenderPart>? Tooltip) {
     public static ApiRenderPart Default(string contents) => new ApiRenderPart(contents, "default", null);
     
     public static ApiRenderPart Trivia(string contents) => new ApiRenderPart(contents, "whitespace", null);

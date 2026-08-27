@@ -122,7 +122,11 @@ public static partial class API {
         
         return new ExpressionContext(
             (simpleCommands ?? []).ToDictionary(kv => kv.Key, kv => SimpleCommands.CreateCommandFromModFunc(kv.Value)),
-            (functionCommands ?? []).ToDictionary(kv => kv.Key, kv => FunctionCommands.CreateFactoryForCustomCommand(kv.Value)));
+            (functionCommands ?? []).ToDictionary(kv => kv.Key, kv => new FunctionCommand(
+                FunctionCommands.CreateFactoryForCustomCommand(kv.Value), 
+                new CommandDescriptor {
+                    Name = kv.Key
+            })));
     }
 
     // NON-API!

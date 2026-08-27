@@ -16,7 +16,7 @@ internal sealed class LambdaContext(IExpressionContext source, LambdaDefinitionC
         return true;
     }
 
-    public bool TryGetFunctionCommand(string name, [NotNullWhen(true)] out FunctionCommandFactory? factory) {
+    public bool TryGetFunctionCommand(string name, [NotNullWhen(true)] out FunctionCommand? factory) {
         return source.TryGetFunctionCommand(name, out factory);
     }
 }
