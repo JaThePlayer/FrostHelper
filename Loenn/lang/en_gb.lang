@@ -817,6 +817,13 @@ entities.FrostHelper/HsvRainbowChannel.attributes.description.channelId=The Rain
 entities.FrostHelper/HsvRainbowChannel.attributes.description.hue=The Hue component, between 0 and 1.\nIf you wish to use the more traditional 0-360 range, use `/ 360.0` at the end.\nSession Expressions are supported, with additional commands:\n- $x, $y, $pos - The position to get the color at. 
 entities.FrostHelper/HsvRainbowChannel.attributes.description.s=The S component, between 0 and 1.\nSession Expressions are supported, with additional commands:\n- $x, $y, $pos - The position to get the color at. 
 entities.FrostHelper/HsvRainbowChannel.attributes.description.v=The V component, between 0 and 1.\nSession Expressions are supported, with additional commands:\n- $x, $y, $pos - The position to get the color at. 
+entities.FrostHelper/HsvRainbowChannel.attributes.description.alpha=The alpha value, between 0 and 1.\nThe color will be multiplied by this value.\nSession Expressions are supported, with additional commands:\n- $x, $y, $pos - The position to get the color at. 
+
+entities.FrostHelper/ColorRainbowChannel.placements.name.default=Rainbow Channel Controller (Color)
+entities.FrostHelper/ColorRainbowChannel.placements.description.default=Controls how colors for a given Rainbow Channel should be selected.\nUse a Rainbow Channel Attacher to attach entities to Rainbow Channels.
+entities.FrostHelper/ColorRainbowChannel.attributes.description.channelId=The Rainbow Channel to control.\nEntities with this Rainbow Channel set will get their rainbow colors from this controller.
+entities.FrostHelper/ColorRainbowChannel.attributes.description.color=The color to use, as a Session Expression returning a Color.\nIntegers get treated as hex values, strings get treated as color codes (either hex or XNA name).\nSession Expressions are supported, with additional commands:\n- $x, $y, $pos - The position to get the color at. 
+entities.FrostHelper/ColorRainbowChannel.attributes.description.alpha=The alpha value, between 0 and 1.\nThe color will be multiplied by this value.\nSession Expressions are supported, with additional commands:\n- $x, $y, $pos - The position to get the color at. 
 
 entities.FrostHelper/RainbowChannelAttacher.placements.name.default=Rainbow Channel Attacher
 entities.FrostHelper/RainbowChannelAttacher.placements.description.default=Attaches specified entities to a Rainbow Channel.\nThis allows control over their rainbow colors by using a Rainbow Channel Controller set to the same channel id.
@@ -974,6 +981,22 @@ triggers.FrostHelper/FlagInvertTrigger.attributes.description.flag=The flag to i
 
 triggers.FrostHelper/TemporaryFlagTrigger.placements.name.default=Temporary Flag
 triggers.FrostHelper/TemporaryFlagTrigger.placements.description.default=Sets a flag which will get reset automatically when you die
+
+triggers.FrostHelper/IndirectFlagTrigger.placements.name.default=Indirect Flag
+triggers.FrostHelper/IndirectFlagTrigger.placements.description.default=Sets a flag, whose name is obtained via a Session Expression.
+triggers.FrostHelper/IndirectFlagTrigger.attributes.description.flag=The flag to set, as a Session Expression.
+triggers.FrostHelper/IndirectFlagTrigger.attributes.description.value=The value to set the flag to, as a Session Expression.\n0 to disable the flag, 1 to enable.
+
+triggers.FrostHelper/IndirectCounterTrigger.placements.name.default=Indirect Counter
+triggers.FrostHelper/IndirectCounterTrigger.placements.description.default=Sets a counter, whose name is obtained via a Session Expression.
+triggers.FrostHelper/IndirectCounterTrigger.attributes.description.counter=The counter to set, as a Session Expression.
+triggers.FrostHelper/IndirectCounterTrigger.attributes.description.value=The value to set the flag to, as a Session Expression.
+
+triggers.FrostHelper/IndirectSliderTrigger.placements.name.default=Indirect Slider
+triggers.FrostHelper/IndirectSliderTrigger.placements.description.default=Sets a slider, whose name is obtained via a Session Expression.
+triggers.FrostHelper/IndirectSliderTrigger.attributes.description.slider=The slider to set, as a Session Expression.
+triggers.FrostHelper/IndirectSliderTrigger.attributes.description.value=The value to set the flag to, as a Session Expression.
+
 
 triggers.FrostHelper/BloomColorTrigger.placements.name.default=Bloom Color
 

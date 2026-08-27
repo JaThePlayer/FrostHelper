@@ -35,9 +35,14 @@ local function addChannelType(name, placementData)
 end
 
 addChannelType("FrostHelper/HsvRainbowChannel", {
-    { "hue", "0.4 + $yoyo(($pos.len + $time * 50) % 280 / 280) * 0.4" },
+    { "hue", "0.4 + $yoyo(($pos.len + $time * 50) % 280 / 280) * 0.4", jautils.fields.sessionExpression {} },
     { "s", "0.4", jautils.fields.sessionExpression {} },
     { "v", "0.9", jautils.fields.sessionExpression {} },
+    { "alpha", "1", jautils.fields.sessionExpression {} }
+})
+
+addChannelType("FrostHelper/ColorRainbowChannel", {
+    { "color", '"ff00ff"', jautils.fields.sessionExpression {} },
     { "alpha", "1", jautils.fields.sessionExpression {} }
 })
 
