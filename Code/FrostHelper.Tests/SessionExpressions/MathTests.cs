@@ -3,6 +3,18 @@ namespace FrostHelper.Tests.SessionExpressions;
 [Collection("FrostHelper")]
 public class MathTests {
     [Fact]
+    public void Spaceless() {
+        var session = new Session();
+        
+        Assert.Equal(7, TestUtils.CreateExpr("4+3").Get<int>(session));
+        Assert.Equal(1, TestUtils.CreateExpr("4-3").Get<int>(session));
+        Assert.Equal(1f, TestUtils.CreateExpr("4/3").Get<float>(session));
+        Assert.Equal(4/3f, TestUtils.CreateExpr("4//3").Get<float>(session));
+        // Frost Helper versions <= 1.79.1 used to treat this as a flag name "4%3", because `%` wasn't treated as a word separator!
+        Assert.Equal(1, TestUtils.CreateExpr("4%3").Get<int>(session));
+    }
+    
+    [Fact]
     public void Division() {
         var session = new Session();
         

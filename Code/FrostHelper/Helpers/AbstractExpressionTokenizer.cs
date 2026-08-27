@@ -362,7 +362,7 @@ internal class ExpressionToken {
         return TokenizerState.End;
 
         static ReadOnlySpan<char> ReadWord(ref SpanParser input) {
-            var idx = input.Remaining.IndexOfAny("+-*/&|#@$(),\"!=<> ");
+            var idx = input.Remaining.IndexOfAny("+-*/%&|#@$(),\"!=<> ");
             if (idx < 0) {
                 return input.ReadStr();
             }
