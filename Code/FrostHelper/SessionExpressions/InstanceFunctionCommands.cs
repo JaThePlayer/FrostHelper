@@ -292,7 +292,11 @@ internal static class InstanceFunctionCommands {
     internal struct Str : IOneArgFunc<object, string, string> {
         public static string Invoke(object field, string arg) {
             if (field is IFormattable formattable) {
-                return formattable.ToString(arg, CultureInfo.InvariantCulture);
+                try {
+                    return formattable.ToString(arg, CultureInfo.InvariantCulture);
+                } catch (FormatException) {
+                    NotificationHelper.Notify($"Invalid format string as 'str()' argument: {arg}");
+                }
             }
             
             return field.ToString() ?? "";
