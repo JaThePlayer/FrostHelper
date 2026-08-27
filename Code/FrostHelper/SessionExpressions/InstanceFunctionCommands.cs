@@ -1,3 +1,4 @@
+using FrostHelper.API;
 using FrostHelper.Helpers;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
@@ -7,35 +8,74 @@ using OpCodes = System.Reflection.Emit.OpCodes;
 
 namespace FrostHelper.SessionExpressions;
 
+internal sealed record InstanceFunctionCommand(InstanceFunctionCommands.InstanceFunctionCommandFactory Factory, CommandDescriptor Descriptor);
+
 internal static class InstanceFunctionCommands {
+    static InstanceFunctionCommands() {
+        Register<object, string, string, Str>("str", [ ApiRenderPart.Default("Converts the value to a string.") ]);
+        Register<string, string, int, StringIsMatch>("isMatch", [ ApiRenderPart.Default("Checks whether the string matches the given regex.") ]);
+        
+        RegisterSession<IEnumerable, LambdaCondition, float, EnumerableSum>("sum", [
+            ApiRenderPart.Default("Calculates the sum of the results of applying the callback to every element in the collection.")
+        ]);
+        RegisterSession<IEnumerable, LambdaCondition, int, EnumerableAll>("all", [
+            ApiRenderPart.Default("Checks whether all elements in the collection match the given predicate.")
+        ]);
+        RegisterSession<IEnumerable, LambdaCondition, int, EnumerableAny>("any", [
+            ApiRenderPart.Default("Checks whether any element in the collection match the given predicate.")
+        ]);
+    }
+    
     public delegate bool InstanceFunctionCommandFactory(
         ConditionHelper.Condition field, IReadOnlyList<ConditionHelper.Condition> args, [NotNullWhen(true)] out ConditionHelper.Condition? result, 
         [NotNullWhen(false)] out string? errorMessage);
     
-    internal static readonly Dictionary<(Type, string), InstanceFunctionCommandFactory> Functions = new() {
-        [(typeof(object), "str")] = OneArgInstanceFunc<object, string, string, Str>.TryCreate,
-        
-        [(typeof(string), "isMatch")] = OneArgInstanceFunc<string, string, int, StringIsMatch>.TryCreate,
-        
-        [(typeof(IEnumerable), "sum")] = OneArgSessionInstanceFunc<IEnumerable, LambdaCondition, float, EnumerableSum>.TryCreate,
-        [(typeof(IEnumerable), "all")] = OneArgSessionInstanceFunc<IEnumerable, LambdaCondition, int, EnumerableAll>.TryCreate,
-        [(typeof(IEnumerable), "any")] = OneArgSessionInstanceFunc<IEnumerable, LambdaCondition, int, EnumerableAny>.TryCreate,
-    };
+    internal static readonly Dictionary<(Type, string), InstanceFunctionCommand> Functions = new();
+    
+    private static void Register(string name, Type objType, IReadOnlyList<ArgumentDescriptor> arguments, TypeDescriptor returnType, IReadOnlyList<ApiRenderPart> description, InstanceFunctionCommandFactory factory) {
+        Functions[(objType, name)] = new InstanceFunctionCommand(factory, new CommandDescriptor {
+            Name = name,
+            Description = description,
+            Arguments = arguments,
+            ReturnType = returnType,
+        });
+    }
+    
+    private static void Register<TField, TArg, TResult, TOp>(string name, IReadOnlyList<ApiRenderPart> description)
+        where TOp : struct, IOneArgFunc<TField, TArg, TResult> {
+        Register(name, typeof(TField), [
+                new ArgumentDescriptor(TOp.ArgName, TypeDescriptor.For(typeof(TArg)))
+            ],
+            TypeDescriptor.For(typeof(TResult)),
+            description,
+            OneArgInstanceFunc<TField, TArg, TResult, TOp>.TryCreate);
+    }
+    
+    private static void RegisterSession<TField, TArg, TResult, TOp>(string name, IReadOnlyList<ApiRenderPart> description)
+        where TOp : struct, IOneArgSessionFunc<TField, TArg, TResult> {
+        Register(name, typeof(TField), [
+                new ArgumentDescriptor(TOp.ArgName, TypeDescriptor.For(typeof(TArg)))
+            ],
+            TypeDescriptor.For(typeof(TResult)),
+            description,
+            OneArgSessionInstanceFunc<TField, TArg, TResult, TOp>.TryCreate);
+    }
     
     internal static ConditionHelper.Condition Create(string functionName, ConditionHelper.Condition target, IReadOnlyList<ConditionHelper.Condition> arguments, IExpressionContext ctx) {
         if (target.ReturnType is { } knownType && GetFactory(knownType, functionName, ctx) is { } factory) {
-            if (!factory(target, arguments, out var condition, out var errorMessage)) {
+            if (!factory.Factory(target, arguments, out var condition, out var errorMessage)) {
                 NotificationHelper.Notify($"Failed to create Session Expression function: '{functionName}', called on '{knownType}':\n{errorMessage}");
                 return new ConstInt(0);
             }
 
+            condition.Descriptor = factory.Descriptor;
             return condition;
         }
         
         return new DynamicInstanceFunction(functionName, target, arguments, ctx);
     }
 
-    internal static InstanceFunctionCommandFactory? GetFactory(Type? type, string functionName, IExpressionContext ctx) {
+    internal static InstanceFunctionCommand? GetFactory(Type? type, string functionName, IExpressionContext ctx) {
         var currentType = type;
         while (currentType is not null) {
             if (Functions.TryGetValue((currentType, functionName), out var accessor)) {
@@ -59,16 +99,23 @@ internal static class InstanceFunctionCommands {
 
         return null;
     }
-    
+
+    internal interface IInstanceFunctionCommand {
+        public ConditionHelper.Condition FieldCondition { get; }
+    }
 
     internal interface IOneArgFunc<in TField, in TArg, out TResult> {
         public static abstract TResult Invoke(TField field, TArg arg);
+        
+        public static abstract string ArgName { get; }
         
         public static abstract bool Emit(ConditionCompilationCtx ctx, Type targetType);
     }
     
     internal interface IOneArgSessionFunc<in TField, in TArg, out TResult> {
         public static abstract TResult Invoke(Session session, object? userdata, TField field, TArg arg);
+        
+        public static abstract string ArgName { get; }
         
         public static abstract bool EmitCodeUsesSessionAndUserdataOnStack { get; }
         
@@ -86,12 +133,13 @@ internal static class InstanceFunctionCommands {
 
             var factory = GetFactory(obj.GetType(), functionName, ctx);
             string? errorMessage = null;
-            if (factory is null || !factory(target, arguments, out var condition, out errorMessage)) {
+            if (factory is null || !factory.Factory(target, arguments, out var condition, out errorMessage)) {
                 NotificationHelper.Notify($"Failed to create Session Expression function: '{functionName}', called on '{obj.GetType()}':\n{errorMessage ?? "function not found"}");
                 _cache[obj.GetType()] = new ConstInt(0);
                 return Zero;
             }
-            
+
+            condition.Descriptor = factory.Descriptor;
             _cache[obj.GetType()] = condition;
             return condition.Get(session, userdata);
         }
@@ -99,7 +147,7 @@ internal static class InstanceFunctionCommands {
         private readonly Dictionary<Type, ConditionHelper.Condition> _cache = [];
     }
 
-    internal sealed class OneArgInstanceFunc<TField, TArg, TResult, TOp> : ConditionHelper.Condition
+    internal sealed class OneArgInstanceFunc<TField, TArg, TResult, TOp> : ConditionHelper.Condition, IInstanceFunctionCommand
         where TOp : IOneArgFunc<TField, TArg, TResult> {
 
         private readonly ConditionHelper.Condition _field;
@@ -158,9 +206,11 @@ internal static class InstanceFunctionCommands {
 
         internal override bool UsesCurrentConditionLocalInEmit =>
             _field.UsesCurrentConditionLocalInEmit || _arg.UsesCurrentConditionLocalInEmit;
+
+        public ConditionHelper.Condition FieldCondition => _field;
     }
 
-    internal sealed class OneArgSessionInstanceFunc<TField, TArg, TResult, TOp> : ConditionHelper.Condition
+    internal sealed class OneArgSessionInstanceFunc<TField, TArg, TResult, TOp> : ConditionHelper.Condition, IInstanceFunctionCommand
         where TOp : IOneArgSessionFunc<TField, TArg, TResult> {
 
         private readonly ConditionHelper.Condition _field;
@@ -225,12 +275,16 @@ internal static class InstanceFunctionCommands {
 
         internal override bool UsesCurrentConditionLocalInEmit =>
             _field.UsesCurrentConditionLocalInEmit || _arg.UsesCurrentConditionLocalInEmit;
+
+        public ConditionHelper.Condition FieldCondition => _field;
     }
 
     internal struct StringIsMatch : IOneArgFunc<string, string, int> {
         public static int Invoke(string field, string arg) {
             return Regex.IsMatch(field, arg, RegexOptions.Compiled) ? 1 : 0;
         }
+
+        public static string ArgName => "regex";
 
         public static bool Emit(ConditionCompilationCtx ctx, Type targetType) => false;
     }
@@ -243,6 +297,8 @@ internal static class InstanceFunctionCommands {
             
             return field.ToString() ?? "";
         }
+
+        public static string ArgName => "format";
 
         public static bool Emit(ConditionCompilationCtx ctx, Type targetType) => false;
     }
@@ -319,6 +375,8 @@ internal static class InstanceFunctionCommands {
             return sum;
         }
 
+        public static string ArgName => "callback";
+
         public static bool EmitCodeUsesSessionAndUserdataOnStack => false;
 
         public static bool Emit(ConditionCompilationCtx ctx, Type targetType, ConditionHelper.Condition fieldCondition, ConditionHelper.Condition argCondition) {
@@ -354,6 +412,8 @@ internal static class InstanceFunctionCommands {
             return 1;
         }
 
+        public static string ArgName => "predicate";
+
         public static bool EmitCodeUsesSessionAndUserdataOnStack => false;
 
         public static bool Emit(ConditionCompilationCtx ctx, Type targetType, ConditionHelper.Condition fieldCondition, ConditionHelper.Condition argCondition) {
@@ -388,6 +448,8 @@ internal static class InstanceFunctionCommands {
 
             return 0;
         }
+
+        public static string ArgName => "predicate";
 
         public static bool EmitCodeUsesSessionAndUserdataOnStack => false;
 

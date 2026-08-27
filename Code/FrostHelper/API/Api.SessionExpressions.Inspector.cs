@@ -279,7 +279,19 @@ internal sealed class InspectorSession {
             parts.Add(ApiRenderPart.Type(type));
             parts.Add(ApiRenderPart.Operator("."));
         }
+        
         parts.Add(ApiRenderPart.Command(descriptor.Name));
+
+        if (descriptor.Arguments is not []) {
+            parts.Add(ApiRenderPart.Operator("("));
+            foreach (var arg in descriptor.Arguments) {
+                parts.Add(ApiRenderPart.Type(arg.Type));
+                parts.Add(ApiRenderPart.Trivia(" "));
+                parts.Add(ApiRenderPart.Default(arg.Name));
+            }
+            parts.Add(ApiRenderPart.Operator(")"));
+        }
+        
         if (descriptor.ReturnType != TypeDescriptor.Any) {
             parts.Add(ApiRenderPart.Default(" -> "));
             parts.Add(ApiRenderPart.Type(descriptor.ReturnType));
@@ -305,6 +317,14 @@ internal sealed class InspectorSession {
                 }
                 
                 parts.Add(ApiRenderPart.Field(postfix, CreateDescriptionTooltip(fieldAccessor.Descriptor)));
+                break;
+            }
+            case InstanceFunctionCommands.IInstanceFunctionCommand functionCommand: {
+                var postfix = condition.Descriptor?.Name ?? throw new UnreachableException();
+            
+                parts.AddRange(HandleAccessorParts(fullOperationText[..^(postfix.Length + 1)], functionCommand.FieldCondition));
+                parts.Add(ApiRenderPart.Operator("."));
+                parts.Add(ApiRenderPart.Field(postfix, CreateDescriptionTooltip(condition.Descriptor)));
                 break;
             }
             default:
