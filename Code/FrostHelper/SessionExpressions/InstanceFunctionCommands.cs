@@ -285,7 +285,12 @@ internal static class InstanceFunctionCommands {
 
     internal struct StringIsMatch : IOneArgFunc<string, string, int> {
         public static int Invoke(string field, string arg) {
-            return Regex.IsMatch(field, arg, RegexOptions.Compiled) ? 1 : 0;
+            try {
+                return Regex.IsMatch(field, arg, RegexOptions.Compiled) ? 1 : 0;
+            } catch (RegexParseException ex) {
+                NotificationHelper.Notify($"Invalid regex: {arg}: {ex}");
+                return 0;
+            }
         }
 
         public static string ArgName => "regex";

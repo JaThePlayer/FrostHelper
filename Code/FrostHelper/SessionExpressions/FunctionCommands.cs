@@ -429,7 +429,9 @@ internal static class FunctionCommands {
 
     private struct FlagsFunc : ISessionFunc<string, IEnumerable<string>> {
         public static IEnumerable<string> Get(Session session, string regex) {
-            return session.Flags.Where(f => Regex.IsMatch(f, regex, RegexOptions.Compiled));
+            return session.Flags.Where(
+                f => InstanceFunctionCommands.StringIsMatch.Invoke(f, regex) > 0
+            );
         }
 
         public static string ArgName => "regex";
