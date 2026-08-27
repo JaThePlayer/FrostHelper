@@ -16,6 +16,9 @@ public class MathTests {
         var session = new Session();
         
         Assert.Equal(3, TestUtils.CreateExpr("3 % 5").Get<int>(session));
+        
+        // Remainder of 0 returns 0 in all cases instead of crashing.
+        Assert.Equal(0, TestUtils.CreateExpr("3 % 0").Get<int>(session));
     }
 
     [Fact]

@@ -146,6 +146,9 @@ internal sealed class MathOperator<TOp>(ConditionHelper.Condition condA, Conditi
 
 internal struct IOperatorModulo : IMathOperator {
     public static T Perform<T>(T a, T b) where T : INumber<T> {
+        if (T.IsZero(b))
+            return T.Zero;
+        
         return a % b;
     }
         
@@ -162,9 +165,9 @@ internal struct IOperatorModulo : IMathOperator {
     }
 
     public static OpCode? PerformOpCode => OpCodes.Rem;
-        
+
     public static bool CanUseOpCodeFor(ConditionHelper.Condition a, ConditionHelper.Condition b) {
-        return true;
+        return b is IConstCondition<float> { Value: not 0 };
     }
 }
 
