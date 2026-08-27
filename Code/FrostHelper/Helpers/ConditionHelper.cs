@@ -32,7 +32,7 @@ public static class ConditionHelper {
         return EmptyCondition;
     }
     
-    internal static bool TryCreate(string str, ExpressionContext ctx, [NotNullWhen(true)] out Condition? condition) {
+    internal static bool TryCreate(string str, IExpressionContext ctx, [NotNullWhen(true)] out Condition? condition) {
         if (string.IsNullOrWhiteSpace(str)) {
             condition = EmptyCondition;
             return true;
@@ -60,7 +60,7 @@ public static class ConditionHelper {
         return true;
     }
     
-    private static bool TryCreate(AbstractExpression expr, IExpressionContext ctx, [NotNullWhen(true)] out Condition? condition) {
+    internal static bool TryCreate(AbstractExpression expr, IExpressionContext ctx, [NotNullWhen(true)] out Condition? condition) {
         
         switch (expr)
         {
@@ -78,8 +78,8 @@ public static class ConditionHelper {
                     }
                     
                     // Try simple commands
-                    if (SimpleCommands.Registry.TryGetValue(remaining, out cond)) {
-                        condition = cond;
+                    if (SimpleCommands.Registry.TryGetValue(remaining, out var simpleCommand)) {
+                        condition = simpleCommand.Condition;
                         break;
                     }
                     
@@ -386,6 +386,8 @@ public static class ConditionHelper {
     }
 
     public abstract class Condition : ISavestatePersisted {
+        internal CommandDescriptor? Descriptor { get; set; }
+        
         internal string? SourceText { get; set; }
         
         internal static readonly object One = 1;

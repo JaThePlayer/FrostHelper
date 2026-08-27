@@ -84,8 +84,8 @@ internal static class FunctionCommands {
                     }
                     
                     // Try simple commands
-                    if (SimpleCommands.Registry.TryGetValue(remaining, out cond)) {
-                        condition = cond;
+                    if (SimpleCommands.Registry.TryGetValue(remaining, out var simpleCommand)) {
+                        condition = simpleCommand.Condition;
                         break;
                     }
                     

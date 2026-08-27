@@ -35,6 +35,16 @@ public static partial class API {
 
         inspectorSession.CurrentExpression = newText;
     }
+    
+    /// <summary>
+    /// Gets the session expression currently stored in the inspector.
+    /// Can be null if errors occured during creation.
+    /// </summary>
+    public static object? GetInspectorSessionExpression(object inspector) {
+        InspectorSession inspectorSession = AssertIs<InspectorSession>(inspector);
+
+        return inspectorSession.Condition;
+    }
 
     /// <summary>
     /// Returns a list of text parts that need to be displayed to render the current session expression with syntax highlighting.
@@ -61,7 +71,7 @@ public static partial class API {
     }
 }
 
-public sealed class InspectorSession {
+internal sealed class InspectorSession {
     private readonly IExpressionContext _ctx;
 
     public string CurrentExpression {
@@ -81,6 +91,18 @@ public sealed class InspectorSession {
                 
                 return;
             }
+
+            using (var sink = API.RegisterNotificationSink((_, text) => {
+                       _errorsMutable.Add(text);
+                       return false;
+            })) {
+                if (!ConditionHelper.TryCreate(value, _ctx, out var condition)) {
+                    Condition = null;
+                    return;
+                }
+                
+                Condition = condition;
+            }
         }
     } = "";
 
@@ -91,6 +113,8 @@ public sealed class InspectorSession {
     private readonly NotificationLogger _notificationLogger;
 
     private List<ExpressionToken> _tokens = [];
+
+    public ConditionHelper.Condition? Condition { get; private set; }
 
     private IReadOnlyList<(string Contents, string ColorId, IReadOnlyList<(string Contents, string ColorId)>? Tooltip)>?
         _renderParts;
@@ -117,7 +141,7 @@ public sealed class InspectorSession {
         _notificationLogger = new NotificationLogger(this);
     }
 
-    internal static IReadOnlyList<ApiRenderPart> CreateRenderParts(ExpressionToken token, bool insideStringLiteral) {
+    internal IReadOnlyList<ApiRenderPart> CreateRenderParts(ExpressionToken token, bool insideStringLiteral) {
         var operand = token.Operand!;
         List<ApiRenderPart> renderParts = token.Kind switch {
             ExpressionToken.Kinds.Add => [ ApiRenderPart.Operator("+") ],
@@ -168,14 +192,14 @@ public sealed class InspectorSession {
             _ => throw new ArgumentOutOfRangeException()
         };
 
-        if (token.Trivia is not null) {
+        if (token.Trivia is not null and not "") {
             renderParts.Insert(0, ApiRenderPart.Trivia(token.Trivia));
         }
 
         return renderParts;
     }
 
-    private static List<ApiRenderPart> HandleInterpolatedStringRenderParts(ExpressionToken token) {
+    private List<ApiRenderPart> HandleInterpolatedStringRenderParts(ExpressionToken token) {
         List<InterpolationHole> operand =
             token.Operand as List<InterpolationHole> ?? throw new UnreachableException();
 
@@ -198,7 +222,7 @@ public sealed class InspectorSession {
         return parts;
     }
 
-    private static List<ApiRenderPart> HandleBracketRenderParts(ExpressionToken token) {
+    private List<ApiRenderPart> HandleBracketRenderParts(ExpressionToken token) {
         BracketOperand innerTokens = token.Operand as BracketOperand ?? throw new UnreachableException();
 
         return [
@@ -209,7 +233,7 @@ public sealed class InspectorSession {
         ];
     }
 
-    private static List<ApiRenderPart> HandleFieldAccessRenderParts(ExpressionToken token) {
+    private List<ApiRenderPart> HandleFieldAccessRenderParts(ExpressionToken token) {
         FieldAccessTokenOperand operand = token.Operand as FieldAccessTokenOperand ?? throw new UnreachableException();
 
         List<ApiRenderPart> parts = [
@@ -235,14 +259,74 @@ public sealed class InspectorSession {
 
         return parts;
     }
+
+    private List<ApiRenderPart>? CreateDescriptionTooltip(CommandDescriptor? descriptor) {
+        if (descriptor is null || descriptor.Description is [])
+            return null;
+
+        List<ApiRenderPart> parts = [];
+        if (descriptor.DeclaringType is { } type) {
+            parts.Add(ApiRenderPart.Type(type));
+            parts.Add(ApiRenderPart.Operator("."));
+        }
+        parts.Add(ApiRenderPart.Command(descriptor.Name));
+        if (descriptor.ReturnType != TypeDescriptor.Any) {
+            parts.Add(ApiRenderPart.Default(" -> "));
+            parts.Add(ApiRenderPart.Type(descriptor.ReturnType));
+        }
+        parts.Add(ApiRenderPart.Trivia("\n"));
+        parts.AddRange(descriptor.Description);
+
+        return parts;
+    }
+
+    private List<ApiRenderPart> HandleAccessorParts(string fullOperationText, ConditionHelper.Condition condition) {
+        List<ApiRenderPart> parts = [];
+        switch (condition)
+        {
+            case KnownFieldAccessor fieldAccessor:
+            {
+                var postfix = fieldAccessor.SourceText ?? throw new UnreachableException();
+            
+                parts.AddRange(HandleAccessorParts(fullOperationText[..^postfix.Length], fieldAccessor.Target));
+                if (postfix.StartsWith('.')) {
+                    parts.Add(ApiRenderPart.Operator("."));
+                    postfix = postfix[1..];
+                }
+                
+                parts.Add(ApiRenderPart.Field(postfix, CreateDescriptionTooltip(fieldAccessor.Descriptor)));
+                break;
+            }
+            default:
+            {
+                parts.Add(ApiRenderPart.Command($"${fullOperationText}", CreateDescriptionTooltip(condition.Descriptor)));
+                break;
+            }
+        }
+        
+        return parts;
+    }
     
-    private static List<ApiRenderPart> HandleCommandRenderParts(ExpressionToken token) {
+    private List<ApiRenderPart> HandleCommandRenderParts(ExpressionToken token) {
         CommandTokenOperand operand = token.Operand as CommandTokenOperand ?? throw new UnreachableException();
 
-        List<ApiRenderPart> parts = [
-            ApiRenderPart.Command("$"),
-            ApiRenderPart.Field(operand.Name)
-        ];
+        CommandDescriptor? descriptor = null;
+
+        List<ApiRenderPart> parts = [];
+
+        using (_ = API.RegisterNotificationSink((_, _) => false)) {
+            if (AbstractExpression.Parse([token], out AbstractExpression? expression)
+                && ConditionHelper.TryCreate(expression, _ctx, out var condition)) {
+                parts = HandleAccessorParts(operand.Name, condition);
+                descriptor = condition.Descriptor;
+            }
+        }
+
+        if (parts.Count == 0) {
+            parts = [
+                ApiRenderPart.Command($"${operand.Name}", CreateDescriptionTooltip(descriptor)),
+            ];  
+        }
 
         if (operand.Arguments is not null) {
             parts.Add(ApiRenderPart.Operator("("));
@@ -269,7 +353,7 @@ public sealed class InspectorSession {
     }
 }
 
-public record struct ApiRenderPart(string Contents, string ColorId, IReadOnlyList<ApiRenderPart>? Tooltip) {
+internal record struct ApiRenderPart(string Contents, string ColorId, IReadOnlyList<ApiRenderPart>? Tooltip) {
     public static ApiRenderPart Default(string contents) => new ApiRenderPart(contents, "default", null);
     
     public static ApiRenderPart Trivia(string contents) => new ApiRenderPart(contents, "whitespace", null);
@@ -289,6 +373,10 @@ public record struct ApiRenderPart(string Contents, string ColorId, IReadOnlyLis
     public static ApiRenderPart Slider(string sliderName, IReadOnlyList<ApiRenderPart>? tooltip = null)
         => new ApiRenderPart(sliderName, "slider", tooltip);
     
-    public static ApiRenderPart Field(string flagName) => new ApiRenderPart(flagName, "command", null);
-    public static ApiRenderPart Command(string flagName) => new ApiRenderPart(flagName, "command", null);
+    public static ApiRenderPart Field(string flagName, IReadOnlyList<ApiRenderPart>? tooltip = null)
+        => new ApiRenderPart(flagName, "field", tooltip);
+    public static ApiRenderPart Command(string flagName, IReadOnlyList<ApiRenderPart>? tooltip = null)
+        => new ApiRenderPart(flagName, "command", tooltip);
+
+    public static ApiRenderPart Type(TypeDescriptor type) => new ApiRenderPart(type.CanonName, "type", null);
 }

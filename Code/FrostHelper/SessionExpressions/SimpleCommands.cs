@@ -1,39 +1,130 @@
 ﻿using Celeste.Mod.Core;
+using FrostHelper.API;
 using FrostHelper.Helpers;
 using static FrostHelper.Helpers.ConditionHelper;
 using OpCodes = System.Reflection.Emit.OpCodes;
 
 namespace FrostHelper.SessionExpressions;
 
+internal sealed record SimpleCommand(CommandDescriptor Descriptor, Condition Condition);
+
 internal static class SimpleCommands {
+    static SimpleCommands() {
+        Registry = [];
+        
+        Register<int>("deathsHere",
+            "Returns how many times the player has died in this room, resets after a screen transition.",
+            new SessionFieldAccessor(nameof(Session.DeathsInCurrentLevel)));
+        
+        Register<int>("deaths",
+            "Returns how many times the player has died this session.",
+            new SessionFieldAccessor(nameof(Session.Deaths)));
+        
+        Register<bool>("hasGolden",
+            "Returns whether the player is carrying a golden berry. 1 if they are, 0 otherwise.",
+            new SessionFieldAccessor(nameof(Session.GrabbedGolden)));
+        
+        Register<bool>("restartedFromGolden",
+            "Returns 1 if the current session started due to a golden death.",
+            new SessionFieldAccessor(nameof(Session.RestartedFromGolden)));
+        
+        Register<int>("coreMode",
+            "Returns the current core mode: 0 if not set, 1 if hot, 2 if cold.",
+            new CoreModeAccessor());
+        
+        Register<bool>("photosensitive",
+            "Returns whether Photosensitive Mode is enabled. 1 if it is, 0 otherwise.",
+            new SettingsFieldAccessor(nameof(Settings.DisableFlashes)));
+        
+        Register<bool>("allowLightning",
+            "Checks the corresponding Everest-extended Photosensitive Mode setting.",
+            new CoreModuleSettingsPropertyAccessor(nameof(CoreModuleSettings.AllowLightning)));
+        
+        Register<bool>("allowScreenFlash",
+            "Checks the corresponding Everest-extended Photosensitive Mode settings.",
+            new CoreModuleSettingsPropertyAccessor(nameof(CoreModuleSettings.AllowScreenFlash)));
+        
+        Register<bool>("allowGlitch",
+            "Checks the corresponding Everest-extended Photosensitive Mode settings.",
+            new CoreModuleSettingsPropertyAccessor(nameof(CoreModuleSettings.AllowGlitch)));
+        
+        Register<bool>("allowDistort",
+            "Checks the corresponding Everest-extended Photosensitive Mode settings.",
+            new CoreModuleSettingsPropertyAccessor(nameof(CoreModuleSettings.AllowDistort)));
+        
+        Register<bool>("allowTextHighlight",
+            "Checks the corresponding Everest-extended Photosensitive Mode settings.",
+            new CoreModuleSettingsPropertyAccessor(nameof(CoreModuleSettings.AllowTextHighlight)));
+        
+        Register<int>("dashes",
+            "Current player dash count.",
+            new DashAccessor());
+        
+        Register<int>("maxDashes",
+            "Maximum allowed player dash count.",
+            new MaxDashAccessor());
+        
+        Register<float>("stamina",
+            "Current player stamina.",
+            new StaminaAccessor());
+        
+        Register<Player>("player",
+            "Current player Entity instance.",
+            new PlayerAccessor());
+        
+        Register<Vector2>("speed",
+            "Player's speed.",
+            new PlayerSpeedAccessor());
+        
+        Register<float>("pi",
+            "The value of Pi.",
+            new ConstFloat(float.Pi));
+        
+        Register<float>("e",
+            "The value of Euler's Number.",
+            new ConstFloat(float.E));
+        
+        Register<float>("dtime",
+            "The delta time between frames, taking into account Assist Mode options.",
+            new DeltaTimeAccessor());
+        
+        Register<float>("time",
+            "Equivalent to Scene.TimeActive in C#.",
+            new TimeAccessor());
+        
+        Register<string>("roomName",
+            "Gets the current room's name.",
+            new SessionFieldAccessor(nameof(Session.Level)));
+        
+        Register<IEnumerable<EntityID>>("strawberries",
+            "Gets the IDs of all strawberries collected this session.",
+            new SessionFieldAccessor(nameof(Session.Strawberries)));
+        
+        Register<IEnumerable<string>>("flags",
+            "Gets the names of all currently enabled flags.",
+            new SessionFieldAccessor(nameof(Session.Flags)));
+    }
+    
+    private static void Register<TRet>(string name, string description, Condition condition)
+        => Register<TRet>(name, [ ApiRenderPart.Default(description) ], condition);
+
+    private static void Register<TRet>(string name, IReadOnlyList<ApiRenderPart> description, Condition condition) {
+        var desc = new CommandDescriptor {
+            Name = name,
+            Description = description,
+            DeclaringType = null,
+            DeclaringMod = null,
+            ReturnType = TypeDescriptor.For(typeof(TRet)),
+            Arguments = [],
+        };
+        condition.Descriptor = desc;
+        Registry[name] = new SimpleCommand(desc, condition);
+    }
+    
     /// <summary>
     /// Simple commands accessible via $cmdname
     /// </summary>
-    internal static readonly Dictionary<string, Condition> Registry = new() {
-        ["deathsHere"] = new SessionFieldAccessor(nameof(Session.DeathsInCurrentLevel)),
-        ["deaths"] = new SessionFieldAccessor(nameof(Session.Deaths)),
-        ["hasGolden"] = new SessionFieldAccessor(nameof(Session.GrabbedGolden)),
-        ["restartedFromGolden"] = new SessionFieldAccessor(nameof(Session.RestartedFromGolden)),
-        ["coreMode"] = new CoreModeAccessor(),
-        ["photosensitive"] = new SettingsFieldAccessor(nameof(Settings.DisableFlashes)),
-        ["allowLightning"] = new CoreModuleSettingsPropertyAccessor(nameof(CoreModuleSettings.AllowLightning)),
-        ["allowScreenFlash"] = new CoreModuleSettingsPropertyAccessor(nameof(CoreModuleSettings.AllowScreenFlash)),
-        ["allowGlitch"] = new CoreModuleSettingsPropertyAccessor(nameof(CoreModuleSettings.AllowGlitch)),
-        ["allowDistort"] = new CoreModuleSettingsPropertyAccessor(nameof(CoreModuleSettings.AllowDistort)),
-        ["allowTextHighlight"] = new CoreModuleSettingsPropertyAccessor(nameof(CoreModuleSettings.AllowTextHighlight)),
-        ["dashes"] = new DashAccessor(),
-        ["maxDashes"] = new MaxDashAccessor(),
-        ["stamina"] = new StaminaAccessor(),
-        ["player"] = new PlayerAccessor(),
-        ["speed"] = new PlayerSpeedAccessor(),
-        ["pi"] = new ConstFloat(float.Pi),
-        ["e"] = new ConstFloat(float.E),
-        ["dtime"] = new DeltaTimeAccessor(),
-        ["time"] = new TimeAccessor(),
-        ["roomName"] = new SessionFieldAccessor(nameof(Session.Level)),
-        ["strawberries"] = new SessionFieldAccessor(nameof(Session.Strawberries)),
-        ["flags"] = new SessionFieldAccessor(nameof(Session.Flags)),
-    };
+    internal static readonly Dictionary<string, SimpleCommand> Registry;
 
     // Exposed via API
     internal static void RegisterSimpleCommand(string modName, string cmdName, Func<Session, object?, object> func) {
@@ -42,7 +133,15 @@ internal static class SimpleCommands {
             Logger.Warn("FrostHelper.ConditionHelper", $"Replacing simple command '${key}'");
         }
 
-        Registry[key] = new ModApiSimpleCommand(func);
+        Registry[key] = new SimpleCommand(
+            new CommandDescriptor {
+                Name = key,
+                DeclaringMod = modName,
+                DeclaringType = null,
+                Description = [],
+                Arguments = [],
+                ReturnType = TypeDescriptor.Any,
+            }, new ModApiSimpleCommand(func));
     }
 
     internal static Condition CreateCommandFromModFunc(Func<Session, object?, object> func) {
