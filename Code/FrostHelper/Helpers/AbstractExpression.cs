@@ -138,17 +138,17 @@ internal partial class AbstractExpression {
 
         if (tokens is [var only])
         {
-            if (only is { Kind: ExpressionToken.Kinds.Bracket, Operand: List<ExpressionToken> bracketTokens })
+            if (only is { Kind: ExpressionToken.Kinds.Bracket, Operand: BracketOperand bracketTokens })
             {
-                return Parse(CollectionsMarshal.AsSpan(bracketTokens), out expression);
+                return Parse(CollectionsMarshal.AsSpan(bracketTokens.Tokens), out expression);
             }
             
-            if (only is { Kind: ExpressionToken.Kinds.InterpolatedString, Operand: List<List<ExpressionToken>> holes })
+            if (only is { Kind: ExpressionToken.Kinds.InterpolatedString, Operand: List<InterpolationHole> holes })
             {
                 var args = new List<AbstractExpression>(holes.Count);
                 foreach (var innerTokens in holes)
                 {
-                    if (!Parse(CollectionsMarshal.AsSpan(innerTokens), out var innerExpr))
+                    if (!Parse(CollectionsMarshal.AsSpan(innerTokens.Tokens), out var innerExpr))
                         return false;
                     args.Add(innerExpr);
                 }
@@ -168,7 +168,7 @@ internal partial class AbstractExpression {
                 var args = new List<AbstractExpression>(commandOperand.Arguments.Count);
                 foreach (var innerTokens in commandOperand.Arguments)
                 {
-                    if (!Parse(CollectionsMarshal.AsSpan(innerTokens), out var innerExpr))
+                    if (!Parse(CollectionsMarshal.AsSpan(innerTokens.Tokens), out var innerExpr))
                         return false;
                     args.Add(innerExpr);
                 }
@@ -183,13 +183,13 @@ internal partial class AbstractExpression {
                 }
 
                 List<AbstractExpression>? arguments = null;
-                if (fieldAccessOperand.Arguments is [[]]) {
+                if (fieldAccessOperand.Arguments is [{Tokens: []}]) {
                     arguments = [];
                 }
                 else if (fieldAccessOperand.Arguments is { }) {
                     arguments = [];
                     foreach (var argumentTokens in fieldAccessOperand.Arguments) {
-                        if (!Parse(CollectionsMarshal.AsSpan(argumentTokens), out var argument)) {
+                        if (!Parse(CollectionsMarshal.AsSpan(argumentTokens.Tokens), out var argument)) {
                             return false;
                         }
                         
@@ -216,7 +216,7 @@ internal partial class AbstractExpression {
         {
             // simplify expressions like `#"strLit"` into just `#stringLit`
             if (stringUnaryArg is { Kind: ExpressionToken.Kinds.LitString, Operand: string op })
-                return Parse([new ExpressionToken(stringUnary.Kind) { Operand = op }], out expression);
+                return Parse([new ExpressionToken(stringUnary.Kind, stringUnary.Trivia) { Operand = op }], out expression);
 
             if (stringUnaryArg is { Kind: ExpressionToken.Kinds.InterpolatedString })
             {
@@ -245,13 +245,13 @@ internal partial class AbstractExpression {
             IList<string> argumentNames;
             if (lambdaArgs.Arguments is null or []) {
                 argumentNames = [ lambdaArgs.Name ];
-            } else if (lambdaArgs.Arguments is [ [] ]) {
+            } else if (lambdaArgs.Arguments is [ { Tokens: [] } ]) {
                 // $() => ...
                 argumentNames = [ ];
             } else {
                 argumentNames = [ ];
                 foreach (var argumentTokens in lambdaArgs.Arguments) {
-                    if (argumentTokens is not [ var onlyToken ]) {
+                    if (argumentTokens.Tokens is not [ var onlyToken ]) {
                         NotificationHelper.Notify("Lambda argument names must be a single token.");
                         return false;
                     }
@@ -444,8 +444,8 @@ internal partial class AbstractExpression {
             ExpressionToken.Kinds.Slider =>
                 new GetSessionVariableExpression(new LiteralExpression<string>(only.Operand?.ToString() ?? ""), GetSessionVariableExpression.Types.Slider),
             ExpressionToken.Kinds.LitString => new LiteralExpression<string>(only.Operand?.ToString() ?? ""),
-            ExpressionToken.Kinds.LitInt => new LiteralExpression<int>((int)only.Operand!),
-            ExpressionToken.Kinds.LitFloat => new LiteralExpression<float>((float)only.Operand!),
+            ExpressionToken.Kinds.LitInt => new LiteralExpression<int>(((LiteralOperand<int>)only.Operand!).Value),
+            ExpressionToken.Kinds.LitFloat => new LiteralExpression<float>(((LiteralOperand<float>)only.Operand!).Value),
             ExpressionToken.Kinds.InterpolatedString => null,
             ExpressionToken.Kinds.And => null,
             ExpressionToken.Kinds.Or => null,

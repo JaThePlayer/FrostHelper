@@ -27,15 +27,15 @@ public class Literals {
     
     [Fact]
     public void InterpolatedStrings_FailConditions() {
-        using (_ = new NotificationExpecter(1)) {
+        using (_ = new NotificationExpecter(3)) {
             Assert.False(AbstractExpression.TryParseCached("\"hi $(3\"", out var expr));
         }
         
-        using (_ = new NotificationExpecter(1)) {
+        using (_ = new NotificationExpecter(2)) {
             Assert.False(AbstractExpression.TryParseCached("\"hi $\"", out var expr));
         }
         
-        using (_ = new NotificationExpecter(1)) {
+        using (_ = new NotificationExpecter(2)) {
             Assert.False(AbstractExpression.TryParseCached("\"hi $$(3)\"", out var expr));
         }
     }

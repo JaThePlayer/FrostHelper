@@ -277,6 +277,17 @@ internal ref struct SpanParser(ReadOnlySpan<char> input)
         _remaining = _remaining.TrimStart();
     }
     
+    public void TrimStart(out string trimmed) {
+        var ret = _remaining.TrimStart();
+        if (_remaining.Length == ret.Length) {
+            trimmed = string.Empty;
+            return;
+        }
+        
+        trimmed = _remaining[..^ret.Length].ToString();
+        _remaining = ret;
+    }
+    
     public bool TryTrimPrefix(ReadOnlySpan<char> prefix)
     {
         if (!StartsWith(prefix))

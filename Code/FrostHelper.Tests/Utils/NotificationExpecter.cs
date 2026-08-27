@@ -27,6 +27,8 @@ public sealed class NotificationExpecter : IDisposable {
         public void Push(NotificationHelper.Notification notification) {
             expecter._remaining--;
             expecter._onNotification?.Invoke(notification);
+
+            Console.WriteLine(notification.Message);
         }
     }
 }

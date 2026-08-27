@@ -142,4 +142,13 @@ public static partial class API {
 
         return expr;
     }
+    
+    // NON-API!
+    private static T AssertIs<T>(object ctx) {
+        if (ctx is not T expr) {
+            throw new ArgumentException($"Object '{ctx}' is not of type {typeof(T)}!");
+        }
+
+        return expr;
+    }
 }
