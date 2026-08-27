@@ -207,6 +207,8 @@ internal static class InstanceFunctionCommands {
         internal override bool UsesCurrentConditionLocalInEmit =>
             _field.UsesCurrentConditionLocalInEmit || _arg.UsesCurrentConditionLocalInEmit;
 
+        protected internal override Type ReturnType => typeof(TResult);
+
         public ConditionHelper.Condition FieldCondition => _field;
     }
 
@@ -276,6 +278,8 @@ internal static class InstanceFunctionCommands {
         internal override bool UsesCurrentConditionLocalInEmit =>
             _field.UsesCurrentConditionLocalInEmit || _arg.UsesCurrentConditionLocalInEmit;
 
+        protected internal override Type ReturnType => typeof(TResult);
+        
         public ConditionHelper.Condition FieldCondition => _field;
     }
 

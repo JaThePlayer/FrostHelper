@@ -79,6 +79,12 @@ internal static class IlGeneratorExt {
                 }
             }
 
+            if (fromType == typeof(byte)) {
+                if (toType == typeof(int)) {
+                    return;
+                }
+            }
+            
             if (fromType == typeof(int)) {
                 if (toType == typeof(float)) {
                     il.Emit(OpCodes.Conv_R4);
@@ -191,4 +197,6 @@ internal static class IlGeneratorExt {
             il.Emit(OpCodes.Ldloc, local);
         }
     }
+
+    static int test(Color x) => x.R + 3;
 }

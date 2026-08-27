@@ -359,7 +359,7 @@ internal sealed class PropertyInfoStructAccessor<T, TField, TRetAs> : FieldAcces
         Descriptor = new CommandDescriptor {
             Name = sessionExpressionName,
             DeclaringType = TypeDescriptor.For(typeof(T)),
-            ReturnType = TypeDescriptor.For(typeof(TField)),
+            ReturnType = TypeDescriptor.For(typeof(TRetAs)),
             Description = description,
         };
     }
@@ -372,7 +372,10 @@ internal sealed class PropertyInfoStructAccessor<T, TField, TRetAs> : FieldAcces
     public override Type ReturnType => typeof(TRetAs);
     
     public override void Emit(ConditionCompilationCtx ctx, Type? knownInputType, Type targetType) {
-        ctx.Il.Emit(OpCodes.Callvirt, _propertyInfo.GetMethod!);
+        var loc = ctx.Il.DeclareLocal(typeof(T));
+        ctx.Il.Emit(OpCodes.Stloc, loc);
+        ctx.Il.Emit(OpCodes.Ldloca, loc);
+        ctx.Il.Emit(OpCodes.Call, _propertyInfo.GetMethod!);
         ctx.Il.EmitConvertToInSessionExpression(_propertyInfo.PropertyType, targetType);
     }
 }
