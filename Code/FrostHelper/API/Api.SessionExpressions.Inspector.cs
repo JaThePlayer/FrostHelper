@@ -284,7 +284,13 @@ internal sealed class InspectorSession {
 
         if (descriptor.Arguments is not []) {
             parts.Add(ApiRenderPart.Operator("("));
+            bool first = true;
             foreach (var arg in descriptor.Arguments) {
+                if (!first) {
+                    parts.Add(ApiRenderPart.Operator(", "));
+                }
+                first = false;
+                
                 parts.Add(ApiRenderPart.Type(arg.Type));
                 parts.Add(ApiRenderPart.Trivia(" "));
                 parts.Add(ApiRenderPart.Default(arg.Name));
