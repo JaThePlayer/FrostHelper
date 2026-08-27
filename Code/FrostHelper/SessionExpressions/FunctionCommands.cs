@@ -613,6 +613,8 @@ internal static class FunctionCommands {
         internal override bool UsesCurrentConditionLocalInEmit => _x.UsesCurrentConditionLocalInEmit 
                                                                || _y.UsesCurrentConditionLocalInEmit
                                                                || _z.UsesCurrentConditionLocalInEmit;
+
+        protected internal override Type ReturnType => typeof(TRet);
     }
 
     private static class PureMathCondition {

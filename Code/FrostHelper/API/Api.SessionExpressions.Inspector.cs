@@ -236,11 +236,21 @@ internal sealed class InspectorSession {
     private List<ApiRenderPart> HandleFieldAccessRenderParts(ExpressionToken token) {
         FieldAccessTokenOperand operand = token.Operand as FieldAccessTokenOperand ?? throw new UnreachableException();
 
-        List<ApiRenderPart> parts = [
-            ..operand.ObjectTokens?.SelectMany(t => CreateRenderParts(t, insideStringLiteral: false)) ?? [],
-            ApiRenderPart.Operator("."),
-            ApiRenderPart.Field(operand.Name)
-        ];
+        List<ApiRenderPart> parts = [];
+        CommandDescriptor? descriptor = null;
+        using (_ = API.RegisterNotificationSink((_, _) => false)) {
+            if (AbstractExpression.Parse([token], out AbstractExpression? expression)
+                && ConditionHelper.TryCreate(expression, _ctx, out var condition)) {
+                descriptor = condition.Descriptor;
+            }
+        }
+        
+        if (parts.Count == 0)
+            parts = [
+                ..operand.ObjectTokens?.SelectMany(t => CreateRenderParts(t, insideStringLiteral: false)) ?? [],
+                ApiRenderPart.Operator("."),
+                ApiRenderPart.Field(operand.Name, CreateDescriptionTooltip(descriptor))
+            ];
 
         if (operand.Arguments is not null) {
             parts.Add(ApiRenderPart.Operator("("));
