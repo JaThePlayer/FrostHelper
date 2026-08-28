@@ -12,17 +12,17 @@ internal sealed record InstanceFunctionCommand(InstanceFunctionCommands.Instance
 
 internal static class InstanceFunctionCommands {
     static InstanceFunctionCommands() {
-        Register<object, string, string, Str>("str", [ ApiRenderPart.Default("Converts the value to a string.") ]);
-        Register<string, string, int, StringIsMatch>("isMatch", [ ApiRenderPart.Default("Checks whether the string matches the given regex.") ]);
+        Register<object, string, string, Str>("str", [ RenderPart.Default("Converts the value to a string.") ]);
+        Register<string, string, int, StringIsMatch>("isMatch", [ RenderPart.Default("Checks whether the string matches the given regex.") ]);
         
         RegisterSession<IEnumerable, LambdaCondition, float, EnumerableSum>("sum", [
-            ApiRenderPart.Default("Calculates the sum of the results of applying the callback to every element in the collection.")
+            RenderPart.Default("Calculates the sum of the results of applying the callback to every element in the collection.")
         ]);
         RegisterSession<IEnumerable, LambdaCondition, int, EnumerableAll>("all", [
-            ApiRenderPart.Default("Checks whether all elements in the collection match the given predicate.")
+            RenderPart.Default("Checks whether all elements in the collection match the given predicate.")
         ]);
         RegisterSession<IEnumerable, LambdaCondition, int, EnumerableAny>("any", [
-            ApiRenderPart.Default("Checks whether any element in the collection match the given predicate.")
+            RenderPart.Default("Checks whether any element in the collection match the given predicate.")
         ]);
     }
     
@@ -32,16 +32,17 @@ internal static class InstanceFunctionCommands {
     
     internal static readonly Dictionary<(Type, string), InstanceFunctionCommand> Functions = new();
     
-    private static void Register(string name, Type objType, IReadOnlyList<ArgumentDescriptor> arguments, TypeDescriptor returnType, IReadOnlyList<ApiRenderPart> description, InstanceFunctionCommandFactory factory) {
+    private static void Register(string name, Type objType, IReadOnlyList<ArgumentDescriptor> arguments, TypeDescriptor returnType, IReadOnlyList<RenderPart> description, InstanceFunctionCommandFactory factory) {
         Functions[(objType, name)] = new InstanceFunctionCommand(factory, new CommandDescriptor {
             Name = name,
             Description = description,
             Arguments = arguments,
             ReturnType = returnType,
+            DeclaringType = TypeDescriptor.For(objType),
         });
     }
     
-    private static void Register<TField, TArg, TResult, TOp>(string name, IReadOnlyList<ApiRenderPart> description)
+    private static void Register<TField, TArg, TResult, TOp>(string name, IReadOnlyList<RenderPart> description)
         where TOp : struct, IOneArgFunc<TField, TArg, TResult> {
         Register(name, typeof(TField), [
                 new ArgumentDescriptor(TOp.ArgName, TypeDescriptor.For(typeof(TArg)))
@@ -51,7 +52,7 @@ internal static class InstanceFunctionCommands {
             OneArgInstanceFunc<TField, TArg, TResult, TOp>.TryCreate);
     }
     
-    private static void RegisterSession<TField, TArg, TResult, TOp>(string name, IReadOnlyList<ApiRenderPart> description)
+    private static void RegisterSession<TField, TArg, TResult, TOp>(string name, IReadOnlyList<RenderPart> description)
         where TOp : struct, IOneArgSessionFunc<TField, TArg, TResult> {
         Register(name, typeof(TField), [
                 new ArgumentDescriptor(TOp.ArgName, TypeDescriptor.For(typeof(TArg)))
@@ -288,10 +289,13 @@ internal static class InstanceFunctionCommands {
             try {
                 return Regex.IsMatch(field, arg, RegexOptions.Compiled) ? 1 : 0;
             } catch (RegexParseException ex) {
-                NotificationHelper.Notify($"Invalid regex: {arg}: {ex}");
+                if (NotifiedInvalidRegexes.Add(arg))
+                    NotificationHelper.Notify($"Invalid regex: {arg}: {ex.Message}");
                 return 0;
             }
         }
+
+        private static readonly HashSet<string> NotifiedInvalidRegexes = [];
 
         public static string ArgName => "regex";
 

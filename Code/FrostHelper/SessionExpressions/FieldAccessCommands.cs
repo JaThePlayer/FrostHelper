@@ -36,34 +36,34 @@ internal static class FieldAccessCommands {
 
     private static void RegisterField<T, TField, TImpl>(string name, string description)
         where TImpl : IFieldAccessor<T, TField>
-        => RegisterField<T, TField, TImpl>(name, [ ApiRenderPart.Default(description) ]);
+        => RegisterField<T, TField, TImpl>(name, [ RenderPart.Default(description) ]);
     
-    private static void RegisterField<T, TField, TImpl>(string name, IReadOnlyList<ApiRenderPart> description)
+    private static void RegisterField<T, TField, TImpl>(string name, IReadOnlyList<RenderPart> description)
         where TImpl : IFieldAccessor<T, TField> {
         Accessors[(typeof(T), name)] = new FieldAccessor<T, TField, TImpl>(name, description);
     }
     
     private static void RegisterField<T, TField>(string name, string fieldNameCSharp, string description)
-        => RegisterField<T, TField>(name, fieldNameCSharp, [ ApiRenderPart.Default(description) ]);
+        => RegisterField<T, TField>(name, fieldNameCSharp, [ RenderPart.Default(description) ]);
     
-    private static void RegisterField<T, TField>(string name, string fieldNameCSharp, IReadOnlyList<ApiRenderPart> description) {
+    private static void RegisterField<T, TField>(string name, string fieldNameCSharp, IReadOnlyList<RenderPart> description) {
         Accessors[(typeof(T), name)] = new FieldInfoAccessor<T, TField>(name, fieldNameCSharp, description);
     }
     
     private static void RegisterProperty<T, TField>(string name, string propertyNameCSharp, string description)
         where T : class
-        => RegisterProperty<T, TField>(name, propertyNameCSharp, [ ApiRenderPart.Default(description) ]);
+        => RegisterProperty<T, TField>(name, propertyNameCSharp, [ RenderPart.Default(description) ]);
     
-    private static void RegisterProperty<T, TField>(string name, string propertyNameCSharp, IReadOnlyList<ApiRenderPart> description)
+    private static void RegisterProperty<T, TField>(string name, string propertyNameCSharp, IReadOnlyList<RenderPart> description)
         where T : class {
         Accessors[(typeof(T), name)] = new PropertyInfoAccessor<T, TField>(name, propertyNameCSharp, description);
     }
     
     private static void RegisterStructProperty<T, TField, TRetAs>(string name, string propertyNameCSharp, string description)
         where T : struct
-        => RegisterStructProperty<T, TField, TRetAs>(name, propertyNameCSharp, [ ApiRenderPart.Default(description) ]);
+        => RegisterStructProperty<T, TField, TRetAs>(name, propertyNameCSharp, [ RenderPart.Default(description) ]);
     
-    private static void RegisterStructProperty<T, TField, TRetAs>(string name, string propertyNameCSharp, IReadOnlyList<ApiRenderPart> description)
+    private static void RegisterStructProperty<T, TField, TRetAs>(string name, string propertyNameCSharp, IReadOnlyList<RenderPart> description)
         where T : struct {
         Accessors[(typeof(T), name)] = new PropertyInfoStructAccessor<T, TField, TRetAs>(name, propertyNameCSharp, description);
     }
@@ -269,7 +269,7 @@ internal interface IFieldAccessor<in T, out TField> {
 }
 
 internal class FieldAccessor<T, TField, TImpl> : FieldAccessorCommand where TImpl : IFieldAccessor<T, TField> {
-    public FieldAccessor(string name, IReadOnlyList<ApiRenderPart> description) {
+    public FieldAccessor(string name, IReadOnlyList<RenderPart> description) {
         Descriptor = new CommandDescriptor {
             Name = name,
             DeclaringType = TypeDescriptor.For(typeof(T)),
@@ -294,7 +294,7 @@ internal sealed class FieldInfoAccessor<T, TField> : FieldAccessorCommand {
     private readonly FieldInfo _fieldInfo;
     private readonly Func<T, TField> _getter;
 
-    public FieldInfoAccessor(string sessionExpressionName, string fieldName, IReadOnlyList<ApiRenderPart> description) {
+    public FieldInfoAccessor(string sessionExpressionName, string fieldName, IReadOnlyList<RenderPart> description) {
         _fieldInfo = typeof(T).GetField(fieldName)!;
         _getter = typeof(T).GetField(fieldName)!.CreateFastGetter<T, TField>();
         
@@ -322,7 +322,7 @@ internal sealed class PropertyInfoAccessor<T, TField> : FieldAccessorCommand whe
     private readonly PropertyInfo _propertyInfo;
     private readonly Func<T, TField> _getter;
 
-    public PropertyInfoAccessor(string sessionExpressionName, string fieldName, IReadOnlyList<ApiRenderPart> description) {
+    public PropertyInfoAccessor(string sessionExpressionName, string fieldName, IReadOnlyList<RenderPart> description) {
         _propertyInfo = typeof(T).GetProperty(fieldName)!;
         _getter = typeof(T).GetProperty(fieldName)!.GetGetMethod()!.CreateDelegate<Func<T, TField>>();
 
@@ -352,7 +352,7 @@ internal sealed class PropertyInfoStructAccessor<T, TField, TRetAs> : FieldAcces
     private readonly PropertyInfo _propertyInfo;
     private readonly RefFunc _getter;
 
-    public PropertyInfoStructAccessor(string sessionExpressionName, string fieldName, IReadOnlyList<ApiRenderPart> description) {
+    public PropertyInfoStructAccessor(string sessionExpressionName, string fieldName, IReadOnlyList<RenderPart> description) {
         _propertyInfo = typeof(T).GetProperty(fieldName)!;
         _getter = typeof(T).GetProperty(fieldName)!.GetGetMethod()!.CreateDelegate<RefFunc>();
         
@@ -387,9 +387,9 @@ internal sealed class EnumerableCountAccessor : FieldAccessorCommand {
             DeclaringType = TypeDescriptor.For(typeof(IEnumerable)),
             ReturnType = TypeDescriptor.For(typeof(int)),
             Description = [
-                ApiRenderPart.Default("Returns the amount of elements in this "),
-                ApiRenderPart.Type(TypeDescriptor.For(typeof(IEnumerable))),
-                ApiRenderPart.Default(".")
+                RenderPart.Default("Returns the amount of elements in this "),
+                RenderPart.Type(TypeDescriptor.For(typeof(IEnumerable))),
+                RenderPart.Default(".")
             ],
         };
     }

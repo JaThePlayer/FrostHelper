@@ -43,7 +43,7 @@ public sealed class ArgumentDescriptor(string name, TypeDescriptor type) {
 public sealed class CommandDescriptor {
     public required string Name { get; init; }
     
-    public IReadOnlyList<ApiRenderPart> Description { get; init; }
+    public IReadOnlyList<RenderPart> Description { get; init; }
     
     public string? DeclaringMod { get; init; }
     

@@ -1,3 +1,4 @@
+global using ApiRenderPart = (string Contents, string ColorId, System.Collections.Generic.IReadOnlyList<(string Contents, string ColorId)>? Tooltip);
 using FrostHelper.Helpers;
 using FrostHelper.SessionExpressions;
 using System.Diagnostics;
@@ -52,9 +53,7 @@ public static partial class API {
     ///
     /// Color IDs represent the kind of text to render, their actual color is dependent on the user.
     /// </summary>
-    public static
-        IReadOnlyList<(string Contents, string ColorId, IReadOnlyList<(string Contents, string ColorId)>? Tooltip)>
-        GetInspectorRenderParts(object inspector) {
+    public static IReadOnlyList<ApiRenderPart> GetInspectorRenderParts(object inspector) {
         InspectorSession inspectorSession = AssertIs<InspectorSession>(inspector);
 
         return inspectorSession.GetRenderParts();
@@ -116,21 +115,18 @@ internal sealed class InspectorSession {
 
     public ConditionHelper.Condition? Condition { get; private set; }
 
-    private IReadOnlyList<(string Contents, string ColorId, IReadOnlyList<(string Contents, string ColorId)>? Tooltip)>?
-        _renderParts;
+    private IReadOnlyList<ApiRenderPart>? _renderParts;
 
-    public IReadOnlyList<(string Contents, string ColorId, IReadOnlyList<(string Contents, string ColorId)>? Tooltip)>
-        GetRenderParts() {
+    public IReadOnlyList<ApiRenderPart> GetRenderParts() {
         if (_renderParts is not null)
             return _renderParts;
         
-        List<(string Contents, string ColorId, IReadOnlyList<(string Contents, string ColorId)>? Tooltip)> ret = [];
+        List<ApiRenderPart> ret = [];
 
         foreach (var tok in _tokens) {
             var parts = CreateRenderParts(tok, false);
             
-            ret.AddRange(parts.Select(p => (p.Contents, p.ColorId, 
-                p.Tooltip?.Select(tp => (tp.Contents, tp.ColorId)).ToList() as IReadOnlyList<(string Contents, string ColorId)>)));
+            ret.AddRange(parts.Select(p => p.ToApi()));
         }
 
         return _renderParts = ret;
@@ -141,102 +137,102 @@ internal sealed class InspectorSession {
         _notificationLogger = new NotificationLogger(this);
     }
 
-    internal IReadOnlyList<ApiRenderPart> CreateRenderParts(ExpressionToken token, bool insideStringLiteral) {
+    internal IReadOnlyList<RenderPart> CreateRenderParts(ExpressionToken token, bool insideStringLiteral) {
         var operand = token.Operand!;
-        List<ApiRenderPart> renderParts = token.Kind switch {
-            ExpressionToken.Kinds.Add => [ ApiRenderPart.Operator("+") ],
-            ExpressionToken.Kinds.Sub => [ ApiRenderPart.Operator("-") ],
-            ExpressionToken.Kinds.Mul => [ ApiRenderPart.Operator("*") ],
-            ExpressionToken.Kinds.Div => [ ApiRenderPart.Operator("/") ],
-            ExpressionToken.Kinds.DivFloat => [ ApiRenderPart.Operator("//") ],
-            ExpressionToken.Kinds.Modulo => [ ApiRenderPart.Operator("%") ],
+        List<RenderPart> renderParts = token.Kind switch {
+            ExpressionToken.Kinds.Add => [ RenderPart.Operator("+") ],
+            ExpressionToken.Kinds.Sub => [ RenderPart.Operator("-") ],
+            ExpressionToken.Kinds.Mul => [ RenderPart.Operator("*") ],
+            ExpressionToken.Kinds.Div => [ RenderPart.Operator("/") ],
+            ExpressionToken.Kinds.DivFloat => [ RenderPart.Operator("//") ],
+            ExpressionToken.Kinds.Modulo => [ RenderPart.Operator("%") ],
             ExpressionToken.Kinds.Flag => [ token.IsUnaryOnStrings 
-                ? ApiRenderPart.Flag("f") 
-                : ApiRenderPart.Flag(operand.ToString()!, [
-                    ApiRenderPart.Default($"Checks the flag '{operand}', returns 1 if its set, 0 otherwise.")
+                ? RenderPart.Flag("f") 
+                : RenderPart.Flag(operand.ToString()!, [
+                    RenderPart.Default($"Checks the flag '{operand}', returns 1 if its set, 0 otherwise.")
                 ])
             ],
             ExpressionToken.Kinds.Counter => [ token.IsUnaryOnStrings 
-                ? ApiRenderPart.Counter("#") 
-                : ApiRenderPart.Counter($"#{operand}", [
-                    ApiRenderPart.Default($"Gets the value of the counter '{operand}'.")
+                ? RenderPart.Counter("#") 
+                : RenderPart.Counter($"#{operand}", [
+                    RenderPart.Default($"Gets the value of the counter '{operand}'.")
                 ])
             ],
             ExpressionToken.Kinds.Slider => [ token.IsUnaryOnStrings
-                ? ApiRenderPart.Slider("@")
-                : ApiRenderPart.Slider($"@{operand}", [
-                    ApiRenderPart.Default($"Gets the value of the slider '{operand}'.")
+                ? RenderPart.Slider("@")
+                : RenderPart.Slider($"@{operand}", [
+                    RenderPart.Default($"Gets the value of the slider '{operand}'.")
                 ])
             ],
             ExpressionToken.Kinds.Command => HandleCommandRenderParts(token),
-            ExpressionToken.Kinds.Invert => [ ApiRenderPart.Operator("!") ],
-            ExpressionToken.Kinds.LitString => [ insideStringLiteral ? ApiRenderPart.StringContent($"{operand}") : ApiRenderPart.StringContent($"\"{operand}\"") ],
+            ExpressionToken.Kinds.Invert => [ RenderPart.Operator("!") ],
+            ExpressionToken.Kinds.LitString => [ insideStringLiteral ? RenderPart.StringContent($"{operand}") : RenderPart.StringContent($"\"{operand}\"") ],
             ExpressionToken.Kinds.InterpolatedString => HandleInterpolatedStringRenderParts(token),
-            ExpressionToken.Kinds.LitInt => [ ApiRenderPart.Literal(((LiteralOperand<int>)operand).SourceText) ],
-            ExpressionToken.Kinds.LitFloat => [ ApiRenderPart.Literal(((LiteralOperand<float>)operand).SourceText) ],
-            ExpressionToken.Kinds.Eq => [ ApiRenderPart.Operator("==") ],
-            ExpressionToken.Kinds.Ne => [ ApiRenderPart.Operator("!=") ],
-            ExpressionToken.Kinds.Lt => [ ApiRenderPart.Operator("<") ],
-            ExpressionToken.Kinds.Le => [ ApiRenderPart.Operator("<=") ],
-            ExpressionToken.Kinds.Gt => [ ApiRenderPart.Operator(">") ],
-            ExpressionToken.Kinds.Ge => [ ApiRenderPart.Operator(">=") ],
-            ExpressionToken.Kinds.SingleEquals => [ ApiRenderPart.Operator("=") ],
-            ExpressionToken.Kinds.And => [ ApiRenderPart.Operator("&&") ],
-            ExpressionToken.Kinds.Or => [ ApiRenderPart.Operator("||") ],
-            ExpressionToken.Kinds.BitwiseAnd => [ ApiRenderPart.Operator("&") ],
-            ExpressionToken.Kinds.BitwiseOr => [ ApiRenderPart.Operator("|") ],
+            ExpressionToken.Kinds.LitInt => [ RenderPart.Literal(((LiteralOperand<int>)operand).SourceText) ],
+            ExpressionToken.Kinds.LitFloat => [ RenderPart.Literal(((LiteralOperand<float>)operand).SourceText) ],
+            ExpressionToken.Kinds.Eq => [ RenderPart.Operator("==") ],
+            ExpressionToken.Kinds.Ne => [ RenderPart.Operator("!=") ],
+            ExpressionToken.Kinds.Lt => [ RenderPart.Operator("<") ],
+            ExpressionToken.Kinds.Le => [ RenderPart.Operator("<=") ],
+            ExpressionToken.Kinds.Gt => [ RenderPart.Operator(">") ],
+            ExpressionToken.Kinds.Ge => [ RenderPart.Operator(">=") ],
+            ExpressionToken.Kinds.SingleEquals => [ RenderPart.Operator("=") ],
+            ExpressionToken.Kinds.And => [ RenderPart.Operator("&&") ],
+            ExpressionToken.Kinds.Or => [ RenderPart.Operator("||") ],
+            ExpressionToken.Kinds.BitwiseAnd => [ RenderPart.Operator("&") ],
+            ExpressionToken.Kinds.BitwiseOr => [ RenderPart.Operator("|") ],
             ExpressionToken.Kinds.Bracket => HandleBracketRenderParts(token),
             ExpressionToken.Kinds.FieldAccess => HandleFieldAccessRenderParts(token),
-            ExpressionToken.Kinds.LambdaArrow => [ ApiRenderPart.Operator("=>") ],
-            ExpressionToken.Kinds.UnaryMinus => [ ApiRenderPart.Operator("-") ],
+            ExpressionToken.Kinds.LambdaArrow => [ RenderPart.Operator("=>") ],
+            ExpressionToken.Kinds.UnaryMinus => [ RenderPart.Operator("-") ],
             _ => throw new ArgumentOutOfRangeException()
         };
 
         if (token.Trivia is not null and not "") {
-            renderParts.Insert(0, ApiRenderPart.Trivia(token.Trivia));
+            renderParts.Insert(0, RenderPart.Trivia(token.Trivia));
         }
 
         return renderParts;
     }
 
-    private List<ApiRenderPart> HandleInterpolatedStringRenderParts(ExpressionToken token) {
+    private List<RenderPart> HandleInterpolatedStringRenderParts(ExpressionToken token) {
         List<InterpolationHole> operand =
             token.Operand as List<InterpolationHole> ?? throw new UnreachableException();
 
-        List<ApiRenderPart> parts = [
-            ApiRenderPart.StringContent("\"")
+        List<RenderPart> parts = [
+            RenderPart.StringContent("\"")
         ];
 
         foreach (var argumentTokens in operand) {
             if (argumentTokens.IsLiteral) {
                 parts.AddRange(argumentTokens.Tokens.SelectMany(t => CreateRenderParts(t, insideStringLiteral: true)));
             } else {
-                parts.Add(ApiRenderPart.Command("$("));
+                parts.Add(RenderPart.Command("$("));
                 parts.AddRange(argumentTokens.Tokens.SelectMany(t => CreateRenderParts(t, insideStringLiteral: false)));
-                parts.Add(ApiRenderPart.Trivia(argumentTokens.PreEndBracketTrivia));
-                parts.Add(ApiRenderPart.Command(")"));
+                parts.Add(RenderPart.Trivia(argumentTokens.PreEndBracketTrivia));
+                parts.Add(RenderPart.Command(")"));
             }
         }
         
-        parts.Add(ApiRenderPart.StringContent("\""));
+        parts.Add(RenderPart.StringContent("\""));
         return parts;
     }
 
-    private List<ApiRenderPart> HandleBracketRenderParts(ExpressionToken token) {
+    private List<RenderPart> HandleBracketRenderParts(ExpressionToken token) {
         BracketOperand innerTokens = token.Operand as BracketOperand ?? throw new UnreachableException();
 
         return [
-            ApiRenderPart.Operator("("),
+            RenderPart.Operator("("),
             .. innerTokens.Tokens.SelectMany(t => CreateRenderParts(t, insideStringLiteral: false)),
-            ApiRenderPart.Trivia(innerTokens.PreEndBracketTrivia),
-            ApiRenderPart.Operator(")")
+            RenderPart.Trivia(innerTokens.PreEndBracketTrivia),
+            RenderPart.Operator(")")
         ];
     }
 
-    private List<ApiRenderPart> HandleFieldAccessRenderParts(ExpressionToken token) {
+    private List<RenderPart> HandleFieldAccessRenderParts(ExpressionToken token) {
         FieldAccessTokenOperand operand = token.Operand as FieldAccessTokenOperand ?? throw new UnreachableException();
 
-        List<ApiRenderPart> parts = [];
+        List<RenderPart> parts = [];
         CommandDescriptor? descriptor = null;
         using (_ = API.RegisterNotificationSink((_, _) => false)) {
             if (AbstractExpression.Parse([token], out AbstractExpression? expression)
@@ -248,68 +244,68 @@ internal sealed class InspectorSession {
         if (parts.Count == 0)
             parts = [
                 ..operand.ObjectTokens?.SelectMany(t => CreateRenderParts(t, insideStringLiteral: false)) ?? [],
-                ApiRenderPart.Operator("."),
-                ApiRenderPart.Field(operand.Name, CreateDescriptionTooltip(descriptor))
+                RenderPart.Operator("."),
+                RenderPart.Field(operand.Name, CreateDescriptionTooltip(descriptor))
             ];
 
         if (operand.Arguments is not null) {
-            parts.Add(ApiRenderPart.Operator("("));
+            parts.Add(RenderPart.Operator("("));
             var first = true;
             foreach (var argumentTokens in operand.Arguments) {
                 if (!first) {
-                    parts.Add(ApiRenderPart.Operator(","));
+                    parts.Add(RenderPart.Operator(","));
                 }
                 first = false;
                 parts.AddRange(argumentTokens.Tokens.SelectMany(t => CreateRenderParts(t, insideStringLiteral: false)));
                 if (argumentTokens.PreEndBracketTrivia is not "")
-                    parts.Add(ApiRenderPart.Trivia(argumentTokens.PreEndBracketTrivia));
+                    parts.Add(RenderPart.Trivia(argumentTokens.PreEndBracketTrivia));
             }
-            parts.Add(ApiRenderPart.Operator(")"));
+            parts.Add(RenderPart.Operator(")"));
         }
 
         return parts;
     }
 
-    private List<ApiRenderPart>? CreateDescriptionTooltip(CommandDescriptor? descriptor) {
+    private List<RenderPart>? CreateDescriptionTooltip(CommandDescriptor? descriptor) {
         if (descriptor is null || descriptor.Description is [])
             return null;
 
-        List<ApiRenderPart> parts = [];
+        List<RenderPart> parts = [];
         if (descriptor.DeclaringType is { } type) {
-            parts.Add(ApiRenderPart.Type(type));
-            parts.Add(ApiRenderPart.Operator("."));
+            parts.Add(RenderPart.Type(type));
+            parts.Add(RenderPart.Operator("."));
         }
         
-        parts.Add(ApiRenderPart.Command(descriptor.Name));
+        parts.Add(RenderPart.Command(descriptor.Name));
 
         if (descriptor.Arguments is not []) {
-            parts.Add(ApiRenderPart.Operator("("));
+            parts.Add(RenderPart.Operator("("));
             bool first = true;
             foreach (var arg in descriptor.Arguments) {
                 if (!first) {
-                    parts.Add(ApiRenderPart.Operator(", "));
+                    parts.Add(RenderPart.Operator(", "));
                 }
                 first = false;
                 
-                parts.Add(ApiRenderPart.Type(arg.Type));
-                parts.Add(ApiRenderPart.Trivia(" "));
-                parts.Add(ApiRenderPart.Default(arg.Name));
+                parts.Add(RenderPart.Type(arg.Type));
+                parts.Add(RenderPart.Trivia(" "));
+                parts.Add(RenderPart.Default(arg.Name));
             }
-            parts.Add(ApiRenderPart.Operator(")"));
+            parts.Add(RenderPart.Operator(")"));
         }
         
         if (descriptor.ReturnType != TypeDescriptor.Any) {
-            parts.Add(ApiRenderPart.Default(" -> "));
-            parts.Add(ApiRenderPart.Type(descriptor.ReturnType));
+            parts.Add(RenderPart.Default(" -> "));
+            parts.Add(RenderPart.Type(descriptor.ReturnType));
         }
-        parts.Add(ApiRenderPart.Trivia("\n"));
+        parts.Add(RenderPart.Trivia("\n"));
         parts.AddRange(descriptor.Description);
 
         return parts;
     }
 
-    private List<ApiRenderPart> HandleAccessorParts(string fullOperationText, ConditionHelper.Condition condition) {
-        List<ApiRenderPart> parts = [];
+    private List<RenderPart> HandleAccessorParts(string fullOperationText, ConditionHelper.Condition condition) {
+        List<RenderPart> parts = [];
         switch (condition)
         {
             case KnownFieldAccessor fieldAccessor:
@@ -318,24 +314,24 @@ internal sealed class InspectorSession {
             
                 parts.AddRange(HandleAccessorParts(fullOperationText[..^postfix.Length], fieldAccessor.Target));
                 if (postfix.StartsWith('.')) {
-                    parts.Add(ApiRenderPart.Operator("."));
+                    parts.Add(RenderPart.Operator("."));
                     postfix = postfix[1..];
                 }
                 
-                parts.Add(ApiRenderPart.Field(postfix, CreateDescriptionTooltip(fieldAccessor.Descriptor)));
+                parts.Add(RenderPart.Field(postfix, CreateDescriptionTooltip(fieldAccessor.Descriptor)));
                 break;
             }
             case InstanceFunctionCommands.IInstanceFunctionCommand functionCommand: {
                 var postfix = condition.Descriptor?.Name ?? throw new UnreachableException();
             
                 parts.AddRange(HandleAccessorParts(fullOperationText[..^(postfix.Length + 1)], functionCommand.FieldCondition));
-                parts.Add(ApiRenderPart.Operator("."));
-                parts.Add(ApiRenderPart.Field(postfix, CreateDescriptionTooltip(condition.Descriptor)));
+                parts.Add(RenderPart.Operator("."));
+                parts.Add(RenderPart.Field(postfix, CreateDescriptionTooltip(condition.Descriptor)));
                 break;
             }
             default:
             {
-                parts.Add(ApiRenderPart.Command($"${fullOperationText}", CreateDescriptionTooltip(condition.Descriptor)));
+                parts.Add(RenderPart.Command($"${fullOperationText}", CreateDescriptionTooltip(condition.Descriptor)));
                 break;
             }
         }
@@ -343,12 +339,12 @@ internal sealed class InspectorSession {
         return parts;
     }
     
-    private List<ApiRenderPart> HandleCommandRenderParts(ExpressionToken token) {
+    private List<RenderPart> HandleCommandRenderParts(ExpressionToken token) {
         CommandTokenOperand operand = token.Operand as CommandTokenOperand ?? throw new UnreachableException();
 
         CommandDescriptor? descriptor = null;
 
-        List<ApiRenderPart> parts = [];
+        List<RenderPart> parts = [];
 
         using (_ = API.RegisterNotificationSink((_, _) => false)) {
             if (AbstractExpression.Parse([token], out AbstractExpression? expression)
@@ -360,23 +356,23 @@ internal sealed class InspectorSession {
 
         if (parts.Count == 0) {
             parts = [
-                ApiRenderPart.Command($"${operand.Name}", CreateDescriptionTooltip(descriptor)),
+                RenderPart.Command($"${operand.Name}", CreateDescriptionTooltip(descriptor)),
             ];  
         }
 
         if (operand.Arguments is not null) {
-            parts.Add(ApiRenderPart.Operator("("));
+            parts.Add(RenderPart.Operator("("));
             var first = true;
             foreach (var argumentTokens in operand.Arguments) {
                 if (!first) {
-                    parts.Add(ApiRenderPart.Operator(","));
+                    parts.Add(RenderPart.Operator(","));
                 }
                 first = false;
                 parts.AddRange(argumentTokens.Tokens.SelectMany(t => CreateRenderParts(t, insideStringLiteral: false)));
                 if (argumentTokens.PreEndBracketTrivia is not "")
-                    parts.Add(ApiRenderPart.Trivia(argumentTokens.PreEndBracketTrivia));
+                    parts.Add(RenderPart.Trivia(argumentTokens.PreEndBracketTrivia));
             }
-            parts.Add(ApiRenderPart.Operator(")"));
+            parts.Add(RenderPart.Operator(")"));
         }
 
         return parts;

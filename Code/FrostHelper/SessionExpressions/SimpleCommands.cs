@@ -106,9 +106,9 @@ internal static class SimpleCommands {
     }
     
     private static void Register<TRet>(string name, string description, Condition condition)
-        => Register<TRet>(name, [ ApiRenderPart.Default(description) ], condition);
+        => Register<TRet>(name, [ RenderPart.Default(description) ], condition);
 
-    private static void Register<TRet>(string name, IReadOnlyList<ApiRenderPart> description, Condition condition) {
+    private static void Register<TRet>(string name, IReadOnlyList<RenderPart> description, Condition condition) {
         var desc = new CommandDescriptor {
             Name = name,
             Description = description,

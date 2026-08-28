@@ -20,64 +20,64 @@ public record FunctionCommand(FunctionCommandFactory Factory, CommandDescriptor 
 internal static class FunctionCommands {
     static FunctionCommands() {
         Register("min", [ ArgumentDescriptor.VarargFor(TypeDescriptor.For(typeof(float))) ], TypeDescriptor.For(typeof(float)),
-            [ ApiRenderPart.Default("Returns the smallest value from all provided arguments.") ], MinCondition.TryCreate);
+            [ RenderPart.Default("Returns the smallest value from all provided arguments.") ], MinCondition.TryCreate);
         
         Register("max", [ ArgumentDescriptor.VarargFor(TypeDescriptor.For(typeof(float))) ], TypeDescriptor.For(typeof(float)),
-            [ ApiRenderPart.Default("Returns the largest value from all provided arguments.") ], MaxCondition.TryCreate);
+            [ RenderPart.Default("Returns the largest value from all provided arguments.") ], MaxCondition.TryCreate);
 
-        RegisterPure<int, int, int, int, ClampFunc<int>>("clamp", [ ApiRenderPart.Default("Clamps the value of x so that its between min and max.") ]);
-        RegisterPure<float, float, AbsFunc<float>>("abs", [ ApiRenderPart.Default("Returns the absolute value of x.") ]);
+        RegisterPure<int, int, int, int, ClampFunc<int>>("clamp", [ RenderPart.Default("Clamps the value of x so that its between min and max.") ]);
+        RegisterPure<float, float, AbsFunc<float>>("abs", [ RenderPart.Default("Returns the absolute value of x.") ]);
         
-        RegisterPure<float, float, SinFunc>("sin", [ ApiRenderPart.Default("Calculates trigonometrical functions, x is assumed to be in radians. (Tip: $pi)") ]);
-        RegisterPure<float, float, CosFunc>("cos", [ ApiRenderPart.Default("Calculates trigonometrical functions, x is assumed to be in radians. (Tip: $pi)") ]);
-        RegisterPure<float, float, TanFunc>("tan", [ ApiRenderPart.Default("Calculates trigonometrical functions, x is assumed to be in radians. (Tip: $pi)") ]);
+        RegisterPure<float, float, SinFunc>("sin", [ RenderPart.Default("Calculates trigonometrical functions, x is assumed to be in radians. (Tip: $pi)") ]);
+        RegisterPure<float, float, CosFunc>("cos", [ RenderPart.Default("Calculates trigonometrical functions, x is assumed to be in radians. (Tip: $pi)") ]);
+        RegisterPure<float, float, TanFunc>("tan", [ RenderPart.Default("Calculates trigonometrical functions, x is assumed to be in radians. (Tip: $pi)") ]);
         
-        RegisterPure<float, float, TruncateFunc>("truncate", [ ApiRenderPart.Default("Truncates the value.") ]);
-        RegisterPure<float, float, RoundFunc>("round", [ ApiRenderPart.Default("Rounds the value.") ]);
+        RegisterPure<float, float, TruncateFunc>("truncate", [ RenderPart.Default("Truncates the value.") ]);
+        RegisterPure<float, float, RoundFunc>("round", [ RenderPart.Default("Rounds the value.") ]);
         
-        RegisterPure<float, float, float, PowFunc<float>>("pow", [ ApiRenderPart.Default("x raised to the power of y.") ]);
-        RegisterPure<float, float, Pow2Func<float>>("pow2", [ ApiRenderPart.Default("x raised to the power of 2.") ]);
+        RegisterPure<float, float, float, PowFunc<float>>("pow", [ RenderPart.Default("x raised to the power of y.") ]);
+        RegisterPure<float, float, Pow2Func<float>>("pow2", [ RenderPart.Default("x raised to the power of 2.") ]);
         
-        RegisterPure<float, float, SqrtFunc>("sqrt", [ ApiRenderPart.Default("x raised to the power of 2.") ]);
-        RegisterPure<float, float, CbrtFunc>("cbrt", [ ApiRenderPart.Default("Square root of x.") ]);
-        RegisterPure<float, float, ExpFunc>("exp", [ ApiRenderPart.Default("Cube root of x.") ]);
-        RegisterPure<float, float, Exp2Func>("exp2", [ ApiRenderPart.Default("$e raised to the power of x") ]);
+        RegisterPure<float, float, SqrtFunc>("sqrt", [ RenderPart.Default("x raised to the power of 2.") ]);
+        RegisterPure<float, float, CbrtFunc>("cbrt", [ RenderPart.Default("Square root of x.") ]);
+        RegisterPure<float, float, ExpFunc>("exp", [ RenderPart.Default("Cube root of x.") ]);
+        RegisterPure<float, float, Exp2Func>("exp2", [ RenderPart.Default("$e raised to the power of x") ]);
         
-        RegisterPure<float, float, float, LogFunc<float>>("log", [ ApiRenderPart.Default("The base-y logarithm of x.") ]);
-        RegisterPure<float, float, LognFunc>("logn", [ ApiRenderPart.Default("The natural logarithm of x.") ]);
-        RegisterPure<float, float, Log2Func>("log2", [ ApiRenderPart.Default("The base-2 logarithm of x.") ]);
-        RegisterPure<float, float, Log10Func>("log10", [ ApiRenderPart.Default("The base-10 logarithm of x.") ]);
+        RegisterPure<float, float, float, LogFunc<float>>("log", [ RenderPart.Default("The base-y logarithm of x.") ]);
+        RegisterPure<float, float, LognFunc>("logn", [ RenderPart.Default("The natural logarithm of x.") ]);
+        RegisterPure<float, float, Log2Func>("log2", [ RenderPart.Default("The base-2 logarithm of x.") ]);
+        RegisterPure<float, float, Log10Func>("log10", [ RenderPart.Default("The base-10 logarithm of x.") ]);
         
-        RegisterPure<float, float, float, float, LerpFunc>("lerp", [ ApiRenderPart.Default("Performs a linear interpolation between two values based on the given weight. Params: x — The first value, which is intended to be the lower bound. y — The second value, which is intended to be the upper bound. amount — A value between 0 and 1, that indicates the weight of the interpolation.") ]);
+        RegisterPure<float, float, float, float, LerpFunc>("lerp", [ RenderPart.Default("Performs a linear interpolation between two values based on the given weight. Params: x — The first value, which is intended to be the lower bound. y — The second value, which is intended to be the upper bound. amount — A value between 0 and 1, that indicates the weight of the interpolation.") ]);
         
-        RegisterPure<float, float, YoYoFunc>("yoyo", [ ApiRenderPart.Default("x <= 0.5 ? x * 2 : 1.0 - (value - 0.5) * 2.0).") ]);
+        RegisterPure<float, float, YoYoFunc>("yoyo", [ RenderPart.Default("x <= 0.5 ? x * 2 : 1.0 - (value - 0.5) * 2.0).") ]);
         
         RegisterPure<int, int, IEnumerable<int>, RangeFunc>("range", [
-            ApiRenderPart.Default("Creates a "),
-            ApiRenderPart.Type(TypeDescriptor.For(typeof(IEnumerable<int>))),
-            ApiRenderPart.Default(" containing numbers between min (inclusive) and max (exclusive).")
+            RenderPart.Default("Creates a "),
+            RenderPart.Type(TypeDescriptor.For(typeof(IEnumerable<int>))),
+            RenderPart.Default(" containing numbers between min (inclusive) and max (exclusive).")
         ]);
         
         RegisterSession<string, IEnumerable<string>, FlagsFunc>("flags", [
-            ApiRenderPart.Default("Creates a "),
-            ApiRenderPart.Type(TypeDescriptor.For(typeof(IEnumerable<string>))),
-            ApiRenderPart.Default(" containing all currently set flags matching the given regex.")
+            RenderPart.Default("Creates a "),
+            RenderPart.Type(TypeDescriptor.For(typeof(IEnumerable<string>))),
+            RenderPart.Default(" containing all currently set flags matching the given regex.")
         ]);
         
         RegisterPure<int, int, int, Color, RgbFunc>("rgb", [
-            ApiRenderPart.Default("Creates a "),
-            ApiRenderPart.Type(TypeDescriptor.For(typeof(Color))),
-            ApiRenderPart.Default(" using r, g, b values, assumed to be in range 0-255.")
+            RenderPart.Default("Creates a "),
+            RenderPart.Type(TypeDescriptor.For(typeof(Color))),
+            RenderPart.Default(" using r, g, b values, assumed to be in range 0-255.")
         ]);
         
         RegisterPure<float, float, float, Color, HsvFunc>("hsv", [
-            ApiRenderPart.Default("Creates a "),
-            ApiRenderPart.Type(TypeDescriptor.For(typeof(Color))),
-            ApiRenderPart.Default(" using h, s, v values, assumed to be in range 0-1.")
+            RenderPart.Default("Creates a "),
+            RenderPart.Type(TypeDescriptor.For(typeof(Color))),
+            RenderPart.Default(" using h, s, v values, assumed to be in range 0-1.")
         ]);
         
         RegisterPure<string, string, DialogFunc>("dialog", [
-            ApiRenderPart.Default("Gets the dialog text in the current language for the given dialogId."),
+            RenderPart.Default("Gets the dialog text in the current language for the given dialogId."),
         ]);
         
         Register("vec", [
@@ -86,15 +86,15 @@ internal static class FunctionCommands {
             ],
             TypeDescriptor.For(typeof(Vector2)),
             [
-                ApiRenderPart.Default("Creates a "),
-                ApiRenderPart.Type(TypeDescriptor.For(typeof(Vector2))),
-                ApiRenderPart.Default(" with the given x, y values.")
+                RenderPart.Default("Creates a "),
+                RenderPart.Type(TypeDescriptor.For(typeof(Vector2))),
+                RenderPart.Default(" with the given x, y values.")
             ], VecCondition.TryCreate);
     }
     
     private static readonly Dictionary<string, FunctionCommand> Registry = new();
 
-    private static void Register(string name, IReadOnlyList<ArgumentDescriptor> arguments, TypeDescriptor returnType, IReadOnlyList<ApiRenderPart> description, FunctionCommandFactory factory) {
+    private static void Register(string name, IReadOnlyList<ArgumentDescriptor> arguments, TypeDescriptor returnType, IReadOnlyList<RenderPart> description, FunctionCommandFactory factory) {
         Registry[name] = new FunctionCommand(factory, new CommandDescriptor {
             Name = name,
             Description = description,
@@ -103,7 +103,7 @@ internal static class FunctionCommands {
         });
     }
 
-    private static void RegisterPure<TArg1, TRet, TOp>(string name, IReadOnlyList<ApiRenderPart> description)
+    private static void RegisterPure<TArg1, TRet, TOp>(string name, IReadOnlyList<RenderPart> description)
         where TOp : struct, IPureFunc<TArg1, TRet> {
         Register(name, [
                 new ArgumentDescriptor(TOp.ArgName, TypeDescriptor.For(typeof(TArg1)))
@@ -113,7 +113,7 @@ internal static class FunctionCommands {
             PureMathCondition.TryCreate<TArg1, TRet, TOp>);
     }
     
-    private static void RegisterSession<TArg1, TRet, TOp>(string name, IReadOnlyList<ApiRenderPart> description)
+    private static void RegisterSession<TArg1, TRet, TOp>(string name, IReadOnlyList<RenderPart> description)
         where TOp : struct, ISessionFunc<TArg1, TRet> {
         Register(name, [
                 new ArgumentDescriptor(TOp.ArgName, TypeDescriptor.For(typeof(TArg1)))
@@ -123,7 +123,7 @@ internal static class FunctionCommands {
             PureMathCondition.TryCreateSession<TArg1, TRet, TOp>);
     }
     
-    private static void RegisterPure<TArg1, TArg2, TRet, TOp>(string name, IReadOnlyList<ApiRenderPart> description)
+    private static void RegisterPure<TArg1, TArg2, TRet, TOp>(string name, IReadOnlyList<RenderPart> description)
         where TOp : struct, IPureFunc<TArg1, TArg2, TRet> {
         Register(name, [
                 new ArgumentDescriptor(TOp.Arg1Name, TypeDescriptor.For(typeof(TArg1))),
@@ -134,7 +134,7 @@ internal static class FunctionCommands {
             PureMathCondition.TryCreate<TArg1, TArg2, TRet, TOp>);
     }
     
-    private static void RegisterPure<TArg1, TArg2, TArg3, TRet, TOp>(string name, IReadOnlyList<ApiRenderPart> description)
+    private static void RegisterPure<TArg1, TArg2, TArg3, TRet, TOp>(string name, IReadOnlyList<RenderPart> description)
         where TOp : struct, IPureFunc<TArg1, TArg2, TArg3, TRet> {
         Register(name, [ 
                 new ArgumentDescriptor(TOp.Arg1Name, TypeDescriptor.For(typeof(TArg1))),
