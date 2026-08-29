@@ -44,8 +44,8 @@ public static class Extensions {
         return def;
     }
     
-    public static Color[] GetColors(this EntityData data, string key, Color[] def) {
-        return ColorHelper.GetColors(data.Attr(key, "")) ?? def;
+    public static Color[] GetColors(this EntityData data, string key, Color[] def, char separator = ',') {
+        return ColorHelper.GetColors(data.Attr(key, ""), separator) ?? def;
     }
 
     internal static T[] ParseArray<T>(this EntityData data, string key, char separator, T[] def) where T : ISpanParsable<T> {
@@ -54,6 +54,13 @@ public static class Extensions {
 
         var parser = new SpanParser(str);
         return parser.ParseList<T>(separator).ToArray();
+    }
+    
+    internal static T[] ParseArray<T>(this EntityData data, string key, char separator, T[] def, Func<string, T> parse) {
+        if (data.String(key) is not { } str)
+            return def;
+
+        return str.Split(separator).Select(parse).ToArray();
     }
     
     internal static T Parse<T>(this EntityData data, string key, T def) where T : IDetailedParsable<T> {

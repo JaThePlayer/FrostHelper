@@ -46,6 +46,15 @@ addChannelType("FrostHelper/ColorRainbowChannel", {
     { "alpha", "1", jautils.fields.sessionExpression {} }
 })
 
+addChannelType("FrostHelper/GradientRainbowChannel", {
+    { "colors", '89e5ae;88e0e0;87a9dd;9887db;d088e2', jautils.fields.colorList { elementSeparator = ';' } },
+    { "speed", "50", jautils.fields.sessionExpression {} },
+    { "size", "280", jautils.fields.sessionExpression {} },
+    { "center", "$vec(0, 0)", jautils.fields.sessionExpression {} },
+    { "loopColors", false },
+})
+
+
 ---@type EntityHandler<UnknownEntity>
 local channelAttacher = {
     name = "FrostHelper/RainbowChannelAttacher",

@@ -19,11 +19,11 @@ public static class ColorHelper {
     /// <summary>
     /// Returns a list of colors from a comma-separated string of hex colors OR xna color names
     /// </summary>
-    public static Color[] GetColors(string colors) {
+    public static Color[] GetColors(string colors, char separator) {
         if (ColorArrayCache.TryGetValue(colors, out var val))
             return val;
 
-        string[] split = colors.Trim().Split(',');
+        string[] split = colors.Trim().Split(separator);
         Color[] parsed = new Color[split.Length];
         for (int i = 0; i < split.Length; i++) {
             parsed[i] = GetColor(split[i]);
@@ -32,6 +32,9 @@ public static class ColorHelper {
         ColorArrayCache[colors] = parsed;
         return parsed;
     }
+
+    public static Color[] GetColors(string colors)
+        => GetColors(colors, ',');
 
     public static Color GetColor(string color) {
         if (Cache.TryGetValue(color, out Color val))

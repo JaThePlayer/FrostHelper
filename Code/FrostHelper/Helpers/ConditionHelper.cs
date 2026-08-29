@@ -647,7 +647,7 @@ public static class ConditionHelper {
 /// A wrapper over a <see cref="ConditionHelper.Condition"/>, allowing for easily obtaining a specific return type.
 /// </summary>
 /// <typeparam name="T">The type returned from the expression</typeparam>
-internal sealed class SessionExpression<T> {
+internal sealed class SessionExpression<T> : ISavestatePersisted {
     private readonly CompiledCondition<T>? _condition;
 
     public SessionExpression(T constantValue) {
