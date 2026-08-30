@@ -19,7 +19,7 @@ internal sealed class RainbowChannelAttacher : Entity {
 
     private void OtherEntityAdded(Entity entity, Scene scene) {
         if (_filter.Matches(entity)) {
-            RainbowChannels.SetEntityChannel(entity, _channel);
+            RainbowChannels.SetEntityChannelIfNotSet(entity, _channel);
         }
     }
 }

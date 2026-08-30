@@ -549,6 +549,7 @@ entities.FrostHelper/RainbowTilesetController.attributes.description.tilesets=A 
 
 entities.FrostHelper/EntityRainbowifyController.placements.name.normal=Entity Rainbowify Controller
 entities.FrostHelper/EntityRainbowifyController.attributes.description.types=List of entity types to make rainbow. Refer to the wiki at https://github.com/JaThePlayer/FrostHelper/wiki/Entity-Rainbowifier
+entities.FrostHelper/EntityRainbowifyController.attributes.description.channel=The Rainbow Channel to attach the affected entities to.\nLeave blank to attach to the default channel.
 
 entities.FrostHelper/HeldRefill.placements.name.normal=Held Refill
 entities.FrostHelper/HeldRefill.attributes.description.speed=The speed multiplier applied when using this refill.

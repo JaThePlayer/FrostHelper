@@ -10,6 +10,7 @@ local controller = controllerEntity.createHandler("FrostHelper/EntityRainbowifyC
 
 jautils.createPlacementsPreserveOrder(controller, "normal", {
     { "types", "", "typesList" },
+    { "channel", "" },
 })
 
 return controller

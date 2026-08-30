@@ -64,11 +64,14 @@ public class EntityRainbowifyController : Entity {
 
     private readonly EntityFilter? _filter;
 
+    private readonly string _channel;
+
     private List<Backdrop>? _affectedBackdrops;
 
     public EntityRainbowifyController(EntityData data, Vector2 offset) : base(data.Position + offset) {
         LoadIfNeeded();
 
+        _channel = data.Attr("channel");
         string types = data.Attr("types");
         if (types == "all") {
             _all = true;
@@ -83,6 +86,9 @@ public class EntityRainbowifyController : Entity {
     private void OtherEntityAdded(Entity entity, Scene scene) {
         if (_filter!.Matches(entity)) {
             entity.Add(new Rainbowifier());
+            if (!string.IsNullOrWhiteSpace(_channel)) {
+                RainbowChannels.SetEntityChannelIfNotSet(entity, _channel);
+            }
         }
     }
 

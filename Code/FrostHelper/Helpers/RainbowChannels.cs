@@ -76,6 +76,13 @@ internal static class RainbowChannels {
         entity.SourceData.Values[RainbowChannelEntityDataKey] = channelId;
     }
     
+    internal static void SetEntityChannelIfNotSet(Entity entity, string channelId) {
+        entity.SourceData ??= new EntityData();
+        entity.SourceData.Values ??= new Dictionary<string, object>();
+        if (!entity.SourceData.Has(channelId))
+            entity.SourceData.Values[RainbowChannelEntityDataKey] = channelId;
+    }
+    
     private static Entity BeforeEntityUpdate(Entity entity, Scene scene) {
         if (entity.SourceData?.Attr(RainbowChannelEntityDataKey) is { } channel ) {
             if (!string.IsNullOrWhiteSpace(channel) && ControllerHelper<RainbowChannelController>.FindFirst(scene, _ => true) is { } controller) {
