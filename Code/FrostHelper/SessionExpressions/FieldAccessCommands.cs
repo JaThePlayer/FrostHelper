@@ -20,6 +20,8 @@ internal static class FieldAccessCommands {
         RegisterProperty<Entity, float>("y", nameof(Entity.Y), "The position of the entity on the y-axis.");
         RegisterField<Entity, Vector2>("pos", nameof(Entity.Position), "The position of the entity.");
         RegisterField<Entity, string, EntitySidAccessor>("sid", "The SID (String ID, used in map editors) of the entity, e.g. FrostHelper/IceSpinner for Custom Spinners. Can be ? if the SID cannot be obtained for the given entity.");
+
+        RegisterField<Player, IEnumerable<Entity>, PlayerFollowersAccessor>("followers", "Gets all followers of this player, like berries or keys.");
         
         RegisterField<EntityID, string>("roomName", nameof(EntityID.Level), "The name of the room the ID belongs to.");
         RegisterField<EntityID, int>("id", nameof(EntityID.ID), "The numerical ID, unique per-room.");
@@ -148,6 +150,16 @@ internal static class FieldAccessCommands {
         }
     }
 }
+
+internal struct PlayerFollowersAccessor : IFieldAccessor<Player, IEnumerable<Entity>> {
+    public static IEnumerable<Entity> GetValue(Player? player) {
+        if (player is null)
+            return [];
+
+        return player.Leader.Followers.Select(f => f.Entity);
+    }
+}
+
 
 internal abstract class FieldAccessorCommand {
     public CommandDescriptor Descriptor { get; set; }
