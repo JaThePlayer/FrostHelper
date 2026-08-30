@@ -54,4 +54,33 @@ public class MathTests {
         Assert.Equal(6, TestUtils.CreateExpr("3 % 5 + 3").Get<int>(session));
         Assert.Equal(0, TestUtils.CreateExpr("3 % 5 + -3").Get<int>(session));
     }
+
+    [Fact]
+    public void NegativeNumber() {
+        var session = new Session();
+        
+        Assert.Equal(-2, TestUtils.CreateExpr("-2").Get<int>(session));
+    }
+    
+    
+    [Fact]
+    public void EqualsNegativeNumber() {
+        var session = new Session();
+        
+        Assert.Equal(1, TestUtils.CreateExpr("-2 == -2").Get<int>(session));
+    }
+    
+    [Fact]
+    public void OrNegativeNumber() {
+        var session = new Session();
+        
+        Assert.Equal(1 | -2, TestUtils.CreateExpr("1 | -2").Get<int>(session));
+    }
+
+    [Fact]
+    public void InvertNegativeNumber() {
+        var session = new Session();
+        
+        Assert.Equal(0, TestUtils.CreateExpr("!-2").Get<int>(session));
+    }
 }

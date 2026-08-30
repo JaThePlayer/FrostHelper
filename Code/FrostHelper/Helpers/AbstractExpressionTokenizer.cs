@@ -77,6 +77,9 @@ internal class ExpressionToken {
     [JsonIgnore]
     public bool ShouldTreatNextSubAsUnaryMinus => Kind is
         Kinds.Add or Kinds.Sub or Kinds.Mul or Kinds.Div or Kinds.DivFloat or Kinds.Modulo
+        or Kinds.Eq or Kinds.Ne or Kinds.Gt or Kinds.Ge or Kinds.Lt or Kinds.Le or Kinds.SingleEquals
+        or Kinds.And or Kinds.BitwiseAnd or Kinds.Or or Kinds.BitwiseOr
+        or Kinds.Invert
         or Kinds.UnaryMinus;
 
     public static TokenizerState Tokenize(ReadOnlySpan<char> input, IAbstractExpressionErrorLogger logger, out List<ExpressionToken> tokens) {
