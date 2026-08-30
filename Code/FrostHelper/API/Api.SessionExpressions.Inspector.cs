@@ -75,11 +75,13 @@ public static partial class API {
         return inspectorSession.Errors;
     }
 
+    /*
     public static IReadOnlyList<ApiAutoCompletion> GetAutoCompletions(object inspector, int cursorIndex) {
         InspectorSession inspectorSession = AssertIs<InspectorSession>(inspector);
 
         return inspectorSession.GetAutoCompletions(cursorIndex);
     }
+    */
 }
 
 internal sealed class InspectorSession {
