@@ -1,4 +1,10 @@
 global using ApiRenderPart = (string Contents, string ColorId, System.Collections.Generic.IReadOnlyList<(string Contents, string ColorId)>? Tooltip);
+global using ApiAutoCompletion = (
+    System.Collections.Generic.IReadOnlyList<(string Contents, string ColorId)> Name,
+    System.Collections.Generic.IReadOnlyList<(string Contents, string ColorId)> Description,
+    string Contents
+);
+
 using FrostHelper.Helpers;
 using FrostHelper.SessionExpressions;
 using System.Diagnostics;
@@ -67,6 +73,12 @@ public static partial class API {
         InspectorSession inspectorSession = AssertIs<InspectorSession>(inspector);
         
         return inspectorSession.Errors;
+    }
+
+    public static IReadOnlyList<ApiAutoCompletion> GetAutoCompletions(object inspector, int cursorIndex) {
+        InspectorSession inspectorSession = AssertIs<InspectorSession>(inspector);
+
+        return inspectorSession.GetAutoCompletions(cursorIndex);
     }
 }
 
@@ -377,6 +389,58 @@ internal sealed class InspectorSession {
 
         return parts;
     }
+
+    private ExpressionToken? GetTokenAt(int cursorIndex, out int tokenStart, out int tokenEnd) {
+        var i = 0;
+        foreach (var token in _tokens) {
+            tokenStart = i;
+            var tokenParts = CreateRenderParts(token, false);
+            tokenEnd = tokenStart + (token.Trivia?.Length ?? 0) + tokenParts.Sum(p => p.Contents.Length);
+            if (tokenEnd <= cursorIndex)
+                return token;
+
+            i = tokenEnd + 1;
+        }
+
+        tokenStart = -1;
+        tokenEnd = -1;
+        return null;
+    }
+    
+    public IReadOnlyList<ApiAutoCompletion> GetAutoCompletions(int cursorIndex) {
+        if (GetTokenAt(cursorIndex, out var tokenStart, out var tokenEnd) is not { } token)
+            return [];
+
+        var session = Engine.Scene.MaybeLevel()?.Session;
+        IEnumerable<AutoCompletion> nonApi;
+        switch (token.Kind) {
+            case ExpressionToken.Kinds.Flag: {
+                var currentFlag = token.Operand?.ToString() ?? "";
+                nonApi = session?.Flags.Where(f => f.StartsWith(currentFlag, StringComparison.OrdinalIgnoreCase))
+                    .Select(f => new AutoCompletion([RenderPart.Flag(f)], [], f[currentFlag.Length..])) ?? [];
+                break;
+            }
+            case ExpressionToken.Kinds.Counter:
+                nonApi = [];
+                break;
+            case ExpressionToken.Kinds.Slider:
+                nonApi = [];
+                break;
+            case ExpressionToken.Kinds.Command:
+                nonApi = [];
+                break;
+            //ExpressionToken.Kinds.InterpolatedString => expr,
+            case ExpressionToken.Kinds.FieldAccess:
+                nonApi = [];
+                break;
+            default:
+                //ExpressionToken.Kinds.LambdaArrow => expr,
+                nonApi = [];
+                break;
+        }
+
+        return nonApi.Select(x => x.ToApi()).ToList();
+    }
     
     private sealed class NotificationLogger(InspectorSession session) : IAbstractExpressionErrorLogger {
         public void Error(string message) {
@@ -385,30 +449,14 @@ internal sealed class InspectorSession {
     }
 }
 
-public record struct ApiRenderPart(string Contents, string ColorId, IReadOnlyList<ApiRenderPart>? Tooltip) {
-    public static ApiRenderPart Default(string contents) => new ApiRenderPart(contents, "default", null);
-    
-    public static ApiRenderPart Trivia(string contents) => new ApiRenderPart(contents, "whitespace", null);
-    
-    public static ApiRenderPart Operator(string type) => new ApiRenderPart(type, "operator", null);
-    
-    public static ApiRenderPart Literal(string value) => new ApiRenderPart(value, "literal", null);
-    
-    public static ApiRenderPart StringContent(string value) => new ApiRenderPart(value, "string", null);
-    
-    public static ApiRenderPart Flag(string flagName, IReadOnlyList<ApiRenderPart>? tooltip = null)
-        => new ApiRenderPart(flagName, "flag", tooltip);
-    
-    public static ApiRenderPart Counter(string counterName, IReadOnlyList<ApiRenderPart>? tooltip = null)
-        => new ApiRenderPart(counterName, "counter", tooltip);
-    
-    public static ApiRenderPart Slider(string sliderName, IReadOnlyList<ApiRenderPart>? tooltip = null)
-        => new ApiRenderPart(sliderName, "slider", tooltip);
-    
-    public static ApiRenderPart Field(string flagName, IReadOnlyList<ApiRenderPart>? tooltip = null)
-        => new ApiRenderPart(flagName, "field", tooltip);
-    public static ApiRenderPart Command(string flagName, IReadOnlyList<ApiRenderPart>? tooltip = null)
-        => new ApiRenderPart(flagName, "command", tooltip);
+internal record AutoCompletion(
+    IReadOnlyList<RenderPart> Name,
+    IReadOnlyList<RenderPart> Description,
+    string Contents) {
 
-    public static ApiRenderPart Type(TypeDescriptor type) => new ApiRenderPart(type.CanonName, "type", null);
+    public ApiAutoCompletion ToApi() => (
+        Name.Select(x => x.ToApiNoTooltip()).ToList(),
+        Description.Select(x => x.ToApiNoTooltip()).ToList(),
+        Contents
+    );
 }

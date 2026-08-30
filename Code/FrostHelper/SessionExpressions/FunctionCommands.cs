@@ -25,7 +25,7 @@ internal static class FunctionCommands {
         Register("max", [ ArgumentDescriptor.VarargFor(TypeDescriptor.For(typeof(float))) ], TypeDescriptor.For(typeof(float)),
             [ RenderPart.Default("Returns the largest value from all provided arguments.") ], MaxCondition.TryCreate);
 
-        RegisterPure<int, int, int, int, ClampFunc<int>>("clamp", [ RenderPart.Default("Clamps the value of x so that its between min and max.") ]);
+        RegisterPure<float, float, float, float, ClampFunc<float>>("clamp", [ RenderPart.Default("Clamps the value of x so that its between min and max.") ]);
         RegisterPure<float, float, AbsFunc<float>>("abs", [ RenderPart.Default("Returns the absolute value of x.") ]);
         
         RegisterPure<float, float, SinFunc>("sin", [ RenderPart.Default("Calculates trigonometrical functions, x is assumed to be in radians. (Tip: $pi)") ]);
@@ -92,7 +92,7 @@ internal static class FunctionCommands {
             ], VecCondition.TryCreate);
     }
     
-    private static readonly Dictionary<string, FunctionCommand> Registry = new();
+    internal static readonly Dictionary<string, FunctionCommand> Registry = new();
 
     private static void Register(string name, IReadOnlyList<ArgumentDescriptor> arguments, TypeDescriptor returnType, IReadOnlyList<RenderPart> description, FunctionCommandFactory factory) {
         Registry[name] = new FunctionCommand(factory, new CommandDescriptor {

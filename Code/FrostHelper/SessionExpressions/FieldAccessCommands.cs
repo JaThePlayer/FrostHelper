@@ -150,7 +150,7 @@ internal static class FieldAccessCommands {
 }
 
 internal abstract class FieldAccessorCommand {
-    public CommandDescriptor? Descriptor { get; set; }
+    public CommandDescriptor Descriptor { get; set; }
     
     public abstract object GetValue(object? obj);
 

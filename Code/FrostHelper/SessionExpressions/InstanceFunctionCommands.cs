@@ -16,13 +16,16 @@ internal static class InstanceFunctionCommands {
         Register<string, string, int, StringIsMatch>("isMatch", [ RenderPart.Default("Checks whether the string matches the given regex.") ]);
         
         RegisterSession<IEnumerable, LambdaCondition, float, EnumerableSum>("sum", [
-            RenderPart.Default("Calculates the sum of the results of applying the callback to every element in the collection.")
+            RenderPart.Default("""
+                               Calculates the sum of the results of applying the callback to every element in the collection.
+                               The lambda receives one argument, set to the element to evaluate.
+                               """)
         ]);
         RegisterSession<IEnumerable, LambdaCondition, int, EnumerableAll>("all", [
-            RenderPart.Default("Checks whether all elements in the collection match the given predicate.")
+            RenderPart.Default("Checks whether all elements in the collection match the given predicate.\nThe lambda receives one argument, set to the element to check.")
         ]);
         RegisterSession<IEnumerable, LambdaCondition, int, EnumerableAny>("any", [
-            RenderPart.Default("Checks whether any element in the collection match the given predicate.")
+            RenderPart.Default("Checks whether any element in the collection match the given predicate.\nThe lambda receives one argument, set to the element to check.")
         ]);
     }
     
