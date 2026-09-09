@@ -16,6 +16,10 @@ internal class EntityFilter(HashSet<Type> types, bool isBlacklist, HashSet<int> 
         typeof(StrawberriesCounter)
     ];
 
+    public IReadOnlySet<Type> Types => types;
+    
+    public IReadOnlySet<int> Ids => ids;
+
     /// <summary>
     /// If true, no entity can match this filter ever.
     /// </summary>
@@ -36,10 +40,10 @@ internal class EntityFilter(HashSet<Type> types, bool isBlacklist, HashSet<int> 
             var remaining = inner.Remaining.Trim();
             if (int.TryParse(remaining, out var id)) {
                 ids.Add(id);
-            } else if (TypeHelper.EntityNameToTypeSafe(inner.Remaining.ToString()) is {} type) {
+            } else if (TypeHelper.EntityNameToTypeSafe(remaining.ToString()) is {} type) {
                 types.Add(type);
             } else {
-                NotificationHelper.Notify($"Couldn't parse '{inner.Remaining.ToString()}' as an entity name or C# type.");
+                NotificationHelper.Notify($"Couldn't parse '{remaining.ToString()}' as an entity name or C# type.");
             }
         }
         
