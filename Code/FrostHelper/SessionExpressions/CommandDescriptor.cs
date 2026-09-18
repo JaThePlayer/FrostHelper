@@ -112,6 +112,10 @@ public sealed class TypeDescriptor {
     }
 
     public static IEnumerable<TypeDescriptor> AllKnownDescriptors => Descriptors.Values.Where(x => x.Description is not []);
+
+    public override string ToString() {
+        return CanonName;
+    }
 }
 
 public sealed class ArgumentDescriptor(string name, TypeDescriptor type) {

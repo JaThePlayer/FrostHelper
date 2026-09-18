@@ -122,8 +122,10 @@ internal interface IBitwiseOperator {
 internal sealed class BitwiseOperator<TOp>(ConditionHelper.Condition condA, ConditionHelper.Condition condB) : ConditionHelper.BinaryOperator(condA, condB) where TOp : IBitwiseOperator {
         private static readonly MethodInfo MethodPerformInt
             = typeof(TOp).GetMethod(nameof(IBitwiseOperator.Perform), BindingFlags.Static | BindingFlags.Public)!.MakeGenericMethod(typeof(int));
-        
-        protected override object Operate(object a, object b) {
+
+        protected override bool CoerceMismatchedIntFloat => true;
+
+        public override object Operate(object a, object b) {
             return (a, b) switch {
                 (int aInt, int bInt) => TOp.Perform(aInt, bInt),
                 (float aF, float bF) => TOp.Perform((int) aF, (int) bF),

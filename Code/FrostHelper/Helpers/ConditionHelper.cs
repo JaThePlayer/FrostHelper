@@ -181,12 +181,12 @@ public static class ConditionHelper {
                     BinOpExpression.Operators.Or => new OperatorOr(leftExpr, rightExpr),
                     BinOpExpression.Operators.BitwiseAnd => new BitwiseOperator<OperatorBitwiseAnd>(leftExpr, rightExpr),
                     BinOpExpression.Operators.BitwiseOr => new BitwiseOperator<OperatorBitwiseOr>(leftExpr, rightExpr),
-                    BinOpExpression.Operators.Add => new MathOperator<OperatorAdd>(leftExpr, rightExpr),
-                    BinOpExpression.Operators.Sub => new MathOperator<OperatorSub>(leftExpr, rightExpr),
-                    BinOpExpression.Operators.Mul => new MathOperator<OperatorMul>(leftExpr, rightExpr),
-                    BinOpExpression.Operators.Div => new MathOperator<OperatorDiv>(leftExpr, rightExpr),
-                    BinOpExpression.Operators.DivFloat => new OperatorDivFloat(leftExpr, rightExpr),
-                    BinOpExpression.Operators.Modulo => new MathOperator<IOperatorModulo>(leftExpr, rightExpr),
+                    BinOpExpression.Operators.Add => MathOperatorRegistry.CreateFor(binExpr.Operator, leftExpr, rightExpr),
+                    BinOpExpression.Operators.Sub => MathOperatorRegistry.CreateFor(binExpr.Operator, leftExpr, rightExpr),
+                    BinOpExpression.Operators.Mul => MathOperatorRegistry.CreateFor(binExpr.Operator, leftExpr, rightExpr),
+                    BinOpExpression.Operators.Div => MathOperatorRegistry.CreateFor(binExpr.Operator, leftExpr, rightExpr),
+                    BinOpExpression.Operators.DivFloat => MathOperatorRegistry.CreateFor(binExpr.Operator, leftExpr, rightExpr),
+                    BinOpExpression.Operators.Modulo => MathOperatorRegistry.CreateFor(binExpr.Operator, leftExpr, rightExpr),
                     BinOpExpression.Operators.Lt => new ComparisonOperator<OperatorLt>(leftExpr, rightExpr),
                     BinOpExpression.Operators.Gt => new ComparisonOperator<OperatorGt>(leftExpr, rightExpr),
                     BinOpExpression.Operators.Eq => new ComparisonOperator<OperatorEq>(leftExpr, rightExpr),
@@ -250,16 +250,20 @@ public static class ConditionHelper {
         protected readonly Condition ConditionA = condA;
         protected readonly Condition ConditionB = condB;
         
+        protected abstract bool CoerceMismatchedIntFloat { get; }
         
         public override object Get(Session session, object? userdata) {
             var a = ConditionA.Get(session, userdata);
             var b = ConditionB.Get(session, userdata);
 
             if (a is bool ab)
-                a = ab ? 1 : 0;
+                a = ab ? One : Zero;
             if (b is bool bb)
-                a = bb ? 1 : 0;
+                a = bb ? One : Zero;
 
+            if (!CoerceMismatchedIntFloat)
+                return Operate(a, b);
+            
             return (a, b) switch {
                 // When floats and ints are mismatched, perform operation on floats
                 (int ai, float bi) => Operate((float)ai, (float)bi),
@@ -285,8 +289,8 @@ public static class ConditionHelper {
                                                                         ConditionB.UsesCurrentConditionLocalInEmit;
 
         public override bool OnlyChecksFlags() => ConditionA.OnlyChecksFlags() && ConditionB.OnlyChecksFlags();
-        
-        protected abstract object Operate(object a, object b);
+
+        public abstract object Operate(object a, object b);
 
         protected override IEnumerable<object> GetArgsForDebugPrint() => [ConditionA, ConditionB];
     }

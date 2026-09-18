@@ -115,7 +115,9 @@ internal sealed class ComparisonOperator<TOp>(ConditionHelper.Condition condA, C
         };
     }
 
-    protected override object Operate(object a, object b) {
+    protected override bool CoerceMismatchedIntFloat => true;
+
+    public override object Operate(object a, object b) {
         return Dispatch(a, b) ? One : Zero;
     }
 

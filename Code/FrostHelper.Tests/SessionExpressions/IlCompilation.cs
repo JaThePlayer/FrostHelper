@@ -73,21 +73,20 @@ public class IlCompilation {
         IL_000e: callvirt System.Boolean Celeste.Session::GetFlag(System.String)
         IL_0013: ldc.i4.1
         IL_0014: ceq
-        IL_0016: call T FrostHelper.SessionExpressions.OperatorDiv::Perform<System.Int32>(T,T)
+        IL_0016: call System.Int32 FrostHelper.SessionExpressions.OperatorDiv::Perform(System.Int32,System.Int32)
         IL_001b: conv.r4
         IL_001c: ret
         """);
         
         AssertIl<float>("2 // hi", """
-        IL_0000: ldc.r4 2
+        IL_0000: ldc.i4 2
         IL_0005: ldarg 
         IL_0009: ldstr "hi"
         IL_000e: callvirt System.Boolean Celeste.Session::GetFlag(System.String)
         IL_0013: ldc.i4.1
         IL_0014: ceq
-        IL_0016: conv.r4
-        IL_0017: call T FrostHelper.SessionExpressions.OperatorDiv::Perform<System.Single>(T,T)
-        IL_001c: ret
+        IL_0016: call System.Single FrostHelper.SessionExpressions.OperatorDivFloat::Perform(System.Int32,System.Int32)
+        IL_001b: ret
         """);
         
         AssertIl<float>("(5 // 2) + $time", """
@@ -275,17 +274,17 @@ public class IlCompilation {
         IL_0000: ldc.r4 2
         IL_0005: ldc.r4 3
         IL_000a: newobj System.Void Microsoft.Xna.Framework.Vector2::.ctor(System.Single,System.Single)
-        IL_000f: ldc.r4 2
-        IL_0014: call Microsoft.Xna.Framework.Vector2 FrostHelper.SessionExpressions.OperatorDiv::Perform(Microsoft.Xna.Framework.Vector2,System.Single)
+        IL_000f: ldc.i4 2
+        IL_0014: call Microsoft.Xna.Framework.Vector2 FrostHelper.SessionExpressions.OperatorDiv::Perform(Microsoft.Xna.Framework.Vector2,System.Int32)
         IL_0019: ret
         """);
         
         AssertIl<Vector2>("2 / $vec(2, 3)", """
-        IL_0000: ldc.r4 2
+        IL_0000: ldc.i4 2
         IL_0005: ldc.r4 2
         IL_000a: ldc.r4 3
         IL_000f: newobj System.Void Microsoft.Xna.Framework.Vector2::.ctor(System.Single,System.Single)
-        IL_0014: call Microsoft.Xna.Framework.Vector2 FrostHelper.SessionExpressions.OperatorDiv::Perform(System.Single,Microsoft.Xna.Framework.Vector2)
+        IL_0014: call Microsoft.Xna.Framework.Vector2 FrostHelper.SessionExpressions.OperatorDiv::Perform(System.Int32,Microsoft.Xna.Framework.Vector2)
         IL_0019: ret
         """);
         
