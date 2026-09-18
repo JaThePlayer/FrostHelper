@@ -13,7 +13,8 @@ internal static class FieldAccessCommands {
         RegisterField<Vector2, float, Vector2YAccessor>("y", "The position of the vector on the y-axis, e.g. $vec(3, 4).y -> 4");
         RegisterField<Vector2, float, Vector2LenAccessor>("len", "The length of the vector, calculated as $sqrt(x*x + y*y)");
         RegisterField<Vector2, float, Vector2LenSqAccessor>("lenSq", "The squared length of the vector, calculated as x*x + y*y. Faster to calculate than .len.");
-        
+        RegisterField<Vector2, float, Vector2AngleAccessor>("angle", "The angle of this vector, in radians.");
+
         RegisterField<string, int, StringLenAccessor>("len", "The length (in characters) of the string, e.g. \"hello\".len -> 5");
         
         RegisterProperty<Entity, float>("x", nameof(Entity.X), "The position of the entity on the x-axis.");
@@ -122,6 +123,12 @@ internal static class FieldAccessCommands {
     private struct Vector2LenSqAccessor : IFieldAccessor<Vector2, float> {
         public static float GetValue(Vector2 obj) {
             return obj.LengthSquared();
+        }
+    }
+    
+    private struct Vector2AngleAccessor : IFieldAccessor<Vector2, float> {
+        public static float GetValue(Vector2 obj) {
+            return obj.Angle();
         }
     }
 
