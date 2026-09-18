@@ -34,6 +34,8 @@ internal static class FunctionCommands {
         
         RegisterPure<float, float, TruncateFunc>("truncate", [ RenderPart.Default("Truncates the value.") ]);
         RegisterPure<float, float, RoundFunc>("round", [ RenderPart.Default("Rounds the value.") ]);
+        RegisterPure<float, float, FloorFunc>("floor", [ RenderPart.Default("Gets the floor of the value.") ]);
+        RegisterPure<float, float, CeilingFunc>("ceiling", [ RenderPart.Default("Gets the ceiling of the value.") ]);
         
         RegisterPure<float, float, float, PowFunc<float>>("pow", [ RenderPart.Default("x raised to the power of y.") ]);
         RegisterPure<float, float, Pow2Func<float>>("pow2", [ RenderPart.Default("x raised to the power of 2.") ]);
@@ -343,6 +345,18 @@ internal static class FunctionCommands {
     
     private struct TruncateFunc : IPureMathFunc<float> {
         public static float Get(float x) => float.Truncate(x);
+        
+        public static string ArgName => "x";
+    }
+    
+    private struct FloorFunc : IPureMathFunc<float> {
+        public static float Get(float x) => float.Floor(x);
+        
+        public static string ArgName => "x";
+    }
+    
+    private struct CeilingFunc : IPureMathFunc<float> {
+        public static float Get(float x) => float.Ceiling(x);
         
         public static string ArgName => "x";
     }
