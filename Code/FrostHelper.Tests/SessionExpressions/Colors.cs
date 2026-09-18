@@ -34,4 +34,11 @@ public class Colors {
         Assert.Equal(new Color(255, 41, 16) * 0.3f, TestUtils.CreateHybridExpr<Color>("$rgb(255, 41, 16) * .3").GetT(session));
         Assert.Equal(new Color(255, 41, 16) * 0.3f, TestUtils.CreateHybridExpr<Color>(".3 * $rgb(255, 41, 16)").GetT(session));
     }
+
+    [Fact]
+    public void Lerpc() {
+        var session = new Session();
+        
+        Assert.Equal(Color.Lerp(Color.White, Color.Red, 0.5f), TestUtils.CreateHybridExpr<Color>("""$lerpc("white", "red", 0.5)""").GetT(session));
+    }
 }

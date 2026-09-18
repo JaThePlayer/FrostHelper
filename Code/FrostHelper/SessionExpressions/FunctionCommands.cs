@@ -51,7 +51,8 @@ internal static class FunctionCommands {
         RegisterPure<float, float, Log10Func>("log10", [ RenderPart.Default("The base-10 logarithm of x.") ]);
         
         RegisterPure<float, float, float, float, LerpFunc>("lerp", [ RenderPart.Default("Performs a linear interpolation between two values based on the given weight. Params: x — The first value, which is intended to be the lower bound. y — The second value, which is intended to be the upper bound. amount — A value between 0 and 1, that indicates the weight of the interpolation.") ]);
-        
+        RegisterPure<Color, Color, float, Color, LerpCFunc>("lerpc", [ RenderPart.Default("Performs a linear interpolation between two colors based on the given weight. Params: x — The first value, which is intended to be the lower bound. y — The second value, which is intended to be the upper bound. amount — A value between 0 and 1, that indicates the weight of the interpolation.") ]);
+
         RegisterPure<float, float, YoYoFunc>("yoyo", [ RenderPart.Default("x <= 0.5 ? x * 2 : 1.0 - (value - 0.5) * 2.0).") ]);
         
         RegisterPure<int, int, IEnumerable<int>, RangeFunc>("range", [
@@ -479,6 +480,16 @@ internal static class FunctionCommands {
         public static string Arg1Name => "x";
 
         public static string Arg2Name => "y";
+
+        public static string Arg3Name => "amount";
+    }
+    
+    private struct LerpCFunc : IPureFunc<Color, Color, float, Color> {
+        public static Color Get(Color x, Color y, float z) => Color.Lerp(x, y, z);
+        
+        public static string Arg1Name => "source";
+
+        public static string Arg2Name => "destination";
 
         public static string Arg3Name => "amount";
     }
