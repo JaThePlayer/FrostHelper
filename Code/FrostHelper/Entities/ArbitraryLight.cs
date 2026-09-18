@@ -74,8 +74,8 @@ internal sealed class ArbitraryLight : VertexLight {
         
         Color mask = self.GetMask(index, 1f, 0f);
         Vector3 center = self.GetCenter(index);
-        
-        radius = arbLight.Radius;
+
+        radius = arbLight._radius.Get(arbLight._level.Session);
         var lightPos = arbLight.Position + arbLight.Entity.Position;
         
         if (self.indexCount + arbLight.Fill.Length * 2 >= self.indices.Length) {
@@ -167,30 +167,35 @@ internal sealed class ArbitraryLight : VertexLight {
 
     public Rectangle Bounds;
 
-    public readonly float Radius;
+    private readonly SessionExpression<float> _radius;
 
     private readonly ArbitraryBloom? _bloom;
 
-    internal ConditionHelper.Condition Condition { get; private init; }
+    private SessionExpression<bool> Condition { get; }
 
     private readonly bool _connectFirstAndLastNode;
+
+    private readonly SessionExpression<float> _alphaExpression;
+
+    private Level _level;
     
     public ArbitraryLight(EntityData data, Vector2 offset) : this(data.Position + offset,
-        data.GetColor("color", "ffffff"), data.Float("alpha", 1f), data.Int("startFade", 16), data.Int("endFade", 32),
-        data.NodesOffset(offset), data.Bool("connectFirstAndLastNode", true), data.Float("radius"), data.GetExpression<float>("bloomAlpha", "0.0"),
-        data.GetCondition("flag")) {
+        data.GetColor("color", "ffffff"), data.GetExpression<float>("alpha", "1"), data.Int("startFade", 16), data.Int("endFade", 32),
+        data.NodesOffset(offset), data.Bool("connectFirstAndLastNode", true), data.GetExpression<float>("radius"), data.GetExpression<float>("bloomAlpha", "0.0"),
+        data.GetExpression<bool>("flag")) {
     }
 
-    internal ArbitraryLight(Vector2 position, Color color, float alpha, int startFade, int endFade,
-                          Vector2[] nodes, bool connectFirstAndLastNode, float radius, SessionExpression<float> bloomAlpha,
-                          ConditionHelper.Condition condition) : base(Vector2.Zero, color, alpha, startFade, endFade) {
+    internal ArbitraryLight(Vector2 position, Color color, SessionExpression<float> alpha, int startFade, int endFade,
+                          Vector2[] nodes, bool connectFirstAndLastNode, SessionExpression<float> radius, SessionExpression<float> bloomAlpha,
+                          SessionExpression<bool> condition) : base(Vector2.Zero, color, alpha.ConstantValue, startFade, endFade) {
         LoadHooksIfNeeded();
         
         Condition = condition;
+        _alphaExpression = alpha;
         _connectFirstAndLastNode = connectFirstAndLastNode;
 
         UpdateNodes(position, nodes, default(IdentityFunc<Vector2>));
-        Radius = radius;
+        _radius = radius;
 
         if (bloomAlpha.CanBePositive) {
             _bloom = new ArbitraryBloom(Fill!) {
@@ -224,6 +229,8 @@ internal sealed class ArbitraryLight : VertexLight {
     public override void EntityAwake() {
         base.EntityAwake();
         UpdateVisibility();
+
+        _level = Scene.ToLevel();
     }
 
     public override void Update() {
@@ -231,12 +238,16 @@ internal sealed class ArbitraryLight : VertexLight {
         UpdateVisibility();
     }
 
-    private void UpdateVisibility()
-    {
-        var visible = Condition.Check(Scene.ToLevel().Session);
+    private void UpdateVisibility() {
+        var session = Scene.ToLevel().Session;
+        var visible = Condition.Get(session);
 
         _bloom?.Visible = visible;
         Visible = visible;
+
+        if (visible) {
+            Alpha = _alphaExpression.Get(session);
+        }
     }
 
     public override void EntityAdded(Scene scene) {

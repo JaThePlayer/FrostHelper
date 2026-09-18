@@ -693,7 +693,7 @@ internal sealed class SessionExpression<T> : ISavestatePersisted {
         return _condition is null ? ConstantValue! : _condition.Get(session, null);
     }
     
-    public T Get(Session session, object userdata) {
+    public T Get(Session session, object? userdata) {
         return _condition is null ? ConstantValue! : _condition.Get(session, userdata);
     }
 }

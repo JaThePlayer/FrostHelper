@@ -225,8 +225,11 @@ function fields.flagEnum(data)
     }
 end
 
+---@class SessionExpressionFieldData
+---@field targetType "int"|"bool"|"any"|"string"|"float"? The type that should be returned by the expression.
+
 ---Creates a Session Expression field.
----@param data {}
+---@param data SessionExpressionFieldData
 ---@return FieldInformationEntry
 function fields.sessionExpression(data)
     ---@type FieldInformationEntry
@@ -240,6 +243,13 @@ function fields.sessionExpression(data)
             return tostring(s)
         end,
         validator = function (s)
+            if data.targetType == "int" then
+                local maybeParsed = tonumber(s)
+                if maybeParsed and not utils.isInteger(maybeParsed) then
+                    return false
+                end
+            end
+
             return true
         end,
     }

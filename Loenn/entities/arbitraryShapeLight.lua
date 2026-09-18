@@ -20,26 +20,26 @@ local castedLight = {
 
 jautils.createPlacementsPreserveOrder(arbitraryLight, "default", {
     { "color", "ffffff", "color" },
-    { "alpha", 1.0 },
+    { "alpha", "1.0", jautils.fields.sessionExpression { targetType = "float" } },
     { "startFade", 16, "integer" },
     { "endFade", 64, "integer" },
-    { "radius", 24, "integer" },
-    { "bloomAlpha", 0 },
-    { "flag", "", "FrostHelper.condition" },
+    { "radius", 24, jautils.fields.sessionExpression { targetType = "int" } },
+    { "bloomAlpha", "0", jautils.fields.sessionExpression { targetType = "float" } },
+    { "flag", "", jautils.fields.sessionExpression { targetType = "bool" } },
     { "connectFirstAndLastNode", false },
 })
 
 jautils.createPlacementsPreserveOrder(castedLight, "default", {
     { "color", "ffffff", "color" },
-    { "alpha", 1.0 },
+    { "alpha", "1.0", jautils.fields.sessionExpression { targetType = "float" } },
     { "startFade", 16, "integer" },
     { "endFade", 64, "integer" },
     { "radius", 24, "integer" },
-    { "bloomAlpha", 0 },
-    { "flag", "", "FrostHelper.condition" },
+    { "bloomAlpha", "0", jautils.fields.sessionExpression { targetType = "float" } },
+    { "flag", "", jautils.fields.sessionExpression { targetType = "bool" } },
     -- For casted lights only
     { "offsetPerBeam", 1, jautils.fields.positiveNumber {} },
-    { "dynamicFlag", "", "FrostHelper.condition" },
+    { "dynamicFlag", "", jautils.fields.sessionExpression { targetType = "bool" } },
     { "dynamic", false }
 })
 
