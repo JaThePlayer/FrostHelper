@@ -19,6 +19,10 @@ internal sealed class LambdaContext(IExpressionContext source, LambdaDefinitionC
     public bool TryGetFunctionCommand(string name, [NotNullWhen(true)] out FunctionCommand? factory) {
         return source.TryGetFunctionCommand(name, out factory);
     }
+
+    public void RegisterSimpleCommand(string name, ConditionHelper.Condition command) {
+        throw new Exception("Cannot register commands on a lambda context");
+    }
 }
 
 internal sealed class LambdaArgumentCondition(LambdaDefinitionCondition lambdaDefinition, int index) : ConditionHelper.Condition {

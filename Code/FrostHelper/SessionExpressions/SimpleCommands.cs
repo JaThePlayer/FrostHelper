@@ -117,7 +117,7 @@ internal static class SimpleCommands {
             ReturnType = TypeDescriptor.For(typeof(TRet)),
             Arguments = [],
         };
-        condition.Descriptor = desc;
+        condition.Descriptor ??= desc;
         Registry[name] = new SimpleCommand(desc, condition);
     }
     

@@ -48,4 +48,12 @@ public record struct RenderPart(string Contents, string ColorId, IReadOnlyList<R
     public (string Contents, string ColorId) ToApiNoTooltip() {
         return (Contents, ColorId);
     }
+
+    public static IReadOnlyList<RenderPart>? FromApi(IReadOnlyList<(string Contents, string ColorId)>? apiParts) {
+        return apiParts?.Select(a => new RenderPart(a.Contents, a.ColorId, null)).ToList();
+    }
+    
+    public static IReadOnlyList<RenderPart> FromApi(IReadOnlyList<ApiRenderPart> apiParts) {
+        return apiParts.Select(a => new RenderPart(a.Contents, a.ColorId, FromApi(a.Tooltip))).ToList();
+    }
 }

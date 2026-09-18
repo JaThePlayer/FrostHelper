@@ -7,6 +7,8 @@ public interface IExpressionContext {
     public bool TryGetSimpleCommand(string name, [NotNullWhen(true)] out ConditionHelper.Condition? command);
     
     public bool TryGetFunctionCommand(string name, [NotNullWhen(true)] out FunctionCommand? factory);
+
+    public void RegisterSimpleCommand(string name, ConditionHelper.Condition command);
 }
 
 /// <summary>
@@ -38,5 +40,9 @@ internal sealed class ExpressionContext(
 
     public bool TryGetFunctionCommand(string name, [NotNullWhen(true)] out FunctionCommand? factory) {
         return FunctionCommands.TryGetValue(name, out factory);
+    }
+
+    public void RegisterSimpleCommand(string name, ConditionHelper.Condition command) {
+        simpleCommands[name] = command;
     }
 }
