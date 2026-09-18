@@ -10,11 +10,18 @@ internal interface IMathOperator<out TIntIntResult>
         IMathOperator<float, int, float>,
         IMathOperator<int, float, float>,
         IMathOperator<int, int, TIntIntResult>,
-        IMathOperator<float, Vector2, Vector2>,
-        IMathOperator<Vector2, float, Vector2>,
-        IMathOperator<int, Vector2, Vector2>,
-        IMathOperator<Vector2, int, Vector2>,
+        ITypeByNumberMathOperatorLeft<Vector2>,
+        ITypeByNumberMathOperatorRight<Vector2>,
         IMathOperator<Vector2, Vector2, Vector2>;
+
+// We need to split ITypeByNumberMathOperator to left and right portions to avoid a compiler error from a potential interface method overlaps.
+internal interface ITypeByNumberMathOperatorLeft<TType>
+    : IMathOperator<float, TType, TType>,
+      IMathOperator<int, TType, TType>;
+
+internal interface ITypeByNumberMathOperatorRight<TType>
+    : IMathOperator<TType, float, TType>,
+        IMathOperator<TType, int, TType>;
 
 internal interface IMathOperator<in TLeft, in TRight, out TRet> {
     static abstract TRet Perform(TLeft a, TRight b);
@@ -35,8 +42,7 @@ internal static class MathOperatorRegistry {
         RegisterDefaultMathOperator<int, OperatorMul>(BinOpExpression.Operators.Mul);
         RegisterDefaultMathOperator<int, IOperatorModulo>(BinOpExpression.Operators.Modulo);
 
-        Register<Color, float, Color, OperatorMulColor>(BinOpExpression.Operators.Mul);
-        Register<float, Color, Color, OperatorMulColor>(BinOpExpression.Operators.Mul);
+        RegisterTypeByNumber<Color, OperatorMulColor>(BinOpExpression.Operators.Mul);
     }
 
     static void Register<TLeft, TRight, TRes, TOperator>(BinOpExpression.Operators op)
@@ -45,6 +51,17 @@ internal static class MathOperatorRegistry {
 
         var reg = Registry[op];
         reg[(typeof(TLeft), typeof(TRight))] = MathOperator<TLeft, TRight, TRes, TOperator>.Create;
+    }
+
+    static void RegisterTypeByNumber<TType, TOperator>(BinOpExpression.Operators op)
+        where TOperator : ITypeByNumberMathOperatorLeft<TType>, ITypeByNumberMathOperatorRight<TType> {
+        Registry.TryAdd(op, new());
+        
+        var reg = Registry[op];
+        reg[(typeof(float), typeof(TType))] = MathOperator<float, TType, TType, TOperator>.Create;
+        reg[(typeof(int), typeof(TType))] = MathOperator<int, TType, TType, TOperator>.Create;
+        reg[(typeof(TType), typeof(float))] = MathOperator<TType, float, TType, TOperator>.Create;
+        reg[(typeof(TType), typeof(int))] = MathOperator<TType, int, TType, TOperator>.Create;
     }
     
     static void RegisterDefaultMathOperator<TIntIntResult, TOperator>(BinOpExpression.Operators op) where TOperator : IMathOperator<TIntIntResult> {
@@ -444,13 +461,21 @@ internal struct OperatorDivFloat : IMathOperator<float> {
     }
 }
 
-internal struct OperatorMulColor : IMathOperator<Color, float, Color>, IMathOperator<float, Color, Color> {
+internal struct OperatorMulColor : ITypeByNumberMathOperatorLeft<Color>, ITypeByNumberMathOperatorRight<Color> {
     public static Color Perform(Color a, float b) {
         return a * b;
     }
 
     public static Color Perform(float a, Color b) {
         return b * a;
+    }
+
+    public static Color Perform(int a, Color b) {
+        return b * a;
+    }
+
+    public static Color Perform(Color a, int b) {
+        return a * b;
     }
 
     public static OpCode? PerformOpCode => null;

@@ -17,4 +17,21 @@ public class Functions {
         Assert.True(TestUtils.CreateExpr("$range(1, 3).all($i => $i < 4)").Check(session));
         Assert.False(TestUtils.CreateExpr("$range(1, 3).all($i => $i > 1)").Check(session));
     }
+    
+    [Fact]
+    public void If() {
+        var session = TestUtils.CreateTestSession();
+        
+        Assert.Equal(2, TestUtils.CreateExpr("$if(1, 2, 3)").Get<int>(session));
+        Assert.Equal(3, TestUtils.CreateExpr("$if(0, 2, 3)").Get<int>(session));
+        
+        Assert.Equal(new Color(255, 0, 0), TestUtils.CreateExpr("$if(0, 2, $rgb(255, 0, 0))").Get<object>(session));
+        Assert.Equal(2, TestUtils.CreateExpr("$if(1, 2, $rgb(255, 0, 0))").Get<object>(session));
+        
+        Assert.Equal(unchecked((int)0xff0000ff), TestUtils.CreateExpr("$if(0, 2, $rgb(255, 0, 0))").Get<int>(session));
+        Assert.Equal(2, TestUtils.CreateExpr("$if(1, 2, $rgb(255, 0, 0))").Get<int>(session));
+        
+        Assert.Equal(unchecked((int)0x040000ff), TestUtils.CreateExpr("$if(0, 2, $rgb(2, 0, 0)) * 2").Get<int>(session));
+        Assert.Equal(4, TestUtils.CreateExpr("$if(1, 2, $rgb(2, 0, 0)) * 2").Get<int>(session));
+    }
 }

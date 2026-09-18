@@ -1,4 +1,5 @@
 using FrostHelper.SessionExpressions;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Numerics;
 using System.Reflection.Emit;
@@ -39,6 +40,12 @@ internal static class IlGeneratorExt {
                     break;
                 case string s:
                     il.Emit(OpCodes.Ldstr, s);
+                    break;
+                case false:
+                    il.Emit(OpCodes.Ldc_I4_0);
+                    break;
+                case true:
+                    il.Emit(OpCodes.Ldc_I4_1);
                     break;
                 default:
                     throw new Exception($"Cannot convert {value.GetType()} to {targetType}");
@@ -166,15 +173,19 @@ internal static class IlGeneratorExt {
             throw new Exception($"Cannot convert {fromType} to {toType}");
         }
 
-        public void EmitSwapOutCurrentCondition(ref LocalBuilder? tempOrigCond, ConditionCompilationCtx ctx, ConditionHelper.Condition next, FieldInfo fieldContainingNext) {
-            if (!next.UsesCurrentConditionLocalInEmit)
-                return;
-
+        public void EmitSaveCurrentCondition([NotNull] ref LocalBuilder? tempOrigCond, ConditionCompilationCtx ctx) {
             if (tempOrigCond is null) {
                 tempOrigCond = il.DeclareLocal(typeof(ConditionHelper.Condition));
                 il.Emit(OpCodes.Ldloc, ctx.CurrentCondition);
                 il.Emit(OpCodes.Stloc, tempOrigCond);
             }
+        }
+        
+        public void EmitSwapOutCurrentCondition(ref LocalBuilder? tempOrigCond, ConditionCompilationCtx ctx, ConditionHelper.Condition next, FieldInfo fieldContainingNext) {
+            if (!next.UsesCurrentConditionLocalInEmit)
+                return;
+
+            il.EmitSaveCurrentCondition(ref tempOrigCond, ctx);
                 
             il.Emit(OpCodes.Ldloc, tempOrigCond);
             il.Emit(OpCodes.Castclass, fieldContainingNext.DeclaringType!);

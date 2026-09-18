@@ -90,6 +90,18 @@ internal static class FunctionCommands {
                 RenderPart.Type(TypeDescriptor.For(typeof(Vector2))),
                 RenderPart.Default(" with the given x, y values.")
             ], VecCondition.TryCreate);
+        
+        
+        Register("if", [
+                new ArgumentDescriptor("condition", TypeDescriptor.For(typeof(bool))),
+                new ArgumentDescriptor("ifTrue", TypeDescriptor.Any),
+                new ArgumentDescriptor("ifFalse", TypeDescriptor.Any),
+            ],
+            TypeDescriptor.Any,
+            [
+                RenderPart.Default("Returns the value of the 2nd argument if the 1st argument is true, otherwise returns the 3rd argument.")
+            ],
+            IfCondition.TryCreate);
     }
     
     internal static readonly Dictionary<string, FunctionCommand> Registry = new();
@@ -864,6 +876,75 @@ internal static class FunctionCommands {
         protected internal override Type ReturnType => typeof(string);
     }
     
+    private sealed class IfCondition(Condition condition, Condition ifTrue, Condition ifFalse) : FunctionCondition(condition, ifTrue) {
+        private readonly Condition _condition = condition;
+        private readonly Condition _ifTrue = ifTrue;
+        private readonly Condition _ifFalse = ifFalse;
+        
+        private static readonly FieldInfo ConditionFieldInfo
+            = typeof(IfCondition).GetField(nameof(_condition),
+                BindingFlags.Instance | BindingFlags.NonPublic)!;
+        
+        private static readonly FieldInfo IfTrueFieldInfo
+            = typeof(IfCondition).GetField(nameof(_ifTrue),
+                BindingFlags.Instance | BindingFlags.NonPublic)!;
+        
+        private static readonly FieldInfo IfFalseFieldInfo
+            = typeof(IfCondition).GetField(nameof(_ifFalse),
+                BindingFlags.Instance | BindingFlags.NonPublic)!;
+        
+        protected internal override Type ReturnType => _ifFalse.ReturnType == _ifTrue.ReturnType
+            ? _ifFalse.ReturnType ?? typeof(object)
+            : typeof(object);
+
+        public override object Get(Session session, object? userdata) {
+            return _condition.Check(session, userdata)
+                ? _ifTrue.Get(session, userdata)
+                : _ifFalse.Get(session, userdata);
+        }
+        
+        internal override void Emit(ConditionCompilationCtx ctx, Type targetType) {
+            var il = ctx.Il;
+            var labelEnd = il.DefineLabel();
+            var labelFalseBranch = il.DefineLabel();
+            var retType = ReturnType;
+            
+            LocalBuilder? tempOrigCond = null;
+
+            if (UsesCurrentConditionLocalInEmit) {
+                il.EmitSaveCurrentCondition(ref tempOrigCond, ctx);
+            }
+            
+            il.EmitSwapOutCurrentCondition(ref tempOrigCond, ctx, _condition, ConditionFieldInfo);
+            _condition.Emit(ctx, typeof(bool));
+            il.Emit(OpCodes.Brfalse, labelFalseBranch);
+            
+            il.EmitSwapOutCurrentCondition(ref tempOrigCond, ctx, _ifTrue, IfTrueFieldInfo);
+            _ifTrue.Emit(ctx, targetType);
+            il.Emit(OpCodes.Br, labelEnd);
+            
+            il.MarkLabel(labelFalseBranch);
+            il.EmitSwapOutCurrentCondition(ref tempOrigCond, ctx, _ifFalse, IfFalseFieldInfo);
+            _ifFalse.Emit(ctx, targetType);
+            
+            il.MarkLabel(labelEnd);
+            il.EmitRevertCurrentCondition(tempOrigCond, ctx);
+        }
+        
+        internal override bool UsesCurrentConditionLocalInEmit => 
+            _condition.UsesCurrentConditionLocalInEmit 
+            || _ifTrue.UsesCurrentConditionLocalInEmit
+            || _ifFalse.UsesCurrentConditionLocalInEmit;
+        
+        public static bool TryCreate(IReadOnlyList<Condition> args, [NotNullWhen(true)] out Condition? condition, [NotNullWhen(false)] out string? errorMessage) {
+            if (args is not [var cond, var ifTrue, var ifFalse]) {
+                return ArgumentAmtMismatch(args.Count, 3, out condition, out errorMessage);
+            }
+
+            return Ok(new IfCondition(cond, ifTrue, ifFalse), out condition, out errorMessage);
+        }
+    }
+        
     internal abstract class FunctionCondition : Condition {
         protected readonly Condition[] Conditions;
 

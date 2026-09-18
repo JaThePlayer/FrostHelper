@@ -29,7 +29,7 @@ public class IlCompilation {
     }
 
     CompiledCondition<T> AssertIl<T>(string expression, string expected, ExpressionContext? context = null) {
-        var flagExpr = TestUtils.CreateExpr(expression, context);
+        var flagExpr = TestUtils.CreateExpr(expression, context, createHybrid: false);
         var compiled = CompiledCondition<T>.GetFor(flagExpr);
         compiled.Jit();
         Assert.NotNull(compiled.CompiledMethod);
@@ -573,6 +573,120 @@ public class IlCompilation {
         IL_012d: conv.i4
         IL_012e: ret
         """);
+    }
+
+    [Fact]
+    public void If() {
+        var session = TestUtils.CreateTestSession();
+        
+        AssertIl<int>("$if(1, 2, 3)", """
+        IL_0000: ldc.i4.1
+        IL_0001: brfalse IL_0010
+        IL_0006: ldc.i4 2
+        IL_000b: br IL_0015
+        IL_0010: ldc.i4 3
+        IL_0015: ret
+        """);
+        
+        AssertIl<int>("$if(0, 2, $rgb(255, 0, 0))", """
+        IL_0000: ldc.i4.0
+        IL_0001: brfalse IL_0010
+        IL_0006: ldc.i4 2
+        IL_000b: br IL_0029
+        IL_0010: ldc.i4 255
+        IL_0015: ldc.i4 0
+        IL_001a: ldc.i4 0
+        IL_001f: call Microsoft.Xna.Framework.Color FrostHelper.SessionExpressions.FunctionCommands/RgbFunc::Get(System.Int32,System.Int32,System.Int32)
+        IL_0024: call System.Int32 FrostHelper.ColorHelper::ColorToHexInt(Microsoft.Xna.Framework.Color)
+        IL_0029: ret
+        """);
+        
+        AssertIl<object>("$if(0, 2, $rgb(255, 0, 0))", """
+        IL_0000: ldc.i4.0
+        IL_0001: brfalse IL_0015
+        IL_0006: ldc.i4 2
+        IL_000b: box System.Int32
+        IL_0010: br IL_002e
+        IL_0015: ldc.i4 255
+        IL_001a: ldc.i4 0
+        IL_001f: ldc.i4 0
+        IL_0024: call Microsoft.Xna.Framework.Color FrostHelper.SessionExpressions.FunctionCommands/RgbFunc::Get(System.Int32,System.Int32,System.Int32)
+        IL_0029: box Microsoft.Xna.Framework.Color
+        IL_002e: ret
+        """);
+        
+        // We are not be able to persist type information after this $if, as we could get int or Color here,
+        // meaning the multiplication has to fall back to dynamic dispatch.
+        AssertIl<int>("$if(0, 2, $rgb(255, 0, 0)) * 2", """
+        IL_0000: ldarg.2
+        IL_0001: stloc V_0
+        IL_0005: ldloc V_0
+        IL_0009: ldarg 
+        IL_000d: ldarg 
+        IL_0011: callvirt T FrostHelper.Helpers.ConditionHelper/Condition::Get<System.Int32>(Celeste.Session,System.Object)
+        IL_0016: ret
+        """);
+        // This could be solved by cloning, as in, expanding this expression into "$if(0, 2 * 2, $rgb(255, 0, 0) * 2)".
+        // This is a worthwhile optimization to look into later.
+        AssertIl<int>("$if(0, 2 * 2, $rgb(255, 0, 0) * 2)", """
+        IL_0000: ldc.i4.0
+        IL_0001: brfalse IL_0016
+        IL_0006: ldc.i4 2
+        IL_000b: ldc.i4 2
+        IL_0010: mul
+        IL_0011: br IL_0039
+        IL_0016: ldc.i4 255
+        IL_001b: ldc.i4 0
+        IL_0020: ldc.i4 0
+        IL_0025: call Microsoft.Xna.Framework.Color FrostHelper.SessionExpressions.FunctionCommands/RgbFunc::Get(System.Int32,System.Int32,System.Int32)
+        IL_002a: ldc.i4 2
+        IL_002f: call Microsoft.Xna.Framework.Color FrostHelper.SessionExpressions.OperatorMulColor::Perform(Microsoft.Xna.Framework.Color,System.Int32)
+        IL_0034: call System.Int32 FrostHelper.ColorHelper::ColorToHexInt(Microsoft.Xna.Framework.Color)
+        IL_0039: ret
+        """);
+
+
+        var ctx = new ExpressionContext(new() {
+            ["test1"] = new TestCondition(1),
+            ["test2"] = new TestCondition(2),
+        }, new());
+        
+        // Make sure that the current condition local is properly set before the branch if needed by any branch.
+        var x = AssertIl<int>("$if(0, $test1, $test2)", """
+        IL_0000: ldarg.2
+        IL_0001: stloc V_0
+        IL_0005: ldloc V_0
+        IL_0009: stloc V_1
+        IL_000d: ldc.i4.0
+        IL_000e: brfalse IL_003b
+        IL_0013: ldloc V_1
+        IL_0017: castclass FrostHelper.SessionExpressions.FunctionCommands/IfCondition
+        IL_001c: ldfld FrostHelper.Helpers.ConditionHelper/Condition FrostHelper.SessionExpressions.FunctionCommands/IfCondition::_ifTrue
+        IL_0021: stloc V_0
+        IL_0025: ldloc V_0
+        IL_0029: ldarg 
+        IL_002d: ldarg 
+        IL_0031: callvirt T FrostHelper.Helpers.ConditionHelper/Condition::Get<System.Int32>(Celeste.Session,System.Object)
+        IL_0036: br IL_005e
+        IL_003b: ldloc V_1
+        IL_003f: castclass FrostHelper.SessionExpressions.FunctionCommands/IfCondition
+        IL_0044: ldfld FrostHelper.Helpers.ConditionHelper/Condition FrostHelper.SessionExpressions.FunctionCommands/IfCondition::_ifFalse
+        IL_0049: stloc V_0
+        IL_004d: ldloc V_0
+        IL_0051: ldarg 
+        IL_0055: ldarg 
+        IL_0059: callvirt T FrostHelper.Helpers.ConditionHelper/Condition::Get<System.Int32>(Celeste.Session,System.Object)
+        IL_005e: ldloc V_1
+        IL_0062: stloc V_0
+        IL_0066: ret
+        """, ctx);
+        Assert.Equal(2, x.Get(session, null));
+    }
+
+    class TestCondition(object value) : ConditionHelper.Condition {
+        public override object Get(Session session, object? userdata) {
+            return value;
+        }
     }
     
     private void Test(Session s) {
