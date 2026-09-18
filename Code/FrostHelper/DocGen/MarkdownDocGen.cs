@@ -1,4 +1,5 @@
 using FrostHelper.API;
+using FrostHelper.Helpers;
 using FrostHelper.SessionExpressions;
 using System.Globalization;
 using System.Text;
@@ -39,6 +40,21 @@ internal static class MarkdownDocGen {
                 
                 builder.AppendLine(CultureInfo.InvariantCulture, $"- {FormatFunction(function.Descriptor, ".")}");
             }
+
+            var firstOperator = true;
+            if (type.CSharpType != typeof(object)) {
+                foreach (var (op, leftType, rightType, function) in MathOperatorRegistry.Registry
+                             .SelectMany(x => x.Value.Select(kv => (x.Key, kv.Key.left, kv.Key.right, kv.Value)))
+                             .Where(x => x.left == type.CSharpType)) {
+                    if (firstOperator) {
+                        firstOperator = false;
+                        builder.AppendLine("\nOperators:");
+                    }
+                
+                    builder.AppendLine(CultureInfo.InvariantCulture, $"- {FormatType(leftType)} {FormatOperator(op)} {FormatType(rightType)} -> {FormatType(function(null!, null!).ReturnType ?? typeof(object))}");
+                }
+            }
+
 
             builder.AppendLine();
         }
@@ -82,6 +98,26 @@ internal static class MarkdownDocGen {
 
         return FormatType(descriptor);
     }
+
+    private static string FormatOperator(BinOpExpression.Operators op) => op switch {
+        BinOpExpression.Operators.Add => "+",
+        BinOpExpression.Operators.Sub => "-",
+        BinOpExpression.Operators.Mul => "*",
+        BinOpExpression.Operators.Div => "/",
+        BinOpExpression.Operators.DivFloat => "//",
+        BinOpExpression.Operators.Modulo => "%",
+        BinOpExpression.Operators.And => "&&",
+        BinOpExpression.Operators.Or => "||",
+        BinOpExpression.Operators.BitwiseAnd => "&",
+        BinOpExpression.Operators.BitwiseOr => "|",
+        BinOpExpression.Operators.Eq => "==",
+        BinOpExpression.Operators.Ne => "!=",
+        BinOpExpression.Operators.Lt => "<",
+        BinOpExpression.Operators.Le => "<=",
+        BinOpExpression.Operators.Gt => ">",
+        BinOpExpression.Operators.Ge => ">=",
+        _ => throw new ArgumentOutOfRangeException(nameof(op), op, null)
+    };
 
     private static string FormatRenderParts(IReadOnlyList<RenderPart>? parts) {
         if (parts is null)
