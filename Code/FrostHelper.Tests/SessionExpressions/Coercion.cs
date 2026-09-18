@@ -68,11 +68,17 @@ public class Coercion {
         
         // Strings get treated as color codes
         Assert.Equal(new Color(0xff, 0x00, 0x10), TestUtils.CreateHybridExpr<Color>("\"ff0010\"").GetT(session));
+        Assert.Equal(new Color(0xff, 0x00, 0x10, 0x90), TestUtils.CreateHybridExpr<Color>("\"ff001090\"").GetT(session));
         Assert.Equal(new Color(0xff, 0x00, 0x00), TestUtils.CreateHybridExpr<Color>("\"Red\"").GetT(session));
         
         // Numbers get treated as hex values.
-        Assert.Equal(new Color(0xff, 0x00, 0x10), TestUtils.CreateHybridExpr<Color>(0xff0010.ToString()).GetT(session));
-        Assert.Equal(new Color(0xff, 0x00, 0x10), TestUtils.CreateHybridExpr<Color>($"{0xff0010}.0").GetT(session));
+        Assert.Equal(new Color(0xff, 0x00, 0x10), TestUtils.CreateHybridExpr<Color>(unchecked((int)0xff0010ff).ToString()).GetT(session));
+        Assert.Equal(new Color(0xff, 0x00, 0x10, 0x60), TestUtils.CreateHybridExpr<Color>($"{unchecked((int)0xff001060)}.0").GetT(session));
         
+        // Color -> string returns hex color code.
+        Assert.Equal("ff0010", TestUtils.CreateHybridExpr<string>("$rgb(255, 0, 16)").GetT(session));
+        
+        // Color -> int returns 0xrrggbbaa hex.
+        Assert.Equal(unchecked((int)0xff0010ff), TestUtils.CreateHybridExpr<int>("$rgb(255, 0, 16)").GetT(session));
     }
 }

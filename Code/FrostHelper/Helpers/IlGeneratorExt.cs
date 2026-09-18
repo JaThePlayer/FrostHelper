@@ -7,8 +7,10 @@ using OpCodes = System.Reflection.Emit.OpCodes;
 namespace FrostHelper.Helpers;
 
 internal static class IlGeneratorExt {
-    private static readonly MethodInfo MethodCalcHexToColorInt = typeof(Calc).GetMethod(nameof(Calc.HexToColor), [ typeof(int) ])!;
+    private static readonly MethodInfo MethodColorHelperHexToColorInt = typeof(ColorHelper).GetMethod(nameof(ColorHelper.HexToColorInt), [ typeof(int) ])!;
     private static readonly MethodInfo MethodColorHelperGetColor = typeof(ColorHelper).GetMethod(nameof(ColorHelper.GetColor), [ typeof(string) ])!;
+    private static readonly MethodInfo MethodColorHelperColorToHex = typeof(ColorHelper).GetMethod(nameof(ColorHelper.ColorToHex), [ typeof(Color) ])!;
+    private static readonly MethodInfo MethodColorHelperColorToHexInt = typeof(ColorHelper).GetMethod(nameof(ColorHelper.ColorToHexInt), [ typeof(Color) ])!;
     
     extension(ILGenerator il) {
         public void EmitLoadConstAs(object value, Type targetType) {
@@ -129,18 +131,31 @@ internal static class IlGeneratorExt {
 
             if (toType == typeof(Color)) {
                 if (fromType == typeof(int)) {
-                    il.Emit(OpCodes.Call, MethodCalcHexToColorInt);
+                    il.Emit(OpCodes.Call, MethodColorHelperHexToColorInt);
                     return;
                 }
                 
                 if (fromType == typeof(float)) {
                     il.Emit(OpCodes.Conv_I4);
-                    il.Emit(OpCodes.Call, MethodCalcHexToColorInt);
+                    il.Emit(OpCodes.Call, MethodColorHelperHexToColorInt);
                     return;
                 }
                 
                 if (fromType == typeof(string)) {
                     il.Emit(OpCodes.Call, MethodColorHelperGetColor);
+                    return;
+                }
+            }
+
+            if (fromType == typeof(Color)) {
+                // Color -> string is hex code
+                if (toType == typeof(string)) {
+                    il.Emit(OpCodes.Call, MethodColorHelperColorToHex);
+                    return;
+                }
+                
+                if (toType == typeof(int)) {
+                    il.Emit(OpCodes.Call, MethodColorHelperColorToHexInt);
                     return;
                 }
             }

@@ -301,6 +301,18 @@ public class IlCompilation {
     }
 
     [Fact]
+    public void ColorTests() {
+        AssertIl<int>("$rgb(255, 0, 16)", """
+        IL_0000: ldc.i4 255
+        IL_0005: ldc.i4 0
+        IL_000a: ldc.i4 16
+        IL_000f: call Microsoft.Xna.Framework.Color FrostHelper.SessionExpressions.FunctionCommands/RgbFunc::Get(System.Int32,System.Int32,System.Int32)
+        IL_0014: call System.Int32 FrostHelper.ColorHelper::ColorToHexInt(Microsoft.Xna.Framework.Color)
+        IL_0019: ret
+        """);
+    }
+
+    [Fact]
     public void RainbowSpinnerHue() {
         var expr = "0.4 + $yoyo(($pos.len + $time * 50) % 280 / 280) * 0.4";
         

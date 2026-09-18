@@ -100,7 +100,28 @@ public static class ColorHelper {
     }
 
     public static string ColorToHex(Color color) {
-        return $"{color.R:X2}{color.G:X2}{color.B:X2}{color.A:X2}";
+        if (color.A == 255) {
+            return $"{color.R:x2}{color.G:x2}{color.B:x2}";
+        }
+        
+        return $"{color.R:x2}{color.G:x2}{color.B:X2}{color.A:x2}";
+    }
+    
+    /// <summary>
+    /// Converts the color to a packed int in format 0xrrggbbaa.
+    /// </summary>
+    public static int ColorToHexInt(Color color) {
+        return color.A
+             | (color.B << 8)
+             | (color.G << 16)
+             | (color.R << 24);
+    }
+    
+    /// <summary>
+    /// Converts a packed int in format 0xrrggbbaa to a color.
+    /// </summary>
+    public static Color HexToColorInt(int hexRgba) {
+        return new Color((byte) (hexRgba >> 24), (byte) (hexRgba >> 16), (byte) (hexRgba >> 8), (byte) hexRgba);
     }
 
     // Based on Communal Helper:

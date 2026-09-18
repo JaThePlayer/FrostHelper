@@ -468,6 +468,9 @@ public static class ConditionHelper {
         internal static string CoerceToString(object obj) {
             if (obj is string str)
                 return str;
+
+            if (obj is Color c)
+                return ColorHelper.ColorToHex(c);
             
             if (obj is IFormattable f)
                 return f.ToString(null, CultureInfo.InvariantCulture);
@@ -546,6 +549,8 @@ public static class ConditionHelper {
                     return T.CreateTruncating(f);
                 case byte f:
                     return T.CreateTruncating(f);
+                case Color c:
+                    return T.CreateTruncating(ColorHelper.ColorToHexInt(c));
             }
             
             NotificationHelper.Notify($"Can't convert Session Expression value '{obj}' [{obj?.GetType().Name ?? "null"}] to {typeof(T).Name}.\nReturning 0!");
@@ -560,10 +565,10 @@ public static class ConditionHelper {
                 return ColorHelper.GetColor(str);
 
             if (obj is int i)
-                return Calc.HexToColor(i);
+                return ColorHelper.HexToColorInt(i);
 
             if (obj is float f)
-                return Calc.HexToColor((int) f);
+                return ColorHelper.HexToColorInt((int) f);
 
             NotificationHelper.Notify($"Can't convert Session Expression value '{obj}' [{obj?.GetType().Name ?? "null"}] to Color.\nReturning 00000000!");
             return default;
