@@ -16,6 +16,7 @@ public class Colors {
         var session = new Session();
         
         Assert.Equal(new Color(255, 41, 16), TestUtils.CreateHybridExpr<Color>("$rgb(255, 41, 16)").GetT(session));
+        Assert.Equal(new Color(255, 41, 16, 40), TestUtils.CreateHybridExpr<Color>("$rgba(255, 41, 16, 40)").GetT(session));
     }
 
     [Fact]
@@ -23,6 +24,7 @@ public class Colors {
         var session = new Session();
         
         Assert.Equal(Calc.HsvToColor(0.3f, 0.6f, 0.7f), TestUtils.CreateHybridExpr<Color>("$hsv(0.3, 0.6, 0.7)").GetT(session));
+        Assert.Equal(Calc.HsvToColor(0.3f, 0.6f, 0.7f) with { A = 40 }, TestUtils.CreateHybridExpr<Color>("$hsva(0.3, 0.6, 0.7, 40)").GetT(session));
     }
 
     [Fact]

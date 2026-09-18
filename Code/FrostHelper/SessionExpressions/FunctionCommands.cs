@@ -72,10 +72,22 @@ internal static class FunctionCommands {
             RenderPart.Default(" using r, g, b values, assumed to be in range 0-255.")
         ]);
         
+        RegisterPure<int, int, int, int, Color, RgbaFunc>("rgba", [
+            RenderPart.Default("Creates a "),
+            RenderPart.Type(TypeDescriptor.For(typeof(Color))),
+            RenderPart.Default(" using r, g, b, a values, assumed to be in range 0-255.")
+        ]);
+        
         RegisterPure<float, float, float, Color, HsvFunc>("hsv", [
             RenderPart.Default("Creates a "),
             RenderPart.Type(TypeDescriptor.For(typeof(Color))),
             RenderPart.Default(" using h, s, v values, assumed to be in range 0-1.")
+        ]);
+        
+        RegisterPure<float, float, float, int, Color, HsvaFunc>("hsva", [
+            RenderPart.Default("Creates a "),
+            RenderPart.Type(TypeDescriptor.For(typeof(Color))),
+            RenderPart.Default(" using h, s, v values, assumed to be in range 0-1. Alpha is in range 0-255.")
         ]);
         
         RegisterPure<string, string, DialogFunc>("dialog", [
@@ -160,7 +172,19 @@ internal static class FunctionCommands {
             PureMathCondition.TryCreate<TArg1, TArg2, TArg3, TRet, TOp>);
     }
     
-
+    private static void RegisterPure<TArg1, TArg2, TArg3, TArg4, TRet, TOp>(string name, IReadOnlyList<RenderPart> description)
+        where TOp : struct, IPureFunc<TArg1, TArg2, TArg3, TArg4, TRet> {
+        Register(name, [ 
+                new ArgumentDescriptor(TOp.Arg1Name, TypeDescriptor.For(typeof(TArg1))),
+                new ArgumentDescriptor(TOp.Arg2Name, TypeDescriptor.For(typeof(TArg2))),
+                new ArgumentDescriptor(TOp.Arg3Name, TypeDescriptor.For(typeof(TArg3))),
+                new ArgumentDescriptor(TOp.Arg4Name, TypeDescriptor.For(typeof(TArg4)))
+            ],
+            TypeDescriptor.For(typeof(TRet)),
+            description,
+            PureMathCondition.TryCreate<TArg1, TArg2, TArg3, TArg4, TRet, TOp>);
+    }
+    
     internal struct RangeFunc : IPureFunc<int, int, IEnumerable<int>> {
         public static IEnumerable<int> Get(int min, int count) {
             return Enumerable.Range(min, count);
@@ -317,6 +341,18 @@ internal static class FunctionCommands {
         public static abstract string Arg2Name { get; }
         
         public static abstract string Arg3Name { get; }
+    }
+    
+    private interface IPureFunc<in TArg1, in TArg2, in TArg3, in TArg4, out TRet> {
+        public static abstract TRet Get(TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4);
+        
+        public static abstract string Arg1Name { get; }
+
+        public static abstract string Arg2Name { get; }
+        
+        public static abstract string Arg3Name { get; }
+        
+        public static abstract string Arg4Name { get; }
     }
 
     private interface IPureMathFunc<T> : IPureFunc<T, T> where T : struct, INumber<T>;
@@ -475,6 +511,20 @@ internal static class FunctionCommands {
         public static string Arg3Name => "b";
     }
     
+    private struct RgbaFunc : IPureFunc<int, int, int, int, Color> {
+        public static Color Get(int r, int g, int b, int alpha) {
+            return new Color(r, g, b, alpha);
+        }
+
+        public static string Arg1Name => "r";
+        
+        public static string Arg2Name => "g";
+        
+        public static string Arg3Name => "b";
+        
+        public static string Arg4Name => "a";
+    }
+    
     private struct HsvFunc : IPureFunc<float, float, float, Color> {
         public static Color Get(float h, float s, float v) {
             return Calc.HsvToColor(h, s, v);
@@ -485,6 +535,22 @@ internal static class FunctionCommands {
         public static string Arg2Name => "s";
         
         public static string Arg3Name => "v";
+    }
+    
+    private struct HsvaFunc : IPureFunc<float, float, float, int, Color> {
+        public static Color Get(float h, float s, float v, int alpha) {
+            var color = Calc.HsvToColor(h, s, v);
+            color.A = byte.CreateTruncating(alpha);
+            return color;
+        }
+        
+        public static string Arg1Name => "h";
+        
+        public static string Arg2Name => "s";
+        
+        public static string Arg3Name => "v";
+        
+        public static string Arg4Name => "alpha";
     }
     
     private struct DialogFunc : IPureFunc<string, string> {
@@ -644,6 +710,64 @@ internal static class FunctionCommands {
 
         protected internal override Type ReturnType => typeof(TRet);
     }
+    
+    private sealed class PureMathFourArgCondition<TArg1, TArg2, TArg3, TArg4, TRet, TOp>(Condition x, Condition y, Condition z, Condition a) : FunctionCondition(x)
+        where TOp : struct, IPureFunc<TArg1, TArg2, TArg3, TArg4, TRet> {
+        private readonly Condition _x = x;
+        private readonly Condition _y = y;
+        private readonly Condition _z = z;
+        private readonly Condition _a = a;
+
+        private static readonly FieldInfo XFieldInfo
+            = typeof(PureMathFourArgCondition<TArg1, TArg2, TArg3, TArg4, TRet, TOp>).GetField(nameof(_x),
+                BindingFlags.Instance | BindingFlags.NonPublic)!;
+        
+        private static readonly FieldInfo YFieldInfo
+            = typeof(PureMathFourArgCondition<TArg1, TArg2, TArg3, TArg4, TRet, TOp>).GetField(nameof(_y),
+                BindingFlags.Instance | BindingFlags.NonPublic)!;
+        
+        private static readonly FieldInfo ZFieldInfo
+            = typeof(PureMathFourArgCondition<TArg1, TArg2, TArg3, TArg4, TRet, TOp>).GetField(nameof(_z),
+                BindingFlags.Instance | BindingFlags.NonPublic)!;
+        
+        private static readonly FieldInfo AFieldInfo
+            = typeof(PureMathFourArgCondition<TArg1, TArg2, TArg3, TArg4, TRet, TOp>).GetField(nameof(_a),
+                BindingFlags.Instance | BindingFlags.NonPublic)!;
+        
+        public override object Get(Session session, object? userdata) {
+            return TOp.Get(
+                _x.Get<TArg1>(session, userdata), 
+                _y.Get<TArg2>(session, userdata), 
+                _z.Get<TArg3>(session, userdata), 
+                _a.Get<TArg4>(session, userdata))!;
+        }
+        
+        internal override void Emit(ConditionCompilationCtx ctx, Type targetType) {
+            var il = ctx.Il;
+            LocalBuilder? tempOrigCond = null;
+            
+            il.EmitSwapOutCurrentCondition(ref tempOrigCond, ctx, _x, XFieldInfo);
+            _x.Emit(ctx, typeof(TArg1));
+            il.EmitSwapOutCurrentCondition(ref tempOrigCond, ctx, _y, YFieldInfo);
+            _y.Emit(ctx, typeof(TArg2));
+            il.EmitSwapOutCurrentCondition(ref tempOrigCond, ctx, _z, ZFieldInfo);
+            _z.Emit(ctx, typeof(TArg3));
+            il.EmitSwapOutCurrentCondition(ref tempOrigCond, ctx, _a, AFieldInfo);
+            _a.Emit(ctx, typeof(TArg4));
+            
+            il.EmitRevertCurrentCondition(tempOrigCond, ctx);
+            
+            il.Emit(OpCodes.Call, typeof(TOp).GetMethod(nameof(TOp.Get))!);
+            il.EmitConvertToInSessionExpression(typeof(TRet), targetType);
+        }
+        
+        internal override bool UsesCurrentConditionLocalInEmit => _x.UsesCurrentConditionLocalInEmit 
+                                                               || _y.UsesCurrentConditionLocalInEmit
+                                                               || _z.UsesCurrentConditionLocalInEmit
+                                                               || _a.UsesCurrentConditionLocalInEmit;
+
+        protected internal override Type ReturnType => typeof(TRet);
+    }
 
     private static class PureMathCondition {
         public static bool TryCreateIntOrFloat<TInt, TFloat>(IReadOnlyList<Condition> args, [NotNullWhen(true)] out Condition? condition,
@@ -748,6 +872,17 @@ internal static class FunctionCommands {
             }
 
             return FunctionCondition.Ok(new PureMathThreeArgCondition<TArg1, TArg2, TArg3, TRet, TOp>(a, b, c), out condition, out errorMessage);
+        }
+        
+        public static bool TryCreate<TArg1, TArg2, TArg3, TArg4, TRet, TOp>(IReadOnlyList<Condition> args, [NotNullWhen(true)] out Condition? condition,
+            [NotNullWhen(false)] out string? errorMessage) 
+            where TOp : struct, IPureFunc<TArg1, TArg2, TArg3, TArg4, TRet>
+        {
+            if (args is not [var a, var b, var c, var d]) {
+                return FunctionCondition.ArgumentAmtMismatch(args.Count, 4, out condition, out errorMessage);
+            }
+
+            return FunctionCondition.Ok(new PureMathFourArgCondition<TArg1, TArg2, TArg3, TArg4, TRet, TOp>(a, b, c, d), out condition, out errorMessage);
         }
     }
 
