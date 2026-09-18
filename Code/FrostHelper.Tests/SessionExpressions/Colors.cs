@@ -24,4 +24,12 @@ public class Colors {
         
         Assert.Equal(Calc.HsvToColor(0.3f, 0.6f, 0.7f), TestUtils.CreateHybridExpr<Color>("$hsv(0.3, 0.6, 0.7)").GetT(session));
     }
+
+    [Fact]
+    public void OperatorMul() {
+        var session = new Session();
+        
+        Assert.Equal(new Color(255, 41, 16) * 0.3f, TestUtils.CreateHybridExpr<Color>("$rgb(255, 41, 16) * .3").GetT(session));
+        Assert.Equal(new Color(255, 41, 16) * 0.3f, TestUtils.CreateHybridExpr<Color>(".3 * $rgb(255, 41, 16)").GetT(session));
+    }
 }

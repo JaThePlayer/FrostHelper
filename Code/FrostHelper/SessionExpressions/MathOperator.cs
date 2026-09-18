@@ -5,18 +5,16 @@ using Vector2 = Microsoft.Xna.Framework.Vector2;
 
 namespace FrostHelper.SessionExpressions;
 
-internal interface IMathOperator<TIntIntResult>
-    : IMathOperator<float, float, float>, 
-      IMathOperator<float, int, float>, 
-      IMathOperator<int, float, float>, 
-      IMathOperator<int, int, TIntIntResult>,
-      IMathOperator<float, Vector2, Vector2>,
-      IMathOperator<Vector2, float, Vector2>,
-      IMathOperator<int, Vector2, Vector2>,
-      IMathOperator<Vector2, int, Vector2>,
-      IMathOperator<Vector2, Vector2, Vector2>
-{
-}
+internal interface IMathOperator<out TIntIntResult>
+    : IMathOperator<float, float, float>,
+        IMathOperator<float, int, float>,
+        IMathOperator<int, float, float>,
+        IMathOperator<int, int, TIntIntResult>,
+        IMathOperator<float, Vector2, Vector2>,
+        IMathOperator<Vector2, float, Vector2>,
+        IMathOperator<int, Vector2, Vector2>,
+        IMathOperator<Vector2, int, Vector2>,
+        IMathOperator<Vector2, Vector2, Vector2>;
 
 internal interface IMathOperator<in TLeft, in TRight, out TRet> {
     static abstract TRet Perform(TLeft a, TRight b);
@@ -36,8 +34,19 @@ internal static class MathOperatorRegistry {
         RegisterDefaultMathOperator<float, OperatorDivFloat>(BinOpExpression.Operators.DivFloat);
         RegisterDefaultMathOperator<int, OperatorMul>(BinOpExpression.Operators.Mul);
         RegisterDefaultMathOperator<int, IOperatorModulo>(BinOpExpression.Operators.Modulo);
+
+        Register<Color, float, Color, OperatorMulColor>(BinOpExpression.Operators.Mul);
+        Register<float, Color, Color, OperatorMulColor>(BinOpExpression.Operators.Mul);
     }
 
+    static void Register<TLeft, TRight, TRes, TOperator>(BinOpExpression.Operators op)
+        where TOperator : IMathOperator<TLeft, TRight, TRes> {
+        Registry.TryAdd(op, new());
+
+        var reg = Registry[op];
+        reg[(typeof(TLeft), typeof(TRight))] = MathOperator<TLeft, TRight, TRes, TOperator>.Create;
+    }
+    
     static void RegisterDefaultMathOperator<TIntIntResult, TOperator>(BinOpExpression.Operators op) where TOperator : IMathOperator<TIntIntResult> {
         Registry.TryAdd(op, new());
 
@@ -432,5 +441,21 @@ internal struct OperatorDivFloat : IMathOperator<float> {
 
     public static bool CanUseOpCodeFor(ConditionHelper.Condition a, ConditionHelper.Condition b) {
         return a.ReturnTypeIsNumber && b is IConstCondition<float> { Value: not 0 };
+    }
+}
+
+internal struct OperatorMulColor : IMathOperator<Color, float, Color>, IMathOperator<float, Color, Color> {
+    public static Color Perform(Color a, float b) {
+        return a * b;
+    }
+
+    public static Color Perform(float a, Color b) {
+        return b * a;
+    }
+
+    public static OpCode? PerformOpCode => null;
+    
+    public static bool CanUseOpCodeFor(ConditionHelper.Condition a, ConditionHelper.Condition b) {
+        return false;
     }
 }
