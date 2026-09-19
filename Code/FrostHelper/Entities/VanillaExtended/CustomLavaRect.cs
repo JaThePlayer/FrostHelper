@@ -37,7 +37,8 @@ internal sealed class CustomLavaRect : Component {
                     && waveParser.Read<float>().TryUnpack(out waveData.Phase)) {
                 }
                 
-                parsed.Add(waveData);
+                if (waveData.Amplitude != 0f)
+                    parsed.Add(waveData);
             }
 
             cachedRef = parsed;
