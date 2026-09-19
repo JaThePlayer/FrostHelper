@@ -23,6 +23,10 @@ internal sealed class LambdaContext(IExpressionContext source, LambdaDefinitionC
     public void RegisterSimpleCommand(string name, ConditionHelper.Condition command) {
         throw new Exception("Cannot register commands on a lambda context");
     }
+
+    public void RegisterFunctionCommand(string name, FunctionCommand factory) {
+        throw new Exception("Cannot register functions on a lambda context");
+    }
 }
 
 internal sealed class LambdaArgumentCondition(LambdaDefinitionCondition lambdaDefinition, int index) : ConditionHelper.Condition {

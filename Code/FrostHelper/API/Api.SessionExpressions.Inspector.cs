@@ -1,4 +1,3 @@
-global using ApiRenderPart = (string Contents, string ColorId, System.Collections.Generic.IReadOnlyList<(string Contents, string ColorId)>? Tooltip);
 global using ApiAutoCompletion = (
     System.Collections.Generic.IReadOnlyList<(string Contents, string ColorId)> Name,
     System.Collections.Generic.IReadOnlyList<(string Contents, string ColorId)> Description,
@@ -16,6 +15,7 @@ public static partial class API {
     /// <summary>
     /// Creates a Session Expression Inspector object, which can be used by other apis to inspect contents of a session expression,
     /// to be used by REPLs and such.
+    /// WARNING: EXPERIMENTAL. ONLY FOR USE IN MAPPING UTILS FOR NOW.
     /// </summary>
     /// <param name="expressionContext">The Session Expression Context to use, leave null to use default context.</param>
     /// <returns>An Inspector object, which can be passed to other APIs.</returns>
@@ -26,6 +26,7 @@ public static partial class API {
     /// <summary>
     /// Gets the text currently stored in the inspector.
     /// Empty string at first.
+    /// WARNING: EXPERIMENTAL. ONLY FOR USE IN MAPPING UTILS FOR NOW.
     /// </summary>
     public static string GetInspectorText(object inspector) {
         InspectorSession inspectorSession = AssertIs<InspectorSession>(inspector);
@@ -36,6 +37,7 @@ public static partial class API {
     /// <summary>
     /// Sets the text currently stored in the inspector.
     /// After doing this, you can use other APIs to retrieve information about the current session expression.
+    /// WARNING: EXPERIMENTAL. ONLY FOR USE IN MAPPING UTILS FOR NOW.
     /// </summary>
     public static void SetInspectorText(object inspector, string newText) {
         InspectorSession inspectorSession = AssertIs<InspectorSession>(inspector);
@@ -46,11 +48,12 @@ public static partial class API {
     /// <summary>
     /// Gets the session expression currently stored in the inspector.
     /// Can be null if errors occured during creation.
+    /// WARNING: EXPERIMENTAL. ONLY FOR USE IN MAPPING UTILS FOR NOW.
     /// </summary>
     public static object? GetInspectorSessionExpression(object inspector) {
         InspectorSession inspectorSession = AssertIs<InspectorSession>(inspector);
 
-        return inspectorSession.Condition;
+        return inspectorSession.Condition is null ? null : CompiledCondition<object>.GetFor(inspectorSession.Condition);
     }
 
     /// <summary>
@@ -58,6 +61,7 @@ public static partial class API {
     /// Might be empty if the expression failed to parse.
     ///
     /// Color IDs represent the kind of text to render, their actual color is dependent on the user.
+    /// WARNING: EXPERIMENTAL. ONLY FOR USE IN MAPPING UTILS FOR NOW.
     /// </summary>
     public static IReadOnlyList<ApiRenderPart> GetInspectorRenderParts(object inspector) {
         InspectorSession inspectorSession = AssertIs<InspectorSession>(inspector);
@@ -68,6 +72,7 @@ public static partial class API {
     /// <summary>
     /// Gets the errors the inspector encountered while parsing the expression.
     /// Empty if no errors were found.
+    /// WARNING: EXPERIMENTAL. ONLY FOR USE IN MAPPING UTILS FOR NOW.
     /// </summary>
     public static IReadOnlyList<string> GetInspectorErrors(object inspector) {
         InspectorSession inspectorSession = AssertIs<InspectorSession>(inspector);

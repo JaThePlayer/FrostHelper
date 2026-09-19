@@ -1,6 +1,7 @@
 ﻿using FrostHelper.Helpers;
 using FrostHelper.SessionExpressions;
-using System.Runtime.CompilerServices;
+using System.Text;
+using Xunit.Abstractions;
 
 namespace FrostHelper.Tests;
 
@@ -71,6 +72,10 @@ public static class TestUtils {
             return compiledRet;
         }
 
+        public T GetTCompiled(Session session, object? userdata = null) {
+            return _compiled.Get(session, userdata);
+        }
+
         internal override void Emit(ConditionCompilationCtx ctx, Type targetType) {
             basedOn.Emit(ctx, targetType);
         }
@@ -80,5 +85,33 @@ public static class TestUtils {
         internal override bool UsesCurrentConditionLocalInEmit => basedOn.UsesCurrentConditionLocalInEmit;
 
         public override bool OnlyChecksFlags() => basedOn.OnlyChecksFlags();
+    }
+    
+    internal static void AssertIl(ITestOutputHelper output, DynamicMethodDefinition method, string expected) {
+        var actual = method.Definition.Body.Instructions;
+        StringBuilder builder = new StringBuilder();
+        foreach (var i in actual) {
+            builder.AppendLine(i.ToString());
+        }
+
+        var result = builder.ToString().TrimEnd();
+        expected = expected.ReplaceLineEndings();
+        if (expected != result) {
+            var allValid = expected.Split().Zip(result.Split()).All(p => p.First.EndsWith("***") ? p.Second.StartsWith(p.First.TrimEnd("***")) : p.First == p.Second);
+            if (allValid)
+                return;
+            output.WriteLine(result);
+            Assert.Equal(expected, result);
+        }
+    }
+
+    internal static CompiledCondition<T> AssertIl<T>(ITestOutputHelper output, string expression, string expected, IExpressionContext? context = null) {
+        var flagExpr = TestUtils.CreateExpr(expression, context, createHybrid: false);
+        var compiled = CompiledCondition<T>.GetFor(flagExpr);
+        compiled.Jit();
+        Assert.NotNull(compiled.CompiledMethod);
+        AssertIl(output, compiled.CompiledMethod, expected);
+
+        return compiled;
     }
 }

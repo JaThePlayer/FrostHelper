@@ -9,6 +9,8 @@ public interface IExpressionContext {
     public bool TryGetFunctionCommand(string name, [NotNullWhen(true)] out FunctionCommand? factory);
 
     public void RegisterSimpleCommand(string name, ConditionHelper.Condition command);
+    
+    public void RegisterFunctionCommand(string name, FunctionCommand factory);
 }
 
 /// <summary>
@@ -44,5 +46,9 @@ internal sealed class ExpressionContext(
 
     public void RegisterSimpleCommand(string name, ConditionHelper.Condition command) {
         simpleCommands[name] = command;
+    }
+
+    public void RegisterFunctionCommand(string name, FunctionCommand factory) {
+        functions[name] = factory;
     }
 }

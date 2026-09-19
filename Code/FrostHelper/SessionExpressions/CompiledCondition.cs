@@ -70,6 +70,29 @@ internal sealed class ConditionCompilationCtx {
     }
 }
 
+internal static class CompiledCondition {
+    private static readonly Dictionary<Type, (MethodInfo GetForMethod, Type DelegateType, MethodInfo GetMethod)> Cache = [];
+    
+    /// <summary>
+    /// Returns a Func{Session, object, returnType} that invokes a compiled session expression.
+    /// </summary>
+    public static Delegate GetDelegateFor(ConditionHelper.Condition condition, Type returnType) {
+        lock (Cache) {
+            if (!Cache.TryGetValue(returnType, out var result)) {
+                var t = typeof(CompiledCondition<>).MakeGenericType(returnType);
+                result.GetForMethod = t.GetMethod(nameof(CompiledCondition<>.GetFor))!;
+                result.DelegateType = typeof(Func<,,>).MakeGenericType(typeof(Session), typeof(object), returnType);
+                result.GetMethod = t.GetMethod(nameof(CompiledCondition<>.Get))!;
+                Cache[returnType] = result;
+            }
+
+            var compiledCondition = result.GetForMethod.Invoke(null, [condition]);
+
+            return Delegate.CreateDelegate(result.DelegateType, compiledCondition, result.GetMethod);
+        }
+    }
+}
+
 internal sealed class CompiledCondition<T> : ISavestatePersisted, IDisposable {
     private static readonly ConditionalWeakTable<ConditionHelper.Condition, CompiledCondition<T>> Cache = new();
     private static int _compiledAmt;
@@ -79,15 +102,15 @@ internal sealed class CompiledCondition<T> : ISavestatePersisted, IDisposable {
     }
     
     private CompiledCondition(ConditionHelper.Condition basedOn) {
-        _basedOn = basedOn;
+        SourceCondition = basedOn;
     }
-
-    private readonly ConditionHelper.Condition _basedOn;
 
     private Func<Session, object?, ConditionHelper.Condition, T>? _compiled;
 
     private bool _attemptedToCompile;
-    
+
+    internal ConditionHelper.Condition SourceCondition { get; }
+
     internal DynamicMethodDefinition? CompiledMethod { get; private set; }
     
     internal Exception? CompilationException { get; private set; }
@@ -99,13 +122,19 @@ internal sealed class CompiledCondition<T> : ISavestatePersisted, IDisposable {
                 _compiled = Jit();
             } catch (Exception ex) {
                 CompilationException = ex;
-                Logger.Error("FrostHelper.CompiledCondition", $"Failed to compile session expression '{_basedOn.SourceText}', falling back to interpreter: {ex}");
+                Logger.Error("FrostHelper.CompiledCondition", $"Failed to compile session expression '{SourceCondition.SourceText}', falling back to interpreter: {ex}");
             }
         }
 
         return _compiled is null
-            ? _basedOn.Get<T>(session, userdata)
-            : _compiled(session, userdata, _basedOn);
+            ? SourceCondition.Get<T>(session, userdata)
+            : _compiled(session, userdata, SourceCondition);
+    }
+
+    public TOther GetOther<TOther>(Session session, object? userdata) {
+        var orig = Get(session, userdata);
+        
+        return ConditionHelper.Condition.Coerce<TOther>(orig!);
     }
 
     internal Func<Session, object?, ConditionHelper.Condition, T>? Jit() {
@@ -121,12 +150,12 @@ internal sealed class CompiledCondition<T> : ISavestatePersisted, IDisposable {
             Il = il,
         };
 
-        if (_basedOn.UsesCurrentConditionLocalInEmit) {
+        if (SourceCondition.UsesCurrentConditionLocalInEmit) {
             il.Emit(OpCodes.Ldarg_2);
             il.Emit(OpCodes.Stloc, ctx.CurrentCondition);
         }
 
-        _basedOn.Emit(ctx, typeof(T));
+        SourceCondition.Emit(ctx, typeof(T));
         
         il.Emit(OpCodes.Ret);
 

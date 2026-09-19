@@ -6,55 +6,26 @@ using Xunit.Abstractions;
 namespace FrostHelper.Tests.SessionExpressions;
 
 [Collection("FrostHelper")]
-public class IlCompilation {
-    private readonly ITestOutputHelper output;
-
-    public IlCompilation(ITestOutputHelper output)
-    {
-        this.output = output;
-    }
-    
-    void AssertIl(DynamicMethodDefinition method, string expected) {
-        var actual = method.Definition.Body.Instructions;
-        StringBuilder builder = new StringBuilder();
-        foreach (var i in actual) {
-            builder.AppendLine(i.ToString());
-        }
-
-        var result = builder.ToString().TrimEnd();
-        if (expected.ReplaceLineEndings() != result) {
-            output.WriteLine(result);
-        }
-        Assert.Equal(expected.ReplaceLineEndings(), result);
-    }
-
-    CompiledCondition<T> AssertIl<T>(string expression, string expected, ExpressionContext? context = null) {
-        var flagExpr = TestUtils.CreateExpr(expression, context, createHybrid: false);
-        var compiled = CompiledCondition<T>.GetFor(flagExpr);
-        compiled.Jit();
-        Assert.NotNull(compiled.CompiledMethod);
-        AssertIl(compiled.CompiledMethod, expected);
-
-        return compiled;
-    }
+public class IlCompilation(ITestOutputHelper output) {
+    private readonly ITestOutputHelper _output = output;
 
     [Fact]
     public void Math() {
-        AssertIl<int>("3 * 7", """
+        TestUtils.AssertIl<int>(output, "3 * 7", """
         IL_0000: ldc.i4 3
         IL_0005: ldc.i4 7
         IL_000a: mul
         IL_000b: ret
         """);
         
-        AssertIl<float>("5 // 2", """
+        TestUtils.AssertIl<float>(output, "5 // 2", """
         IL_0000: ldc.r4 5
         IL_0005: ldc.r4 2
         IL_000a: div
         IL_000b: ret
         """);
         
-        AssertIl<float>("hi // 2", """
+        TestUtils.AssertIl<float>(output, "hi // 2", """
         IL_0000: ldarg 
         IL_0004: ldstr "hi"
         IL_0009: callvirt System.Boolean Celeste.Session::GetFlag(System.String)
@@ -66,7 +37,7 @@ public class IlCompilation {
         IL_0018: ret
         """);
        
-        AssertIl<float>("2 / hi", """
+        TestUtils.AssertIl<float>(output, "2 / hi", """
         IL_0000: ldc.i4 2
         IL_0005: ldarg 
         IL_0009: ldstr "hi"
@@ -78,7 +49,7 @@ public class IlCompilation {
         IL_001c: ret
         """);
         
-        AssertIl<float>("2 // hi", """
+        TestUtils.AssertIl<float>(output, "2 // hi", """
         IL_0000: ldc.i4 2
         IL_0005: ldarg 
         IL_0009: ldstr "hi"
@@ -89,7 +60,7 @@ public class IlCompilation {
         IL_001b: ret
         """);
         
-        AssertIl<float>("(5 // 2) + $time", """
+        TestUtils.AssertIl<float>(output, "(5 // 2) + $time", """
         IL_0000: ldc.r4 5
         IL_0005: ldc.r4 2
         IL_000a: div
@@ -99,32 +70,32 @@ public class IlCompilation {
         IL_0016: ret
         """);
         
-        AssertIl<float>("$yoyo(2)", """
+        TestUtils.AssertIl<float>(output, "$yoyo(2)", """
         IL_0000: ldc.r4 2
         IL_0005: call System.Single FrostHelper.SessionExpressions.FunctionCommands/YoYoFunc::Get(System.Single)
         IL_000a: ret
         """);
         
-        AssertIl<float>("$pow2(2)", """
+        TestUtils.AssertIl<float>(output, "$pow2(2)", """
         IL_0000: ldc.r4 2
         IL_0005: call T FrostHelper.SessionExpressions.FunctionCommands/Pow2Func`1<System.Single>::Get(T)
         IL_000a: ret
         """);
         
-        AssertIl<float>("$pow2(2.)", """
+        TestUtils.AssertIl<float>(output, "$pow2(2.)", """
         IL_0000: ldc.r4 2
         IL_0005: call T FrostHelper.SessionExpressions.FunctionCommands/Pow2Func`1<System.Single>::Get(T)
         IL_000a: ret
         """);
         
-        AssertIl<float>("$pow(2, 3)", """
+        TestUtils.AssertIl<float>(output, "$pow(2, 3)", """
         IL_0000: ldc.r4 2
         IL_0005: ldc.r4 3
         IL_000a: call T FrostHelper.SessionExpressions.FunctionCommands/PowFunc`1<System.Single>::Get(T,T)
         IL_000f: ret
         """);
         
-        AssertIl<float>("$lerp(0, 1, 0.5)", """
+        TestUtils.AssertIl<float>(output, "$lerp(0, 1, 0.5)", """
         IL_0000: ldc.r4 0
         IL_0005: ldc.r4 1
         IL_000a: ldc.r4 0.5
@@ -135,7 +106,7 @@ public class IlCompilation {
     
     [Fact]
     public void Flags() {
-        var flagExpr = AssertIl<int>("flagA + flagB", """
+        var flagExpr = TestUtils.AssertIl<int>(output, "flagA + flagB", """
         IL_0000: ldarg 
         IL_0004: ldstr "flagA"
         IL_0009: callvirt System.Boolean Celeste.Session::GetFlag(System.String)
@@ -154,7 +125,7 @@ public class IlCompilation {
         session.SetFlag("flagB");
         Assert.Equal(1, flagExpr.Get(session, null));
         
-        AssertIl<bool>(@"f""hi$(1)""", """
+        TestUtils.AssertIl<bool>(output, @"f""hi$(1)""", """
         IL_0000: ldarg 
         IL_0004: ldloca V_1
         IL_0008: ldc.i4.0
@@ -173,7 +144,7 @@ public class IlCompilation {
         IL_0042: ret
         """);
                 
-        AssertIl<bool>(@"f""hi$(@f)""", """
+        TestUtils.AssertIl<bool>(output, @"f""hi$(@f)""", """
         IL_0000: ldarg 
         IL_0004: ldloca V_1
         IL_0008: ldc.i4.0
@@ -194,7 +165,7 @@ public class IlCompilation {
         IL_004b: ret
         """);
         
-        AssertIl<bool>("!hi", """
+        TestUtils.AssertIl<bool>(output, "!hi", """
         IL_0000: ldarg 
         IL_0004: ldstr "hi"
         IL_0009: callvirt System.Boolean Celeste.Session::GetFlag(System.String)
@@ -206,7 +177,7 @@ public class IlCompilation {
 
     [Fact]
     public void Counters() {
-        AssertIl<int>("#hi + #bye", """
+        TestUtils.AssertIl<int>(output, "#hi + #bye", """
         IL_0000: ldarg.2
         IL_0001: stloc V_0
         IL_0005: ldloc V_0
@@ -233,7 +204,7 @@ public class IlCompilation {
         IL_005e: ret
         """);
         
-        AssertIl<int>("#\"count$(1)\"", """
+        TestUtils.AssertIl<int>(output, "#\"count$(1)\"", """
         IL_0000: ldarg 
         IL_0004: ldloca V_1
         IL_0008: ldc.i4.0
@@ -255,14 +226,14 @@ public class IlCompilation {
 
     [Fact]
     public void Vector2Tests() {
-        AssertIl<Vector2>("$vec(2, 3)", """
+        TestUtils.AssertIl<Vector2>(output, "$vec(2, 3)", """
         IL_0000: ldc.r4 2
         IL_0005: ldc.r4 3
         IL_000a: newobj System.Void Microsoft.Xna.Framework.Vector2::.ctor(System.Single,System.Single)
         IL_000f: ret
         """);
         
-        AssertIl<float>("($vec(2, 3)).len", """
+        TestUtils.AssertIl<float>(output, "($vec(2, 3)).len", """
         IL_0000: ldc.r4 2
         IL_0005: ldc.r4 3
         IL_000a: newobj System.Void Microsoft.Xna.Framework.Vector2::.ctor(System.Single,System.Single)
@@ -270,7 +241,7 @@ public class IlCompilation {
         IL_0014: ret
         """);
         
-        AssertIl<Vector2>("$vec(2, 3) / 2", """
+        TestUtils.AssertIl<Vector2>(output, "$vec(2, 3) / 2", """
         IL_0000: ldc.r4 2
         IL_0005: ldc.r4 3
         IL_000a: newobj System.Void Microsoft.Xna.Framework.Vector2::.ctor(System.Single,System.Single)
@@ -279,7 +250,7 @@ public class IlCompilation {
         IL_0019: ret
         """);
         
-        AssertIl<Vector2>("2 / $vec(2, 3)", """
+        TestUtils.AssertIl<Vector2>(output, "2 / $vec(2, 3)", """
         IL_0000: ldc.i4 2
         IL_0005: ldc.r4 2
         IL_000a: ldc.r4 3
@@ -288,7 +259,7 @@ public class IlCompilation {
         IL_0019: ret
         """);
         
-        AssertIl<Vector2>("$vec(0, 1) / $vec(2, 3)", """
+        TestUtils.AssertIl<Vector2>(output, "$vec(0, 1) / $vec(2, 3)", """
         IL_0000: ldc.r4 0
         IL_0005: ldc.r4 1
         IL_000a: newobj System.Void Microsoft.Xna.Framework.Vector2::.ctor(System.Single,System.Single)
@@ -302,7 +273,7 @@ public class IlCompilation {
 
     [Fact]
     public void ColorTests() {
-        AssertIl<int>("$rgb(255, 0, 16)", """
+        TestUtils.AssertIl<int>(output, "$rgb(255, 0, 16)", """
         IL_0000: ldc.i4 255
         IL_0005: ldc.i4 0
         IL_000a: ldc.i4 16
@@ -317,7 +288,7 @@ public class IlCompilation {
         var expr = "0.4 + $yoyo(($pos.len + $time * 50) % 280 / 280) * 0.4";
         
         var uncompiled = TestUtils.CreateExpr(expr, RainbowChannelExpression.ExpressionContext);
-        var compiled = AssertIl<float>(expr, """
+        var compiled = TestUtils.AssertIl<float>(output, expr, """
         IL_0000: ldc.r4 0.4
         IL_0005: ldarg 
         IL_0009: castclass FrostHelper.Helpers.RainbowChannelExpression
@@ -360,7 +331,7 @@ public class IlCompilation {
 
     [Fact]
     public void LogicalOperators() {
-        AssertIl<bool>("flagA && flagB", """
+        TestUtils.AssertIl<bool>(output, "flagA && flagB", """
         IL_0000: ldarg 
         IL_0004: ldstr "flagA"
         IL_0009: callvirt System.Boolean Celeste.Session::GetFlag(System.String)
@@ -373,7 +344,7 @@ public class IlCompilation {
         IL_0027: ret
         """);
         
-        AssertIl<bool>("flagA || flagB", """
+        TestUtils.AssertIl<bool>(output, "flagA || flagB", """
         IL_0000: ldarg 
         IL_0004: ldstr "flagA"
         IL_0009: callvirt System.Boolean Celeste.Session::GetFlag(System.String)
@@ -389,7 +360,7 @@ public class IlCompilation {
     
     [Fact]
     public void BitwiseOperators() {
-        AssertIl<int>("flagA & flagB", """
+        TestUtils.AssertIl<int>(output, "flagA & flagB", """
         IL_0000: ldarg 
         IL_0004: ldstr "flagA"
         IL_0009: callvirt System.Boolean Celeste.Session::GetFlag(System.String)
@@ -404,7 +375,7 @@ public class IlCompilation {
         IL_0023: ret
         """);
         
-        AssertIl<int>("flagA | flagB", """
+        TestUtils.AssertIl<int>(output, "flagA | flagB", """
         IL_0000: ldarg 
         IL_0004: ldstr "flagA"
         IL_0009: callvirt System.Boolean Celeste.Session::GetFlag(System.String)
@@ -422,7 +393,7 @@ public class IlCompilation {
 
     [Fact]
     public void ComparisonOperators() {
-        AssertIl<bool>("flagA > flagB", """
+        TestUtils.AssertIl<bool>(output, "flagA > flagB", """
         IL_0000: ldarg 
         IL_0004: ldstr "flagA"
         IL_0009: callvirt System.Boolean Celeste.Session::GetFlag(System.String)
@@ -440,7 +411,7 @@ public class IlCompilation {
 
     [Fact]
     public void Invert() {
-        AssertIl<bool>("!(1 + 2)", """
+        TestUtils.AssertIl<bool>(output, "!(1 + 2)", """
         IL_0000: ldarg.2
         IL_0001: stloc V_0
         IL_0005: ldc.i4 1
@@ -456,31 +427,31 @@ public class IlCompilation {
 
     [Fact]
     public void SimpleCommands() {
-        AssertIl<int>("$deaths", """
+        TestUtils.AssertIl<int>(output, "$deaths", """
         IL_0000: ldarg 
         IL_0004: ldfld System.Int32 Celeste.Session::Deaths
         IL_0009: ret
         """);
         
-        AssertIl<int>("$deathsHere", """
+        TestUtils.AssertIl<int>(output, "$deathsHere", """
         IL_0000: ldarg 
         IL_0004: ldfld System.Int32 Celeste.Session::DeathsInCurrentLevel
         IL_0009: ret
         """);
         
-        AssertIl<string>("$roomName", """
+        TestUtils.AssertIl<string>(output, "$roomName", """
         IL_0000: ldarg 
         IL_0004: ldfld System.String Celeste.Session::Level
         IL_0009: ret
         """);
         
-        AssertIl<bool>("$photosensitive", """
+        TestUtils.AssertIl<bool>(output, "$photosensitive", """
         IL_0000: ldsfld Celeste.Settings Celeste.Settings::Instance
         IL_0005: ldfld System.Boolean Celeste.Settings::DisableFlashes
         IL_000a: ret
         """);
         
-        AssertIl<bool>("$allowGlitch", """
+        TestUtils.AssertIl<bool>(output, "$allowGlitch", """
         IL_0000: call Celeste.Mod.Core.CoreModuleSettings Celeste.Mod.Core.CoreModule::get_Settings()
         IL_0005: call System.Boolean Celeste.Mod.Core.CoreModuleSettings::get_AllowGlitch()
         IL_000a: ret
@@ -489,14 +460,14 @@ public class IlCompilation {
 
     [Fact]
     public void EnumerableOperations() {
-        AssertIl<int>("$strawberries.count", """
+        TestUtils.AssertIl<int>(output, "$strawberries.count", """
         IL_0000: ldarg 
         IL_0004: ldfld System.Collections.Generic.HashSet`1<Celeste.EntityID> Celeste.Session::Strawberries
         IL_0009: call System.Int32 System.Collections.Generic.HashSet`1<Celeste.EntityID>::get_Count()
         IL_000e: ret
         """);
         
-        AssertIl<int>("$strawberries.sum($s => $s.roomName == \"test\")", """
+        TestUtils.AssertIl<int>(output, "$strawberries.sum($s => $s.roomName == \"test\")", """
         IL_0000: ldarg.2
         IL_0001: stloc V_0
         IL_0005: ldarg 
@@ -579,7 +550,7 @@ public class IlCompilation {
     public void If() {
         var session = TestUtils.CreateTestSession();
         
-        AssertIl<int>("$if(1, 2, 3)", """
+        TestUtils.AssertIl<int>(output, "$if(1, 2, 3)", """
         IL_0000: ldc.i4.1
         IL_0001: brfalse IL_0010
         IL_0006: ldc.i4 2
@@ -588,7 +559,7 @@ public class IlCompilation {
         IL_0015: ret
         """);
         
-        AssertIl<int>("$if(0, 2, $rgb(255, 0, 0))", """
+        TestUtils.AssertIl<int>(output, "$if(0, 2, $rgb(255, 0, 0))", """
         IL_0000: ldc.i4.0
         IL_0001: brfalse IL_0010
         IL_0006: ldc.i4 2
@@ -601,7 +572,7 @@ public class IlCompilation {
         IL_0029: ret
         """);
         
-        AssertIl<object>("$if(0, 2, $rgb(255, 0, 0))", """
+        TestUtils.AssertIl<object>(output, "$if(0, 2, $rgb(255, 0, 0))", """
         IL_0000: ldc.i4.0
         IL_0001: brfalse IL_0015
         IL_0006: ldc.i4 2
@@ -617,7 +588,7 @@ public class IlCompilation {
         
         // We are not be able to persist type information after this $if, as we could get int or Color here,
         // meaning the multiplication has to fall back to dynamic dispatch.
-        AssertIl<int>("$if(0, 2, $rgb(255, 0, 0)) * 2", """
+        TestUtils.AssertIl<int>(output, "$if(0, 2, $rgb(255, 0, 0)) * 2", """
         IL_0000: ldarg.2
         IL_0001: stloc V_0
         IL_0005: ldloc V_0
@@ -628,7 +599,7 @@ public class IlCompilation {
         """);
         // This could be solved by cloning, as in, expanding this expression into "$if(0, 2 * 2, $rgb(255, 0, 0) * 2)".
         // This is a worthwhile optimization to look into later.
-        AssertIl<int>("$if(0, 2 * 2, $rgb(255, 0, 0) * 2)", """
+        TestUtils.AssertIl<int>(output, "$if(0, 2 * 2, $rgb(255, 0, 0) * 2)", """
         IL_0000: ldc.i4.0
         IL_0001: brfalse IL_0016
         IL_0006: ldc.i4 2
@@ -652,7 +623,7 @@ public class IlCompilation {
         }, new());
         
         // Make sure that the current condition local is properly set before the branch if needed by any branch.
-        var x = AssertIl<int>("$if(0, $test1, $test2)", """
+        var x = TestUtils.AssertIl<int>(output, "$if(0, $test1, $test2)", """
         IL_0000: ldarg.2
         IL_0001: stloc V_0
         IL_0005: ldloc V_0

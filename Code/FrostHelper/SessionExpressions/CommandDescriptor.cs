@@ -129,14 +129,14 @@ public sealed class ArgumentDescriptor(string name, TypeDescriptor type) {
 
 public sealed class CommandDescriptor {
     public required string Name { get; init; }
-    
-    public IReadOnlyList<RenderPart> Description { get; init; }
+
+    public IReadOnlyList<RenderPart> Description { get; init; } = [];
     
     public string? DeclaringMod { get; init; }
     
     public TypeDescriptor? DeclaringType { get; init; }
     
-    public TypeDescriptor ReturnType { get; init; }
+    public required TypeDescriptor ReturnType { get; init; }
 
     public IReadOnlyList<ArgumentDescriptor> Arguments { get; init; } = [];
 }

@@ -483,6 +483,27 @@ public static class ConditionHelper {
             return Coerce<T>(Get(session, userdata));
         }
 
+        internal static object Coerce(object obj, Type toType) {
+            if (toType == typeof(bool))
+                return CoerceToBool(obj);
+            if (toType == typeof(int))
+                return CoerceToNumber<int>(obj);
+            if (toType == typeof(float))
+                return CoerceToNumber<float>(obj);
+            if (toType == typeof(string))
+                return CoerceToString(obj);
+            if (toType == typeof(object))
+                return obj;
+            if (toType == typeof(Color))
+                return CoerceToColor(obj);
+
+            if (obj.GetType() == toType || obj.GetType().IsAssignableTo(toType)) {
+                return obj;
+            }
+
+            throw new ArgumentException($"Unsupported T for Session Expression: {toType.FullName}");
+        }
+        
         internal static T Coerce<T>(object obj) {
             if (typeof(T) == typeof(bool))
                 return (T)(object)CoerceToBool(obj);

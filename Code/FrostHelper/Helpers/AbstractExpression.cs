@@ -164,6 +164,11 @@ internal partial class AbstractExpression {
                     expression = new SimpleCommandExpression(commandOperand.Name);
                     return true;
                 }
+
+                if (commandOperand.Arguments is [{ Tokens: [] }]) {
+                    expression = new FunctionCommandExpression(commandOperand.Name, []);
+                    return true;
+                }
                 
                 var args = new List<AbstractExpression>(commandOperand.Arguments.Count);
                 foreach (var innerTokens in commandOperand.Arguments)

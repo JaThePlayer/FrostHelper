@@ -204,7 +204,8 @@ internal static class FunctionCommands {
 
         Registry[key] = new FunctionCommand(CreateFactoryForCustomCommand(func), new CommandDescriptor {
             Name = key,
-            DeclaringMod = modName
+            DeclaringMod = modName,
+            ReturnType = TypeDescriptor.Any
         });
     }
 
@@ -271,30 +272,6 @@ internal static class FunctionCommands {
         condition.Descriptor = functionCommand.Descriptor;
 
         return true;
-    }
-
-    private sealed class LazyFunctionArgumentList(IReadOnlyList<Condition> args) : IReadOnlyList<object> {
-        public Session Session { get; set; }
-        public object? UserData { get; set; }
-        
-        private readonly object?[] _cache = new object[args.Count];
-
-        public void Reset(Session session, object? userdata) {
-            Array.Clear(_cache);
-            Session = session;
-            UserData = userdata;
-        }
-        
-        public IEnumerator<object> GetEnumerator()
-            => args.Select(x => x.Get(Session, UserData)).GetEnumerator();
-
-        IEnumerator IEnumerable.GetEnumerator()
-            => GetEnumerator();
-
-        public int Count => args.Count;
-
-        public object this[int index] 
-            => args[index].Get(Session, UserData);
     }
 
     private sealed class ModFunctionCondition(IReadOnlyList<Condition> args, Func<Session, object?, IReadOnlyList<object>, object> func) 
