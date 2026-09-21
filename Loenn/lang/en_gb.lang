@@ -141,7 +141,7 @@ entities.FrostHelper/CustomFireBarrier.attributes.description.silent=Whether the
 entities.FrostHelper/CustomFireBarrier.attributes.description.canCollide=Whether this entity can be collided with in any way.\nDisable for decorative barriers.
 entities.FrostHelper/CustomFireBarrier.attributes.description.hasSolid=If `Can Collide` is set, determines whether this barrier should act as a solid block,\nallowing non-player entities to interact with it,\nand allowing for walljumping from the barrier.
 entities.FrostHelper/CustomFireBarrier.attributes.description.fade=Over how many pixels the barrier's edges should fade to the center color.\nCapped at half of the barrier's width or height, depending on the direction.
-
+entities.FrostHelper/CustomFireBarrier.attributes.description.curveAmplitude=When OnlyTop or OnlyBottom modes are used, makes the edges of the barrier curve upwards by this amount of pixels.
 entities.FrostHelper/CustomFireBarrier.attributes.description.waves=Configures the waves on the surface of the barrier.
 FrostHelper.fields.customFireBarrier.amplitude=Amplitude
 FrostHelper.fields.customFireBarrier.amplitude.tooltip=The amplitude of this sine wave.\nThe wave follows the formula: `Amplitude * sin(xPos * Length + time * Frequency + Phase)`
