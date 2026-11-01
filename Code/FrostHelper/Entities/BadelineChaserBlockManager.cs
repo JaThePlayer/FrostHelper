@@ -6,6 +6,8 @@ public class BadelineChaserBlockManager : Entity {
     }
 
     bool lastState;
+    private bool customSound;
+    private string customActivateSfx = "", customDeactivateSfx = "";
 
     public override void Update() {
         bool state = false;
@@ -45,6 +47,10 @@ public class BadelineChaserBlockManager : Entity {
                     }
                 }
             }
+            if (activator.CustomActivateSfx != "")
+                customActivateSfx = activator.CustomActivateSfx;
+            if (activator.CustomDeactivateSfx != "")
+                customDeactivateSfx = activator.CustomDeactivateSfx;
         }
 
         foreach (BadelineChaserBlock block in Scene.Tracker.SafeGetEntities<BadelineChaserBlock>()) {
@@ -52,9 +58,15 @@ public class BadelineChaserBlockManager : Entity {
         }
 
         if (lastState != state) {
-            var audio = Audio.Play(state ? BadelineChaserBlockActivator.ActivateSfx : BadelineChaserBlockActivator.DeactivateSfx);
+
+            string activate = customActivateSfx != "" ? customActivateSfx : BadelineChaserBlockActivator.ActivateSfx;
+            string deactivate = customDeactivateSfx != "" ? customDeactivateSfx : BadelineChaserBlockActivator.DeactivateSfx;
+            
+            var audio = Audio.Play(state ? activate : deactivate);
             audio.getVolume(out float volume, out _);
-            audio.setVolume(volume * 60f);
+            
+            if (customActivateSfx == "" && customDeactivateSfx == "")
+                audio.setVolume(volume * 60f);
         }
         lastState = state;
     }

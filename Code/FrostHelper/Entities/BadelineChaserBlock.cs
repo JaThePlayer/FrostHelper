@@ -3,20 +3,23 @@
 [CustomEntity("FrostHelper/BadelineChaserBlock")]
 [Tracked]
 public class BadelineChaserBlock : Solid {
-    public static MTexture SolidBlockTexture;
-    public static MTexture PressedBlockTexture;
-    static MTexture[,] nineSlicePressed;
-    static MTexture[,] nineSliceSolid;
+    public static MTexture DefaultSolidBlockTexture;
+    public static MTexture DefaultPressedBlockTexture;
+    public static MTexture[,] defaultNineSlicePressed;
+    public static MTexture[,] defaultNineSliceSolid;
+
+    private readonly MTexture[,] nineSlicePressed;
+    private readonly MTexture[,] nineSliceSolid;
 
     public static void Load() {
-        SolidBlockTexture = GFX.Game["objects/FrostHelper/badelineChaserBlock/solid"];
-        PressedBlockTexture = GFX.Game["objects/FrostHelper/badelineChaserBlock/pressed"];
-        nineSlicePressed = new MTexture[3, 3];
-        nineSliceSolid = new MTexture[3, 3];
+        DefaultSolidBlockTexture = GFX.Game["objects/FrostHelper/badelineChaserBlock/solid"];
+        DefaultPressedBlockTexture = GFX.Game["objects/FrostHelper/badelineChaserBlock/pressed"];
+        defaultNineSlicePressed = new MTexture[3, 3];
+        defaultNineSliceSolid = new MTexture[3, 3];
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 3; j++) {
-                nineSlicePressed[i, j] = PressedBlockTexture.GetSubtexture(new Rectangle(i * 8, j * 8, 8, 8));
-                nineSliceSolid[i, j] = SolidBlockTexture.GetSubtexture(new Rectangle(i * 8, j * 8, 8, 8));
+                defaultNineSlicePressed[i, j] = DefaultPressedBlockTexture.GetSubtexture(new Rectangle(i * 8, j * 8, 8, 8));
+                defaultNineSliceSolid[i, j] = DefaultSolidBlockTexture.GetSubtexture(new Rectangle(i * 8, j * 8, 8, 8));
             }
         }
     }
@@ -39,7 +42,28 @@ public class BadelineChaserBlock : Solid {
     public BadelineChaserBlock(EntityData data, Vector2 offset) : base(data.Position + offset, data.Width, data.Height, false) {
         Reversed = data.Bool("reversed", false);
         Collider = new Hitbox(data.Width, data.Height);
-        Emblem = new Sprite(GFX.Game, "objects/FrostHelper/badelineChaserBlock/emblem");
+
+        string path = "objects/FrostHelper/badelineChaserBlock/";
+        if (data.Attr("sprite") is { } customPath && customPath != "") {
+            path = customPath;
+            
+            MTexture solidBlockTexture = GFX.Game[$"{path}solid"];
+            MTexture pressedBlockTexture = GFX.Game[$"{path}pressed"];
+            nineSlicePressed = new MTexture[3, 3];
+            nineSliceSolid = new MTexture[3, 3];
+            for (int i = 0; i < 3; i++) {
+                for (int j = 0; j < 3; j++) {
+                    nineSlicePressed[i, j] = pressedBlockTexture.GetSubtexture(new Rectangle(i * 8, j * 8, 8, 8));
+                    nineSliceSolid[i, j] = solidBlockTexture.GetSubtexture(new Rectangle(i * 8, j * 8, 8, 8));
+                }
+            }
+            
+        } else {
+            nineSlicePressed = defaultNineSlicePressed;
+            nineSliceSolid = defaultNineSliceSolid;
+        }
+        
+        Emblem = new Sprite(GFX.Game, $"{path}emblem");
         Emblem.Add("solid", !Reversed ? "solidreverse" : "solid");
         Emblem.Add("pressed", !Reversed ? "pressedreverse" : "pressed");
         Emblem.CenterOrigin();

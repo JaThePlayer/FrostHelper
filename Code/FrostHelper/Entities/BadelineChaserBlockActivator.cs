@@ -5,26 +5,32 @@ namespace FrostHelper;
 [CustomEntity("FrostHelper/BadelineChaserBlockActivator")]
 [Tracked]
 public class BadelineChaserBlockActivator : Solid {
-    public static MTexture BlockTextureSolid;
-    static MTexture[,] nineSliceSolid;
-    public static MTexture BlockTextureField;
-    static MTexture[,] nineSliceField;
+    public static MTexture DefaultBlockTextureSolid;
+    static MTexture[,] defaultNineSliceSolid;
+    public static MTexture DefaultBlockTextureField;
+    static MTexture[,] defaultNineSliceField;
+
+    private readonly MTexture[,] nineSliceSolid;
+    private readonly MTexture[,] nineSliceField;
 
     public static string ActivateSfx = "event:/radleymctuneston_badelineblock_activate";
     public static string DeactivateSfx = "event:/radleymctuneston_badelineblock_deactivate";
     public static string BuzzSfx = "event:/radleymctuneston_badelineblock_buzz";
 
+    public string CustomActivateSfx = "";
+    public string CustomDeactivateSfx = "";
+    
     public bool Solid;
 
     public static void Load() {
-        BlockTextureSolid = GFX.Game["objects/FrostHelper/badelineChaserBlock/activator"];
-        nineSliceSolid = new MTexture[3, 3];
-        BlockTextureField = GFX.Game["objects/FrostHelper/badelineChaserBlock/activatorfield"];
-        nineSliceField = new MTexture[3, 3];
+        DefaultBlockTextureSolid = GFX.Game["objects/FrostHelper/badelineChaserBlock/activator"];
+        defaultNineSliceSolid = new MTexture[3, 3];
+        DefaultBlockTextureField = GFX.Game["objects/FrostHelper/badelineChaserBlock/activatorfield"];
+        defaultNineSliceField = new MTexture[3, 3];
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 3; j++) {
-                nineSliceSolid[i, j] = BlockTextureSolid.GetSubtexture(new Rectangle(i * 8, j * 8, 8, 8));
-                nineSliceField[i, j] = BlockTextureField.GetSubtexture(new Rectangle(i * 8, j * 8, 8, 8));
+                defaultNineSliceSolid[i, j] = DefaultBlockTextureSolid.GetSubtexture(new Rectangle(i * 8, j * 8, 8, 8));
+                defaultNineSliceField[i, j] = DefaultBlockTextureField.GetSubtexture(new Rectangle(i * 8, j * 8, 8, 8));
             }
         }
     }
@@ -40,8 +46,31 @@ public class BadelineChaserBlockActivator : Solid {
         Solid = data.Bool("solid", true);
         Collider = new Hitbox(data.Width, data.Height);
         Collidable = Solid;
+        
+        string path = "objects/FrostHelper/badelineChaserBlock/";
+        if (data.Attr("sprite") is { } customPath && customPath != "") {
+            path = customPath;
+            
+            MTexture solidBlockTexture = GFX.Game[$"{path}activator"];
+            MTexture fieldBlockTexture = GFX.Game[$"{path}activatorfield"];
+            nineSliceField = new MTexture[3, 3];
+            nineSliceSolid = new MTexture[3, 3];
+            for (int i = 0; i < 3; i++) {
+                for (int j = 0; j < 3; j++) {
+                    nineSliceField[i, j] = fieldBlockTexture.GetSubtexture(new Rectangle(i * 8, j * 8, 8, 8));
+                    nineSliceSolid[i, j] = solidBlockTexture.GetSubtexture(new Rectangle(i * 8, j * 8, 8, 8));
+                }
+            }
+            
+        } else {
+            nineSliceField = defaultNineSliceField;
+            nineSliceSolid = defaultNineSliceSolid;
+        }
 
-        Emblem = new Sprite(GFX.Game, "objects/FrostHelper/badelineChaserBlock/emblem");
+        CustomActivateSfx = data.Attr("activateSfx");
+        CustomDeactivateSfx = data.Attr("deactivateSfx");
+
+        Emblem = new Sprite(GFX.Game, $"{path}emblem");
         Emblem.Add("loop", "field");
         //Emblem.Add("pressed", Reversed ? "pressedreverse" : "pressed");
         Emblem.CenterOrigin();
