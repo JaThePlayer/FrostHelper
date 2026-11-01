@@ -12,6 +12,9 @@ local badelineChaserBlockActivator = nineSliceSolidEntity.createHandler("FrostHe
             width = 16,
             height = 16,
             solid = false,
+            sprite = "",
+            activateSfx = "",
+            deactivateSfx = "",
         },
     },
     {
@@ -20,6 +23,9 @@ local badelineChaserBlockActivator = nineSliceSolidEntity.createHandler("FrostHe
             width = 16,
             height = 16,
             solid = true,
+            sprite = "",
+            activateSfx = "",
+            deactivateSfx = "",
         },
     },
 }, false, function (entity)

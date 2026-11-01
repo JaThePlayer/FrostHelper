@@ -14,6 +14,7 @@ local badelineChaserBlock = nineSliceSolidEntity.createHandler("FrostHelper/Bade
             height = 16,
             reversed = false,
             giveLiftBoost = true,
+            sprite = "",
         },
     },
     {
@@ -23,6 +24,7 @@ local badelineChaserBlock = nineSliceSolidEntity.createHandler("FrostHelper/Bade
             height = 16,
             reversed = true,
             giveLiftBoost = true,
+            sprite = "",
         },
     },
 }, false, function (entity)
