@@ -102,7 +102,7 @@ public class ApiTests(ITestOutputHelper output) {
         Assert.Equal(1, TestUtils.CreateExpr("$one()", context).Get<int>(session));
         
         TestUtils.AssertIl<int>(output, "$one()", """
-        IL_0000: ldc.i4 2
+        IL_0000: ldc.i4 ***
         IL_0005: ldc.i4 ***
         IL_000a: call System.Object MonoMod.Utils.DynamicReferenceManager::GetValue(System.Int32,System.Int32)
         IL_000f: ldarg 
@@ -116,7 +116,7 @@ public class ApiTests(ITestOutputHelper output) {
         
         Assert.Equal(2, TestUtils.CreateExpr("$sub(3, 1)", context).Get<int>(session));
         TestUtils.AssertIl<int>(output, "$sub(3, 1)", """
-        IL_0000: ldc.i4 4
+        IL_0000: ldc.i4 ***
         IL_0005: ldc.i4 ***
         IL_000a: call System.Object MonoMod.Utils.DynamicReferenceManager::GetValue(System.Int32,System.Int32)
         IL_000f: ldarg 
@@ -201,5 +201,9 @@ public class ApiTests(ITestOutputHelper output) {
         // Return value is coerced automatically.
         var color = Assert.IsType<Func<Session, object?, Color>>(API.API.CreateTypedSessionExpressionOrNull("\"red\"", null, typeof(Color)));
         Assert.Equal(Color.Red, color(session, null));
+        
+        // The returned delegate is cached.
+        var threePlusFourAgain = Assert.IsType<Func<Session, object?, int>>(API.API.CreateTypedSessionExpressionOrNull("3 + #four", null, typeof(int)));
+        Assert.Same(threePlusFour, threePlusFourAgain);
     }
 }

@@ -1,4 +1,5 @@
 ﻿using FrostHelper.Helpers;
+using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
 
 namespace FrostHelper.SessionExpressions;
@@ -11,6 +12,8 @@ public interface IExpressionContext {
     public void RegisterSimpleCommand(string name, ConditionHelper.Condition command);
     
     public void RegisterFunctionCommand(string name, FunctionCommand factory);
+
+    public ConditionHelper.Condition? GetOrCache(string conditionString, Func<string, ConditionHelper.Condition?> generator);
 }
 
 /// <summary>
@@ -19,6 +22,10 @@ public interface IExpressionContext {
 internal sealed class ExpressionContext(
     Dictionary<string, ConditionHelper.Condition> simpleCommands,
     Dictionary<string, FunctionCommand> functions) : IExpressionContext {
+    
+    private static readonly ConcurrentDictionary<string, ConditionHelper.Condition?> Cache = [];
+    private static readonly ConcurrentDictionary<(string, Type), ConditionHelper.Condition?> TypedDelegateCache = [];
+    
     public IReadOnlyDictionary<string, ConditionHelper.Condition> SimpleCommands => simpleCommands;
     
     public IReadOnlyDictionary<string, FunctionCommand> FunctionCommands => functions;
@@ -50,5 +57,9 @@ internal sealed class ExpressionContext(
 
     public void RegisterFunctionCommand(string name, FunctionCommand factory) {
         functions[name] = factory;
+    }
+
+    public ConditionHelper.Condition? GetOrCache(string conditionString, Func<string, ConditionHelper.Condition?> generator) {
+        return Cache.GetOrAdd(conditionString, generator);
     }
 }

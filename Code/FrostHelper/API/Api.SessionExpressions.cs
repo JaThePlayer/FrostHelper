@@ -1,7 +1,9 @@
 ﻿using FrostHelper.Helpers;
 using FrostHelper.SessionExpressions;
+using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection.Emit;
+using System.Runtime.CompilerServices;
 using OpCodes = System.Reflection.Emit.OpCodes;
 
 namespace FrostHelper.API;
@@ -11,7 +13,8 @@ public static partial class API {
     /// <summary>
     /// Creates a delegate which can evaluate a Session Expression efficiently.
     /// This is the recommended way to evaluate session expressions.
-    /// This function should only be called once when creating an entity, the delegate should be stored for re-use.
+    /// The result of this function for a given set of arguments is cached internally, however for better performance
+    /// this function should only be called once when creating an entity, the delegate should be stored for re-use.
     /// Added in Frost Helper 1.81.0
     /// </summary>
     /// <param name="str">The expression</param>
@@ -19,13 +22,18 @@ public static partial class API {
     /// <param name="returnType">The type that should be returned by the expression.</param>
     /// <returns>A delegate which evaluates the expression. Will always be of type Func{Session, object?, returnType} and can safely be cast to that type.</returns>
     public static Delegate? CreateTypedSessionExpressionOrNull(string str, object? context, Type returnType) {
-        if (ConditionHelper.TryCreate(str, AssertIsOrNull<IExpressionContext>(context) ?? ExpressionContext.Default, out var expr)) {
-            var compiled = CompiledCondition.GetDelegateFor(expr, returnType);
-            return compiled;
-        }
+        var ctx = AssertIsOrNull<IExpressionContext>(context) ?? ExpressionContext.Default;
 
-        return null;
+        var cache = TypedExpressionsCache.GetValue(ctx, static _ => []);
+
+        return cache.GetOrAdd((str, returnType), args => 
+            ConditionHelper.TryCreate(args.str, ctx, out var expr)
+                ? CompiledCondition.GetDelegateFor(expr, args.returnType) 
+                : null);
     }
+
+    private static readonly ConditionalWeakTable<IExpressionContext, ConcurrentDictionary<(string str, Type returnType), Delegate?>>
+        TypedExpressionsCache = [];
 
     /// <summary>
     /// Coerces the given value to the target type, using Session Expression rules.

@@ -27,6 +27,10 @@ internal sealed class LambdaContext(IExpressionContext source, LambdaDefinitionC
     public void RegisterFunctionCommand(string name, FunctionCommand factory) {
         throw new Exception("Cannot register functions on a lambda context");
     }
+
+    public ConditionHelper.Condition? GetOrCache(string conditionString, Func<string, ConditionHelper.Condition?> generator) {
+        return generator(conditionString);
+    }
 }
 
 internal sealed class LambdaArgumentCondition(LambdaDefinitionCondition lambdaDefinition, int index) : ConditionHelper.Condition {

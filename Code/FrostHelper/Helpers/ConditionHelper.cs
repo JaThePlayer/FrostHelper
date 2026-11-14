@@ -1,5 +1,6 @@
 ﻿using FrostHelper.ModIntegration;
 using FrostHelper.SessionExpressions;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
@@ -38,14 +39,17 @@ public static class ConditionHelper {
             return true;
         }
 
-        if (AbstractExpression.TryParseCached(str, out var expr)) {
-            var ret = TryCreate(expr, ctx, out condition);
-            condition?.SourceText = str;
-            return ret;
-        }
+        var cond = ctx.GetOrCache(str, _ => {
+            if (AbstractExpression.TryParseCached(str, out var expr) && TryCreate(expr, ctx, out var condition)) {
+                condition.SourceText = str;
+                return condition;
+            }
 
-        condition = null;
-        return false;
+            return null;
+        });
+
+        condition = cond;
+        return cond != null;
     }
 
     private static bool CreateList(IList<AbstractExpression> args, IExpressionContext ctx, out List<Condition> conditions) {
