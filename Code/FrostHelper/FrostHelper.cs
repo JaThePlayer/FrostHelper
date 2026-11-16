@@ -173,6 +173,7 @@ public class FrostModule : EverestModule {
 
         AttributeHelper.InvokeAllWithAttribute(typeof(OnLoadContent));
         GravityHelperIntegration.Load();
+        MotionSmoothingIntegration.Load();
         SpeedrunToolIntegration.LoadIfNeeded();
         
         SpeedrunToolIntegration.AddReturnSameObjectProcessor?.Invoke(t => 

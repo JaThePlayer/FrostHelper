@@ -62,7 +62,17 @@ public class BetterShaderTrigger : Trigger {
     }
 
     public static void Apply(VirtualRenderTarget source, VirtualRenderTarget target, Effect eff, bool clear = false) {
-        eff.ApplyStandardParameters(Engine.Scene);
+        // Motion Smoothing's Fancy mode upscales these buffers, which a vertex shader projecting from Dimensions doesn't know about
+        if (MotionSmoothingIntegration.RenderAtGameScale is { } renderAtGameScale) {
+            renderAtGameScale(() => ApplyImpl(source, target, eff, clear, MotionSmoothingIntegration.GetCurrentRenderTargetScale!()));
+        } else {
+            ApplyImpl(source, target, eff, clear, 1f);
+        }
+    }
+
+    private static void ApplyImpl(VirtualRenderTarget source, VirtualRenderTarget target, Effect eff, bool clear, float scale) {
+        // Vertices are in game pixels, so ViewMatrix takes them to the target's pixels for TransformMatrix
+        eff.ApplyStandardParameters(Engine.Scene, Matrix.CreateScale(scale));
         VirtualRenderTarget tempA = GameplayBuffers.TempA;
 
         Engine.Instance.GraphicsDevice.SetRenderTarget(tempA);
